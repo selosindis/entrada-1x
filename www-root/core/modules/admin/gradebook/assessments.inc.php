@@ -37,6 +37,98 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_ASSESSMENTS", true);
 
+    if (isset($_POST["ajax"]) && $_POST["ajax"] === "ajax") {
+		
+		ob_clear_open_buffers();
+		
+			$method = clean_input($_POST["method"], array("trim", "striptags"));
+
+			switch ($method) {
+				case "store-resubmit" :
+					
+					if (isset($_POST["aovalue_id"]) && $tmp_input = clean_input($_POST["aovalue_id"], "int")) {
+						$PROCESSED["aovalue_id"] = $tmp_input;
+						$MODE = "UPDATE";
+						$WHERE = "`aovalue_id` = ".$db->qstr($tmp_input);
+					} else {
+						$MODE = "INSERT";
+						$WHERE = "'1' = '1'";
+					}
+					if (isset($_POST["proxy_id"]) && $tmp_input = clean_input($_POST["proxy_id"], "int")) {
+						$PROCESSED["proxy_id"] = $tmp_input;
+					} else {
+						add_error("Invalid proxy ID supplied.");
+					}
+					if (isset($_POST["aoption_id"]) && $tmp_input = clean_input($_POST["aoption_id"], "int")) {
+						$PROCESSED["aoption_id"] = $tmp_input;
+					} else {
+						add_error("Invalid assessment option ID provided.");
+					}
+					if (isset($_POST["value"]) && $tmp_input = clean_input($_POST["value"], "int")) {
+						$PROCESSED["value"] = clean_input($_POST["value"], "int");
+					} else {
+						$PROCESSED["value"] = 0;
+					}
+					
+					if (!$ERROR) {
+						if ($db->AutoExecute("assessment_option_values", $PROCESSED, $MODE, $WHERE)) {
+							if (!isset($PROCESSED["aovalue_id"])) {
+								$PROCESSED["aovalue_id"] = $db->Insert_ID();
+							}
+							echo json_encode(array("status" => "success", "data" => $PROCESSED));
+						} else {
+							echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+						}
+					} else {
+						echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+					}
+					
+				break;
+				case "store-late" :
+					
+					if (isset($_POST["aovalue_id"]) && $tmp_input = clean_input($_POST["aovalue_id"], "int")) {
+						$PROCESSED["aovalue_id"] = $tmp_input;
+						$MODE = "UPDATE";
+						$WHERE = "`aovalue_id` = ".$db->qstr($tmp_input);
+					} else {
+						$MODE = "INSERT";
+						$WHERE = "'1' = '1'";
+					}
+					if (isset($_POST["proxy_id"]) && $tmp_input = clean_input($_POST["proxy_id"], "int")) {
+						$PROCESSED["proxy_id"] = $tmp_input;
+					} else {
+						add_error("Invalid proxy ID supplied.");
+					}
+					if (isset($_POST["aoption_id"]) && $tmp_input = clean_input($_POST["aoption_id"], "int")) {
+						$PROCESSED["aoption_id"] = $tmp_input;
+					} else {
+						add_error("Invalid assessment option ID provided.");
+					}
+					if (isset($_POST["value"]) && $_POST["value"] == "1") {
+						$PROCESSED["value"] = 1;
+					} else {
+						$PROCESSED["value"] = 0;
+					}
+					
+					if (!$ERROR) {
+						if ($db->AutoExecute("assessment_option_values", $PROCESSED, $MODE, $WHERE)) {
+							if (!isset($PROCESSED["aovalue_id"])) {
+								$PROCESSED["aovalue_id"] = $db->Insert_ID();
+							}
+							echo json_encode(array("status" => "success", "data" => $PROCESSED));
+						} else {
+							echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+						}
+					} else {
+						echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+					}
+					
+				break;
+			}
+		
+		exit;
+	}
+    
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
 
 	if (($router) && ($router->initRoute())) {
@@ -61,8 +153,11 @@ if(!defined("PARENT_INCLUDED")) {
 		$organisation_id = $db->getOne($query);
 		
 		if (!$ENTRADA_ACL->amIAllowed(new CourseContentResource($COURSE_ID, $organisation_id), "update")) {
+			$url = ENTRADA_URL."/admin/gradebook";
+			$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+			
 			$ERROR++;
-			$ERRORSTR[]	= "You do not have the permissions required to access this assessment.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+			$ERRORSTR[]	= "You do not have the permissions required to access this assessment.<br /><br />You will now be redirected to the <strong>Gradebook index</strong> page.  This will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 			echo display_error();
 

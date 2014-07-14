@@ -42,7 +42,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					WHERE a.`eform_id` = ".$db->qstr($FORM_ID)."
 					AND a.`form_active` = '1'";
 		$form_record = $db->GetRow($query);
-		if ($form_record && $ENTRADA_ACL->amIAllowed(new EvaluationFormResource($form_record["eform_id"]), 'update')) {
+		if ($form_record && $ENTRADA_ACL->amIAllowed(new EvaluationFormResource($form_record["eform_id"], $form_record["organisation_id"], true), 'update')) {
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/forms?section=edit&id=".$FORM_ID, "title" => limit_chars($form_record["form_title"], 32));
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/forms?section=copy&id=".$FORM_ID, "title" => "Copying Evaluation");
 
@@ -50,6 +50,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			 * Required field "form_title" / Form Title.
 			 */
 			if ((isset($_POST["form_title"])) && ($tmp_input = clean_input($_POST["form_title"], array("notags", "trim")))) {
+				$PROCESSED["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
 				$PROCESSED["target_id"] = $form_record["target_id"];
 				$PROCESSED["form_title"] = $tmp_input;
 				$PROCESSED["form_description"] = $form_record["form_description"];
@@ -57,86 +58,123 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
-				if ($db->AutoExecute("evaluation_forms", $PROCESSED, "INSERT") && ($new_eform_id = $db->Insert_Id())) {
-					$query = "	SELECT *
-								FROM `evaluation_form_questions` AS a
-								JOIN `evaluations_lu_questions` AS b
-								ON a.`equestion_id` = b.`equestion_id`
-								WHERE a.`eform_id` = ".$db->qstr($FORM_ID);
-					$questions = $db->GetAll($query);
-					if ($questions) {
-						$new_efquestion_ids = array();
 
-						foreach ($questions as $question) {
-							$query = "	INSERT INTO `evaluation_form_questions` VALUES (
-											NULL,
-											'".$new_eform_id."',
-											".$db->qstr($question["equestion_id"]).",
-											".$db->qstr($question["question_order"]).",
-											".$db->qstr($question["allow_comments"]).",
-											".$db->qstr($question["send_threshold_notifications"])."
-										)";
-							if (!($db->Execute($query))) {
-								$ERROR++;
-
-								application_log("error", "Unable to insert new evaluation_form_questions record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
-							}
-						}
-						
-						$query = "SELECT * FROM `evaluation_form_rubrics` WHERE `eform_id` = ".$db->qstr($FORM_ID);
-						$rubrics = $db->GetAll($query);
-						if ($rubrics) {
-							foreach ($rubrics as $rubric) {
-								$new_rubric = $rubric;
-								$new_rubric["eform_id"] = $new_eform_id;
-								$new_rubric["erubric_id"] = NULL;
-								if (!$db->AutoExecute("evaluation_form_rubrics", $new_rubric, "INSERT") || !($new_erubric_id = $db->Insert_Id())) {
-									$ERROR++;
-									application_log("error", "Unable to insert new evaluation_form_rubrics record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
-								}
-							}
-						}
-						
-						$query = "SELECT * FROM `evaluation_form_contacts` 
+                $query = "SELECT * FROM `evaluation_form_contacts`
 									WHERE `eform_id` = ".$db->qstr($FORM_ID);
-						$evaluation_form_contacts = $db->GetAll($query);
-						if ($evaluation_form_contacts) {
-							foreach ($evaluation_form_contacts as $evaluation_form_contact) {
-								$temp_evaluation_form_contacts = $evaluation_form_contact;
-								unset($temp_evaluation_form_contacts["econtact_id"]);
-								$temp_evaluation_form_contacts["eform_id"] = $new_eform_id;
-								if (!$db->AutoExecute("evaluation_form_contacts", $temp_evaluation_form_contacts, "INSERT")) {
-									$ERROR++;
-									application_log("error", "Unable to insert new evaluation_form_contacts record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
-								}
-							}
-						}
+                $evaluation_form_contacts = $db->GetAll($query);
 
-						if ($ERROR) {
-							$query = "DELETE FROM `evaluation_form_rubrics` WHERE `eform_id` = ".$db->qstr($new_eform_id);
-							$db->Execute($query);
-							
-							$query = "DELETE FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($new_eform_id);
-							$db->Execute($query);
-							
-							$query = "DELETE FROM `evaluation_form_contacts` WHERE `eform_id` = ".$db->qstr($new_eform_id);
-							$db->Execute($query);
+                $authors_with_duplicates = array();
+                foreach ($evaluation_form_contacts as $contact) {
+                    if ($contact["contact_role"] == "author") {
+                        $evaluation_forms = Models_Evaluation_Form::fetchAllByAuthorAndTitle($contact["proxy_id"], $PROCESSED["form_title"]);
+                        if ($evaluation_forms) {
+                            $authors_with_duplicates[] = $contact["proxy_id"];
+                        }
+                    }
+                }
 
-							$query = "DELETE FROM `evaluation_forms` WHERE `eform_id` = ".$db->qstr($new_eform_id);
-							$db->Execute($query);
+                if (count($authors_with_duplicates) >= 1) {
+                    if (count($authors_with_duplicates) == 1) {
+                        if ($authors_with_duplicates[0] == $ENTRADA_USER->getActiveId()) {
+                            add_error("The <strong>Form Title</strong> must be unique for each author. Please ensure that you use a form name which you are not an author for already.<br /><br />Please consider adding a simple identifier to the end of the form name (such as \"".date("M-Y")."\") to identify this form compared to any other existing form with the same name.");
+                        } else {
+                            $author_name = get_account_data("wholename", $authors_with_duplicates[0]);
+                            add_error("The <strong>Form Title</strong> must be unique for each author. Please ensure that you use a form name which <strong>".html_encode($author_name)."</strong> is not an author for already.<br /><br />Please consider adding a simple identifier to the end of the form name (such as \"".date("M-Y")."\") to identify this form compared to any other existing form with the same name.");
+                        }
+                    } else {
+                        $error_string = "The <strong>Form Title</strong> must be unique for each author.<br /><br /> The following list of authors are already authors on another form with the same name: <br />\n<ul class=\"menu\">\n";
+                        foreach ($authors_with_duplicates as $author) {
+                            $author_name = get_account_data("wholename", $author);
+                            $error_string .= "<li class=\"user\">".html_encode($author_name)."</li>";
+                        }
+                        $error_string .= "</ul>\n";
+                        $error_string .= "<br />Please consider adding a simple identifier to the end of the form name (such as \"".date("M-Y")."\") to identify this form compared to any other existing form with the same name.\n";
+                        add_error($error_string);
+                    }
+                }
 
-							$ERROR++;
-							$ERRORSTR[] = "There was a problem creating the new evaluation form at this time. The system administrator was informed of this error; please try again later.";
+                if (!has_error()) {
+                    if ($db->AutoExecute("evaluation_forms", $PROCESSED, "INSERT") && ($new_eform_id = $db->Insert_Id())) {
+                        $query = "	SELECT *
+                                    FROM `evaluation_form_questions` AS a
+                                    JOIN `evaluations_lu_questions` AS b
+                                    ON a.`equestion_id` = b.`equestion_id`
+                                    WHERE a.`eform_id` = ".$db->qstr($FORM_ID);
+                        $questions = $db->GetAll($query);
+                        if ($questions) {
+                            $new_efquestion_ids = array();
 
-							application_log("error", "There was an error inserting a new copied evaluation form. Database said: ".$db->ErrorMsg());
-						}
-					}
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "There was a problem creating the new evaluation form at this time. The system administrator was informed of this error; please try again later.";
+                            foreach ($questions as $question) {
+                                $query = "	INSERT INTO `evaluation_form_questions` VALUES (
+                                                NULL,
+                                                '".$new_eform_id."',
+                                                ".$db->qstr($question["equestion_id"]).",
+                                                ".$db->qstr($question["question_order"]).",
+                                                ".$db->qstr($question["allow_comments"]).",
+                                                ".$db->qstr($question["send_threshold_notifications"])."
+                                            )";
+                                if (!($db->Execute($query))) {
+                                    $ERROR++;
 
-					application_log("error", "There was an error inserting a new copied evaluation form. Database said: ".$db->ErrorMsg());
-				}
+                                    application_log("error", "Unable to insert new evaluation_form_questions record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
+                                }
+                            }
+
+                            $query = "SELECT * FROM `evaluation_form_rubrics` WHERE `eform_id` = ".$db->qstr($FORM_ID);
+                            $rubrics = $db->GetAll($query);
+                            if ($rubrics) {
+                                foreach ($rubrics as $rubric) {
+                                    $new_rubric = $rubric;
+                                    $new_rubric["eform_id"] = $new_eform_id;
+                                    $new_rubric["erubric_id"] = NULL;
+                                    if (!$db->AutoExecute("evaluation_form_rubrics", $new_rubric, "INSERT") || !($new_erubric_id = $db->Insert_Id())) {
+                                        $ERROR++;
+                                        application_log("error", "Unable to insert new evaluation_form_rubrics record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
+                                    }
+                                }
+                            }
+
+                            $query = "SELECT * FROM `evaluation_form_contacts`
+                                        WHERE `eform_id` = ".$db->qstr($FORM_ID);
+                            $evaluation_form_contacts = $db->GetAll($query);
+                            if ($evaluation_form_contacts) {
+                                foreach ($evaluation_form_contacts as $evaluation_form_contact) {
+                                    $temp_evaluation_form_contacts = $evaluation_form_contact;
+                                    unset($temp_evaluation_form_contacts["econtact_id"]);
+                                    $temp_evaluation_form_contacts["eform_id"] = $new_eform_id;
+                                    if (!$db->AutoExecute("evaluation_form_contacts", $temp_evaluation_form_contacts, "INSERT")) {
+                                        $ERROR++;
+                                        application_log("error", "Unable to insert new evaluation_form_contacts record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
+                                    }
+                                }
+                            }
+
+                            if ($ERROR) {
+                                $query = "DELETE FROM `evaluation_form_rubrics` WHERE `eform_id` = ".$db->qstr($new_eform_id);
+                                $db->Execute($query);
+
+                                $query = "DELETE FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($new_eform_id);
+                                $db->Execute($query);
+
+                                $query = "DELETE FROM `evaluation_form_contacts` WHERE `eform_id` = ".$db->qstr($new_eform_id);
+                                $db->Execute($query);
+
+                                $query = "DELETE FROM `evaluation_forms` WHERE `eform_id` = ".$db->qstr($new_eform_id);
+                                $db->Execute($query);
+
+                                $ERROR++;
+                                $ERRORSTR[] = "There was a problem creating the new evaluation form at this time. The system administrator was informed of this error; please try again later.";
+
+                                application_log("error", "There was an error inserting a new copied evaluation form. Database said: ".$db->ErrorMsg());
+                            }
+                        }
+                    } else {
+                        $ERROR++;
+                        $ERRORSTR[] = "There was a problem creating the new evaluation form at this time. The system administrator was informed of this error; please try again later.";
+
+                        application_log("error", "There was an error inserting a new copied evaluation form. Database said: ".$db->ErrorMsg());
+                    }
+                }
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "Unable to copy this evaluation form because the <strong>New Form Title</strong> field is required, and was not provided.";

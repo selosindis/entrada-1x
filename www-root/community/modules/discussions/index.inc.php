@@ -58,7 +58,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-forum")) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-forum">Add Discussion Forum</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-forum" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Discussion Forum</a></li>
 			</ul>
 		</div>
 		<div style="clear: both"></div>
@@ -119,7 +119,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-forum")) {
 					}										
 					echo "	<strong>Time:</strong> ".date("M d Y, g:ia", $topics["updated_date"])."<br />\n";
 					echo "	<strong>Topic:</strong> <a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&amp;id=".$topics["cdtopic_id"]."\">".limit_chars(html_encode($topics["topic_title"]), 25, true)."</a><br />\n";
-					echo "	<strong>By:</strong>".$display."\n";
+					echo "	<strong>By: </strong>".$display."\n";
 				} else {
 					echo "	No topics in this forum.\n";
 				}

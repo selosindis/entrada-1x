@@ -37,7 +37,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 } else {
 	
 	if(!isset($_SESSION["education_expand_grid"])) {
-		$_SESSION["education_expand_grid"] = "undergraduate_medical_teaching_grid";
+		$_SESSION["education_expand_grid"] = "captured_teaching_grid";
 	}
 	?>
 	<h1>Section I - Education</h1>
@@ -53,224 +53,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	<table id="flex10" style="display:none"></table>
 	
 	<?php
-	// @TODO
-	// Had to hardcode 1230785940 as the event start time due to the change in the event types from 2008 to 2009.
-	// Need to get this done before April 1st so this stays for now until I can revisit it.
-	$query	= "SELECT a.`event_id`, a.`event_title`, a.`course_id`, a.`event_duration`, 
-	a.`event_start`, c.`course_name`, c.`course_code`, a.`event_phase`, d.`audience_type`, d.`audience_value`, e.`eventtype_id`, e.`duration`
-	FROM `events` AS a
-	LEFT JOIN `event_contacts` AS b
-	ON b.`event_id` = a.`event_id`
-	AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-	LEFT JOIN `courses` AS c
-	ON a.`course_id` = c.`course_id`
-	LEFT JOIN `event_audience` AS d
-	ON a.`event_id` = d.`event_id`
-	LEFT JOIN `event_eventtypes` AS e
-	ON a.`event_id` = e.`event_id`
-	WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-	AND event_start > 1230785940
-	ORDER BY `event_start` DESC, `course_name` DESC, `course_code` DESC";
-
-	$results	= $db->GetAll($query);
-	
-	$proxyID 	= $ENTRADA_USER->getActiveId();
-	
-	$modified				= 0;
-	$undergraduateArray 	= array();
-	$previousEventID		= '';
-	$previousYear			= '';
-	$previousCourse 		= '';
-	$previousPhase 			= '';
-	$previousCourseNumber	= '';
-	// Used to track course numbers that need to be deleted due to UGME removing them
-	$coursesArray			= array();
-	
-	// Get the default enrollments to be used to determine how many learners were enrolled in an event
-	$defaultEnrollments = getDefaultEnrollment();
-	
-	foreach($results as $result) {
-		$currentYear 		= trim((date("Y", $result["event_start"])));
-		$currentCourse 		= trim($result['course_name']);
-		$currentCourseNum 	= trim($result['course_code']);
-		$audienceType 		= trim($result['audience_type']);
-		$audienceValue 		= trim($result['audience_value']);
-		$courseID			= trim($result['course_id']);
-		$eventID			= trim($result['event_id']);
-		$phase              = trim($result['event_phase']);
-		$eventtype_id       = trim($result['eventtype_id']);
-		
-		// The following logic compiles data on a course level based on the learning events within the system.
-		// Student counts are included in this logic as it used to be used in the system and maybe required by your school so we have left it here
-		// However, our school relies on displaying "defaul enrollment" numbers from the events_lu_eventtypes table.
-		if(!key_exists($eventtype_id, $defaultEnrollments)) {
-			if($audienceValue != "") {
-				switch($audienceType) {
-					case "proxy_id":
-						if(!isset($undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['students'])) {
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['students'] = 1;
-						} else {
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['students']++;
-						}
-						if($eventID != $previousEventID) {
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['duration'] / 60);
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
-						} else if(!isset($undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'])) {
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $result['duration'] / 60;
-						}
-						break;
-					case "grad_year":
-					default:
-						if($eventID != $previousEventID) {
-							$studQuery = "SELECT COUNT(*) AS `num_studs`
-							FROM `".AUTH_DATABASE."`.`user_access` 
-							WHERE `app_id` = '".AUTH_APP_ID."' 
-							AND `role` = ".$db->qstr($audienceValue);	
-							
-							$studResult	= $db->GetRow($studQuery);
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['students'] = $studResult['num_studs'];
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['duration'] / 60);
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
-						} else {
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['duration'] / 60);
-						}
-						break;
-				}
-			}
-		} else {
-			// There is a default enrollment for this event type so use that to determine the number of learners enrolled
-			if($eventID != $previousEventID && $previousEventID != "") {
-				$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['duration'] / 60);
-				$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
-				$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
-				$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['students'] = $defaultEnrollments[$eventtype_id]["default_enrollment"];
-			}
-		}
-		$previousEventID = $eventID;
-	}
-	
-	foreach($undergraduateArray as $year => $value) {
-		foreach($value as $course => $nextValue) {
-			foreach($nextValue as $coursenum => $nextNextValue) {
-				$PROCESSED["lecture_enrollment"] 						= 0;
-				$PROCESSED["lecture_hours"]								= 0;
-				$PROCESSED["lab_hours"]									= 0;
-				$PROCESSED["small_group_hours"]							= 0;
-				$PROCESSED["patient_contact_session_hours"] 			= 0;
-				$PROCESSED["symposium_hours"] 							= 0;
-				$PROCESSED["directed_independant_learning_hours"] 		= 0;
-				$PROCESSED["review_feedback_session_hours"] 			= 0;
-				$PROCESSED["examination_hours"] 						= 0;
-				$PROCESSED["clerkship_seminar_hours"] 					= 0;
-				$PROCESSED["other_hours"] 								= 0;
-				$PROCESSED["coord_enrollment"] 							= 0;
-				unset($PROCESSED["comments"]);
-
-				foreach($nextNextValue as $phaseValue => $eventType) {
-					foreach($eventType as $eventTypeValue => $amounts) {
-						switch ($eventTypeValue) {
-							case 1:
-								$PROCESSED["lecture_hours"] 							= $amounts["hours"];
-							break;
-							case 6:
-								$PROCESSED["lab_hours"] 								= $amounts["hours"];
-							break;
-							case 8:
-								$PROCESSED["small_group_hours"] 						= $amounts["hours"];
-							break;
-							case 13:
-								$PROCESSED["symposium_hours"] 							= $amounts["hours"];
-							case 15:
-								$PROCESSED["directed_independant_learning_hours"] 		= $amounts["hours"];
-							break;	
-							case 18:
-								$PROCESSED["review_feedback_session_hours"] 			= $amounts["hours"];
-							break;
-							case 20:
-								$PROCESSED["examination_hours"] 						= $amounts["hours"];
-							break;
-							case 23:
-								$PROCESSED["clerkship_seminar_hours"] 					= $amounts["hours"];
-							break;
-							case 11:
-								$PROCESSED["patient_contact_session_hours"] 			= $amounts["hours"];
-							break;
-							case 24:
-								$PROCESSED["other_hours"] 								= $amounts["hours"];
-							break;
-							default:
-								$PROCESSED["lecture_hours"] 							= $amounts["hours"];
-							break;
-						}
-						$phase = $amounts["phase"];
-					}
-				
-					$PROCESSED["course_number"] 	= $coursenum;
-					$PROCESSED["year_reported"] 	= $year;
-					$PROCESSED["proxy_id"] 			= $ENTRADA_USER->getActiveId();
-					$PROCESSED["course_name"]		= $course;
-					$PROCESSED["lecture_phase"] 	= $phase;
-					$PROCESSED["assigned"] 			= 'Yes';
-					
-					// Write to the database here
-					$checkQuery	= "SELECT * 
-					FROM `ar_undergraduate_teaching` 
-					WHERE `year_reported` = ".$db->qstr($year)."
-					AND `course_number` = ".$db->qstr($coursenum)."
-					AND `course_name` = ".$db->qstr($course)."
-					AND `lecture_phase` = ".$db->qstr($phase)."
-					AND `proxy_id` = '".$PROCESSED["proxy_id"]."'";
-					
-					if(!$checkResult = $db->GetRow($checkQuery)) {
-						$PROCESSED["comments"] 			= '';
-						$PROCESSED["updated_date"] 		= time();
-						$PROCESSED["updated_by"] 		= "9999999";
-						
-						if($db->AutoExecute("ar_undergraduate_teaching", $PROCESSED, "INSERT")) {
-							$EVENT_ID = $db->Insert_Id();
-							$coursesArray[] = $EVENT_ID;
-							application_log("success", "Undergraduate Teaching [".$EVENT_ID."] added to the system.");
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "There was a problem inserting this record into the system. The MEdIT Unit was informed of this error; please try again later.";
-			
-							application_log("error", "There was an error inserting an undergraduate teaching record. Database said: ".$db->ErrorMsg());
-						}
-					} else {
-						// Ensure all editable fields are not over written by null or 0
-						$PROCESSED["assigned"] 			= $checkResult["assigned"];
-						$PROCESSED["coord_enrollment"] 	= $checkResult["coord_enrollment"];
-						$PROCESSED["comments"] 			= $checkResult["comments"];
-						
-						$UNDERGRADUATE_TEACHING_ID = $checkResult['undergraduate_teaching_id'];
-						$coursesArray[] = $UNDERGRADUATE_TEACHING_ID;
-						$db->AutoExecute(DATABASE_NAME.".ar_undergraduate_teaching", $PROCESSED, "UPDATE", "`undergraduate_teaching_id`=".$db->qstr($UNDERGRADUATE_TEACHING_ID));
-					}
-				}
-			}
-		}
-	}
-	
-	// Remove any records that no longer need to be in ar_undergraduate_teaching due to UGME removing them
-	if(isset($coursesArray) && count($coursesArray) > 0) {
-		$coursesArray = implode(",", $coursesArray);
-		
-		$query = "DELETE FROM `ar_undergraduate_teaching` 
-		WHERE `undergraduate_teaching_id` NOT IN (".$coursesArray.") 
-		AND `proxy_id` = '".$PROCESSED["proxy_id"]."'";
-		
-		if(!$db->Execute($query)) {
-			application_log("error", "There was an error inserting an undergraduate teaching record. Database said: ".$db->ErrorMsg());
-		}
-	}
-	
-	$fields = "ar_undergraduate_teaching,undergraduate_teaching_id,course_number,course_name,lecture_phase,year_reported";
+    $organisations = implode(",", array_keys($ENTRADA_USER->getAllOrganisations()));
 	?>
 	<script type="text/javascript" defer="defer">
 	jQuery(document).ready(function() {
@@ -302,33 +85,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			}
 		});
 		
-		undergraduate_medical_teaching_grid = jQuery("#flex1").flexigrid
+        captured_teaching_grid = jQuery("#flex1").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid_education.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
-				{display: 'Course Code', name : 'course_number', width : 100, sortable : true, align: 'left'},
-				{display: 'Course', name : 'course_name', width : 359, sortable : true, align: 'left'},
-				{display: 'Phase', name : 'lecture_phase', width : 59, sortable : true, align: 'left'},
-				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
-				{display: 'Edit / View', name : 'ctled', width : 50,  sortable : false, align: 'center', process:editUndergradMedicalTeaching}
+				{display: 'Event Title', name : 'event_title', width : 359, sortable : true, align: 'left'},
+				{display: 'Course Code', name : 'course_code', width : 100, sortable : true, align: 'left'},
+				{display: 'Date', name : 'event_start', width : 59, sortable : true, align: 'left'},
+				{display: 'Duration', name : 'duration', width : 50, sortable : true, align: 'left'},
+				{display: 'Review', name : 'entrada_url', width : 50, sortable : true, align: 'center'}
 				],
 			searchitems : [
-				{display: 'Course Code', name : 'course_number'},
-				{display: 'Course', name : 'course_name'},
-				{display: 'Phase', name : 'lecture_phase'},
-				{display: 'Year', name : 'year_reported', isdefault: true}
+				{display: 'Event Title', name : 'event_title', isdefault: true},
+				{display: 'Course Code', name : 'course_code'},
+				{display: 'Date', name : 'event_start'}
 				],
-			sortname: "year_reported",
+			sortname: "event_start",
 			sortorder: "desc",
 			resizable: false, 
 			disableSelect: true, 
 			usepager: true,
 			showToggleBtn: false,
-			collapseTable: <?php echo ($_SESSION["education_expand_grid"] == "undergraduate_medical_teaching_grid" ? "false" : "true"); ?>,
-			title: 'A. Undergrad Teaching - MEdTech Central',
+			collapseTable: <?php echo ($_SESSION["education_expand_grid"] == "captured_teaching_grid" ? "false" : "true"); ?>,
+			title: 'A. Captured Teaching',
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
@@ -336,20 +118,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
-	            {name: 'Report Missing', bclass: 'report_missing', onpress : reportMissingUndergradMedicalTeaching}
+	            {name: 'Report Missing', bclass: 'report_missing', onpress : reportMissingTeaching}
 	            ]
 			}
 		);
 			
-		function reportMissingUndergradMedicalTeaching(com,grid) {
+		function reportMissingTeaching(com,grid) {
 	        if (com=='Report Missing') {
 	        	sendFeedback('<?php echo ENTRADA_URL; ?>/agent-undergrad-teaching.php?enc=<?php echo feedback_enc(); ?>')
 	        }            
 	    }
 	     
-	    function editUndergradMedicalTeaching(celDiv,id) {
-	    	jQuery(celDiv).html("<a href='<?php echo ENTRADA_URL; ?>/annualreport/education?section=edit_undergraduate&amp;rid="+id+"' style=\"cursor: pointer; cursor: hand\" text-decoration: none><img src=\"<?php echo ENTRADA_RELATIVE; ?>/images/action-edit.gif\" style=\"border: none\"/></a>");
-	    }
 		<?php $fields = "ar_undergraduate_nonmedical_teaching,undergraduate_nonmedical_teaching_id,course_number,course_name,assigned,year_reported"; ?>
 		undergraduate_nonmedical_grid = jQuery("#flex2").flexigrid
 		(
@@ -376,7 +155,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			usepager: true,
 			showToggleBtn: false,
 			collapseTable: <?php echo ($_SESSION["education_expand_grid"] == "undergraduate_nonmedical_grid" ? "false" : "true"); ?>,
-			title: 'B. Undergraduate Teaching - Other',
+			title: 'B. Undergraduate Teaching Not Captured',
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
@@ -485,7 +264,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			usepager: true,
 			showToggleBtn: false,
 			collapseTable: <?php echo ($_SESSION["education_expand_grid"] == "graduate_grid" ? "false" : "true"); ?>,
-			title: 'C. Graduate Teaching',
+			title: 'C. Graduate Teaching Not Captured',
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,

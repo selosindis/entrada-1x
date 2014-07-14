@@ -23,11 +23,11 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".COMMUNITY_URL."/javascript/s
 echo "<h1>Submit Assignment</h1>\n";
 
 if ($RECORD_ID) {
-	$query			= "SELECT * FROM `assignment_files` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `file_active` = '1'";
-	if ($submission	= $db->GetRow($query)) {
-		header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$RECORD_ID);
-	}
-	$query			= "SELECT * FROM `assignments` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `assignment_active` = '1' AND (`due_date` = 0 OR `due_date` > UNIX_TIMESTAMP())";
+	$query			= "SELECT * FROM `assignments`
+	                    WHERE `assignment_id` = ".$db->qstr($RECORD_ID)."
+	                    AND `assignment_active` = '1'
+	                    AND (`release_date` = 0 OR `release_date` < ".$db->qstr(time()).")
+	                    AND (`release_until` = 0 OR `release_until` > ".$db->qstr(time()).")";
 	$folder_record	= $db->GetRow($query);
 	if ($folder_record){// || true) {
 		$course_ids = groups_get_enrolled_course_ids($ENTRADA_USER->getID());
@@ -41,11 +41,11 @@ if ($RECORD_ID) {
 							JOIN `group_members` AS c 
 							ON b.`group_id` = c.`group_id` 
 							WHERE a.`assessment_id` = ".$db->qstr($folder_record["assessment_id"])."
+							AND a.`active` = 1
 							AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 				$permitted = $db->GetRow($query);
 			}
-			if ($permitted) {
-				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$folder_record["cshare_id"], "title" => limit_chars($folder_record["folder_title"], 32));
+			if ($permitted) {				
 				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-file&assignment_id=".$RECORD_ID, "title" => "Upload File");
 
 				$file_uploads = array();
@@ -211,6 +211,9 @@ if ($RECORD_ID) {
 						if ($NOTICE) {
 							echo display_notice();
 						}
+                        
+                        $max_files = $db->GetOne("SELECT `max_file_uploads` FROM `assignments` WHERE `assignment_id`=".$db->qstr($RECORD_ID));
+                        
 						?>
 
 
@@ -225,6 +228,8 @@ if ($RECORD_ID) {
 						<tfoot>
 							<tr>
 								<td colspan="3" style="padding-top: 15px; text-align: right">
+                                    <p>You may upload <?php echo $max_files; ?> 
+                                        file<?php echo $max_files !== 1 ? 's' : ''; ?> for this assignment.</p>
 									<div id="display-upload-button">
 										<input type="button" class="btn btn-primary" value="Upload File" onclick ="uploadFile()" />
 									</div>
@@ -286,7 +291,7 @@ if ($RECORD_ID) {
 					break;
 				}
 			} else {
-				add_error('You are not authorized to upload to this assignment. If you think you are recieving this message in error, please contact the coordinator for the course.');
+				add_error('You are not authorized to upload to this assignment. If you think you are receiving this message in error, please contact the coordinator for the course.');
 				if ($ERROR) {
 					echo display_error();
 				}

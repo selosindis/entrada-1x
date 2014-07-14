@@ -57,7 +57,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-gallery")) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-gallery">Add Photo Gallery</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-gallery" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Photo Gallery</a></li>
 			</ul>
 		</div>
 		<div style="clear: both"></div>

@@ -245,6 +245,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("ADMIN_OBSERVERSHIP_FORM"))) {
 						  <option value="Palliative Medicine">Palliative Medicine</option>
 						  <option value="Pediatric Cardiology">Pediatric Cardiology</option>
 						  <option value="Pediatric Emergency Medicine">Pediatric Emergency Medicine</option>
+                          <option value="Pediatric Gastroenterology">Pediatric Gastroenterology</option>
 						  <option value="Pediatric General Surgery">Pediatric General Surgery</option>
 						  <option value="Pediatric Hemotology/Oncology">Pediatric Hemotology/Oncology</option>
 						  <option value="Pediatric Neurology">Pediatric Neurology</option>
@@ -410,7 +411,24 @@ if((!defined("PARENT_INCLUDED")) || (!defined("ADMIN_OBSERVERSHIP_FORM"))) {
 				</tr>
 			<?php 
 				echo generate_calendars("observership", "", true, true, (($OBSERVERSHIP->getStart()) ? $OBSERVERSHIP->getStart() : 0), true, true, (($OBSERVERSHIP->getEnd()) ? $OBSERVERSHIP->getEnd() : 0),false); 
+
 			?>
+                <tr>
+					<td colspan="3">&nbsp;</td>
+				</tr>
+                <tr class="preceptor_manual">
+		       		<td>&nbsp;</td>
+				    <td><label for="supervisor" class="form-required">Status:</label></td>
+				    <td>
+                        <select name="status" id="status" data-init="<?php echo $OBSERVERSHIP->getStatus();?>">
+                            <option value="pending" <?php echo $OBSERVERSHIP->getStatus() == "pending" ? "selected=\"selected\"" : ""; ?>>Pending</option>
+                            <option value="approved" <?php echo $OBSERVERSHIP->getStatus() == "approved" ? "selected=\"selected\"" : ""; ?>>Approved</option>
+                            <option value="rejected" <?php echo $OBSERVERSHIP->getStatus() == "rejected" ? "selected=\"selected\"" : ""; ?>>Rejected</option>
+                            <option value="confirmed" <?php echo $OBSERVERSHIP->getStatus() == "confirmed" ? "selected=\"selected\"" : ""; ?>>Confirmed</option>
+                            <option value="denied" <?php echo $OBSERVERSHIP->getStatus() == "denied" ? "selected=\"selected\"" : ""; ?>>Denied</option>
+                        </select>
+                    </td>
+                </tr>
 			</tbody>
 		</table>
 	</form>	

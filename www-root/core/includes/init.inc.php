@@ -36,6 +36,9 @@ $loader->registerNamespace('Entrada_');
 $loader->registerNamespace('Models_');
 
 require_once("config/settings.inc.php");
+
+header("X-Frame-Options: SAMEORIGIN");
+
 if (defined("DEVELOPMENT_MODE") && (bool) DEVELOPMENT_MODE) {
     require_once("Entrada/adodb/adodb-exceptions.inc.php");
 }
@@ -75,6 +78,11 @@ if (defined("AUTH_ALLOW_CAS") && (bool) AUTH_ALLOW_CAS) {
  * Initialize the interface template.
  */
 $ENTRADA_TEMPLATE = new Entrada_Template();
+
+/**
+ * Initialize the settings class.
+ */
+$ENTRADA_SETTINGS = new Entrada_Settings();
 
 if ($ENTRADA_USER) {
     /**
@@ -125,6 +133,13 @@ $ONUNLOAD = array();
 $JQUERY = array();
 $SIDEBAR = array();
 $PAGE_META = array();
+
+//declare some global variables meant to be always available to javascript.
+if ($ENTRADA_USER) {
+    $HEAD[] = "<script type=\"text/javascript\">
+                    var default_org_id = '".$ENTRADA_USER->getActiveOrganisation()."';
+                </script>";
+}
 
 $CAS_AUTHENTICATED = false;
 

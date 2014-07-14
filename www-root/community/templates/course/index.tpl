@@ -51,10 +51,10 @@
     <div class="container">
         <div class="row-fluid">
             <div class="span5">
-                <h1><a href="{$sys_website_url}"><img src="{$template_relative}/images/logo.png" alt="{php} echo APPLICATION_NAME; {/php}" title="{php} echo APPLICATION_NAME; {/php}"/></a></h1>
+                <h1><a href="{$sys_website_url}"><img src="{$template_relative}/images/logo.png" alt="{$application_name}" title="{$application_name}"/></a></h1>
             </div>
-            {php}
-            if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) : {/php}
+
+            {if $isAuthorized}
                 <div class="span5">
                     <div class="welcome-area">
                         <div class="userAvatar">
@@ -72,25 +72,20 @@
                 <div class="span2">
                     <a href="{$sys_website_url}/?action=logout" class="log-out">Logout <i class="icon icon-logout"></i></a>
                 </div>
-       		{php}
-       		endif;
-       		{/php}
+            {/if}
         </div>
     </div>
 </div>
 
-
-{php} if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])): {/php}
+{if $isAuthorized}
     <div class="navbar">
         <div class="navbar-inner">
             <div class="container no-printing">
-                {php}
-                	echo navigator_tabs();
-            	{/php}
+                {$navigator_tabs}
             </div>
         </div>
     </div>
-{php}endif;{/php}
+{/if}
 </header>
 <div id="site-container" class="container">
 	<div id="site-body" class="row-fluid">
@@ -115,7 +110,7 @@
                                 <p> <a href="{$next_page_url}"> Next >></a></p>
                             {elseif $next_page_url == "#" && $previous_page_url != "#"}
                                 <p> <a href="{$previous_page_url}"><< Previous</a> </p>
-                            {else $next_page_url == "#" && $previous_page_url == "#"}
+                            {elseif $next_page_url == "#" && $previous_page_url == "#"}
                                 <p> </p>
                             {/if}
                         </div>
@@ -126,19 +121,19 @@
 </div>
 <footer id="main-footer">
 	<div class="no-printing container">
-		{php} echo COPYRIGHT_STRING;{/php}
+        {$copyright_string}
 	</div>
 </footer>
-{php}if(((!defined("DEVELOPMENT_MODE")) || (!(bool) DEVELOPMENT_MODE)) && (defined("GOOGLE_ANALYTICS_CODE")) && (GOOGLE_ANALYTICS_CODE != "")) :{/php}
-<script type="text/javascript">
-	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-</script>
-<script type="text/javascript">
-	var pageTracker = _gat._getTracker("{php} echo GOOGLE_ANALYTICS_CODE;{/php}");
-	pageTracker._initData();
-	pageTracker._trackPageview();
-</script>
-{php}endif;{/php}
+{if !$development_mode && $google_analytics_code}
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        var pageTracker = _gat._getTracker("{$google_analytics_code}");
+        pageTracker._initData();
+        pageTracker._trackPageview();
+    </script>
+{/if}
 </body>
 </html>

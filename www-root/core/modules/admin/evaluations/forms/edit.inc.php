@@ -42,7 +42,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					WHERE `eform_id` = ".$db->qstr($FORM_ID)."
 					AND `form_active` = '1'";
 		$form_record = $db->GetRow($query);
-		if ($form_record && $ENTRADA_ACL->amIAllowed(new EvaluationFormResource($form_record["eform_id"], true), "update")) {
+		if ($form_record && $ENTRADA_ACL->amIAllowed(new EvaluationFormResource($form_record["eform_id"], $form_record["organisation_id"], true), "update")) {
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/forms?section=edit&id=".$FORM_ID, "title" => limit_chars($form_record["form_title"], 32));
 
 			/**
@@ -101,6 +101,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					if (!in_array($ENTRADA_USER->getActiveId(), $PROCESSED["associated_authors"])) {
 						array_unshift($PROCESSED["associated_authors"], $ENTRADA_USER->getActiveId());
 					}
+
+
+                    $authors_with_duplicates = array();
+                    foreach ($PROCESSED["associated_authors"] as $author) {
+                        $evaluation_forms = Models_Evaluation_Form::fetchAllByAuthorAndTitle($author, $PROCESSED["form_title"]);
+                        if ($evaluation_forms) {
+                            foreach ($evaluation_forms as $evaluation_form) {
+                                if ($evaluation_form->getID() != $FORM_ID) {
+                                    $authors_with_duplicates[] = $author;
+                                }
+                            }
+                        }
+                    }
+
+                    if (count($authors_with_duplicates) >= 1) {
+                        if (count($authors_with_duplicates) == 1) {
+                            if ($authors_with_duplicates[0] == $ENTRADA_USER->getActiveId()) {
+                                add_error("The <strong>Form Title</strong> must be unique for each author. Please ensure that you use a form name which you are not an author for already. <br /><br />Please consider adding a simple identifier to the end of the form name (such as \"".date("M-Y")."\") to identify this form compared to any other existing form with the same name.");
+                            } else {
+                                $author_name = get_account_data("wholename", $authors_with_duplicates[0]);
+                                add_error("The <strong>Form Title</strong> must be unique for each author. Please ensure that you use a form name which <strong>".html_encode($author_name)."</strong> is not an author for already.<br /><br />Please consider adding a simple identifier to the end of the form name (such as \"".date("M-Y")."\") to identify this form compared to any other existing form with the same name.");
+                            }
+                        } else {
+                            $error_string = "The <strong>Form Title</strong> must be unique for each author.<br /><br /> The following list of users are already an author on another form with the same name: <br />\n<ul class=\"menu\">\n";
+                            foreach ($authors_with_duplicates as $author) {
+                                $author_name = get_account_data("wholename", $author);
+                                $error_string .= "<li class=\"user\">".html_encode($author_name)."</li>";
+                            }
+                            $error_string .= "</ul>\n";
+                            $error_string .= "<br />Please consider adding a simple identifier to the end of the form name (such as \"".date("M-Y")."\") to identify this form compared to any other existing form with the same name.\n";
+                            add_error($error_string);
+                        }
+                    }
 
 					if (!$ERROR) {
 						$PROCESSED["updated_date"] = time();

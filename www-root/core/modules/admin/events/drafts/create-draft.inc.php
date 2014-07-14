@@ -32,37 +32,48 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[]	= array("url" => "", "title" => "Create New Draft Schedule");
-	echo "<h1>Create New Draft Schedule</h1>";
+	$BREADCRUMB[] = array("url" => "", "title" => "Create Draft Schedule");
+
+	echo "<h1>Create Draft Schedule</h1>";
+
 	switch ($STEP) {
 		case 2 :
-			$PROCESSED["options"] = array();
-			
-			$i = 0;
+            $PROCESSED = array(
+                "status" => "open",
+                "options" => array(),
+                "created" => time()
+            );
+
+            $i = 0;
 			if (isset($_POST["options"]) && is_array($_POST["options"]) && !empty($_POST["options"])) {
 			    foreach ($_POST["options"] as $option => $value) {
 				    $PROCESSED["options"][$i]["option"] = clean_input($option, "alpha");
 				    $PROCESSED["options"][$i]["value"] = 1;
+
+                    $PROCESSED["draft_option_".$option] = 1; // Used only to recheck checkboxes after a form error.
+
 				    $i++;
 				}
 			}
 			
-			// error checking / sanitization
 			if (isset($_POST["draft_name"]) && !empty($_POST["draft_name"])) {
-				$PROCESSED["draft_name"] = clean_input($_POST["draft_name"], array("trim"));
+				$PROCESSED["name"] = clean_input($_POST["draft_name"], array("trim"));
 			} else {
-				add_error("A draft title is required.");
+				add_error("The <strong>Draft Name</strong> is a required field.");
 			}
 			
 			if (isset($_POST["draft_description"]) && !empty($_POST["draft_description"])) {
-				$PROCESSED["draft_description"] = clean_input($_POST["draft_description"], array("nohtml"));
-			}
+				$PROCESSED["description"] = clean_input($_POST["draft_description"], array("nohtml"));
+			} else {
+                $PROCESSED["description"] = "";
+            }
+
 			if (isset($_POST["course_ids"])) {
 				foreach ($_POST["course_ids"] as $course_id) {
 					$PROCESSED["course_ids"][] = (int) $course_id;
 				}
 			}
-			
+
 			/**
 			 * Non-required field "draft_start_date" / Draft Start (validated through validate_calendars function).
 			 * Non-required field "draft_finish_date" / Draft Finish (validated through validate_calendars function).
@@ -73,6 +84,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$PROCESSED["draft_start_date"] = 0;
 			}
+
 			if ((isset($draft_date["finish"])) && ((int) $draft_date["finish"])) {
 				$PROCESSED["draft_finish_date"] = (int) $draft_date["finish"];
 			} else {
@@ -90,120 +102,125 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			if (has_error()) {
 				$STEP = 1;
 			} else {
+                if ($db->AutoExecute("drafts", $PROCESSED, "INSERT") && $draft_id = $db->Insert_ID()) {
+                    $creators = array(
+                        "draft_id" => $draft_id,
+                        "proxy_id" => $ENTRADA_USER->getActiveId()
+                    );
+
+                    if (!$db->AutoExecute("draft_creators", $creators, "INSERT")) {
+                        application_log("error", "Error when creating draft [".$draft_id."]. Unable to insert to the draft_creators table. Database said: ".$db->ErrorMsg());
+                    }
+
+                    if ($PROCESSED["options"]) {
+                        // This is just to be safe I am assuming.
+                        $query = "DELETE FROM `draft_options` WHERE `draft_id` = ".$db->qstr($draft_id);
+                        $db->Execute($query);
+
+                        foreach ($PROCESSED["options"] as $option) {
+                            $option["draft_id"] = $draft_id;
+                            if (!$db->AutoExecute("draft_options", $option, "INSERT")) {
+                                application_log("error", "Error when saving draft [".$draft_id."] options, DB said: ".$db->ErrorMsg());
+                            }
+                        }
+                    }
 				
-				// create the draft
-				$query = "	INSERT INTO `drafts` (`status`, `name`, `description`, `created`) 
-							VALUES ('open', ".$db->qstr($PROCESSED["draft_name"]).", ".$db->qstr($PROCESSED["draft_description"]).", ".$db->qstr(time()).")";
-				$result = $db->Execute($query);
-				$draft_id = $db->Insert_ID();
-				
-				// grant the active user permission to work on the draft
-				$query = "	INSERT INTO `draft_creators` (`draft_id`, `proxy_id`) 
-							VALUES (".$db->qstr($draft_id).", ".$db->qstr($ENTRADA_USER->getActiveId()).")";
-				$result = $db->Execute($query);
-				
-				if ($PROCESSED["options"]) {
-					$query = "DELETE FROM `draft_options` WHERE `draft_id` = ".$db->qstr($draft_id);
-					$db->Execute($query);
-					foreach ($PROCESSED["options"] as $option) {
-						$option["draft_id"] = $draft_id;
-						if (!$db->AutoExecute("draft_options", $option, "INSERT")) {
-							application_log("error", "Error when saving draft [".$draft_id."] options, DB said: ".$db->ErrorMsg());
-						}
-					}
-				}
-				
-				if ($PROCESSED["course_ids"]) {
-					foreach ($PROCESSED["course_ids"] as $course_id) {
-						// copy the events into the drafts table
-						$query = "	SELECT *
-									FROM `events` AS a
-									WHERE a.`course_id` = ".$db->qstr($course_id)."
-									AND a.`event_start` >= ".$db->qstr($PROCESSED["draft_start_date"])."
-									AND a.`event_finish` <= ".$db->qstr($PROCESSED["draft_finish_date"])."
-									ORDER BY a.`event_start`"; 
-						$events = $db->GetAll($query);
+                    if (isset($PROCESSED["course_ids"]) && $PROCESSED["course_ids"]) {
+                        foreach ($PROCESSED["course_ids"] as $course_id) {
+                            // Copy the Learning Events from this course into the drafts table.
+                            $query = "	SELECT *
+                                        FROM `events` AS a
+                                        WHERE a.`course_id` = ".$db->qstr($course_id)."
+                                        AND a.`event_start` >= ".$db->qstr($PROCESSED["draft_start_date"])."
+                                        AND a.`event_finish` <= ".$db->qstr($PROCESSED["draft_finish_date"])."
+                                        ORDER BY a.`event_start`";
+                            $events = $db->GetAll($query);
 
-						$date_diff = (int) ($PROCESSED["new_start_day"] - $events[0]["event_start"]);
+                            $date_diff = (int) ($PROCESSED["new_start_day"] - $events[0]["event_start"]);
 
-						foreach ($events as $event) {
-							$event["draft_id"] = $draft_id;
+                            foreach ($events as $event) {
+                                $event["draft_id"] = $draft_id;
 
-							// adds the offset time to the event year and week, preserves the day of the week
-							$event["event_start"]  = strtotime((date("o", ($event["event_start"] + $date_diff)))."-W".date("W", ($event["event_start"] + $date_diff))."-".date("w", $event["event_start"])." ".date("H:i",$event["event_start"]));
-							$event["event_finish"] = strtotime((date("o", ($event["event_finish"] + $date_diff)))."-W".date("W", ($event["event_finish"] + $date_diff))."-".date("w", $event["event_finish"])." ".date("H:i",$event["event_finish"]));
-							
-							if ($event["objectives_release_date"] != 0) {
-								$event["objectives_release_date"] = strtotime((date("o", ($event["objectives_release_date"] + $date_diff)))."-W".date("W", ($event["objectives_release_date"] + $date_diff))."-".date("w", $event["objectives_release_date"])." ".date("H:i",$event["objectives_release_date"]));
-							} else {
-								$event["objectives_release_date"] = 0;
-							}
-							
-							
-							
-							if (!$db->AutoExecute("draft_events", $event, 'INSERT')) {
-								add_error("An error occured, an administrator has been notified. Please try again later.");
-								application_log("error", "An error occured when inserting an event into a draft event schedule. DB said: ".$db->ErrorMsg());
-							} else {
-								$devent_id = $db->Insert_ID();
-							
+                                // adds the offset time to the event year and week, preserves the day of the week
+                                $event["event_start"] = strtotime((date("o", ($event["event_start"] + $date_diff)))."-W".date("W", ($event["event_start"] + $date_diff))."-".date("w", $event["event_start"])." ".date("H:i",$event["event_start"]));
+                                $event["event_finish"] = strtotime((date("o", ($event["event_finish"] + $date_diff)))."-W".date("W", ($event["event_finish"] + $date_diff))."-".date("w", $event["event_finish"])." ".date("H:i",$event["event_finish"]));
 
-								// copy the audience for the event
-								$query = "	SELECT * 
-											FROM `event_audience`
-											WHERE `event_id` = ".$db->qstr($event["event_id"]);
-								$audiences = $db->GetAll($query);
-								if ($audiences) {
-									foreach ($audiences as $audience) {
-										$audience["devent_id"] = $devent_id;
-										if (!$db->AutoExecute("draft_audience", $audience, 'INSERT')) {
-											add_error("An error occured, an administrator has been notified. Please try again later.");
-											application_log("error", "An error occured when inserting a draft event audience into a draft event schedule. DB said: ".$db->ErrorMsg());
-										}
-									}
-								}
+                                if ($event["objectives_release_date"] != 0) {
+                                    $event["objectives_release_date"] = strtotime((date("o", ($event["objectives_release_date"] + $date_diff)))."-W".date("W", ($event["objectives_release_date"] + $date_diff))."-".date("w", $event["objectives_release_date"])." ".date("H:i",$event["objectives_release_date"]));
+                                } else {
+                                    $event["objectives_release_date"] = 0;
+                                }
 
-								// copy the contacts for the event
-								$query = "	SELECT * 
-											FROM `event_contacts`
-											WHERE `event_id` = ".$db->qstr($event["event_id"]);
-								$contacts = $db->GetAll($query);
-								if ($contacts) {
-									foreach ($contacts as $contact) {
-										$contact["devent_id"] = $devent_id;
-										if (!$db->AutoExecute("draft_contacts", $contact, 'INSERT')) {
-											add_error("An error occured, an administrator has been notified. Please try again later.");
-											application_log("error", "An error occured when inserting a draft event contact into a draft event schedule. DB said: ".$db->ErrorMsg());
-										}
-									}
-								}
+                                if ($db->AutoExecute("draft_events", $event, "INSERT") && $devent_id = $db->Insert_ID()) {
+                                    // Copy the audience for the event.
+                                    $query = "	SELECT *
+                                                FROM `event_audience`
+                                                WHERE `event_id` = ".$db->qstr($event["event_id"]);
+                                    $audiences = $db->GetAll($query);
+                                    if ($audiences) {
+                                        foreach ($audiences as $audience) {
+                                            $audience["devent_id"] = $devent_id;
+                                            if (!$db->AutoExecute("draft_audience", $audience, "INSERT")) {
+                                                add_error("An error occurred when attempting to copy one of the Learning Events into the new draft. A system administrator has been notified of issue, we apologize for the inconvenience.");
 
-								// copy the eventtypes for the event
-								$query = "	SELECT * 
-											FROM `event_eventtypes`
-											WHERE `event_id` = ".$db->qstr($event["event_id"]);
-								$eventtypes = $db->GetAll($query);
-								if ($eventtypes) {
-									foreach ($eventtypes as $eventtype) {
-										$eventtype["devent_id"] = $devent_id;
-										if (!$db->AutoExecute("draft_eventtypes", $eventtype, 'INSERT')) {
-											add_error("An error occured, an administrator has been notified. Please try again later.");
-											application_log("error", "An error occured when inserting a draft eventtype into a draft event schedule. DB said: ".$db->ErrorMsg());
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-				if (!$ERROR) {
-					add_success("This draft was successfully created, you will be redirected in 5 seconds. If you are not redirected please <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&amp;draft_id=".$draft_id."\">Click Here</a>.");
-					display_success();
-					$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\\'', 5000)";
-				} else {
-					add_error("An error occured while creating this draft. The system administrator has been notified, please try again later.");
-					application_log("error", "Error ocurred when creating draft [".$draft_id."]. DB said ".$db->ErrorMsg());
-				}
+                                                application_log("error", "An error occurred when inserting a draft event audience into a draft event schedule. Database said: ".$db->ErrorMsg());
+                                            }
+                                        }
+                                    }
+
+                                    // copy the contacts for the event
+                                    $query = "	SELECT *
+                                                FROM `event_contacts`
+                                                WHERE `event_id` = ".$db->qstr($event["event_id"]);
+                                    $contacts = $db->GetAll($query);
+                                    if ($contacts) {
+                                        foreach ($contacts as $contact) {
+                                            $contact["devent_id"] = $devent_id;
+                                            if (!$db->AutoExecute("draft_contacts", $contact, "INSERT")) {
+                                                add_error("An error occurred when attempting to copy one of the Learning Events into the new draft. A system administrator has been notified of issue, we apologize for the inconvenience.");
+
+                                                application_log("error", "An error occurred when inserting a draft event contact into a draft event schedule. Database said: ".$db->ErrorMsg());
+                                            }
+                                        }
+                                    }
+
+                                    // copy the eventtypes for the event
+                                    $query = "	SELECT *
+                                                FROM `event_eventtypes`
+                                                WHERE `event_id` = ".$db->qstr($event["event_id"]);
+                                    $eventtypes = $db->GetAll($query);
+                                    if ($eventtypes) {
+                                        foreach ($eventtypes as $eventtype) {
+                                            $eventtype["devent_id"] = $devent_id;
+                                            if (!$db->AutoExecute("draft_eventtypes", $eventtype, "INSERT")) {
+                                                add_error("An error occurred when attempting to copy one of the Learning Events into the new draft. A system administrator has been notified of issue, we apologize for the inconvenience.");
+
+                                                application_log("error", "An error occurred when inserting a draft eventtype into a draft event schedule. Database said: ".$db->ErrorMsg());
+                                            }
+                                        }
+                                    }
+
+                                } else {
+                                    add_error("An error occurred when attempting to copy one of the Learning Events into the new draft. A system administrator has been notified of issue, we apologize for the inconvenience.");
+
+                                    application_log("error", "An error occurred when inserting an event into a draft event schedule. DB said: ".$db->ErrorMsg());
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    add_error("An error occurred when attempting to create your new draft. A system administrator has been notified of issue, we apologize for the inconvenience.");
+
+                    application_log("error", "Error occurred when creating a new Learning Event draft. Database said: ".$db->ErrorMsg());
+                }
+                if (has_error()) {
+                    $STEP = 1;
+                } else {
+                    add_success("You have successfully create a new draft, and you will be <strong>automatically</strong> redirected to it in 5 seconds. You can also <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&amp;draft_id=".$draft_id."\">click here</a> to be redirected immediately.");
+                    display_success();
+
+                    $ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\\'', 5000)";
+                }
 			}
 		break;
 		case 1 :
@@ -229,12 +246,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			if (has_error()) {
 				echo display_error();
 			}
+
 			if (has_notice()) {
 				echo display_notice();
 			}
+
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/picklist.js\"></script>\n";
-			$ONLOAD[]	= "$('courses_list').style.display = 'none'";
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/picklist.js\"></script>\n";
+			$ONLOAD[] = "$('courses_list').style.display = 'none'";
+
 			/**
 			* Fetch all courses into an array that will be used.
 			*/
@@ -250,152 +270,128 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				.new_start_day .ui-datepicker-calendar tbody tr:hover td a {background: url("images/ui-bg_flat_55_fbec88_40x100.png") repeat-x scroll 50% 50% #FBEC88;border: 1px solid #FAD42E;color: #363636;}
 			</style>
 			<div class="no-printing">
-				<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts?section=create-draft&step=2" method="post" onsubmit="selIt()">
-					
-					
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 20%" />
-							<col style="width: 77%" />
-						</colgroup>
-						<tbody>
-							<tr>
-								<td colspan="3"><h2>Draft Details</h2></td>
-							</tr>
-							<tr>
-								<td></td>
-								<td style="vertical-align: top;"><label class="form-required">Draft Name</label></td>
-								<td style="vertical-align: top;"><input type="text" style="width: 95%; padding: 3px" maxlength="255" value="" name="draft_name" id="draft_name"></td>
-							</tr>
-							<tr>
-								<td></td>
-								<td style="vertical-align: top;"><label class="form-nrequired">Description</label></td>
-								<td style="vertical-align: top;"><textarea type="text" style="width: 95%; padding: 3px; height:60px;" value="" name="draft_description" id="draft_description"></textarea></td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td>
-									
-										<label class="form-nrequired">Copy Resources:</label><br />
-										<span class="content-small">Selecting the following options will copy the content from the previous instance of the event.</span>
-								</td>
-								<td>
-									<table width="100%" cellpadding="0" cellspacing="0">
-										<colgroup>
-											<col style="width: 3%" />
-											<col style="width: 3%" />
-											<col style="width: 94%" />
-										</colgroup>
-										<tr>
-											<td>&nbsp;</td>
-											<td><input type="checkbox" checked="checked" name="options[files]" /></td>
-											<td>Copy files <span class="content-small">- Excluding podcasts</span></td>
-										</tr>
-										<tr>
-											<td>&nbsp;</td>
-											<td><input type="checkbox" checked="checked" name="options[links]" /></td>
-											<td>Copy links</td>
-										</tr>
-										<tr>
-											<td>&nbsp;</td>
-											<td><input type="checkbox" checked="checked" name="options[objectives]" /></td>
-											<td>Copy objectives</td>
-										</tr>
-										<tr>
-											<td>&nbsp;</td>
-											<td><input type="checkbox" checked="checked" name="options[topics]" /></td>
-											<td>Copy hot topics</td>
-										</tr>
-										<tr>
-											<td>&nbsp;</td>
-											<td><input type="checkbox" checked="checked" name="options[quizzes]" /></td>
-											<td>Copy quizzes</td>
-										</tr>
-									</table>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 20%" />
-							<col style="width: 77%" />
-						</colgroup>
-						<tbody>
-							<tr>
-								<td colspan="3">
-									<h2>Learning Event Copy</h2>
-									<?php echo display_generic("Previous learning events can be copied into a draft schedule. Select a course from the list below and set the copy date range. The events found in the selected courses during the copy timeframe will be entered into the draft, starting on the week selected in the <strong>New Start</strong> field. The events that are copied will preserve the day of the week in which they previously ran."); ?>
-								</td>
-							</tr>
-							<tr>
-								<td></td>
-								<td style="vertical-align: top;"><label class="form-nrequired">Courses Included</label></td>
-								<td style="vertical-align: top;">
-									<?php
-									echo "<select class=\"multi-picklist\" id=\"PickList\" name=\"course_ids[]\" multiple=\"multiple\" size=\"5\" style=\"width: 100%; margin-bottom: 5px\">\n";
-											if ((is_array($PROCESSED["course_ids"])) && (count($PROCESSED["course_ids"]))) {
-												foreach ($PROCESSED["course_ids"] as $course_id) {
-													echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
-												}
-											}
-									echo "</select>\n";
-									echo "<div style=\"float: left; display: inline\">\n";
-									echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"btn\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
-									echo "</div>\n";
-									echo "<div style=\"float: right; display: inline\">\n";
-									echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"btn btn-danger\" onclick=\"delIt()\" value=\"Remove\" />\n";
-									echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"btn btn-primary\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
-									echo "</div>\n";
-									echo "<div id=\"courses_list\" style=\"clear: both; padding-top: 3px; display: none\">\n";
-									echo "	<h2>Courses List</h2>\n";
-									echo "	<select class=\"multi-picklist\" id=\"SelectList\" name=\"other_courses_list\" multiple=\"multiple\" size=\"15\" style=\"width: 100%\">\n";
-											if ((is_array($course_list)) && (count($course_list))) {
-												foreach ($course_list as $course_id => $course) {
-													if (!is_array($PROCESSED["course_ids"])) {
-														$PROCESSED["course_ids"] = array();
-													}
-													if (!in_array($course_id, $PROCESSED["course_ids"])) {
-														echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
-													}
-												}
-											}
-									echo "	</select>\n";
-									echo "	</div>\n";
-									echo "	<script type=\"text/javascript\">\n";
-									echo "	\$('PickList').observe('keypress', function(event) {\n";
-									echo "		if (event.keyCode == Event.KEY_DELETE) {\n";
-									echo "			delIt();\n";
-									echo "		}\n";
-									echo "	});\n";
-									echo "	\$('SelectList').observe('keypress', function(event) {\n";
-									echo "	    if (event.keyCode == Event.KEY_RETURN) {\n";
-									echo "			addIt();\n";
-									echo "		}\n";
-									echo "	});\n";
-									echo "	</script>\n";
-									?>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<?php echo generate_calendars("copy", "", true, true, ((isset($PROCESSED["draft_start"])) ? $PROCESSED["draft_start"] : strtotime("September 1st, ".(date("o") - 1))), true, true, ((isset($PROCESSED["draft_finish"])) ? $PROCESSED["draft_finish"] : time()), false); ?>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-								<td><span class="content-small"><strong>NOTE:</strong> All events in the included courses between these two dates will be copied into this draft.</span></td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<?php echo generate_calendars("new", "", true, true, ((isset($PROCESSED["new_start_day"])) ? $PROCESSED["new_start_day"] : ((isset($PROCESSED["draft_start"])) ? strtotime(date("Y-m-d", strtotime($PROCESSED["draft_start"])) . " +1 year") : strtotime("September 1st, ".(date("o"))))), false, false, 0, false); ?>
-							<tr>
-								<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="btn btn-primary" value="Create" /></td>
-							</tr>
-						</tbody>
-					</table>
+				<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts?section=create-draft&step=2" method="post" onsubmit="selIt()" class="form-horizontal">
+
+                    <h2 class="collapsable" title="Draft Information Section">Draft Information</h2>
+                    <div id="draft-information-section">
+                        <div class="control-group">
+                            <label class="control-label form-required" for="draft_name">Draft Name</label>
+                            <div class="controls">
+                                <input type="text" id="draft_name" name="draft_name" value="<?php echo ((isset($PROCESSED["name"])) ? html_encode($PROCESSED["name"]) : ""); ?>"  maxlength="255" placeholder="Example: <?php echo date("Y"); ?> Draft Teaching Schedule" class="span10" />
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label form-nrequired" for="draft_description">Optional Description</label>
+                            <div class="controls">
+                                <textarea type="text" name="draft_description" id="draft_description" class="span10 expandable"><?php echo ((isset($PROCESSED["description"])) ? html_encode($PROCESSED["description"]) : ""); ?></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 class="collapsable<?php echo (!isset($PROCESSED["course_ids"]) ? " collapsed" : ""); ?>" title="Copy Events Section">Copy Forward Existing Learning Events</h2>
+                    <div id="copy-events-section">
+                        <p>Previous Learning Events can be copied into this new draft schedule by selecting courses from the list below and setting the date range. Learning Events found in the selected courses during the selected date range will be automatically copied into the new draft, starting on the week selected in the <strong>New Start Date</strong> field.</p>
+
+                        <div class="control-group">
+                            <label class="control-label form-nrequired">Copying Learning Resources</label>
+                            <div class="controls">
+                                <div class="alert alert-info">
+                                    <strong>Did you know:</strong> When you copy learning events forward you can select what learning resources are copied along with each event?
+                                </div>
+
+                                <label class="checkbox">
+                                    <input type="checkbox" name="options[files]"<?php echo (!isset($_POST) || !$_POST || isset($PROCESSED["draft_option_files"]) ? " checked=\"checked\"" : ""); ?> />
+                                    Copy all <strong>attached files</strong>.
+                                </label>
+
+                                <label class="checkbox">
+                                    <input type="checkbox" name="options[links]"<?php echo (!isset($_POST) || !$_POST || isset($PROCESSED["draft_option_links"]) ? " checked=\"checked\"" : ""); ?> />
+                                    Copy all <strong>attached links</strong>.
+                                </label>
+
+                                <label class="checkbox">
+                                    <input type="checkbox" name="options[objectives]"<?php echo (!isset($_POST) || !$_POST || isset($PROCESSED["draft_option_objectives"]) ? " checked=\"checked\"" : ""); ?> />
+                                    Copy all <strong>attached learning objectives</strong>.
+                                </label>
+
+                                <label class="checkbox">
+                                    <input type="checkbox" name="options[topics]"<?php echo (!isset($_POST) || !$_POST || isset($PROCESSED["draft_option_topics"]) ? " checked=\"checked\"" : ""); ?> />
+                                    Copy all <strong>attached hot topics</strong>.
+                                </label>
+
+                                <label class="checkbox">
+                                    <input type="checkbox" name="options[quizzes]"<?php echo (!isset($_POST) || !$_POST || isset($PROCESSED["draft_option_quizzes"]) ? " checked=\"checked\"" : ""); ?> />
+                                    Copy all <strong>attached quizzes</strong>.
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label form-nrequired">Courses Included</label>
+                            <div class="controls">
+                                <?php
+                                echo "<select class=\"multi-picklist\" id=\"PickList\" name=\"course_ids[]\" multiple=\"multiple\" size=\"5\" style=\"width: 100%; margin-bottom: 5px\">\n";
+                                        if ((is_array($PROCESSED["course_ids"])) && (count($PROCESSED["course_ids"]))) {
+                                            foreach ($PROCESSED["course_ids"] as $course_id) {
+                                                echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
+                                            }
+                                        }
+                                echo "</select>\n";
+                                echo "<div style=\"float: left; display: inline\">\n";
+                                echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"btn\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
+                                echo "</div>\n";
+                                echo "<div style=\"float: right; display: inline\">\n";
+                                echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"btn btn-danger\" onclick=\"delIt()\" value=\"Remove\" />\n";
+                                echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"btn btn-primary\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
+                                echo "</div>\n";
+                                echo "<div id=\"courses_list\" style=\"clear: both; padding-top: 3px; display: none\">\n";
+                                echo "	<h2>Courses List</h2>\n";
+                                echo "	<select class=\"multi-picklist\" id=\"SelectList\" name=\"other_courses_list\" multiple=\"multiple\" size=\"15\" style=\"width: 100%\">\n";
+                                        if ((is_array($course_list)) && (count($course_list))) {
+                                            foreach ($course_list as $course_id => $course) {
+                                                if (!is_array($PROCESSED["course_ids"])) {
+                                                    $PROCESSED["course_ids"] = array();
+                                                }
+                                                if (!in_array($course_id, $PROCESSED["course_ids"])) {
+                                                    echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
+                                                }
+                                            }
+                                        }
+                                echo "	</select>\n";
+                                echo "</div>\n";
+                                echo "<script type=\"text/javascript\">\n";
+                                echo "	\$('PickList').observe('keypress', function(event) {\n";
+                                echo "		if (event.keyCode == Event.KEY_DELETE) {\n";
+                                echo "			delIt();\n";
+                                echo "		}\n";
+                                echo "	});\n";
+                                echo "	\$('SelectList').observe('keypress', function(event) {\n";
+                                echo "	    if (event.keyCode == Event.KEY_RETURN) {\n";
+                                echo "			addIt();\n";
+                                echo "		}\n";
+                                echo "	});\n";
+                                echo "</script>\n";
+                                ?>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <table>
+                                <?php echo generate_calendars("copy", "", true, true, ((isset($PROCESSED["draft_start_date"])) ? $PROCESSED["draft_start_date"] : strtotime("September 1st, ".(date("o") - 1))), true, true, ((isset($PROCESSED["draft_finish_date"])) ? $PROCESSED["draft_finish_date"] : time()), false); ?>
+                            </table>
+                        </div>
+
+                        <div class="control-group">
+                            <table>
+                                <?php echo generate_calendars("new", "New Start Date", true, true, ((isset($PROCESSED["new_start_day"])) ? $PROCESSED["new_start_day"] : ((isset($PROCESSED["draft_start_date"])) ? strtotime("+1 Year", $PROCESSED["draft_start_date"]) : strtotime("September 1st, ".(date("o"))))), false, false, 0, false, false, ""); ?>
+                            </table>
+                        </div>
+
+                    </div>
+
+                    <a href="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts" class="btn">Cancel</a>
+                    <input type="submit" class="btn btn-primary pull-right" value="Create Draft" />
 				</form>
 			</div>
 		<?php

@@ -136,7 +136,6 @@ if (!defined("IN_NOTICES")) {
 								AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 								AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 								AND b.`group` = 'faculty'
-								AND a.`grad_year` >= '".(date("Y") - ((date("m") < 7) ?  2 : 1))."'
 								ORDER BY a.`grad_year` ASC, a.`lastname` ASC, a.`firstname` ASC";
 					$results = $db->GetAll($query);
 					if ($results) {
@@ -198,7 +197,7 @@ if (!defined("IN_NOTICES")) {
 				 * Process students.
 				 */
 				if ((isset($_POST["associated_student"]) && $use_ajax)) {
-					$associated_audience = explode(',', $_POST["event_audience_students"]);
+					$associated_audience = explode(',', $_POST["associated_student"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
 							if (strpos($audience_id, "student") !== false) {
@@ -332,7 +331,7 @@ if (!defined("IN_NOTICES")) {
 
 				<ul class="menu multiselect" id="audience_list" style="margin-top: 5px<?php echo ($target_audience ? "; display: none;" : "");?>">
 					<?php
-					if (is_array($PROCESSED["associated_cohort"]) && count($PROCESSED["associated_cohort"])) {
+					if (isset($PROCESSED["associated_cohort"]) && is_array($PROCESSED["associated_cohort"]) && count($PROCESSED["associated_cohort"])) {
 						foreach ($PROCESSED["associated_cohort"] as $group) {
 							if ((array_key_exists($group, $COHORT_LIST)) && is_array($COHORT_LIST[$group])) {
 								?>
@@ -342,7 +341,7 @@ if (!defined("IN_NOTICES")) {
 						}
 					}
 
-					if (is_array($PROCESSED["associated_course_list"]) && count($PROCESSED["associated_course_list"])) {
+					if (isset($PROCESSED["associated_course_list"]) && is_array($PROCESSED["associated_course_list"]) && count($PROCESSED["associated_course_list"])) {
 						foreach ($PROCESSED["associated_course_list"] as $group) {
 							if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
 								?>
@@ -352,7 +351,7 @@ if (!defined("IN_NOTICES")) {
 						}
 					}
 
-					if (is_array($PROCESSED["associated_student"]) && count($PROCESSED["associated_student"])) {
+					if (isset($PROCESSED["associated_student"]) && is_array($PROCESSED["associated_student"]) && count($PROCESSED["associated_student"])) {
 						foreach ($PROCESSED["associated_student"] as $student) {
 							if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 								?>
@@ -362,7 +361,7 @@ if (!defined("IN_NOTICES")) {
 						}
 					}
 
-					if (is_array($PROCESSED["associated_faculty"]) && count($PROCESSED["associated_faculty"])) {
+					if (isset($PROCESSED["associated_faculty"]) && is_array($PROCESSED["associated_faculty"]) && count($PROCESSED["associated_faculty"])) {
 						foreach ($PROCESSED["associated_faculty"] as $faculty) {
 							if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 								?>
@@ -372,7 +371,7 @@ if (!defined("IN_NOTICES")) {
 						}
 					}
 
-					if (is_array($PROCESSED["associated_staff"]) && count($PROCESSED["associated_staff"])) {
+					if (isset($PROCESSED["associated_staff"]) && is_array($PROCESSED["associated_staff"]) && count($PROCESSED["associated_staff"])) {
 						foreach ($PROCESSED["associated_staff"] as $staff) {
 							if ((array_key_exists($staff, $STAFF_LIST)) && is_array($STAFF_LIST[$staff])) {
 								?>

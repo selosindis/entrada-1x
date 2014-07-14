@@ -88,30 +88,29 @@ $query = "	SELECT a.*, COUNT(b.`assessment_id`) AS `assessments`
 			FROM `courses` AS a
 			JOIN `assessments` AS b
 			ON a.`course_id` = b.`course_id`
+			AND b.`active` = 1
 			AND b.`cohort` IN (".$group_ids_string.")
 			AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 			AND (b.`release_until` = '0' OR b.`release_until` > ".$db->qstr(time()).")
 			AND b.`show_learner` = '1'
+            JOIN `assessment_grades` AS c
+            ON b.`assessment_id` = c.`assessment_id`
+            AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 			GROUP BY a.`course_id`
 			ORDER BY ".$sort_by;
 $results = $db->GetAll($query);
 if ($results) {
 	?>
-	<table class="tableList" cellspacing="0" summary="List of Gradebooks">
-		<colgroup>
-			<col class="date-small" />
-			<col class="title" />
-			<col class="general" />
-		</colgroup>
+	<table class="table table-bordered table-striped" cellspacing="0" summary="List of Gradebooks">
 		<thead>
 			<tr>
-				<td class="date-small borderl<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "code") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("code", "Course Code", ENTRADA_RELATIVE."/profile/gradebook"); ?></td>
-				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("title", "Course Title", ENTRADA_RELATIVE."/profile/gradebook"); ?></td>
-				<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "assessments") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("assessments", "Assessments", ENTRADA_RELATIVE."/profile/gradebook"); ?></td>
+				<th width="14%" class="date-small borderl<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "code") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("code", "Course Code", ENTRADA_RELATIVE."/profile/gradebook"); ?></th>
+				<th class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("title", "Course Title", ENTRADA_RELATIVE."/profile/gradebook"); ?></td>
+				<th width="14%" class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "assessments") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("assessments", "Assessments", ENTRADA_RELATIVE."/profile/gradebook"); ?></th>
 				<?php
 				if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
 					?>
-					<td class="general">Weighted Total</td>
+					<th width="13%" class="general">Wgt. Total</th>
 					<?php
 				}
 				?>

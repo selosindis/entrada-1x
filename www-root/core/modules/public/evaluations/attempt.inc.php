@@ -48,8 +48,14 @@ if (isset($_POST["request_code"]) && ($code = clean_input($_POST["request_code"]
     $code = false;
 }
 
-if ($RECORD_ID) {							
-	$cohort = groups_get_cohort($ENTRADA_USER->getID());
+if ($RECORD_ID) {
+    $cohort_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getID(), false, $ENTRADA_USER->getActiveOrganisation(), false);
+    $cohort_ids_string = "";
+    if (isset($cohort_ids) && is_array($cohort_ids)) {
+        foreach ($cohort_ids as $cohort_id) {
+            $cohort_ids_string .= ($cohort_ids_string ? ", " : "").$db->qstr($cohort_id);
+        }
+    }
 	
 	$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
 				JOIN `course_groups` AS b
@@ -87,6 +93,7 @@ if ($RECORD_ID) {
 						LEFT JOIN `evaluations_lu_targets` AS e
 						ON ef.`target_id` = e.`target_id`
 						WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
+                        ".(defined("EVALUATION_LOCKOUT") && EVALUATION_LOCKOUT ? "AND a.`evaluation_finish` > ".$db->qstr(time() - EVALUATION_LOCKOUT) : "")."
 						AND 
 						(
 							(
@@ -97,9 +104,9 @@ if ($RECORD_ID) {
 							(
 								b.`evaluator_type` = 'organisation_id'
 								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-							)".($_SESSION["details"]["group"] == "student" ? " OR (
+							)".(isset($cohort_ids_string) && $cohort_ids_string ? " OR (
 								b.`evaluator_type` = 'cohort'
-								AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+								AND b.`evaluator_value` IN (".$cohort_ids_string.")
 							)" : "").($cgroup_ids_string ? " OR (
 								b.`evaluator_type` = 'cgroup_id'
 								AND b.`evaluator_value` IN (".$cgroup_ids_string.")
@@ -109,12 +116,12 @@ if ($RECORD_ID) {
 						GROUP BY cr.`eprogress_id`";
 	$evaluation_record	= $db->GetRow($query);
 	if ($evaluation_record) {
-		if ($evaluation_record["allow_target_request"] && (!isset($evaluation_request) || !$evaluation_request)) {
+		if ($evaluation_record["allow_target_request"] && !$evaluation_record["require_request_code"] && (!isset($evaluation_request) || !$evaluation_request)) {
             $evaluation_requests = Models_Evaluation::getEvaluationRequests($RECORD_ID, $ENTRADA_USER->getID());
             if ($evaluation_requests && count($evaluation_requests)) {
                 $evaluation_request = $evaluation_requests[0];
-            } else {
-                $evaluation_record = null;
+            } elseif ($evaluation_record["require_requests"]) {
+                $evaluation_record = NULL;
             }
         }
     }
@@ -158,6 +165,18 @@ if ($RECORD_ID) {
 								$etarget_id = $db->GetOne($query);
 								$PROCESSED["target_record_id"] = $event_id;
 							}
+                            $PROCESSED_PATIENT_ENCOUNTER = array();
+                            if ($PROCESSED["target_shortname"] == "resident") {
+                                if ((isset($_POST["encounter_complexity"])) && ($encounter_complexity = clean_input($_POST["encounter_complexity"], array("trim", "int"))) && in_array($encounter_complexity, array(1, 2, 3))) {
+                                    $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] = $encounter_complexity;
+                                    if (isset($_POST["encounter_name"]) && ($encounter_name = clean_input($_POST["encounter_name"], array("trim", "notags")))) {
+                                        $PROCESSED_PATIENT_ENCOUNTER["encounter_name"] = $encounter_name;
+                                    }
+                                } else {
+                                    $ERROR++;
+                                    $ERRORSTR[] = "Please ensure you select an encounter complexity for the patient encounter being evaluated.";
+                                }
+                            }
 							if ($PROCESSED["target_shortname"] == "preceptor") {
 								if (isset($_POST["preceptor_proxy_id"]) && ($preceptor_proxy_id = clean_input($_POST["preceptor_proxy_id"], "trim", "alphanumeric")) && ((int)$preceptor_proxy_id || ($preceptor_proxy_id == "other"))) {
                                     if ($preceptor_proxy_id !== "other") {
@@ -306,6 +325,7 @@ if ($RECORD_ID) {
 							if ($progress_record) {
 								$eprogress_id		= $progress_record["eprogress_id"];
 								$PROCESSED_CLERKSHIP_EVENT["eprogress_id"] = $eprogress_id;
+								$PROCESSED_PATIENT_ENCOUNTER["eprogress_id"] = $eprogress_id;
 
 								if (((isset($_POST["responses"])) && (is_array($_POST["responses"])) && (count($_POST["responses"]) > 0)) || (isset($_POST["comments"]) && (count($_POST["comments"]) > 0))) {
 									$questions_found = false;
@@ -446,6 +466,7 @@ if ($RECORD_ID) {
 											}
 											if (array_search($PROCESSED["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false) {
 												if (!$db->AutoExecute("evaluation_progress_clerkship_events", $PROCESSED_CLERKSHIP_EVENT, "INSERT")) {
+                                                    $db->Execute("UPDATE `evaluation_progress` SET `progress_value` = 'inprogress' WHERE `eprogress_id` = ".$db->qstr($PROCESSED["eprogress_id"]));
 													application_log("error", "Unable to record the final clerkship event details for eprogress_id [".$eprogress_id."] in the evaluation_progress_clerkship_events table. Database said: ".$db->ErrorMsg());
 
 													$ERROR++;
@@ -465,7 +486,29 @@ if ($RECORD_ID) {
 
 													$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
 												}
-											} else {
+											} elseif ($PROCESSED["target_shortname"] == "resident") {
+                                                if (!$db->AutoExecute("evaluation_progress_patient_encounters", $PROCESSED_PATIENT_ENCOUNTER, "INSERT")) {
+                                                    $db->Execute("UPDATE `evaluation_progress` SET `progress_value` = 'inprogress' WHERE `eprogress_id` = ".$db->qstr($PROCESSED["eprogress_id"]));
+                                                    application_log("error", "Unable to record the final patient encounter details for eprogress_id [".$eprogress_id."] in the evaluation_progress_patient_encounters table. Database said: ".$db->ErrorMsg());
+
+                                                    $ERROR++;
+                                                    $ERRORSTR[] = "We were unable to record the final results for this evaluation at this time. Please be assured that your responses are saved, but you will need to come back to this evaluation to re-submit it. This problem has been reported to a system administrator; please try again later.";
+                                                } else {
+                                                    /**
+                                                     * Add a completed evaluation statistic.
+                                                     */
+                                                    add_statistic("evaluations", "evaluation_complete", "evaluation_id", $RECORD_ID);
+
+                                                    application_log("success", "Proxy_id [".$ENTRADA_USER->getID()."] has completed evaluation_id [".$RECORD_ID."].");
+
+                                                    $url = ENTRADA_URL."/evaluations";
+
+                                                    $SUCCESS++;
+                                                    $SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($evaluation_record["evaluation_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the evaluations index; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+
+                                                    $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
+                                                }
+                                            } else {
 												/**
 												 * Add a completed evaluation statistic.
 												 */
@@ -574,17 +617,25 @@ if ($RECORD_ID) {
 									if (!isset($evaluation_targets) || !count($evaluation_targets)) {
 										$evaluation_targets = Models_Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 									}
-                                    if ($PROCESSED["target_shortname"] == "preceptor") {
+                                    if (in_array($PROCESSED["target_shortname"], array("preceptor", "teacher", "peer", "resident"))) {
                                         $HEAD[] = "
                                                     <script type=\"text/javascript\">
-                                                        function displayOtherTeacher(instructor_id) {
-                                                            if(instructor_id == 'other') {
+                                                        function fetchTargetDetails(id, id_name) {
+                                                            ".($PROCESSED["target_shortname"] == "preceptor" ? "
+                                                            var preceptor_evaluation = jQuery('#event_id').val();
+                                                            if(etarget_id == 'other') {
                                                                 $('other_teacher_layer').style.display = 'block';
                                                                 $('other_teacher_fname').focus();
                                                             } else {
                                                                 $('other_teacher_layer').style.display = 'none';
-                                                            }
-
+                                                                " : "var preceptor_evaluation = false;
+                                                            ")."
+                                                                var etarget_id = (id_name == 'evaluation_target' ? id : false);
+                                                                var proxy_id = (id_name == 'proxy_id' ? id : false);
+                                                                if (((etarget_id && parseInt(etarget_id) == etarget_id) || (proxy_id && parseInt(proxy_id) == proxy_id))) {
+                                                                    jQuery('#target-details-holder').load('".ENTRADA_URL."/evaluations?section=api-target-info&id=".$RECORD_ID."', {'etarget_id' : etarget_id, 'eevaluator_id' : '".$PROCESSED["eevaluator_id"]."', 'erequest_id' : ".(isset($evaluation_request) && $evaluation_request ? "'".$evaluation_request["erequest_id"]."'" : "false").", 'preceptor_evaluation' : preceptor_evaluation, 'proxy_id' : proxy_id} );
+                                                                }
+                                                            ".($PROCESSED["target_shortname"] == "preceptor" ? "}" : "")."
                                                             return;
                                                         }
                                                     </script>";
@@ -623,11 +674,22 @@ if ($RECORD_ID) {
                                                     echo "<div id=\"preceptor_select\">\n";
                                                     echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $evaluation_targets[0]["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
                                                     echo "</div>\n";
-                                                } 
+                                                } elseif ($PROCESSED["target_shortname"] == "resident") {
+                                                    echo "<div id=\"encounter_select\" class=\"row-fluid\">\n";
+                                                    echo "  <label for=\"encounter\" class=\"span5\">Encounter:\n";
+                                                    echo "      <input type=\"text\" name=\"encounter\" />\n";
+                                                    echo "  </label>\n";
+                                                    echo "  <label for=\"complexity\" class=\"span6\">Complexity:\n";
+                                                    echo "      <select name=\"complexity\">\n";
+                                                    echo "          <option></option>\n";
+                                                    echo "      </select>\n";
+                                                    echo "  </label>\n";
+                                                    echo "</div>\n";
+                                                }
 											}
 										} elseif ($PROCESSED["target_shortname"] == "teacher") {
 											echo "<div class=\"content-small\">Please choose a teacher to evaluate: \n";
-											echo "<select id=\"evaluation_target\" name=\"evaluation_target\">";
+											echo "<select id=\"evaluation_target\" name=\"evaluation_target\" onchange=\"fetchTargetDetails(jQuery(this).val(), 'evaluation_target')\">";
 											echo "<option value=\"0\">-- Select a teacher --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
@@ -642,13 +704,15 @@ if ($RECORD_ID) {
 											echo "<select id=\"event_id\" name=\"event_id\"".($PROCESSED["target_shortname"] == "preceptor" ? " onchange=\"loadPreceptors(this.options[this.selectedIndex].value)\"" : "").">";
 											echo "<option value=\"0\">-- Select an event --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
-												echo "<option value=\"".$evaluation_target["event_id"]."\"".(($PROCESSED["event_id"] == $evaluation_target["event_id"]) || ((!isset($PROCESSED["event_id"]) || !$PROCESSED["event_id"]) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".(strpos($evaluation_target["event_title"], $evaluation_target["rotation_title"]) === false ? $evaluation_target["rotation_title"]." - " : "").$evaluation_target["event_title"]."</option>\n";
+												echo "<option value=\"".$evaluation_target["event_id"]."\"".((isset($PROCESSED_CLERKSHIP_EVENT["event_id"]) && $PROCESSED_CLERKSHIP_EVENT["event_id"] == $evaluation_target["event_id"]) || ((!isset($PROCESSED_CLERKSHIP_EVENT["event_id"]) || !$PROCESSED_CLERKSHIP_EVENT["event_id"]) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".(strpos($evaluation_target["event_title"], $evaluation_target["rotation_title"]) === false ? $evaluation_target["rotation_title"]." - " : "").$evaluation_target["event_title"]."</option>\n";
 											}
 											echo "</select>";
 											if ($PROCESSED["target_shortname"] == "preceptor") {
 												echo "<div id=\"preceptor_select\">\n";
-												if (isset($PROCESSED["event_id"]) && $PROCESSED["event_id"]) {
-													echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
+												if (isset($PROCESSED_CLERKSHIP_EVENT["event_id"]) && $PROCESSED_CLERKSHIP_EVENT["event_id"]) {
+                                                    echo "<br /><div class=\"content-small\">Please choose a clerkship preceptor to evaluate: \n";
+													echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $PROCESSED_CLERKSHIP_EVENT["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
+                                                    echo "</div>\n";
 												} else {
 													echo display_notice("Please select a <strong>Clerkship Service</strong> to evaluate a <strong>Preceptor</strong> for.");
 												}
@@ -672,7 +736,7 @@ if ($RECORD_ID) {
 										} elseif ($PROCESSED["target_shortname"] == "peer" || $PROCESSED["target_shortname"] == "student") {
 											echo "<div class=\"content-small\">Please choose a learner to assess: \n";
 											echo "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
-											echo "<select id=\"target_record_id\" name=\"target_record_id\">";
+											echo "<select id=\"target_record_id\" name=\"target_record_id\" onchange=\"fetchTargetDetails(this.value, 'proxy_id')\">";
 											echo "<option value=\"0\">-- Select a learner --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
@@ -682,18 +746,53 @@ if ($RECORD_ID) {
 											echo "</select>";
 											echo "</div>";
 										} elseif ($PROCESSED["target_shortname"] == "resident") {
-											echo "<div class=\"content-small\">Please choose a resident to evaluate: \n";
-											echo "<select id=\"evaluation_target\" name=\"evaluation_target\">";
-											echo "<option value=\"0\">-- Select a resident --</option>\n";
+											echo "<div class=\"content-small row-fluid\">\n";
+                                            echo "  <label for=\"evaluation_target\" class=\"span7\">\n";
+                                            echo "      Please choose a resident to evaluate:\n";
+                                            echo "  </label>\n";
+                                            echo "  <span class=\"span5\">\n";
+                                            echo "      <select id=\"evaluation_target\" name=\"evaluation_target\" onchange=\"fetchTargetDetails(this.value, 'evaluation_target')\">";
+											echo "          <option value=\"0\">-- Select a resident --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
-													echo "<option value=\"".$evaluation_target["etarget_id"]."\"".(($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] || $PROCESSED["target_record_id"] == $evaluation_target["proxy_id"]) || (((!isset($PROCESSED["etarget_id"]) || !$PROCESSED["etarget_id"]) || (!isset($PROCESSED["target_record_id"]) || !$PROCESSED["target_record_id"])) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
+													echo "          <option value=\"".$evaluation_target["etarget_id"]."\"".(($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] || $PROCESSED["target_record_id"] == $evaluation_target["proxy_id"]) || (((!isset($PROCESSED["etarget_id"]) || !$PROCESSED["etarget_id"]) || (!isset($PROCESSED["target_record_id"]) || !$PROCESSED["target_record_id"])) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
 												}
 											}
-											echo "</select>";
-											echo "</div>";
+											echo "      </select>";
+                                            echo "  </span>\n";
+                                            echo "</div>";
+                                            echo "<div class=\"content-small row-fluid\">\n";
+                                            echo "  <label for=\"encounter_complexity\" class=\"span7\">\n";
+                                            echo "      Please choose the complexity of this encounter:\n";
+                                            echo "  </label>\n";
+                                            echo "  <span class=\"span5\">\n";
+                                            echo "      <select id=\"encounter_complexity\" name=\"encounter_complexity\">\n";
+                                            echo "          <option value=\"0\"".(!isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) || !$PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] ? " selected=\"selected\"" : "").">-- Select the encounter complexity --</option>\n";
+                                            echo "          <option value=\"1\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] == 1 ? " selected=\"selected\"" : "").">Simple</option>\n";
+                                            echo "          <option value=\"2\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] == 2 ? " selected=\"selected\"" : "").">Complex, but frequently encountered</option>\n";
+                                            echo "          <option value=\"3\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] == 3 ? " selected=\"selected\"" : "").">Complex</option>\n";
+                                            echo "      </select>\n";
+                                            echo "  </span>\n";
+                                            echo "</div>";
+                                            echo "<div class=\"content-small row-fluid\">\n";
+                                            echo "  <label for=\"encounter\" class=\"span7\">\n";
+                                            echo "      Additionally, you may indicate the name of this encounter:\n";
+                                            echo "  </label>\n";
+                                            echo "  <span class=\"span5\">\n";
+                                            echo "      <input type=\"text\" id=\"encounter_name\" name=\"encounter_name\" style=\"margin-bottom: 0px;\" value=\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_name"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_name"] ? html_encode($PROCESSED_PATIENT_ENCOUNTER["encounter_name"]) : "")."\"/>\n";
+                                            echo "  </span>\n";
+                                            echo "</div>";
 										}
 									}
+                                    if (isset($PROCESSED["etarget_id"]) && $PROCESSED["etarget_id"]) {
+                                        if ($PROCESSED["target_shortname"] == "preceptor") {
+                                            if (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) {
+                                                $ONLOAD[] = "fetchTargetDetails(".((int)$PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]).", 'proxy_id');";
+                                            }
+                                        } elseif (in_array($PROCESSED["target_shortname"], array("peer", "student", "resident", "teacher"))) {
+                                            $ONLOAD[] = "fetchTargetDetails(".((int)$PROCESSED["target_record_id"]).", 'proxy_id');";
+                                        }
+                                    }
                                     if ($PROCESSED["target_shortname"] == "preceptor") {
                                         ?>
                                             <div id="other_teacher_layer"<?php echo (!isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) || $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] !== "other" ? " style=\"display: none\"" : ""); ?>>
@@ -722,6 +821,7 @@ if ($RECORD_ID) {
                                         <?php
                                     }
 									?>
+                                    <div id="target-details-holder" class="space-above space-below"></div>
 									<div id="display-unsaved-warning" class="display-notice" style="display: none">
 										<ul>
 											<li><strong>Warning Unsaved Response:</strong><br />Your response to the question indicated by a yellow background was not automatically saved.</li>
@@ -775,26 +875,44 @@ if ($RECORD_ID) {
 											parameters: { 'section' : 'save-response', 'id' : '<?php echo $RECORD_ID; ?>', 'qid' : qid, 'rid' : rid, 'comments' : comments},
 											onSuccess: function(transport) {
 												if (transport.responseText.match(200)) {
-													$('question_' + qid).removeClassName('notice');
+                                                    if (jQuery('tr#question_' + qid).length > 0) {
+                                                        jQuery('tr#question_' + qid).removeClass('question-notice');
+                                                    } else if (jQuery('li#question_' + qid).length > 0) {
+                                                        jQuery('li#question_' + qid).removeClass('question-notice');
+                                                    } else {
+                                                        jQuery('#question_' + qid).removeClass('question-notice');
+                                                    }
 
-													if ($$('#evaluation-questions-list li.notice').length <= 0) {
+                                                    if ($$('#evaluation-questions-list li.notice').length <= 0) {
 														$('display-unsaved-warning').fade({ duration: 0.5 });
 													}
 												} else {
-													$('question_' + qid).addClassName('notice');
+                                                    if (jQuery('tr#question_' + qid).length > 0) {
+                                                        jQuery('tr#question_' + qid).addClass('question-notice');
+                                                    } else if (jQuery('li#question_' + qid).length > 0) {
+                                                        jQuery('li#question_' + qid).addClass('question-notice');
+                                                    } else {
+                                                        jQuery('#question_' + qid).addClass('question-notice');
+                                                    }
 
-													if ($('display-unsaved-warning').style.display == 'none') {
+                                                    if ($('display-unsaved-warning').style.display == 'none') {
 														$('display-unsaved-warning').appear({ duration: 0.5 });
 													}
 												}
 											},
 											onError: function() {
-													$('question_' + qid).addClassName('notice');
+                                                if (jQuery('tr#question_' + qid).length > 0) {
+                                                    jQuery('tr#question_' + qid).addClass('question-notice');
+                                                } else if (jQuery('li#question_' + qid).length > 0) {
+                                                    jQuery('li#question_' + qid).addClass('question-notice');
+                                                } else {
+                                                    jQuery('#question_' + qid).addClass('question-notice');
+                                                }
 
-													if ($('display-unsaved-warning').style.display == 'none') {
-														$('display-unsaved-warning').appear({ duration: 0.5 });
-													}
-											}
+                                                if ($('display-unsaved-warning').style.display == 'none') {
+                                                    $('display-unsaved-warning').appear({ duration: 0.5 });
+                                                }
+                                            }
 										});
 									}
 									function loadPreceptors(event_id) {
@@ -813,12 +931,17 @@ if ($RECORD_ID) {
 													$('preceptor_select').addClassName('notice');
 
 													$('preceptor_select').update('<ul><li>No <strong>Preceptors</strong> available for evaluation found in the system.</li></ul>');
-											}
+											},
+                                            onComplete: function() {
+                                                if ($('preceptor_proxy_id') && $('preceptor_proxy_id').selectedIndex == 0) {
+                                                    jQuery('#target-details-holder').html('');
+                                                }
+                                            }
 										});
 									}
 									</script>
 									<?php
-									$sidebar_html = evaluation_generate_description((isset($evaluation_record["base_min_submittable"]) && $evaluation_record["base_min_submittable"] ? $evaluation_record["base_min_submittable"] : $evaluation_record["min_submittable"]), $total_questions, (isset($evaluation_record["base_max_submittable"]) && $evaluation_record["base_max_submittable"] ? $evaluation_record["base_max_submittable"] : $evaluation_record["max_submittable"]), $evaluation_record["evaluation_finish"]);
+									$sidebar_html = evaluation_generate_description((isset($evaluation_record["base_min_submittable"]) && $evaluation_record["base_min_submittable"] ? $evaluation_record["base_min_submittable"] : $evaluation_record["min_submittable"]), $total_questions, (isset($evaluation_record["base_max_submittable"]) && ($evaluation_record["base_max_submittable"] || ((int)$evaluation_record["base_max_submittable"] === 0)) ? $evaluation_record["base_max_submittable"] : $evaluation_record["max_submittable"]), $evaluation_record["evaluation_finish"]);
 									new_sidebar_item("Evaluation Statement", $sidebar_html, "page-anchors", "open", "1.9");
 								} else {
 									$ERROR++;

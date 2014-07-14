@@ -27,14 +27,14 @@ if ($ASSIGNMENT_ID) {
 	$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 	if ($iscontact = $db->GetRow($query)) {
 		$USER_ID = $tmp;
-	} elseif ($assignment && $ENTRADA_ACL->amIAllowed(new CourseResource($assignment["course_id"], $assignment["organisation_id"]), "update")) {
+	} elseif ($assignment && $ENTRADA_ACL->amIAllowed(new GradebookResource($assignment["course_id"], $assignment["organisation_id"]), "update")) {
 		$iscontact = true;	
 	} else {
 		$iscontact = false;
 	}
 
 	if ($iscontact) {			
-		if($assignment){
+		if ($assignment) {
 
 			/**
 			 * Download the latest version.
@@ -52,22 +52,28 @@ if ($ASSIGNMENT_ID) {
 						)";
 			$results = $db->GetAll($query);
 			$dir = FILE_STORAGE_PATH."/zips";
-			if ( !file_exists($dir) ) {
-			  mkdir ($dir, 0777);
+			if (!file_exists($dir)) {
+			    mkdir ($dir, 0777);
 			}
-			$zip_file_name = str_replace(array("/", " ") , "_", $assignment["course_code"]."_".$assignment["assignment_title"]).'.zip';
+            $zip_prefix = str_replace(array("/", " ") , "_", $assignment["course_code"]."_".$assignment["assignment_title"]);
+			$zip_file_name = $zip_prefix.'.zip';
 			$zipname = $dir."/".$zip_file_name;
 			if ($results) {
                 $zip = new ZipArchive();
-                $res = $zip->open($zipname,ZIPARCHIVE::OVERWRITE);
+                $res = $zip->open($zipname,ZipArchive::OVERWRITE);
                 if ($res !== true) {
                     $ERROR++;
                     $ERRORSTR[] = "<strong>Unable to create the file archive.</strong><br /><br />The archive of files was not created. Please try again later.";
                 } else {
-                        foreach ($results as $file){
+                        foreach ($results as $file) {
                             $submission_file = FILE_STORAGE_PATH."/A".$file["afversion_id"];
-                            if ((@file_exists($submission_file)) && (@is_readable($submission_file))) {
-                                $zip->addFile($submission_file, $file["number"]."_".$file["username"]."_".$file["file_filename"]);	
+                            if (file_exists($submission_file) && is_readable($submission_file)) {
+                                if ((int)$assignment['max_file_uploads'] > 1) {
+                                    $inner_filename = $zip_prefix."/".$file["number"]."_".$file["username"]."/".$file["file_filename"];
+                                } else {
+                                    $inner_filename = $zip_prefix."/".$file["number"]."_".$file["username"]."_".$file["file_filename"];
+                                }
+                                $zip->addFile($submission_file, $inner_filename);	
                             }							
                         }
                         $file_version = array();
@@ -78,12 +84,8 @@ if ($ASSIGNMENT_ID) {
 			}
 			if (($file_version) && (is_array($file_version))) {
 				$download_file = $zipname;
-				if ((@file_exists($download_file)) && (@is_readable($download_file))) {
-						/**
-					 * This must be done twice in order to close both of the open buffers.
-					 */
-					@ob_end_clean();
-					@ob_end_clean();
+				if (file_exists($download_file) && is_readable($download_file)) {
+                    ob_clear_open_buffers();
 
 					/**
 					 * Determine method that the file should be accessed (downloaded or viewed)
@@ -93,18 +95,20 @@ if ($ASSIGNMENT_ID) {
                     header("Expires: 0");
                     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
                     header("Content-Type: ".$file_version["file_mimetype"]);
-                    header("Content-Disposition: inline; filename=\"".$zip_file_name."\"");
-                    header("Content-Length: ".@filesize($download_file));
+                    header("Content-Disposition: attachment; filename=\"".$zip_file_name."\"");
+                    header("Content-Length: ".filesize($download_file));
                     header("Content-Transfer-Encoding: binary\n");
-					echo @file_get_contents($download_file, FILE_BINARY);
-                    statistic("assignment:".$ASSIGNMENT_ID, "file_zip_download", "assignment_id", $ASSIGNMENT_ID);
+					echo file_get_contents($download_file, FILE_BINARY);
+                    add_statistic("assignment:".$ASSIGNMENT_ID, "file_zip_download", "assignment_id", $ASSIGNMENT_ID);
 					exit;
 				}
 
 			}
 			if ((!$ERROR) && (!$NOTICE)) {
-				$ERROR++;
-				$ERRORSTR[] = "<strong>Unable to download the selected file.</strong><br /><br />The file you have selected cannot be downloaded at this time, ".((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"]) ? "please try again later." : "Please log in to continue.");
+				$url = ENTRADA_URL."/admin/gradebook/?".replace_query(array("step" => false, "section" => "view", "id" => $COURSE_ID));
+				$NOTICE++;
+				$NOTICESTR[] = "<strong>No assignment files to download yet.</strong><br /><br />You will now be redirected to the <strong>Gradebook</strong> page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+				$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 			}
 
 			if ($NOTICE) {
@@ -114,7 +118,7 @@ if ($ASSIGNMENT_ID) {
 				echo display_error();
 			}
 	
-		}else{
+		} else {
 				application_log("error", "The provided file id was invalid [".$ASSIGNMENT_ID."] (View File).");
 				//header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=submit&id=".$ASSIGNMENT_ID);
 				echo 'Invalid id specified. No assignment found for that id.';
@@ -130,4 +134,3 @@ if ($ASSIGNMENT_ID) {
 	
 	exit;
 }
-?>

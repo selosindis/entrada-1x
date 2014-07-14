@@ -59,11 +59,37 @@ if (!defined("IN_COURSE_REPORTS")) {
 
 	$student_list = $db->getAll($query);
 	
+	//Add individuals to the student list if they exist.
+	$results = array();
+	$query = "	SELECT *, concat(c.`lastname`, ', ', c.`firstname`) as `fullname`, c.`id` as `proxy_id` 
+				FROM `course_audience` a				
+				JOIN `" . AUTH_DATABASE . "`.`user_data` c
+				ON a.`audience_value` = c.`id`
+				WHERE a.`audience_type` = 'proxy_id'
+				AND a.`course_id` = " . $db->qstr($course_details["course_id"]) . "
+				AND a.`audience_active` = 1
+				ORDER BY `fullname` ASC";		
+	$results = $db->getAll($query);
+	
+	if ($results && count($results) > 0) {
+		$student_list = array_merge($student_list, $results);
+		
+		// Create the fullname column to sort by
+		foreach ($student_list as $key => $row) {			
+			$fullname[$key]  = $row['fullname'];			
+		}
+
+		// Sort the data with fullname ascending
+		// Add $student_list as the last parameter, to sort by the common key
+		array_multisort($fullname, SORT_ASC, $student_list);
+	}	
+	
 	$query = "	SELECT *
 				FROM `course_objectives` a
 				JOIN `global_lu_objectives` b
 				ON a.`objective_id` = b.`objective_id`
 				WHERE a.`course_id` = " . $db->qstr($course_details["course_id"]) . "
+                AND a.`active` = '1'
 				AND b.`objective_loggable` = 1";
 
 	$course_objectives = $db->getAll($query);
@@ -125,19 +151,80 @@ if (!defined("IN_COURSE_REPORTS")) {
 						}
 						if (!$is_parent) {	
 							sort($COURSE_REPORT_EVENT_TYPES);
-							foreach ($COURSE_REPORT_EVENT_TYPES as $etype_id) {							
-								$query = "	SELECT count(*)
+							foreach ($COURSE_REPORT_EVENT_TYPES as $etype_id) {																	
+								$query = "	SELECT *
 											FROM `events` a
 											JOIN `event_objectives` b
 											ON a.`event_id` = b.`event_id`
 											JOIN `event_eventtypes` c
 											ON a.`event_id` = c.`event_id`
+											JOIN `event_audience` d
+											ON d.`event_id` = a.`event_id`
 											WHERE a.`course_id` = " . $db->qstr($course_details["course_id"]) . "
 											AND b.`objective_id` = " . $db->qstr($obj_id) . "
 											AND a.`event_finish` <= " . $db->qstr(time()) . "
 											AND a.`event_finish` BETWEEN '" . $curr_period["start_date"] . "' AND '" . $curr_period["finish_date"] . "'
-											AND c.`eventtype_id` = " . $db->qstr($etype_id);										
-								$procedure_total = $db->getOne($query);
+											AND c.`eventtype_id` = " . $db->qstr($etype_id) . "
+											GROUP BY a.`event_id`, d.`audience_type`";									
+								$events = $db->getAll($query);																	
+								$procedure_total = 0;
+								
+								foreach ($events as $event) {
+									switch($event["audience_type"]) {
+										case "proxy_id":
+											$query = "	SELECT count(*)
+														FROM `event_audience` a														
+														WHERE a.`audience_value` = " . $db->qstr($PROCESSED["student_proxy_id"]) . "
+														AND a.`audience_type` = 'proxy_id'
+														AND a.`event_id` = " . $db->qstr($event["event_id"]);																																		
+											$procedure_total += $db->getOne($query);												
+											break;										
+										case "course_id":
+											$query = "	SELECT *
+														FROM `course_audience` a														
+														WHERE a.`course_id` = " . $db->qstr($event["audience_value"]);											
+											$course_audiences = $db->getAll($query);																			
+											foreach($course_audiences as $ca) {
+												switch($ca["audience_type"]) {
+													case "group_id":
+														$query = "	SELECT count(*)
+																	FROM `group_members` a														
+																	WHERE a.`proxy_id` = " .$db->qstr($PROCESSED["student_proxy_id"]) . "
+																	AND a.`group_id` = " . $db->qstr($ca["audience_value"]);
+														$procedure_total += $db->getOne($query);
+														break;
+													case "proxy_id":
+														$query = "	SELECT count(*)
+																	FROM `course_audience` a														
+																	WHERE a.`audience_value` = " . $db->qstr($PROCESSED["student_proxy_id"]) . "
+																	AND a.`course_id` = " . $db->qstr($ca["course_id"]);																	
+														$procedure_total += $db->getOne($query);
+														break;
+													default:
+														
+														break;
+												}
+											}
+											break;
+										case "cohort":
+											$query = "	SELECT count(*)
+														FROM `group_members` a														
+														WHERE a.`proxy_id` = " .$db->qstr($PROCESSED["student_proxy_id"]) . "
+														AND a.`group_id` = " . $db->qstr($event["audience_value"]);
+											$procedure_total += $db->getOne($query);
+											break;																				
+										case "group_id":
+											$query = "	SELECT count(*)
+														FROM `course_group_audience` a														
+														WHERE a.`proxy_id` = " .$db->qstr($PROCESSED["student_proxy_id"]) . "
+														AND a.`cgroup_id` = " . $db->qstr($event["audience_value"]);
+											$procedure_total += $db->getOne($query);
+											break;
+										default:
+											
+											break;
+									}									
+								}
 
 								$query = "	SELECT count(*)
 											FROM `events` a
@@ -305,8 +392,13 @@ if (!defined("IN_COURSE_REPORTS")) {
 						</table>
 				<?php 
 					} else {
-						add_notice("No objectives have been mapped to events.");
-						echo display_notice();
+						if ($procedure_total > 0) {
+							add_notice("No objectives have been mapped to events.");
+							echo display_notice();
+						} else {
+							add_notice("No events to report on for this student.");
+							echo display_notice();
+						}
 					}
 				?>
 			</div>			

@@ -151,6 +151,7 @@ if ($ACTION == "login") {
 				"access_expires",
 				"last_login",
 				"privacy_level",
+				"copyright",
 				"notifications",
 				"private_hash",
 				"private-allow_podcasting",
@@ -161,8 +162,8 @@ if ($ACTION == "login") {
 
 	if (($ERROR === 0) && ($result["STATUS"] == "success")) {
 		if (isset($USER_ACCESS_ID)) {
-			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = NULL WHERE `id` = ".(int) $USER_ACCESS_ID." AND `app_id` = ".$db->qstr(AUTH_APP_ID))) {
-				application_log("error", "Unable to incrememnt the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = NULL, `last_login` = ".$db->qstr(time()).", `last_ip` = ".$db->qstr((isset($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : 0))." WHERE `id` = ".(int) $USER_ACCESS_ID." AND `app_id` = ".$db->qstr(AUTH_APP_ID))) {
+				application_log("error", "Unable to reset the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
 			}
 		}
 
@@ -226,6 +227,7 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["expires"] = $result["ACCESS_EXPIRES"];
 			$_SESSION["details"]["lastlogin"] = $result["LAST_LOGIN"];
 			$_SESSION["details"]["privacy_level"] = $result["PRIVACY_LEVEL"];
+			$_SESSION["details"]["copyright"] = $result["COPYRIGHT"];
 			$_SESSION["details"]["notifications"] = $result["NOTIFICATIONS"];
 			$_SESSION["details"]["private_hash"] = $result["PRIVATE_HASH"];
 			$_SESSION["details"]["allow_podcasting"] = false;
@@ -240,6 +242,7 @@ if ($ACTION == "login") {
 			} else {
 				$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
 			}
+            add_statistic("index", "login", "access_id", $ENTRADA_USER->getAccessId(), $ENTRADA_USER->getID());
 
 			if (isset($result["PRIVATE-ALLOW_PODCASTING"])) {
 				if ((int) trim($result["PRIVATE-ALLOW_PODCASTING"])) {
@@ -284,13 +287,25 @@ if ($ACTION == "login") {
          * If the users e-mail address hasn't been verified in the last 365 days,
          * set a flag that indicates this should be done.
          */
-        if (!$_SESSION["details"]["email_updated"] || (($_SESSION["details"]["email_updated"] - mktime()) / 86400 >= 365)) {
+        if (!$_SESSION["details"]["email_updated"] || (($_SESSION["details"]["email_updated"] - time()) / 86400 >= 365)) {
             $_SESSION["details"]["email_updated"] = false;
         } else {
             $_SESSION["details"]["email_updated"] = true;
         }
 
-		if ((!(int) $_SESSION["details"]["privacy_level"]) || (((bool) $GOOGLE_APPS["active"]) && (in_array($_SESSION["details"]["group"], $GOOGLE_APPS["groups"])) && (!$_SESSION["details"]["google_id"]))) {
+		/**
+		 * Test for Copyright compliance and if Copyright notice has been updated
+		 */
+		$COPYRIGHT = false;
+		if ((array_count_values($copyright_settings = (array) $translate->_("copyright")) > 1) && strlen($copyright_settings["copyright-version"])) {
+			if (!(($lastupdated = strtotime($copyright_settings["copyright-version"])) === false)) {
+				if ((!(int) $_SESSION["details"]["copyright"]) || ($lastupdated > (int) $_SESSION["details"]["copyright"])) {
+					$COPYRIGHT = true;
+				}
+			}
+		}
+
+		if ((!(int) $_SESSION["details"]["privacy_level"]) || $COPYRIGHT ||  (((bool) $GOOGLE_APPS["active"]) && (in_array($_SESSION["details"]["group"], $GOOGLE_APPS["groups"])) && (!$_SESSION["details"]["google_id"]))) {
 			/**
 			 * They need to be re-directed to the firstlogin module.
 			 */
@@ -310,7 +325,7 @@ if ($ACTION == "login") {
 		 * if no errors have been encountered before trying to authenticate.
 		 */
 		if ($ERROR == 0) {
-			$remaining_attempts = (AUTH_MAX_LOGIN_ATTEMPTS - $LOGIN_ATTEMPTS);
+			$remaining_attempts = (AUTH_MAX_LOGIN_ATTEMPTS - (isset($LOGIN_ATTEMPTS) && ((int)$LOGIN_ATTEMPTS) ? $LOGIN_ATTEMPTS : 0));
 
 			$ERROR++;
 			$ERRORSTR[$ERROR] = $result["MESSAGE"];
@@ -351,18 +366,37 @@ if ($ACTION == "login") {
 
 	unset($result, $username, $password);
 } elseif ($ACTION == "logout") {
-	users_online("logout");
+    users_online("logout");
 
-	$_SESSION = array();
-	unset($_SESSION);
-	session_destroy();
+    /**
+     * If the user is in masquerade mode, save the session data from before
+     * the masquerade began before it is destroyed with the rest of the session
+     */
+    if (isset($_SESSION["previous_session"]) && $_SESSION["previous_session"]) {
+        $previous_session = $_SESSION["previous_session"];
+    }
 
-	if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
-		phpCAS::logout(ENTRADA_URL);
-	}
+    $_SESSION = array();
+    unset($_SESSION);
+    session_destroy();
 
-	header("Location: ".ENTRADA_URL);
-	exit;
+    if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
+        phpCAS::logout(ENTRADA_URL);
+    }
+
+    /**
+     * If logging out of the masquerade, log back in as admin and redirect
+     */
+    if (isset($previous_session) && $previous_session) {
+        session_start();
+        $_SESSION = $previous_session;
+
+        header("Location: ".ENTRADA_URL."/admin/users");
+        exit;
+    }
+
+    header("Location: ".ENTRADA_URL);
+    exit;
 }
 
 if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"] && isset($ENTRADA_USER)) {
@@ -487,74 +521,6 @@ switch ($MODULE) {
 		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR.$MODULE.".inc.php");
 	break;
 	default :
-		/*
-		$excused_proxy_ids = array();
-        if ($ENTRADA_USER->getActiveGroup() == "student" && $MODULE != "evaluations" && !in_array($ENTRADA_USER->getID(), $excused_proxy_ids)) {
-            $query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
-                        JOIN `course_groups` AS b
-                        ON a.`cgroup_id` = b.`cgroup_id`
-                        WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-                        AND a.`active` = 1
-                        AND b.`active` = 1";
-            $course_groups = $db->GetAll($query);
-
-            $cgroup_ids_string = "";
-            if (isset($course_groups) && is_array($course_groups)) {
-                foreach ($course_groups as $course_group) {
-                    if ($cgroup_ids_string) {
-                        $cgroup_ids_string .= ", ".$db->qstr($course_group["cgroup_id"]);
-                    } else {
-                        $cgroup_ids_string = $db->qstr($course_group["cgroup_id"]);
-                    }
-                }
-            }
-			$cohort = groups_get_cohort($ENTRADA_USER->getID());
-			$query = "SELECT * FROM `evaluations` AS a
-						JOIN `evaluation_evaluators` AS b
-						ON a.`evaluation_id` = b.`evaluation_id`
-						JOIN `evaluation_forms` AS c
-						ON a.`eform_id` = c.`eform_id`
-						JOIN `evaluations_lu_targets` AS d
-						ON c.`target_id` = d.`target_id`
-						WHERE
-						(
-							(
-								b.`evaluator_type` = 'proxy_id'
-								AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
-							)
-							OR
-							(
-								b.`evaluator_type` = 'organisation_id'
-								AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-							)".($_SESSION["details"]["group"] == "student" ? " OR (
-								b.`evaluator_type` = 'cohort'
-								AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
-							)" : "").($cgroup_ids_string ? " OR (
-								b.`evaluator_type` = 'cgroup_id'
-								AND b.`evaluator_value` IN (".$cgroup_ids_string.")
-							)" : "")."
-						)
-						AND a.`evaluation_finish` < ".$db->qstr(time())."
-						AND a.`evaluation_active` = 1
-						AND ".$db->qstr($ENTRADA_USER->getID())." NOT IN (
-							SELECT `proxy_id` FROM `evaluation_evaluator_exclusions`
-							WHERE `evaluation_id` = a.`evaluation_id`
-						)
-						GROUP BY a.`evaluation_id`
-						ORDER BY a.`evaluation_finish` ASC";
-
-			$evaluations = $db->GetAll($query);
-			if ($evaluations) {
-				foreach ($evaluations as $evaluation) {
-					$overdue = Models_Evaluation::getUserOverdueEvaluation($evaluation, array("eevaluator_id" => $evaluation["eevaluator_id"]), array("id" => $ENTRADA_USER->getID()));
-					if ($overdue) {
-						header("Location: ".ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"]);
-						exit;
-					}
-				}
-			}
-		}
-		*/
 
 		/**
 		 * Initialize Entrada_Router so it can load the requested modules.

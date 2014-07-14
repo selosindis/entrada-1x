@@ -61,7 +61,7 @@ class InternalAwards extends Collection {
 	 * Sorts the collection by award title 
 	 * @param int $direction
 	 */
-	public function sort($direction) {
+	public function sort($direction = SORT_ASC, $sort_by = '') {
 		static $last_direction;
 
 		if (!is_null($direction)) {

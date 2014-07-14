@@ -53,6 +53,8 @@ if (!defined("IN_EVENTS")) {
 
 	if (isset($_POST["course_id"]) && ($tmp_input = clean_input($_POST["course_id"], array("int")))) {
 		$course_id = $tmp_input;
+        $PROCESSED["course_id"] = $course_id;
+
 	}
 
 	if (isset($_POST["event_id"]) && ($tmp_input = clean_input($_POST["event_id"], array("int")))) {
@@ -151,7 +153,7 @@ if (!defined("IN_EVENTS")) {
 				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($groups_results) {
 					foreach ($groups_results as $group) {
-						if (isset($PROCESSED["associated_cgroup_ids"]) && is_array($PROCESSED["associated_cgroup_ids"]) && in_array($group["group_id"], $PROCESSED["associated_cgroup_ids"])) {
+						if (isset($PROCESSED["associated_cgroup_ids"]) && is_array($PROCESSED["associated_cgroup_ids"]) && in_array($group["cgroup_id"], $PROCESSED["associated_cgroup_ids"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";

@@ -16,8 +16,7 @@
  */
 
 require_once 'core/library/Models/utility/ModelBase.class.php';
-require_once 'core/library/Models/utility/Validation.interface.php';
-class Observership extends ModelBase implements Editable, Validation {
+class Observership extends ModelBase {
 	protected $id;
 	protected $student_id;
 	protected $title;
@@ -84,13 +83,13 @@ class Observership extends ModelBase implements Editable, Validation {
 				$res->VALID = false;				
 			}
 			
-			if (($ENTRADA_USER->getGroup() != "staff" && $ENTRADA_USER->getGroup() != "medtech") && date("z", $res->start) < date("z", time())) {
+			if (($ENTRADA_USER->getGroup() != "staff" && $ENTRADA_USER->getGroup() != "medtech") && $res->start < strtotime(date("Y-m-d", time()))) {
 				add_error("Entry of historical observerships is not available, any entered observership must start tomorrow or later.");
 				$res->VALID = false;
 			}
 
 			if ($ENTRADA_USER->getGroup() == "staff" || $ENTRADA_USER->getGroup() == "medtech") {
-				$res->status = "confirmed";
+				$res->status = "approved";
 			}
 			
 			if(!$res->end){
@@ -124,6 +123,31 @@ class Observership extends ModelBase implements Editable, Validation {
 					$res->VALID = false;					
 				}
 			}
+            
+            
+            if (!isset($arr["activity_type"]) || trim($arr["activity_type"]) == "") {
+                add_error("<strong>Activity Type</strong> is a required field. Please ensure you've provided a value.");
+            }
+            
+            if (!isset($arr["clinical_discipline"]) || trim($arr["clinical_discipline"]) == "") {
+                add_error("<strong>Eligible Clinical Disciplines</strong> is a required field. Please ensure you've provided a value.");
+            }
+            
+            if (!isset($arr["organisation"]) || trim($arr["organisation"]) == "") {
+                add_error("<strong>Organisation</strong> is a required field. Please ensure you've provided a value.");
+            }
+            
+            if (!isset($arr["address_l1"]) || trim($arr["address_l1"]) == "") {
+                add_error("<strong>Address Line 1</strong> is a required field. Please ensure you've provided a value.");
+            }
+            
+            if (!isset($arr["city"]) || trim($arr["city"]) == "") {
+                add_error("<strong>City</strong> is a required field. Please ensure you've provided a value.");
+            }
+            
+            if (trim($arr["prov_state"]) == "0") {
+                add_error("<strong>Province</strong> is a required field. Please ensure you've provided a value.");
+            }
 
 			if($mode == "add"){
 				if(!isset($arr["read"]) || !trim($arr["read"])){
@@ -171,6 +195,7 @@ class Observership extends ModelBase implements Editable, Validation {
 						"postal_code"=>array("trim","notags"),
 						"phone"=>array("trim","notags"),
 						"fax"=>array("trim","notags"),
+                        "city" => array("trim","notags"),
 						"updated_date"=>array("int"),
 						"updated_by"=>array("int")
 					);
@@ -220,7 +245,7 @@ class Observership extends ModelBase implements Editable, Validation {
 	}	
 
 	public function getTitle(){
-		return $this->title;
+		return ucwords($this->title);
 	}
 
 	public function getAddressLine1(){
@@ -314,8 +339,8 @@ class Observership extends ModelBase implements Editable, Validation {
 		$preceptor = trim(($this->getPreceptorPrefix() ? $this->getPreceptorPrefix() . " " : "") . $this->getPreceptorFirstname() . " " . $this->getPreceptorLastname());
 		
 		$elements = array();
-		$elements[] = $this->title;
-		$elements[] = $this->site . ", " . $this->location;
+		$elements[] = ucwords($this->title);
+		$elements[] = (!is_null($this->site) ? $this->site : $this->organisation) . ", " . (!is_null($this->location) ? $this->location : (!is_null($this->city) ? $this->city . ", " : "") . (!is_null($this->prov) ? $this->prov . ", " : ""). (!is_null($this->country) ? $this->country : ""));
 		$elements[] = $preceptor;
 		$details = implode("\n", $elements);
 		return $details;
@@ -444,7 +469,7 @@ class Observership extends ModelBase implements Editable, Validation {
 		if ($this->activity_type == "ipobservership") {
 			$this->title = $this->clinical_discipline . " " . $this->observership_details;
 		} else {
-		    $this->title = $this->clinical_discipline . " " . $this->activity_type;
+			$this->title = $this->clinical_discipline . " " . $this->activity_type;
 		}
 		$data = $this->toArray();
 		
@@ -458,10 +483,10 @@ class Observership extends ModelBase implements Editable, Validation {
 		}
 	}
 	
-	public function delete($id = false) {		
+	public function delete($id = false) {
 		global $db;
 		$id = (int) $id ? $id : $this->id;
-		if ($this->status == "pending") {
+		if ($this->status == "pending" || $this->status == "approved" || $this->status == "rejected") {
 			$query = "DELETE FROM `student_observerships` where `id`=".$db->qstr($id);
 			if(!$db->Execute($query)) {
 				application_log("error", "Unable to delete a student_observerships record. Database said: ".$db->ErrorMsg());

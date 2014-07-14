@@ -42,12 +42,16 @@ class MSPRs extends Collection {
 	 */
 	static public function getYear($year) {
 		global $db, $ORGANISATION_ID;
-		$query = "	select * from `student_mspr` a 
-					left join `".AUTH_DATABASE."`.`user_data` b 
-					on a.user_id = b.id 
-					where `grad_year`=".$db->qstr($year)." 
-					and `organisation_id`=".$db->qstr($ORGANISATION_ID)."
-					order by lastname, firstname";
+        $query = "SELECT * 
+                    FROM `student_mspr` AS a
+                    JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                    ON a.`user_id` = b.`id`
+                    JOIN `".AUTH_DATABASE."`.`user_access` AS c
+                    ON b.`id` = c.`user_id`
+                    WHERE c.`group` = 'student'
+                    AND c.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+                    AND (c.`role` = ".$db->qstr($year)." OR b.`grad_year` = ".$db->qstr($year).")
+                    GROUP BY a.`user_id`";
 		$results	= $db->GetAll($query);
 		$msprs = array();
 		if ($results) {

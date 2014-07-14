@@ -69,6 +69,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 
 	if (!$home_page) {
 		$PAGE_TYPES[]	= array("module_shortname" => "url", "module_title" => "External URL");
+		$PAGE_TYPES[]   = array("module_shortname" => "lticonsumer", "module_title" => "BasicLTI Consumer");
 	}
 
 	foreach ($PAGE_TYPES as $PAGE) {
@@ -83,8 +84,61 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 	if (!isset($PAGE_TYPE) || !$PAGE_TYPE) {
 		$PAGE_TYPE= $page_type;
 	}
-
+	
+	if ($home_page || $PAGE_TYPE == "events" || $PAGE_TYPE == "announcements") {
+		$query		= "SELECT * FROM `community_page_options` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID);
+		$results	= $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+						$page_options[$result["option_title"]] = $result;
+			}
+		}
+	}
+	
 	if ($home_page) {
+		/**
+		 * If these options are not already records in the database, insert them so they can be updated.
+		 */
+		if (!array_key_exists("show_announcements", $page_options)) {
+			$db->Execute("INSERT INTO `community_page_options` 
+				(`community_id`, `cpage_id`, `option_title`, `option_value`)
+				VALUES (".$db->qstr($COMMUNITY_ID).", ".$db->qstr($PAGE_ID).", 'show_announcements', 0)");
+			$page_options["show_announcements"] =	array ('cpoption_id' 	=> $db->insert_id(),
+												   'community_id'	=> $COMMUNITY_ID,
+												   'cpage_id'		=> $PAGE_ID,
+												   'option_title'	=> "show_announcements",
+												   'option_value'	=> 0,
+												   'proxy_id'		=> 0,
+												   'updated_date'	=> 0
+												  );
+		}
+		if (!array_key_exists("show_events", $page_options)) {
+			$db->Execute("INSERT INTO `community_page_options` 
+				(`community_id`, `cpage_id`, `option_title`, `option_value`)
+				VALUES (".$db->qstr($COMMUNITY_ID).", ".$db->qstr($PAGE_ID).", 'show_events', 0)");
+			$page_options["show_events"] =	array ('cpoption_id' 	=> $db->insert_id(),
+												   'community_id'	=> $COMMUNITY_ID,
+												   'cpage_id'		=> $PAGE_ID,
+												   'option_title'	=> "show_events",
+												   'option_value'	=> 0,
+												   'proxy_id'		=> 0,
+												   'updated_date'	=> 0
+												  );
+		}
+		if (!array_key_exists("show_history", $page_options)) {
+			$db->Execute("INSERT INTO `community_page_options` 
+				(`community_id`, `cpage_id`, `option_title`, `option_value`)
+				VALUES (".$db->qstr($COMMUNITY_ID).", ".$db->qstr($PAGE_ID).", 'show_history', 0)");
+			$page_options["show_history"] =	array ('cpoption_id' 	=> $db->insert_id(),
+												   'community_id'	=> $COMMUNITY_ID,
+												   'cpage_id'		=> $PAGE_ID,
+												   'option_title'	=> "show_history",
+												   'option_value'	=> 0,
+												   'proxy_id'		=> 0,
+												   'updated_date'	=> 0
+												  );
+		}
+		
 		$query		= "SELECT * FROM `community_page_options` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);//." AND `cpage_id` = '0'";
 		$results	= $db->GetAll($query);
 		if ($results) {
@@ -107,14 +161,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 		}
 	} else {
 		if ($PAGE_TYPE == "announcements" || $PAGE_TYPE == "events") {
-			$query		= "SELECT * FROM `community_page_options` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID);
-			$results	= $db->GetAll($query);
-			if ($results) {
-				foreach ($results as $result) {
-							$page_options[$result["option_title"]] = $result;
-				}
-			}
-			if (!key_exists('allow_member_posts', $page_options)) {
+			if (!array_key_exists('allow_member_posts', $page_options)) {
 			$db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'allow_member_posts', `option_value` = '0'");
 			$page_options["allow_member_posts"] = Array ('cpoption_id' 	=> $db->insert_id(),
 														 'community_id' => $COMMUNITY_ID,
@@ -126,7 +173,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 														);
 			}
 
-			if (!key_exists('allow_troll_posts', $page_options)) {
+			if (!array_key_exists('allow_troll_posts', $page_options)) {
 				$db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'allow_troll_posts', `option_value` = '0'");
 				$page_options["allow_troll_posts"] = Array ('cpoption_id' 	=> $db->insert_id(),
 															 'community_id' => $COMMUNITY_ID,
@@ -138,7 +185,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 															);
 			}
 
-			if (!key_exists('moderate_posts', $page_options)) {
+			if (!array_key_exists('moderate_posts', $page_options)) {
 				$db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'moderate_posts', `option_value` = '0'");
 				$page_options["moderate_posts"] = Array ('cpoption_id' 	=> $db->insert_id(),
 															 'community_id' => $COMMUNITY_ID,
@@ -157,7 +204,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							$page_options[$result["option_title"]] = $result;
 				}
 			}
-			if (!key_exists('new_window', $page_options)) {
+			if (!array_key_exists('new_window', $page_options)) {
 				$db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'new_window', `option_value` = '0'");
 				$page_options["moderate_posts"] = Array ('cpoption_id' 	=> $db->insert_id(),
 															 'community_id' => $COMMUNITY_ID,
@@ -375,6 +422,34 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									$ERROR++;
 									$ERRORSTR[] = "The <strong>External URL</strong> field is required, please enter a valid website address.";
 								}
+							}  elseif ($PAGE_TYPE == "lticonsumer") {
+								$ltiJSONArray = array();
+								if ((isset($_POST["lti_url"])) && ($lti_url = clean_input($_POST["lti_url"], array("trim", "notags")))) {
+									$ltiJSONArray["lti_url"] = $lti_url;
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "The <strong>LTI Launch URL</strong> field is required, please enter a valid URL address.";
+								}
+
+								if ((isset($_POST["lti_key"])) && ($lti_key = clean_input($_POST["lti_key"], array("trim", "notags")))) {
+									$ltiJSONArray["lti_key"] = $lti_key;
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "The <strong>LTI Key</strong> field is required, please enter a key.";
+								}
+
+								if ((isset($_POST["lti_secret"])) && ($lti_secret = clean_input($_POST["lti_secret"], array("trim", "notags")))) {
+									$ltiJSONArray["lti_secret"] = $lti_secret;
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "The <strong>LTI Secret</strong> field is required, please enter a secret.";
+								}
+
+								if (isset($_POST["lti_params"])) {
+									$ltiJSONArray["lti_params"] = $_POST["lti_params"];
+								}
+
+								$PROCESSED["page_content"] = json_encode($ltiJSONArray);
 							} elseif ($PAGE_TYPE == "default") {
 								/**
 								 * Non-Required "page_content" / Page Contents.
@@ -1009,6 +1084,29 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										</td>
 									</tr>
 									<?php
+								} elseif($PAGE_TYPE == "lticonsumer") {
+									$ltiSettings = null;
+									if(isset($PROCESSED["page_content"]) && !empty($PROCESSED["page_content"])) {
+										$ltiSettings = json_decode($PROCESSED["page_content"]);
+									}
+									?>
+									<tr>
+										<td><label for="lti_url" class="form-required">LTI Launch URL:</label></td>
+										<td><input type="textbox" id="lti_url" name="lti_url" style="width: 99%;" value="<?php echo ((isset($ltiSettings) && property_exists($ltiSettings, "lti_url")) ? html_encode($ltiSettings->lti_url) : ""); ?>" /></td>
+									</tr>
+									<tr>
+										<td><label for="lti_key" class="form-required">LTI Key:</label></td>
+										<td><input type="textbox" id="lti_key" name="lti_key" style="width: 99%;" value="<?php echo ((isset($ltiSettings) && property_exists($ltiSettings, "lti_key")) ? html_encode($ltiSettings->lti_key) : ""); ?>" /></td>
+									</tr>
+									<tr>
+										<td><label for="lti_secret" class="form-required">LTI Secret:</label></td>
+										<td><input type="textbox" id="lti_secret" name="lti_secret" style="width: 99%;" value="<?php echo ((isset($ltiSettings) && property_exists($ltiSettings, "lti_secret")) ? html_encode($ltiSettings->lti_secret) : ""); ?>" /></td>
+									</tr>
+									<tr>
+										<td style="vertical-align: top"><label for="lti_params">LTI Additional Parameters:</label></td>
+										<td><textarea class="expandable" id="lti_params" name="lti_params" style="width: 98%;"><?php echo ((isset($ltiSettings)) ? html_encode($ltiSettings->lti_params) : ""); ?></textarea></td>
+									</tr>
+									<?php
 								} else {
 									?>
 									<tr>
@@ -1021,6 +1119,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</tr>
 									<?php
 								}
+
 								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 									if ($PAGE_TYPE == "events" || $PAGE_TYPE == "announcements") {
 										?>

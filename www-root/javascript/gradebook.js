@@ -240,7 +240,7 @@ jQuery(document).ready(function($) {
 		var input = $(this);
 		$.ajax({
 			url: ENTRADA_URL + "/admin/gradebook/assessments?section=grade",
-			data: "ajax=ajax&method=store-resubmit&value=" + $(this).attr("value") + "&aoption_id=" + $(this).attr("data-id") + "&proxy_id=" + $(this).attr("data-proxy-id") + "&aovalue_id=" + $(this).attr("data-aovalue-id"),
+			data: "ajax=ajax&method=store-resubmit&value=" + input.val() + "&aoption_id=" + input.attr("data-id") + "&proxy_id=" + input.attr("data-proxy-id") + "&aovalue_id=" + input.attr("data-aovalue-id"),
 			type: "POST",
 			success: function(data) {
 				var jsonResponse = JSON.parse(data);

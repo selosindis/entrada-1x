@@ -30,16 +30,13 @@ if (isset($_GET["cid"]) && $tmp_cmt = clean_input($_GET["cid"],"int")){
 
 if ($RECORD_ID && $ASSIGNMENT_ID) {
 	$query			= "
-					SELECT a.*, b.`file_title`, b.`proxy_id` AS `file_owner`, c.`assignment_title`, c.`course_id`
+					SELECT a.*, a.`proxy_id` AS `file_owner`, c.`assignment_title`, c.`course_id`
 					FROM `assignment_comments` AS a
-					JOIN `assignment_files` AS b
-					ON a.`afile_id` = b.`afile_id`
 					JOIN `assignments` AS c
 					ON a.`assignment_id` = c.`assignment_id`
 					WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
 					AND a.`acomment_id` = ".$db->qstr($RECORD_ID)."
 					AND a.`comment_active` = '1'
-					AND b.`file_active` = '1'
 					AND c.`assignment_active` = '1'";
 	$comment_record	= $db->GetRow($query);
 	if ($comment_record) {
@@ -57,12 +54,12 @@ if ($RECORD_ID && $ASSIGNMENT_ID) {
 					$BREADCRUMB = array();
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook", "title" => "Gradebooks");
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $comment_record["course_id"])), "title" => "Assignments");
-					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "id" => $comment_record["course_id"], "assignment_id"=>$comment_record["assignment_id"], "step" => false)), "title" => $file_record["assignment_title"]);
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "id" => $comment_record["course_id"], "assignment_id"=>$comment_record["assignment_id"], "step" => false)), "title" => $comment_record["assignment_title"]);
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?".replace_query(array("section" => "view", "id" => $ASSIGNMENT_ID, "pid"=>$comment_record["file_owner"], "step" => false)), "title" => $user_name."'s Submission");
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "edit-comment", "id" => $ASSIGNMENT_ID, "cid"=>$RECORD_ID, "step" => false)), "title" => "Edit Comment");
 				} else {
-					$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$ASSIGNMENT_ID.(isset($assignment_contact) && $assignment_contact?"&amp;pid=".$comment_record["file_owner"]:""), "title" => limit_chars($comment_record["file_title"], 32));
-					$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;id=".$ASSIGNMENT_ID."&amp;cid=".$RECORD_ID, "title" => "Edit File Comment");
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$ASSIGNMENT_ID.(isset($assignment_contact) && $assignment_contact?"&amp;pid=".$comment_record["file_owner"]:""), "title" => limit_chars($comment_record["assignment_title"], 32));
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;assignment_id=".$ASSIGNMENT_ID."&amp;cid=".$RECORD_ID, "title" => "Edit Comment");
 				}							
 
 				communities_load_rte();
@@ -105,8 +102,8 @@ if ($RECORD_ID && $ASSIGNMENT_ID) {
 
 							if ($db->AutoExecute("assignment_comments", $PROCESSED, "UPDATE", "`acomment_id` = ".$db->qstr($RECORD_ID)." AND `assignment_id` = ".$db->qstr($ASSIGNMENT_ID))) {
 								
-								//$url			= ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID.(isset($assignment_contact) && $assignment_contact?"&amp;pid=".$comment_record["file_owner"]:"")."#comment-".$RECORD_ID;
-								$url			= ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID.(isset($assignment_contact) && $assignment_contact?"&pid=".$comment_record["file_owner"]:"")."#comment-".$RECORD_ID;
+								//$url			= ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$ASSIGNMENT_ID.(isset($assignment_contact) && $assignment_contact?"&amp;pid=".$comment_record["file_owner"]:"")."#comment-".$RECORD_ID;
+								$url			= ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$ASSIGNMENT_ID.(isset($assignment_contact) && $assignment_contact?"&pid=".$comment_record["file_owner"]:"")."#comment-".$RECORD_ID;
 								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 								$SUCCESS++;
@@ -152,7 +149,7 @@ if ($RECORD_ID && $ASSIGNMENT_ID) {
 						echo display_notice();
 					}
 					?>
-					<form action="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;id=".$ASSIGNMENT_ID."&amp;cid=".$RECORD_ID; ?>&amp;step=2" method="post">
+					<form action="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;assignment_id=".$ASSIGNMENT_ID."&amp;cid=".$RECORD_ID; ?>&amp;step=2" method="post">
 					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit File Comment">
 					<colgroup>
 						<col style="width: 3%" />
@@ -189,6 +186,11 @@ if ($RECORD_ID && $ASSIGNMENT_ID) {
 					break;
 				}
 			} else {
+				$url			= ENTRADA_URL."/profile/gradebook/assignments";
+				$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+				
+				$ERROR++;
+				$ERRORSTR[] = "You are not authorized to add a comment to this file.<br /><br />You will now be redirected back to the assignment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue";
 				if ($ERROR) {
 					echo display_error();
 				}
@@ -197,27 +199,35 @@ if ($RECORD_ID && $ASSIGNMENT_ID) {
 				}
 			}
 		} else {
+			$url			= ENTRADA_URL."/profile/gradebook/assignments";
+			$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+			
 			$NOTICE++;
-			$NOTICESTR[] = "The comment that you are trying to edit was deactivated <strong>".date(DEFAULT_DATE_FORMAT, $comment_record["updated_date"])."</strong> by <strong>".html_encode(get_account_data("firstlast", $comment_record["updated_by"]))."</strong>.<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
+			$NOTICESTR[] = "The comment that you are trying to edit was deactivated <strong>".date(DEFAULT_DATE_FORMAT, $comment_record["updated_date"])."</strong> by <strong>".html_encode(get_account_data("firstlast", $comment_record["updated_by"]))."</strong>.<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.<br /><br />You will now be redirected back to the assignment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue";
 
 			echo display_notice();
 
 			application_log("error", "The comment record id [".$RECORD_ID."] is deactivated; however, ".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getID()."] has tried to edit it.");
 		}
 	} else {
+		$url			= ENTRADA_URL."/profile/gradebook/assignments";
+		$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+	
 		$ERROR++;
-		$ERRORSTR[] = "The comment id that you have provided does not exist in the system. Please provide a valid record id to proceed.";
+		$ERRORSTR[] = "The comment id that you have provided does not exist in the system. Please provide a valid record id to proceed.<br /><br />You will now be redirected back to the assignment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue";
 
 		echo display_error();
 
 		application_log("error", "The provided comment id was invalid [".$RECORD_ID."] (Edit Comment).");
 	}
 } else {
+	$url			= ENTRADA_URL."/profile/gradebook/assignments";
+	$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+	
 	$ERROR++;
-	$ERRORSTR[] = "Please provide a valid comment id to proceed.";
+	$ERRORSTR[] = "Please provide a valid comment id to proceed.<br /><br />You will now be redirected back to the assignment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue";
 
 	echo display_error();
 
 	application_log("error", "No comment id was provided to edit. (Edit Comment)");
 }
-?>

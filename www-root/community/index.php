@@ -26,6 +26,15 @@
  */
 require_once("init.inc.php");
 
+require_once "Entrada/lti/oauth/oauth-utils.class.php";
+require_once "Entrada/lti/oauth/oauth-exception.class.php";
+require_once "Entrada/lti/oauth/oauth-request.class.php";
+require_once "Entrada/lti/oauth/oauth-token.class.php";
+require_once "Entrada/lti/oauth/oauth-consumer.class.php";
+require_once "Entrada/lti/oauth/oauth-signature-method.interface.php";
+require_once "Entrada/lti/oauth/method/oauth-signature-method-hmac-sha1.class.php";
+require_once "Entrada/lti/LTIConsumer.class.php";
+
 require_once("Entrada/smarty/Smarty.class.php");
 
 ob_start("on_checkout");
@@ -61,6 +70,7 @@ $COMMUNITY_MEMBER = false;			// Users are not members by defalt.
 $COMMUNITY_ADMIN = false;			// Users are not community administrators by default.
 
 $PROCEED_TO = ((isset($_GET["url"])) ? trim($_GET["url"]) : ((isset($_SERVER["REQUEST_URI"])) ? trim($_SERVER["REQUEST_URI"]) : false));
+$ALLOW_MEMBERSHIP = false;
 
 /**
  * For backwards compatibility so pre-1.0 links still work properly.
@@ -101,15 +111,14 @@ if (isset($_SERVER["PATH_INFO"])) {
 	}
 }
 
-if (isset($PAGE_URL) && $PAGE_URL) {
-    $query = "	SELECT a.`community_protected`, b.`allow_public_view`
-                FROM `communities` AS a
-                LEFT JOIN `community_pages` AS b
-                ON b.`community_id` = a.`community_id`
-                WHERE `community_url` = ".$db->qstr($COMMUNITY_URL)."
-                AND `page_url` = ".$db->qstr($PAGE_URL);
-    $page_permissions = $db->GetRow($query);
-}
+$query = "	SELECT a.`community_protected`, b.`allow_public_view`
+            FROM `communities` AS a
+            LEFT JOIN `community_pages` AS b
+            ON b.`community_id` = a.`community_id`
+            WHERE `community_url` = ".$db->qstr($COMMUNITY_URL)."
+            AND `page_url` = ".$db->qstr((isset($PAGE_URL) && $PAGE_URL ? $PAGE_URL : ""));
+$page_permissions = $db->GetRow($query);
+
 $PAGE_PROTECTED = (isset($page_permissions) && $page_permissions && ($page_permissions["community_protected"] == 1 || $page_permissions["allow_public_view"] == 0) ? true : false);
 
 if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
@@ -194,10 +203,14 @@ if ($LOGGED_IN && $ENTRADA_USER) {
  * Setup Smarty template engine.
  */
 $smarty = new Smarty();
-$smarty->template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
+
+$template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
+$smarty->template_dir = $template_dir;
 $smarty->compile_dir = CACHE_DIRECTORY;
-$smarty->compile_id = md5($smarty->template_dir);
+$smarty->compile_id = md5($template_dir);
 $smarty->cache_dir = CACHE_DIRECTORY;
+
+$is_sequential_nav = false;
 
 /**
  * Check if the community url has been set by the above code.
@@ -256,7 +269,7 @@ if ($COMMUNITY_URL) {
 
 			}
 
-			if (isset($PAGE_URL)) {
+            if (isset($PAGE_URL) && $PAGE_URL) {
 				switch ($PAGE_URL) {
 					case "pages" :
 						$COMMUNITY_MODULE = "pages";
@@ -401,8 +414,10 @@ if ($COMMUNITY_URL) {
 				 */
 				if ((isset($community_details["community_template"])) && (is_dir(ENTRADA_ABSOLUTE."/community/templates/".$community_details["community_template"]))) {
 					$COMMUNITY_TEMPLATE = $community_details["community_template"];
-					$smarty->template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
-					$smarty->compile_id = md5($smarty->template_dir);
+                    $template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
+
+					$smarty->template_dir = $template_dir;
+					$smarty->compile_id = md5($template_dir);
 				}
                 $COMMUNITY_LOCKED_PAGE_IDS = array();
                 $COMMUNITY_TYPE_OPTIONS = array();
@@ -429,7 +444,6 @@ if ($COMMUNITY_URL) {
                     }
 					if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1" && $COMMUNITY_MODULE != "pages") {
 						$is_sequential_nav = true;
-						$smarty->assign("is_sequential_nav", $is_sequential_nav);
 
 						$result = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
 
@@ -736,6 +750,82 @@ if ($COMMUNITY_URL) {
 
 							echo display_error();
 						}
+					}  elseif ($COMMUNITY_MODULE == "lticonsumer") {
+						$query  = "SELECT `page_title`, `page_content` FROM `community_pages` WHERE `cpage_id` = " . $db->qstr($PAGE_ID);
+						$result = $db->GetRow($query);
+
+						if ($result) {
+							if (trim($result["page_title"]) != "") {
+								echo "<h1>".html_encode($result["page_title"])."</h1>";
+							}
+
+							if (!empty($result["page_content"])) {
+								$lti_settings = json_decode($result["page_content"]);
+
+								$parameters = array(
+					                "resource_link_id" => $PAGE_ID,
+					                "resource_link_title" => html_encode($result["page_title"]),
+					                "resource_link_description" => "",
+					                "user_id" => $ENTRADA_USER->getId(),
+					                "roles" => "Learner",
+					                "lis_person_name_full" => $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname(),
+					                "lis_person_name_family" => $ENTRADA_USER->getLastname(),
+					                "lis_person_name_given" => $ENTRADA_USER->getFirstname(),
+					                "lis_person_contact_email_primary" => $ENTRADA_USER->getEmail(),
+					                "context_id" => $PAGE_ID,
+					                "context_title" => html_encode($result["page_title"]),
+					                "context_label" => "",
+					                "tool_consumer_info_product_family_code" => APPLICATION_NAME,
+					                "tool_consumer_info_version" => APPLICATION_VERSION,
+					                "tool_consumer_instance_guid" => ENTRADA_URL,
+					                "tool_consumer_instance_description" => "",
+					                "launch_presentation_locale" => "en-US",
+					                "launch_presentation_document_target" => "iframe",
+					                "launch_presentation_width" => "",
+					                "launch_presentation_height" => "",
+					                "launch_presentation_css_url" => ""
+					            );
+
+                                $paramsList = explode(";", $lti_settings->lti_params);
+                                if ($paramsList && count($paramsList) > 0) {
+                                    foreach ($paramsList as $param) {
+                                        $parts = explode("=", $param);
+                                        if ($parts && (count($parts) == 2)) {
+                                            $key = clean_input($parts[0], array("trim", "notags"));
+                                            $value = clean_input($parts[1], array("trim", "notags"));
+
+                                            if ($key) {
+                                                $parameters["custom_".$key] = $value;
+                                            }
+                                        }
+                                    }
+                                }
+
+					            $ltiConsumer = new LTIConsumer();
+					            $signedParams = $ltiConsumer->sign($parameters, $lti_settings->lti_url, "POST", $lti_settings->lti_key, $lti_settings->lti_secret);
+					            ?>
+                                <iframe name="ltiTestFrame" id="ltiTestFrame" src="" width="100%" height="700px" scrolling="auto" style="border: 1px solid rgba(0, 0, 0, 0.075);" transparency=""></iframe>
+                                <form id="ltiSubmitForm" name="ltiSubmitForm" method="POST" action="<?php echo html_encode($lti_settings->lti_url); ?>" target="ltiTestFrame" enctype="application/x-www-form-urlencoded">
+                                    <?php
+                                    if ($signedParams && count($signedParams) > 0) {
+                                        foreach ($signedParams as $key => $value) {
+                                            $key = htmlspecialchars($key);
+                                            $value = htmlspecialchars($value);
+
+                                            echo "<input type=\"hidden\" name=\"" . $key . "\" value=\"" . $value . "\"/>";
+                                        }
+                                    }
+                                    ?>
+                                    <input id="ltiSubmitBtn" type="submit" style="display: none;"/>
+                                </form>
+                                <script>
+                                    window.onload = function(){
+                                        document.forms['ltiSubmitForm'].submit();
+                                    };
+                                </script>
+					            <?php
+							}
+						}
 					} else {
 						$url		= COMMUNITY_URL.$COMMUNITY_URL;
 						$ONLOAD[]	= "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -762,15 +852,15 @@ if ($COMMUNITY_URL) {
 					$result	= $db->GetRow($query);
 					if ($result) {
 						if (trim($result["page_title"]) != "") {
-							$page_text .= "<h1>".html_encode($result["page_title"])."</h1>";
+							$page_text .= "<h1>".html_encode($result["page_title"]).(($LOGGED_IN) && ($COMMUNITY_ADMIN) ? "<a id=\"community-edit-button\" href=\"". COMMUNITY_URL.$COMMUNITY_URL .":pages?action=edit&step=1&page=". $result["cpage_id"] ."\" class=\"edit-community-page-btn pull-right\">Edit Page</a>" : "")."</h1>";
 						}
 
 						if (trim($result["page_content"]) != "") {
 							$page_text .= $result["page_content"]."\n<br /><br />\n";
 						}
 					}
-					$PAGE_CONTENT	= $page_text.$PAGE_CONTENT;
 
+					$PAGE_CONTENT = $page_text.$PAGE_CONTENT;
 				}
 
 				$PAGE_META["title"] = $community_details["community_title"];
@@ -806,10 +896,20 @@ if ($COMMUNITY_URL) {
                     $sys_profile_evaluations = "";
 
 				}
+
+                if (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"]) {
+                    $navigator_tabs = navigator_tabs();
+                } else {
+                    $navigator_tabs = "";
+                }
+
 				$date_joined = "Joined: ".date("Y-m-d", $COMMUNITY_MEMBER_SINCE);
 
                 $smarty->assign("sys_profile_photo", $sys_profile_photo);
                 $smarty->assign("sys_profile_evaluations", $sys_profile_evaluations);
+                $smarty->assign("allow_membership", $ALLOW_MEMBERSHIP);
+
+                $smarty->assign("is_sequential_nav", $is_sequential_nav);
 
 				$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);
 				$smarty->assign("sys_community_relative", COMMUNITY_RELATIVE);
@@ -830,6 +930,19 @@ if ($COMMUNITY_URL) {
 
 				$smarty->assign("site_total_members", communities_count_members());
 				$smarty->assign("site_total_admins", communities_count_members(1));
+
+                $smarty->assign("copyright_string", COPYRIGHT_STRING);
+                $smarty->assign("development_mode", DEVELOPMENT_MODE);
+                $smarty->assign("google_analytics_code", GOOGLE_ANALYTICS_CODE);
+
+                $smarty->assign("isAuthorized", (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] ? true : false));
+                $smarty->assign("protocol", (isset($_SERVER["HTTPS"]) ? "https" : "http"));
+
+                $smarty->assign("navigator_tabs", $navigator_tabs);
+                $smarty->assign("entrada_navigation", communities_entrada_navigation($navigator_tabs));
+
+                $smarty->assign("application_name", APPLICATION_NAME);
+                $smarty->assign("application_version", APPLICATION_VERSION);
 
 				$query = "	SELECT a.`course_id`, a.`course_code`
 									FROM `courses` AS a

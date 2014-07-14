@@ -100,7 +100,6 @@ if (!$access && (!$ENTRADA_ACL->amIAllowed($MODULES["quizzes"]["resource"], $MOD
 				$ALLOW_QUESTION_MODIFICATIONS = true;
 			}
 		}
-		
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);

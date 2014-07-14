@@ -326,8 +326,8 @@ if (!defined("IN_COURSE_GROUPS")) {
 			<thead>
 				<tr>
 					<td class="modified">&nbsp;</td>
-					<td class="community_title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"] == "group_name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]) : ""); ?>"><?php echo admin_order_link("group_name", "Group Name", $SUBMODULE); ?></td>
-					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"] == "members") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]) : ""); ?>"><?php echo admin_order_link("members", "Number of members", $SUBMODULE); ?></td>
+					<td class="community_title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"] == "group_name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]) : ""); ?>"><?php echo admin_order_link("group_name", "Group Name", $SUBMODULE, $MODULE."-".$SUBMODULE); ?></td>
+					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"] == "members") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]) : ""); ?>"><?php echo admin_order_link("members", "Number of members", $SUBMODULE, $MODULE."-".$SUBMODULE); ?></td>
 					<td class="actions">&nbsp;</td>
 				</tr>
 			</thead>
@@ -403,7 +403,6 @@ if (!defined("IN_COURSE_GROUPS")) {
 	$sidebar_html .= "<ul class=\"menu\">\n";
 	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"]) == "group_name") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/courses/groups?".replace_query(array("sb" => "group_name"))."\" title=\"Sort by Category\">by name</a></li>\n";
 	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"]) == "members") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/courses/groups?".replace_query(array("sb" => "members"))."\" title=\"Sort by Number of Groups\">by number of members</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"]) == "updated_date") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/courses/groups?".replace_query(array("sb" => "updated_date"))."\" title=\"Sort by Date &amp; Time\">by date &amp; time</a></li>\n";
 	$sidebar_html .= "</ul>\n";
 	$sidebar_html .= "Order columns:\n";
 	$sidebar_html .= "<ul class=\"menu\">\n";

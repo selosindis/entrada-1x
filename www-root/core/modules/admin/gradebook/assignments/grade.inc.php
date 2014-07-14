@@ -38,19 +38,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
-	if(!isset($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"]) || !isset($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"])){
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"]) || !isset($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"])) {
 		$_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] = "student";
 		$_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"] = "asc";
 	}
 
-	if(isset($_GET["sb"]) && $tmp_sb = clean_input($_GET["sb"],array("trim","notags"))){
-		if (in_array(strtolower($tmp_sb),array('student','submitted','grade'))) {
+	if (isset($_GET["sb"]) && $tmp_sb = clean_input($_GET["sb"],array("trim","notags"))) {
+		if (in_array(strtolower($tmp_sb),array("student", "submitted", "grade"))) {
 			$_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] = $tmp_sb;
 		}
 	}
 
-	if(isset($_GET["so"]) && $tmp_so = clean_input($_GET["so"],array("trim","notags"))){
-		if (in_array(strtolower($tmp_so),array('desc','asc'))) {
+	if (isset($_GET["so"]) && $tmp_so = clean_input($_GET["so"],array("trim","notags"))) {
+		if (in_array(strtolower($tmp_so),array("desc", "asc"))) {
 			$_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"] = $tmp_so;
 		}
 	}	
@@ -69,24 +69,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		);
 		
 	if ($COURSE_ID) {
-		$query			= "	SELECT * FROM `courses` 
-							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
-							AND `course_active` = '1'";
+		$query = "SELECT * FROM `courses` 
+					WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+					AND `course_active` = '1'";
 		$course_details	= $db->GetRow($query);
 		
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {			
 
-			$query = "	SELECT `assignments`.*,	`assessments`.`cohort`, `assessment_marking_schemes`.`id` AS `marking_scheme_id`, `assessment_marking_schemes`.`handler`, `assessment_marking_schemes`.`description` as `marking_scheme_description`
-						FROM `assignments`
-						LEFT JOIN `assessments`
-						ON `assignments`.`assessment_id` = `assessments`.`assessment_id`
-						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-						WHERE `assignments`.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID);
+			$query = "  SELECT a.*, b.`cohort`, c.`id` AS `marking_scheme_id`, c.`handler`, c.`description` as `marking_scheme_description`
+                        FROM `assignments` AS a
+                        JOIN `assessments` AS b
+                        ON a.`assessment_id` = b.`assessment_id`
+                        LEFT JOIN `assessment_marking_schemes` AS c
+                        ON c.`id` = b.`marking_scheme_id`
+                        WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+                        AND b.`active` = 1
+                        AND a.`assignment_active` = '1'";
 			$assignment = $db->GetRow($query);
-			if ($assignment) {				
+			if ($assignment) {
+                $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => $assignment["assignment_title"]);
+
 				$COHORT = $assignment["cohort"];
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => $assignment["assignment_title"]);
-				courses_subnavigation($course_details,"gradebook");
+
+				courses_subnavigation($course_details, "gradebook");
 
 				echo "<div class=\"content-small\">";
 				if ($COURSE_ID) {
@@ -104,66 +109,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					width: 100%;
 				}	
 				</style>
-				<div>
-					<h1 class="event-title"><?php echo $assignment["assignment_title"]; ?></h1>
-				</div>
+
+				<h1 class="event-title"><?php echo $assignment["assignment_title"]; ?></h1>
+
 				<?php
-//				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, h.`grade_id` AS `grade_id`, h.`value` AS `grade_value`, i.`grade_weighting`, d.`updated_date` AS `submitted_date`
-//							FROM `entrada_auth`.`user_data` AS b
-//							JOIN `entrada_auth`.`user_access` AS c
-//							ON c.`user_id` = b.`id` 
-//							AND c.`app_id`= ".$db->qstr(AUTH_APP_ID)."
-//							AND c.`account_active` = 'true'
-//							AND (c.`access_starts` = '0' OR c.`access_starts`<= '1330627003')
-//							AND (c.`access_expires` = '0' OR c.`access_expires`>= '1330627003')
-//							JOIN `assignment_files` AS d
-//							ON d.`proxy_id` = b.`id`
-//							JOIN `assignments` AS e
-//							ON d.`assignment_id` = e.`assignment_id`
-//							AND d.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
-//							JOIN `assessments` AS f
-//							ON e.`assessment_id` = f.`assessment_id`
-//							LEFT JOIN `group_members` AS g
-//							ON g.`group_id` = f.`cohort`
-//							AND g.`proxy_id` = b.`id`
-//							LEFT JOIN `entrada`.`assessment_grades` AS h 
-//							ON b.`id` = h.`proxy_id` 
-//							AND h.`assessment_id` = ".$db->qstr($assignment["assessment_id"])."
-//							LEFT JOIN `assessment_exceptions` AS i
-//							ON b.`id` = i.`proxy_id`
-//							AND h.`assessment_id` = i.`assessment_id`
-//							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
 				$order = strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]);
-				$orders = array('student'=>"desc",'grade'=>"desc",'submitted'=>'desc');
-				switch($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"]) {
-					case 'student':
+				$orders = array("student" => "desc", "grade" => "desc", "submitted" => "desc");
+                
+				switch ($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"]) {
+					case "student":
 						$by = "a.`lastname`";
 						if ($order == "DESC") {
-							$orders['student'] = "asc";
+							$orders["student"] = "asc";
 						}
-						break;
-					case 'grade':
+					break;
+					case "grade":
 						$by = "`grade_value`";
 						if ($order == "DESC") {
-							$orders['grade'] = "asc";
+							$orders["grade"] = "asc";
 						}						
-						break;
-					case 'submitted':						
+					break;
+					case "submitted":						
 						$by = "`submitted_date`";
 						if ($order == "DESC") {
-							$orders['submitted'] = "asc";
+							$orders["submitted"] = "asc";
 						}						
-						break;
+					break;
 					default:
 						$by = "`submitted_date`";
 						if ($order == "DESC") {
-							$orders['submitted'] = "asc";
+							$orders["submitted"] = "asc";
 						}			
+
 						$_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] = "submitted";
-						break;
+					break;
 				}				
 
-				$query = "	SELECT a.id AS `proxy_id`, CONCAT_WS(', ',a.`lastname`,a.`firstname`) AS `fullname`, a.`number` as `student_number`, c.`assessment_id`, b.`updated_date` AS `submitted_date`, b.`afile_id`, d.`grade_id`, d.`value` AS `grade_value`, f.`handler`, g.`grade_weighting`
+				$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ',a.`lastname`,a.`firstname`) AS `fullname`, a.`number` as `student_number`, c.`assessment_id`, MAX(b.`updated_date`) AS `submitted_date`, d.`grade_id`, d.`value` AS `grade_value`, f.`handler`, g.`grade_weighting`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							JOIN `assignment_files` AS b
 							ON a.`id` = b.`proxy_id`
@@ -171,56 +153,65 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
 							JOIN `assignments` AS c
 							ON b.`assignment_id` = c.`assignment_id`
+							JOIN `assessments` AS e
+							ON e.`assessment_id` = c.`assessment_id`
 							LEFT JOIN `assessment_grades` AS d 
-							ON c.`assessment_id` = d.`assessment_id`
-							AND d.`proxy_id` = a.`id`
-							LEFT JOIN `assessments` AS e
 							ON d.`assessment_id` = e.`assessment_id`
+							AND d.`proxy_id` = a.`id`
 							LEFT JOIN `assessment_marking_schemes` AS f
 							ON e.`marking_scheme_id` = f.`id`
 							LEFT JOIN `assessment_exceptions` AS g
 							ON g.`assessment_id` = d.`assessment_id`
 							AND g.`proxy_id` = a.`id`
+							AND e.`active` = 1
+							AND c.`assignment_active` = '1'
+                            GROUP BY a.`id`
 							ORDER BY ".$by." ".$order;			
 				$students = $db->GetAll($query);
-												
+
 				$query = "	SELECT * FROM `assessments` AS a
 							JOIN `assessment_marking_schemes` AS b
 							ON a.`marking_scheme_id` = b.`id`
-							WHERE a.`assessment_id` = ".$db->qstr($assignment["assessment_id"]);				
-				$assessment = $db->GetRow($query);				
+							WHERE a.`assessment_id` = ".$db->qstr($assignment["assessment_id"])."
+							AND a.`active` = 1";
+				$assessment = $db->GetRow($query);
 				?>
-					<div style="float: right; text-align: right; width:400px;">
-						<ul class="page-action">
-						<?php 
-						if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) { 
-						?>
-							<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment</a></li>
-							<?php 
-							if($assignment["assessment_id"]) { ?>
-								<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit","assessment_id"=>$assignment["assessment_id"], "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
-							<?php
-							} 
-						}
-						if (isset($assessment) && $assessment) { 
-						?>
-								<li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li>
-						<?php 						
-						} 
-						?>
-						</ul>
-					</div>				
-				<div style="clear: both;"></div>
+
+                <div class="pull-right">
+                    <?php
+                    if (extension_loaded("zip")) {
+                        ?>
+                        <a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?section=download-submissions&assignment_id=<?php echo (int) $assignment["assignment_id"]; ?>" class="btn"><i class="icon-download-alt"></i> Download All Submissions</a>
+                        <?php
+                    }
+
+                    if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) { 
+                        ?>
+                        <a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?<?php echo replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="btn">Edit Assignment</a>
+                        <?php
+                    }
+
+                    if (isset($assessment) && $assessment && isset($students) && !(empty($students))) { 
+                        ?>
+                        <a href="#" id="advanced-options"><button class="btn">Show Options</button></a>
+                        <?php
+                    }
+                    ?>
+                </div>
+				<div class="clearfix"></div>
+
 				<?php				
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
-				if ($students && count($students) >= 1): ?>
-					<span id="assessment_name" style="display: none;"><?php echo $assignment["assignment_title"]; ?></span>
+				if ($students && !empty($students)) {
+                    ?>
+					<span id="assessment_name" style="display: none;"><?php echo html_encode($assignment["assignment_title"]); ?></span>
                     <div class="row-fluid">
                         <span id="assignment_submissions" class="span12">
-                            <h2>Submissions <?php if(extension_loaded('zip')) { ?><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submissions&assignment_id=<?php echo $assignment["assignment_id"];?>"><span style="float:right;"><i class="icon-download-alt"></i>&nbsp;Download All Submissions</span></a><?php } ?></h2>
-                            <div style="margin-bottom: 5px;">							
+                            <h2>Submissions</h2>
+                            <div style="margin-bottom: 5px;">
                                 <span class="content-small"><strong>Tip: </strong><?php echo $assignment["marking_scheme_description"]; ?></span>
-                            </div>	
+                            </div>
+                            
                             <table class="gradebook assignment <?php echo $editable; ?>">                                
                                 <tbody>
                                     <?php								
@@ -237,6 +228,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         } else {
                                             $grade_value = "-";
                                         }
+
                                         if (isset($student["grade_weighting"]) && $student["grade_weighting"]) {
                                             $grade_weighting = $student["grade_weighting"];
                                         } else {
@@ -244,34 +236,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         }
                                         ?>
                                         <tr id="grades<?php echo $student["proxy_id"]; ?>">
-											<td><div class="text-center"><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submission&id=<?php echo $COURSE_ID; ?>&assignment_id=<?php echo $ASSIGNMENT_ID;?>&sid=<?php echo $student["proxy_id"]; ?>"><i class="icon-download-alt"></i></a></div></td>
-											<td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=" .$COURSE_ID . "&assignment_id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"];?>"><?php echo $student["fullname"]; ?></a></td>
-                                            <td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=" .$COURSE_ID . "&assignment_id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"];?>"><?php echo $student["student_number"]; ?></a></td>
+											<td><div class="text-center"><a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?section=download-submission&id=<?php echo $COURSE_ID; ?>&assignment_id=<?php echo $ASSIGNMENT_ID; ?>&sid=<?php echo $student["proxy_id"]; ?>"><i class="icon-download-alt"></i></a></div></td>
+											<td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=" .$COURSE_ID . "&assignment_id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"]; ?>"><?php echo $student["fullname"]; ?></a></td>
+                                            <td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=" .$COURSE_ID . "&assignment_id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"]; ?>"><?php echo $student["student_number"]; ?></a></td>
                                             <td>
-                                                <?php if (isset($assessment) && $assessment) { ?>
-                                                <span class="grade" id="grade_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"
-                                                    data-grade-id="<?php echo $grade_id; ?>"
-                                                    data-assessment-id="<?php echo $assignment["assessment_id"]; ?>"
-                                                    data-proxy-id="<?php echo $student["proxy_id"] ?>"
-													style="float:left;"
-                                                ><?php echo $grade_value; ?></span>
-                                                <span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?> style="float:left;">
-                                                    <?php echo assessment_suffix($assessment); ?>
-                                                </span>
-                                                <span class="gradesuffix" style="float:right;">
-													<i class="icon-edit edit_grade" id="edit_grade_<?php echo $assignment["assessment_id"] . "_" . $student["proxy_id"] ?>"></i>
-                                                </span>
-                                                <?php } else { ?>
-                                                No Assessment
-                                                <?php } ?>
+                                                <?php
+                                                if (isset($assessment) && $assessment) {
+                                                    ?>
+                                                    <span class="grade" id="grade_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"
+                                                        data-grade-id="<?php echo $grade_id; ?>"
+                                                        data-assessment-id="<?php echo $assignment["assessment_id"]; ?>"
+                                                        data-proxy-id="<?php echo $student["proxy_id"] ?>"
+                                                        style="float:left;"
+                                                    ><?php echo $grade_value; ?></span>
+                                                    <span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?> style="float:left;">
+                                                        <?php echo assessment_suffix($assessment); ?>
+                                                    </span>
+                                                    <span class="gradesuffix" style="float:right;">
+                                                        <i class="icon-edit edit_grade" id="edit_grade_<?php echo $assignment["assessment_id"] . "_" . $student["proxy_id"] ?>"></i>
+                                                    </span>
+                                                    <?php
+                                                } else {
+                                                    ?>
+                                                    No Assessment
+                                                    <?php
+                                                }
+                                                ?>
                                             </td>
-                                            <td><?php	echo date(DEFAULT_DATE_FORMAT,$student["submitted_date"]); ?></td>
+                                            <td><?php echo date(DEFAULT_DATE_FORMAT, $student["submitted_date"]); ?></td>
                                             <?php
                                             if ($assessment["marking_scheme_id"] == 3) {
 												$comment_colspan = 6;
-                                            ?>
-												<td id="percentage_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"><?php echo round($student["grade_value"],2);?>%</td>
-                                            <?php
+                                                ?>
+												<td id="percentage_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"><?php echo round($student["grade_value"], 2); ?>%</td>
+                                                <?php
                                             } 
                                             ?>
                                         </tr>
@@ -287,16 +285,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 														<?php 
 														$query = "	SELECT a.*, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `commenter_fullname`, c.`username` AS `commenter_username` 
 																	FROM `assignment_comments` AS a 
-																	JOIN `assignment_files` AS b 
-																	ON a.`afile_id` = b.`afile_id` 
 																	LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
 																	ON a.`proxy_id` = c.`id` 
-																	WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." 
-																	AND b.`proxy_id` = ".$db->qstr($student["proxy_id"])."
+																	WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." 
+                                                                    AND a.`proxy_to_id` = ".$db->qstr($student["proxy_id"])."
 																	AND a.`comment_active` = '1'
 																	ORDER BY a.`updated_date`";
 														$comment_results = $db->GetAll($query);
-														if($comment_results) {
+														if ($comment_results) {
 															foreach($comment_results as $result) {
 																$comments++;
 																?>
@@ -371,8 +367,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             </table>					
                         </span>
                         <script type="text/javascript">
-                            jQuery(document).ready(function($){
-                                $('.edit_grade').click(function(e){
+                            jQuery(document).ready(function($) {
+                                $('.edit_grade').click(function(e) {
                                     var id = e.target.id.substring(5);
                                     $('#'+id).trigger('click');
                                 });								
@@ -388,7 +384,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             });
 
                         </script>
-                        <span id="gradebook_stats" class="span5" style="margin-top:14px;">
+                        <span id="gradebook_stats" class="span5" style="margin-top: 14px;">
                             <h2>Statistics</h2>
                             <div id="graph"></div>
 							<script type="text/javascript">
@@ -405,7 +401,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     foreach ($students as $key => $student) {
                                         if ($student["grade_value"] == "") {
                                             $unentered++;
-                                        } elseif ($student["grade_value"] > 50){
+                                        } elseif ($student["grade_value"] > 50) {
                                             $grades[0]++;
                                         } else {
                                             $grades[1]++;
@@ -610,31 +606,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         </span>
                     </div>
 					<script type="text/javascript">
-					jQuery(document).ready(function(){
+					jQuery(document).ready(function() {
 						jQuery('.comments').hide();
 						jQuery('.new_comment').hide();
 						jQuery('#gradebook_stats').hide();
-						jQuery('#advanced-options').click(function(){
+						jQuery('#advanced-options').click(function() {
 							if (jQuery('#gradebook_stats').is(":visible")) {
 								jQuery('#assignment_submissions').attr('class','span12');
 								jQuery('#gradebook_stats').hide();
-								jQuery('#advanced-options').text('Show Options');
+								jQuery('#advanced-options').html('<button class="btn">Show Options</button>');
 							} else {
 								jQuery('#assignment_submissions').attr('class','span7');
 								jQuery('#gradebook_stats').show();	
-								jQuery('#advanced-options').text('Hide Options');
-							}
+                                jQuery('#advanced-options').html('<button class="btn">Hide Options</button>');
+                            }
 						});
 						
-						jQuery('.add_comment').click(function(){
+						jQuery('.add_comment').click(function() {
 							var id = jQuery(this).attr('id').substring(12);
 							//var comment_desc = tinyMCE.get('new_comment_desc_'+id).getContent();
 							var comment_desc = jQuery('#new_comment_desc_'+id).val();
 							var comment_title = jQuery('#new_comment_title_'+id).val();
 							jQuery.ajax({
 								type: "POST",
-								url: "<?php echo ENTRADA_URL;?>/api/ajax-comment.api.php",
-								data: "comment_description="+comment_desc+"&comment_title="+comment_title+"&uid="+id+"&assignment_id=<?php echo $ASSIGNMENT_ID;?>&comment_type=assignment"
+								url: "<?php echo ENTRADA_URL; ?>/api/ajax-comment.api.php",
+								data: "comment_description="+comment_desc+"&comment_title="+comment_title+"&uid="+id+"&assignment_id=<?php echo $ASSIGNMENT_ID; ?>&comment_type=assignment"
 							})
 							.done(function(data, textStatus, jqXHR) {
 								try {
@@ -662,7 +658,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							});
 						});
 						
-						jQuery('.delete').live('click',function(){
+						jQuery('.delete').live('click',function() {
 							id = jQuery(this).attr('id').substring(7);
 							jQuery("#dialog-confirm").dialog({
 								resizable: false,
@@ -670,7 +666,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								modal: true,
 								buttons: {
 									'Delete': function() {
-										window.location = '<?php echo ENTRADA_URL."/profile/gradebook/assignments";?>?section=delete-comment&id='+id+'&returnto=grade';
+										window.location = '<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=delete-comment&acomment_id='+id+'&returnto=grade';
 										return true;
 									},
 									Cancel: function() {
@@ -680,26 +676,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								});
 						});						
 						
-						jQuery('.view_comments').live('click',function(e){
+						jQuery('.view_comments').live('click',function(e) {
 							var id = e.target.id.substring(14);
 							jQuery('#comments_'+id).show();
 							jQuery('#view_comments_'+id).text('Hide Comments');
 							jQuery('#view_comments_'+id).attr('class','hide_comments');
 						});	
 
-						jQuery('.hide_comments').live('click',function(e){
+						jQuery('.hide_comments').live('click',function(e) {
 							var id = e.target.id.substring(14);
 							jQuery('#comments_'+id).hide();
 							jQuery('#view_comments_'+id).text('View Comments');
 							jQuery('#view_comments_'+id).attr('class','view_comments');
 						});		
 
-						jQuery('.leave_comment').live('click',function(e){
+						jQuery('.leave_comment').live('click',function(e) {
 							var id = e.target.id.substring(14);
 							jQuery('#new_comment_'+id).show();
 						});	
 
-						jQuery('.cancel_comment').live('click',function(e){
+						jQuery('.cancel_comment').live('click',function(e) {
 							var id = e.target.id.substring(15);
 							jQuery('#new_comment_'+id).hide();
 							jQuery('#new_comment_text_'+id).val('');
@@ -759,11 +755,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						clear:both;
 					}
 					</style>
-				<?php
-				else:
-				?>
-				<div class="display-notice">No one has submitted their assignment yet.</div>
-				<?php endif;
+				    <?php
+                } else {
+				    ?>
+				    <div class="display-notice">No one has submitted their assignment yet.</div>
+				    <?php
+                }
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "In order to edit an assessment's grades you must provide a valid assignment identifier.";

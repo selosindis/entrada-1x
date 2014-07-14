@@ -265,7 +265,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					 * Required field "email" / Primary E-Mail.
 					 */
 					if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
-						if (@valid_address($email)) {
+						if (valid_address($email)) {
 							$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `email` = ".$db->qstr($email);
 							$result	= $db->GetRow($query);
 							if ($result) {
@@ -402,6 +402,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
             if (!$ERROR) {
                 if ($ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), 'create')) {
                     if ($permissions_only) {
+						$clinical_set = false;
                         foreach ($permissions as $perm) {
                             if (!$perm["org_id"]) {
                                 $ERROR++;
@@ -423,9 +424,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                 $PROCESSED_ACCESS["role"] = $group_role["role_name"];
                                 $PROCESSED_ACCESS["organisation_id"] = $perm["org_id"];
 
-                                if ($PROCESSED_ACCESS["group"] == "faculty") {
+                                if ($PROCESSED_ACCESS["group"] == "faculty" && !$clinical_set) {
                                     if (isset($perm["clinical"])) {
                                         $PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
+										$clinical_set = true;
                                         $query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
                                                     SET `clinical` = " . $PROCESSED["clinical"] . "
                                                     WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
@@ -495,14 +497,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                         }
                                     }
 
-                                    if (@count($PROCESSED_DEPARTMENTS)) {
+                                    if (isset($PROCESSED_DEPARTMENTS) && is_array($PROCESSED_DEPARTMENTS)) {
                                         foreach($PROCESSED_DEPARTMENTS as $department_id) {
-                                            if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id), "INSERT")) {
-                                                application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
+                                            if((int) $department_id != 0) {
+                                                if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id, "entrada_only" => '1'), "INSERT")) {
+                                                    application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
+                                                }
                                             }
                                         }
                                     }
-
 
                                     /**
                                      * Add user to cohort if they're a student
@@ -577,6 +580,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                             $PROCESSED["password"] = sha1($PROCESSED["password"].$PROCESSED["salt"]);
                             $PROCESSED["email_updated"] = time();
                             if (($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
+								$clinical_set = false;
                                 foreach ($permissions as $perm) {
                                     if (!$perm["org_id"]) {
                                         $ERROR++;
@@ -630,9 +634,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                             }
                                         }
 
-                                        if ($PROCESSED_ACCESS["group"] == "faculty") {
+                                        if ($PROCESSED_ACCESS["group"] == "faculty" && !$clinical_set) {
                                             if (isset($perm["clinical"])) {
                                                 $PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
+												$clinical_set = true;
                                                 $query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
                                                             SET `clinical` = " . $PROCESSED["clinical"] . "
                                                             WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
@@ -721,12 +726,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                                     }
                                                 }
 
-                                                if (@count($PROCESSED_DEPARTMENTS)) {
+                                                if (isset($PROCESSED_DEPARTMENTS) && is_array($PROCESSED_DEPARTMENTS)) {
                                                     foreach($PROCESSED_DEPARTMENTS as $key => $department_id) {
-                                                        if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id), "INSERT")) {
+                                                        if((int) $department_id != 0) {
+                                                        if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id, "entrada_only" => '1'), "INSERT")) {
                                                             application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
                                                         }
                                                     }
+                                                  }
                                                 }
 
                                                 $url			= ENTRADA_URL."/admin/users";

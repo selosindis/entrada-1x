@@ -65,16 +65,25 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 						
 						$query = "	SELECT *
 									FROM `draft_events`
-									WHERE `draft_id` = ".$db->qstr($draft["draft_id"]);
+									WHERE `draft_id` = ".$db->qstr($draft["draft_id"])."
+									ORDER BY `parent_id` ASC";
 						$events = $db->GetAll($query);
 						if ($events) {
+                            $recurring_event_id_map = array();
 
 							application_log("notice", "Draft schedule importer found ".count($events)." events in draft ".$draft["draft_id"].".");
 
 							foreach ($events as $event) {
+                                $recurring_id_updated = false;
+
+                                if (isset($event["recurring_id"]) && $event["recurring_id"] && array_key_exists($event["recurring_id"], $recurring_event_id_map)) {
+                                    $event["recurring_id"] = $recurring_event_id_map[$event["recurring_id"]];
+                                    $recurring_id_updated = true;
+                                }
 
 								if ($event["event_id"]) {
 									$old_event_id = $event["event_id"];
+									$old_events[$old_event_id] = $event;
 									unset($event["event_id"]);
 								} else {
 									$old_event_id = false;
@@ -85,9 +94,26 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 								if (empty($event["event_children"])) {
 									$event["event_children"] = 0;
 								}
+
+								if (isset($event["parent_id"]) && in_array($event["parent_id"], $old_events[$event["parent_id"]])) {
+									$event["parent_id"] = $old_events[$event["parent_id"]]["new_event_id"];
+								}
+
 								if ($db->AutoExecute("`events`", $event, 'INSERT')) {
 									$event_id = $db->Insert_ID();
+
+                                    if (!$recurring_id_updated && isset($event["recurring_id"]) && $event["recurring_id"] && !array_key_exists($event["recurring_id"], $recurring_event_id_map)) {
+                                        $recurring_event_id_map[$event["recurring_id"]] = $event_id;
+                                        $query = "UPDATE `events` SET `recurring_id` = ".$db->qstr($event_id)." WHERE `event_id` = ".$db->qstr($event_id);
+                                        if (!$db->Execute($query)) {
+                                            application_log("error", "An error occurred when updating a draft event with a recurring event id. DB said: ".$db->ErrorMsg());
+                                        }
+                                    }
+									$old_events[$old_event_id]["new_event_id"] = $event_id;
 									application_log("success", "Successfully created event [".$event_id."]");
+                                    
+                                    //inserts creation log
+                                    history_log($event_id, 'created this learning event.', $event["updated_by"]);
 								} else {
 									$error++;
 									application_log("error", "Error inserting event [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
@@ -155,7 +181,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 								if ($eventaudience = $db->GetAll($query)) {
 									application_log("notice", "Found ".count($eventaudience)." event audience members for draft event [".$event["devent_id"]."].");
 									foreach ($eventaudience as $audience) {
-
+                                        
 										$audience["event_id"] = $event_id;
 										$audience["updated_date"] = time();
 										$audience["updated_by"] =  $draft_creators[0]["proxy_id"];
@@ -169,6 +195,31 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 											$error++;
 											application_log("error", "Error inserting event_audience [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
 										}
+                                        
+                                        if ($audience["audience_type"] == "group_id") {
+                                            /*
+                                             * If the draft event audience type is a group check the course group for contacts, 
+                                             * if found add them to `event_contacts` as tutors.
+                                             */
+                                            $contacts = Models_Course_Group_Contact::fetchAllByCgroupID($audience["audience_value"]);
+                                            if ($contacts) {
+                                                $i = 0;
+                                                foreach ($contacts as $contact) {
+                                                    $event_contact_data = array(
+                                                        "event_id"      => $event_id,
+                                                        "proxy_id"      => $contact->getProxyID(),
+                                                        "contact_role"  => "tutor",
+                                                        "contact_order" => $i,
+                                                        "updated_date"  => time(),
+                                                        "updated_by"    => "1"
+                                                    );
+                                                    if (!$db->AutoExecute("event_contacts", $event_contact_data, "INSERT")) {
+                                                        application_log("error", "Failed to insert event contact, DB said: ".$db->ErrorMsg());
+                                                    }
+                                                    $i++;
+                                                }
+                                            }
+                                        }
 									}
 								}
 
@@ -194,13 +245,14 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 													application_log("success", "Successfully inserted file [".$db->Insert_ID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
 
 													$new_file_id = (int) $db->Insert_ID();
-													if (copy(FILE_STORAGE_PATH."/".$old_event_file, FILE_STORAGE_PATH."/".$new_file_id)) {
-														application_log("success", "Successfully copied file [".$old_event_file."] to file [".$new_file_id."], for new event [".$event_id."].");
-														$copied_files[] = $processed_file["file_name"];
-													} else {
-														application_log("success", "Failed to copy file [".$old_event_file."] to file [".$new_file_id."].");
+													if (file_exists(FILE_STORAGE_PATH."/".$old_event_file)) {
+														if (copy(FILE_STORAGE_PATH."/".$old_event_file, FILE_STORAGE_PATH."/".$new_file_id)) {
+															application_log("success", "Successfully copied file [".$old_event_file."] to file [".$new_file_id."], for new event [".$event_id."].");
+															$copied_files[] = $processed_file["file_name"];
+														} else {
+															application_log("success", "Failed to copy file [".$old_event_file."] to file [".$new_file_id."].");
+														}
 													}
-
 												} else {
 													$error++;
 													application_log("error", "Error inserting event_files [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
@@ -262,6 +314,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									}
 									
 									if ($draft_options["topics"]) {
+                                        
 										/*
 										 *  add the event topics associated with the draft event
 										 */
@@ -270,14 +323,14 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 													WHERE `event_id` = ".$db->qstr($old_event_id);
 										if ($event_topics = $db->GetAll($query)) {
 											foreach ($event_topics as $topic) {
-												unset($topic["eobjective_id"]);
+												unset($topic["etopic_id"]);
 												$topic["event_id"]		= $event_id;
 												$topic["updated_by"]	= $draft_creators[0]["proxy_id"];
-												if ($db->AutoExecute("`event_objectives`", $topic, "INSERT")) {
+												if ($db->AutoExecute("`event_topics`", $topic, "INSERT")) {
 													application_log("success", "Successfully inserted topic [".$db->Insert_ID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
 												} else {
 													$error++;
-													application_log("error", "Error inserting event_objectives [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+													application_log("error", "Error inserting event_topics [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
 												}
 											}
 										} else {
@@ -351,7 +404,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									application_log("error", "Failed to sent email to draft [".$draft_id."] creators.");
 								}
 							}
-							
+						
 							$query = "UPDATE `drafts` SET `status` = 'closed' WHERE `draft_id` = ".$db->qstr($draft["draft_id"]);
 							if ($db->Execute($query)) {
 							   /*

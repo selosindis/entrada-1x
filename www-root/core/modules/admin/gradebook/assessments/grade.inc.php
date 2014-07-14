@@ -37,98 +37,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	
-	if (isset($_POST["ajax"]) && $_POST["ajax"] === "ajax") {
-		
-		ob_clear_open_buffers();
-		
-			$method = clean_input($_POST["method"], array("trim", "striptags"));
-
-			switch ($method) {
-				case "store-resubmit" :
-					
-					if (isset($_POST["aovalue_id"]) && $tmp_input = clean_input($_POST["aovalue_id"], "int")) {
-						$PROCESSED["aovalue_id"] = $tmp_input;
-						$MODE = "UPDATE";
-						$WHERE = "`aovalue_id` = ".$db->qstr($tmp_input);
-					} else {
-						$MODE = "INSERT";
-						$WHERE = "'1' = '1'";
-					}
-					if (isset($_POST["proxy_id"]) && $tmp_input = clean_input($_POST["proxy_id"], "int")) {
-						$PROCESSED["proxy_id"] = $tmp_input;
-					} else {
-						add_error("Invalid proxy ID supplied.");
-					}
-					if (isset($_POST["aoption_id"]) && $tmp_input = clean_input($_POST["aoption_id"], "int")) {
-						$PROCESSED["aoption_id"] = $tmp_input;
-					} else {
-						add_error("Invalid assessment option ID provided.");
-					}
-					if (isset($_POST["value"]) && $tmp_input = clean_input($_POST["value"], "int")) {
-						$PROCESSED["value"] = clean_input($_POST["value"], "int");
-					} else {
-						$PROCESSED["value"] = 0;
-					}
-					
-					if (!$ERROR) {
-						if ($db->AutoExecute("assessment_option_values", $PROCESSED, $MODE, $WHERE)) {
-							if (!isset($PROCESSED["aovalue_id"])) {
-								$PROCESSED["aovalue_id"] = $db->Insert_ID();
-							}
-							echo json_encode(array("status" => "success", "data" => $PROCESSED));
-						} else {
-							echo json_encode(array("status" => "error", "data" => $ERRORSTR));
-						}
-					} else {
-						echo json_encode(array("status" => "error", "data" => $ERRORSTR));
-					}
-					
-				break;
-				case "store-late" :
-					
-					if (isset($_POST["aovalue_id"]) && $tmp_input = clean_input($_POST["aovalue_id"], "int")) {
-						$PROCESSED["aovalue_id"] = $tmp_input;
-						$MODE = "UPDATE";
-						$WHERE = "`aovalue_id` = ".$db->qstr($tmp_input);
-					} else {
-						$MODE = "INSERT";
-						$WHERE = "'1' = '1'";
-					}
-					if (isset($_POST["proxy_id"]) && $tmp_input = clean_input($_POST["proxy_id"], "int")) {
-						$PROCESSED["proxy_id"] = $tmp_input;
-					} else {
-						add_error("Invalid proxy ID supplied.");
-					}
-					if (isset($_POST["aoption_id"]) && $tmp_input = clean_input($_POST["aoption_id"], "int")) {
-						$PROCESSED["aoption_id"] = $tmp_input;
-					} else {
-						add_error("Invalid assessment option ID provided.");
-					}
-					if (isset($_POST["value"]) && $_POST["value"] == "1") {
-						$PROCESSED["value"] = 1;
-					} else {
-						$PROCESSED["value"] = 0;
-					}
-					
-					if (!$ERROR) {
-						if ($db->AutoExecute("assessment_option_values", $PROCESSED, $MODE, $WHERE)) {
-							if (!isset($PROCESSED["aovalue_id"])) {
-								$PROCESSED["aovalue_id"] = $db->Insert_ID();
-							}
-							echo json_encode(array("status" => "success", "data" => $PROCESSED));
-						} else {
-							echo json_encode(array("status" => "error", "data" => $ERRORSTR));
-						}
-					} else {
-						echo json_encode(array("status" => "error", "data" => $ERRORSTR));
-					}
-					
-				break;
-			}
-		
-		exit;
-	}
-	
 	/**
 	 * Add PlotKit to the beginning of the $HEAD array.
 	 */
@@ -157,30 +65,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         ON b.`id` = a.`marking_scheme_id`
 						LEFT JOIN `assessments_lu_meta` AS c
                         ON c.`id` = a.`characteristic_id`
-						WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+						WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+						AND a.`active` = '1'";
 			$assessment = $db->GetRow($query);
 			if ($assessment) {
 				$query = "SELECT `option_id`, `aoption_id` FROM `assessment_options` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND `option_active` = '1'";
 				$assessment_options = $db->GetAssoc($query);
 				
+                $query = "SELECT * FROM `assessment_attached_quizzes` 
+                            WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+                $attached_quizzes = $db->GetAll($query);
+                
 				$COHORT = $assessment["cohort"];
 				
-				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`
-							FROM `".AUTH_DATABASE."`.`user_data` AS b
-							JOIN `".AUTH_DATABASE."`.`user_access` AS c
-							ON c.`user_id` = b.`id` 
-							AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-							AND c.`account_active` = 'true'
-							AND (c.`access_starts` = '0' OR c.`access_starts`<=".$db->qstr(time()).")
-							AND (c.`access_expires` = '0' OR c.`access_expires`>=".$db->qstr(time()).")
+				$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`number`
+							FROM `".AUTH_DATABASE."`.`user_data` AS a
+							JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							ON a.`id` = b.`user_id` 
+							AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+							AND b.`account_active` = 'true'
+							AND (b.`access_starts` = '0' OR b.`access_starts`<=".$db->qstr(time()).")
+							AND (b.`access_expires` = '0' OR b.`access_expires`>=".$db->qstr(time()).")
 							JOIN `group_members` AS c
-							ON b.`id` = c.`proxy_id`
-							WHERE c.`group` = 'student'
+							ON a.`id` = c.`proxy_id`
+							WHERE b.`group` = 'student'
 							AND c.`group_id` = ".$db->qstr($COHORT)."
 							AND c.`member_active` = '1' 
-							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
+							ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 				$students = $db->GetAll($query);
-				
+                
 				foreach ($students as $key => &$student) {
 					$query = "SELECT `grade_id`, `value` AS `grade_value` FROM `assessment_grades`
 								WHERE `proxy_id` = ".$db->qstr($student["proxy_id"])."
@@ -434,24 +347,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						
 						<div id="import-csv" style="display:none;">
 							<h2>Import grades from CSV</h2>
-							<div id="display-notice-box" class="display-notice">
-								<ul>
-								<li><strong>Important Notes:</strong>
-									<br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
-									<br />Any grades entered will be overwritten if present in the CSV.</li>
-								</ul>
-							</div>
-							<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
-								<input type="file" name="file"/>
+                            <form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
+                                <div id="display-notice-box" class="display-notice">
+                                    <ul>
+                                        <li>
+                                            <strong>Important Notes:</strong>
+                                            <br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets).
+                                            <br />Any grades entered will be overwritten if present in the CSV.
+                                            <?php
+                                            if ($assessment["handler"] == "Boolean") {
+                                                echo "<br /><br />By default, importing a Pass/Fail grade counts any numeric grade other than 0 as a Pass. Alternatively, check off the box below to select the minimum numeric grade required to be considered a pass.\n";
+                                                echo "<br /><br /><input type=\"checkbox\" id=\"enable_grade_threshold\" onclick=\"jQuery('#grade_threshold_holder').toggle(this.checked)\" name=\"enable_grade_threshold\" value=\"1\" /> <label for=\"enable_grade_threshold\">Enable custom minimum passing value for imported grades</label>\n";
+                                                echo "<br /><div style=\"display: none;\" id=\"grade_threshold_holder\"><label for=\"grade_threshold\">Minimum Pass Value:</label> <input class=\"space-left\" style=\"width: 40px;\" type=\"text\" name=\"grade_threshold\" id=\"grade_threshold\" value=\"60\" /></div>\n";
+                                            }
+                                            ?>
+                                        </li>
+                                    </ul>
+                                </div>
+								<input type="file" name="file" />
 							</form>
 						</div>
 
 						<?php 
 						if ($assessment["assessment_type"] == "quiz") { 
-						   $query = "SELECT * FROM `assessment_attached_quizzes` 
-										WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
-							$attached_quizzes = $db->GetAll($query);
-							if ($attached_quizzes) {
+                            if ($attached_quizzes) {
 								if (count($attached_quizzes) == 1) {
 									$attached_quiz = $attached_quizzes[0];
 								}
@@ -492,7 +411,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								} else if (jQuery(this).attr("id") == "import-csv-button") {
 									var target = jQuery("#import-csv");
 									var title = "Import CSV";
-									var height = 350;
+									var height = <?php echo ($assessment["handler"] == "Boolean" ? 500 : 350); ?>;
 								}
 								var importResults = target.dialog({
 									modal:		true,
@@ -530,7 +449,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<select name="student_exceptions" id="student_exceptions" style="width: 210px;" onchange="add_exception(this.options[this.selectedIndex].value, '<?php echo $assessment["assessment_id"]; ?>')">
 							<option value="0">-- Select A Student --</option>
 								<?php
-								foreach ($students as $student) {
+								foreach ($students as $key => &$student) {
 									if (!isset($student["grade_weighting"]) || $student["grade_weighting"] == NULL) {
 										echo "<option value=\"".$student["proxy_id"]."\">".$student["fullname"]."</option>";
 									}

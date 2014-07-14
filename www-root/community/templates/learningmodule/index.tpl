@@ -19,6 +19,7 @@
     <link href="{$sys_website_url}/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery.min.js"></script>
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery-ui.min.js"></script>
+    <script type="text/javascript">var COMMUNITY_ID = "{$community_id}";</script>
 	<script type="text/javascript">jQuery.noConflict();</script>
 
 	<script src="{$template_relative}/js/script.js"></script>
@@ -69,6 +70,9 @@
 			{if $is_logged_in && $user_is_member}
 				{include file="sidebar-blocks/community_block.tpl"}
 			{/if}
+            {if $allow_membership}
+                {include file="sidebar-blocks/community_join_block.tpl"}
+            {/if}
 		</aside>
 		{if $is_sequential_nav}
 			<section style="text-align:right;" class="span-23">
@@ -78,7 +82,7 @@
 					<p> <a href="{$next_page_url}"> Next >></a></p>
 				{elseif $next_page_url == "#" && $previous_page_url != "#"}
 					<p> <a href="{$previous_page_url}"><< Previous</a> </p>
-				{else $next_page_url == "#" && $previous_page_url == "#"}
+				{elseif $next_page_url == "#" && $previous_page_url == "#"}
 					<p> </p>
 				{/if}
 			</section>
@@ -86,9 +90,19 @@
 		</div>
 
     <footer class="span-24">
-		<p>{php}echo COPYRIGHT_STRING;{/php}</p>
+		<p>{$copyright_string}</p>
     </footer>
   </div> <!--! end of #container -->
+    {if !$development_mode && $google_analytics_code}
+        <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+        </script>
+        <script type="text/javascript">
+            var pageTracker = _gat._getTracker("{$google_analytics_code}");
+            pageTracker._initData();
+            pageTracker._trackPageview();
+        </script>
+    {/if}
 </body>
-
 </html>

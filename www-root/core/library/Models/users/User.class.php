@@ -726,8 +726,11 @@ class User {
                             JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
                             ON a.`id` = b.`user_id`
                             AND b.`app_id` = ?
-                            WHERE a.`id` = ?";
-                $result = $db->GetRow($query, array(AUTH_APP_ID, $proxy_id));
+                            WHERE a.`id` = ?
+                            AND b.`account_active` = 'true'
+                            AND (b.`access_starts` = '0' OR b.`access_starts` < ?)
+                            AND (b.`access_expires` = '0' OR b.`access_expires` >= ?)";
+                $result = $db->GetRow($query, array(AUTH_APP_ID, $proxy_id, time(), time()));
                 if ($result) {
                     $user = self::fromArray($result, $user);
                 }
@@ -766,6 +769,9 @@ class User {
                                 WHERE a.`user_id` = " . $db->qstr($user->getID()) . "
                                 AND a.`organisation_id` = " . $db->qstr($user->getActiveOrganisation()) . "
                                 AND a.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+                                AND a.`account_active` = 'true'
+                                AND (a.`access_starts` = '0' OR a.`access_starts` < ".$db->qstr(time()).")
+                                AND (a.`access_expires` = '0' OR a.`access_expires` >= ".$db->qstr(time()).")
                                 ORDER BY a.`id` ASC";
                     $result = $db->GetRow($query);
                     if ($result) {
@@ -836,6 +842,19 @@ class User {
         }
 	}
 
+    public function toArray() {
+		$arr = false;
+		$class_vars = get_class_vars(get_called_class());
+		if (isset($class_vars)) {
+			foreach ($class_vars as $class_var => $value) {
+                if ($class_var != "format_keys") {
+                    $arr[$class_var] = $this->$class_var;
+                }
+			}
+        }
+		return $arr;
+	}
+    
 	public static function getAccessHash() {
 		global $db, $ENTRADA_USER;
 		//get all of the users groups and roles for each organisation
@@ -860,6 +879,10 @@ class User {
 	 * @return User
 	 */
 	public static function fromArray(array $arr, User $user) {
+        foreach ($arr as $class_var_name => $value) {
+			$user->$class_var_name = $value;
+		}
+        /*
 		$user->id = $arr["id"];
 		$user->number = $arr["number"];
 		$user->username = $arr["username"];
@@ -895,7 +918,7 @@ class User {
 		$user->role = $arr["role"];
 		$user->access_id = $arr["access_id"];
 		$user->active_id = $arr["id"];
-
+        */
 		return $user;
 	}
 

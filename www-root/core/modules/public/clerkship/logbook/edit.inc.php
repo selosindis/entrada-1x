@@ -287,7 +287,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                             AND a.`event_type` = 'clinical'";
                                 $found	= ($db->GetRow($query) ? true : false);
                                 ?>
-                                <select id="rotation_id" name="rotation_id" style="width: 100%<?php echo ($found ? "; display: none" : ""); ?>" onchange="$('allow_save').value = '0';$('addEncounterForm').submit();">
+                                <select id="rotation_id" name="event_id" style="width: 100%<?php echo ($found ? "; display: none" : ""); ?>" onchange="$('allow_save').value = '0';$('addEncounterForm').submit();">
                                 <option value="0">-- Select Rotation --</option>
                                 <?php
                                 $query		= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a 
@@ -298,10 +298,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                 $results	= $db->GetAll($query);
                                 if ($results) {
                                     foreach ($results as $result) {
-                                        echo "<option value=\"".(int) $result["event_id"]."\"".(isset($PROCESSED["event_id"]) && $PROCESSED["event_id"] == (int)$result["event_id"] ? " selected=\"selected\"" : "").">".$result["event_title"]."</option>\n";
-                                        if (isset($PROCESSED["rotation_id"]) && $PROCESSED["rotation_id"] == (int)$result["rotation_id"]) {
+                                        echo "<option value=\"".(int) $result["event_id"]."\"".(isset($PROCESSED["rotation_id"]) && $PROCESSED["rotation_id"] == (int)$result["event_id"] ? " selected=\"selected\"" : "").">".$result["event_title"]."</option>\n";
+                                        if (isset($PROCESSED["rotation_id"]) && $PROCESSED["rotation_id"] == (int)$result["event_id"]) {
                                             $rotation_title = $result["event_title"];
-                                            $rotation_id = $result["event_id"];
+                                            $event_id = $result["event_id"];
                                         }
                                     }
                                 }
@@ -310,7 +310,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                 <?php
                                 if ($found && isset($rotation_title) && $rotation_title) {
                                     echo "<div id=\"rotation-title\" style=\"width: 100%\"><span>".$rotation_title."</span><img src=\"".ENTRADA_URL."/images/action-edit.gif\" style=\"float: right; cursor: pointer\" onclick=\"$('rotation-title').hide(); $('rotation_id').show();\"/></div>\n";
-                                    echo "<input type=\"hidden\" value=\"".$rotation_id."\" name=\"rotation_id\" />";
+                                    echo "<input type=\"hidden\" value=\"".$event_id."\" name=\"rotation_id\" />";
                                 }
                                 ?>
                             </span>
@@ -372,7 +372,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                     $query = "SELECT `category_type` FROM `".CLERKSHIP_DATABASE."`.`categories` AS a 
                                                 LEFT JOIN `".CLERKSHIP_DATABASE."`.`events` AS b 
                                                 ON a.`category_id` = b.`category_id` 
-                                                WHERE b.`event_id` = ".$db->qstr((((int)$_GET["event"]) ? ((int)$_GET["event"]) : $PROCESSED["event_id"]));
+                                                WHERE b.`event_id` = ".$db->qstr((((int)$_GET["event"]) ? ((int)$_GET["event"]) : $PROCESSED["rotation_id"]));
                                     $category_type = $db->GetOne($query);
                                     if ($category_type == "family medicine") {
                                         $agerange_cat = "5";
@@ -508,7 +508,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` 
 											WHERE `rotation_id` = (SELECT `rotation_id` 
 											FROM `".CLERKSHIP_DATABASE."`.`events` 
-											WHERE `event_id` = ".$db->qstr($PROCESSED["event_id"]).")";
+											WHERE `event_id` = ".$db->qstr($PROCESSED["rotation_id"]).")";
 								$rotation = $db->GetRow($query);
 								if ($rotation) {
 									$rotation_id = $rotation["rotation_id"];

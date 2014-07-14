@@ -12,12 +12,12 @@
  * $Id: teaching-report-by-department-workforce.inc.php 957 2009-12-18 14:14:32Z simpson $
  */
 
-if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
+if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	exit;
-} else if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} else if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		header("Location: ".ENTRADA_URL);
 		exit;
-	} else if(!$ENTRADA_ACL->amIAllowed('report', 'read', false)) {
+	} else if (!$ENTRADA_ACL->amIAllowed('report', 'read', false)) {
 			$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 			$ERROR++;
@@ -34,12 +34,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			$PROCESSED = array();
 			$PROCESSED["show_all_teachers"]	= true;
 
-			if((isset($_POST["update"])) && ((!isset($_POST["show_all_teachers"])) || ($_POST["show_all_teachers"] != "1"))) {
+			if ((isset($_POST["update"])) && ((!isset($_POST["show_all_teachers"])) || ($_POST["show_all_teachers"] != "1"))) {
 				$PROCESSED["show_all_teachers"] = false;
 			}
 
 			function display_half_days($convert = 0, $type = "lecture") {
-				if($convert = (int) $convert) {
+				if ($convert = (int) $convert) {
 					switch($type) {
 						case "lecture" :
 						case "lab" :
@@ -102,30 +102,30 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				</form>
 			</div>
 			<?php
-			if($STEP == 2) {
+			if ($STEP == 2) {
 				$int_use_cache		= true;
 				$event_ids			= array();
 				$report_results		= array();
 				$no_staff_number	= array();
 				$department_sidebar	= array();
-				$default_na_name	= "Unknown or N/A";
 
-				$organisation_where = " AND (a.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation().") ";
+				$default_na_name	= "Department";
 
 				$query	= "	SELECT a.`id` AS `proxy_id`, a.`number` AS `staff_number`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON b.`user_id` = a.`id`
 							AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-							WHERE  b.`app_id` = ".$db->qstr(AUTH_APP_ID).$organisation_where."
+							AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 							AND b.`group` = 'faculty'
 							ORDER BY `fullname`";
-				if($int_use_cache) {
-					$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+				if ($int_use_cache) {
+					$results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				} else {
-					$results	= $db->GetAll($query);
+					$results = $db->GetAll($query);
 				}
-				if($results) {
+
+				if ($results) {
 					/*
 					1	Lecture	Faculty member speaks to a whole group of students for the session. Ideally, the lecture is interactive, with brief student activities to apply learning within the talk or presentation. The focus, however, is on the faculty member speaking or presenting to a group of students.	1	0	NULL	NULL	1250877835	1
 					6	Lab	In this session, practical learning, activity and demonstration take place, usually with specialized equipment, materials or methods and related to a class, or unit of teaching.	1	1	NULL	NULL	1250877835	1
@@ -149,33 +149,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					$report_results["courses"]["clerkship_seminar"]	= array("total_events" => 0, "total_minutes" => 0, "events_calculated" => 0, "events_minutes" => 0);
 					$report_results["courses"]["events"]			= array("total_events" => 0, "total_minutes" => 0, "events_calculated" => 0, "events_minutes" => 0);
 
-					foreach($results as $result) {
+					foreach ($results as $result) {
 						$department_id	= $default_na_name;
-						$division_id	= $default_na_name;
+						$division_id	= "Division";
 
-						if($result["staff_number"]) {
-							$query	= "	SELECT b.`department`, b.`division`
-										FROM `total_staffing`.`qfm_person_per_position` AS a
-										LEFT JOIN `total_staffing`.`qfm_positions` AS b
-										ON b.`position_id` = a.`position_id_key`
-										WHERE a.`staff_id` = ".$db->qstr(trim($result["staff_number"]))."
-										LIMIT 1";
-							$dresult	= $db->GetRow($query);
-							if($dresult) {
-								if((int) trim($dresult["division"])) {
-									$department_id	= (($department_name = fetch_department_title((int) trim($dresult["department"]))) ? $department_name : "Unknown Department Nmae");
-									$division_id	= (($division_name = fetch_department_title((int) trim($dresult["division"]))) ? $division_name : "Unknown Division Name");
-								} elseif((int) trim($dresult["department"])) {
-									$department_id	= (($department_name = fetch_department_title((int) trim($dresult["department"]))) ? $department_name : "Unknown Department Nmae");
-
-									if((is_array($report_results["departments"][$department_id])) && (count($report_results["departments"][$department_id]) > 1)) {
-										$division_id	= $default_na_name;
-									} else {
-										$division_id	= "Division";
-									}
-								}
-							}
-						}
+                        $query = "SELECT a.`department_title`
+                                    FROM `".ENTRADA_AUTH."`.`departments` AS a
+                                    JOIN `".ENTRADA_AUTH."`.`user_departments` AS b
+                                    ON b.`dep_id` = a.`department_id`
+                                    AND b.`user_id` = ".$db->qstr($result["proxy_id"]);
+                        $dresult	= $db->GetRow($query);
+                        if ($dresult) {
+                            $department_id = $dresult["department_title"];
+                            $division_id = $dresult["department_title"];
+                        }
 
 						$i = @count($report_results["departments"][$department_id][$division_id]["people"]);
 						$report_results["departments"][$department_id][$division_id]["people"][$i]["fullname"]				= $result["fullname"];
@@ -192,15 +179,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						$report_results["departments"][$department_id][$division_id]["people"][$i]["clerkship_seminar"]		= array("total_events" => 0, "total_minutes" => 0);
 						$report_results["departments"][$department_id][$division_id]["people"][$i]["events"]				= array("total_events" => 0, "total_minutes" => 0);
 
-						/*$query = "	SELECT a.`event_id`, a.`event_title`, a.`course_id`, c.`eventtype_id`, c.`duration` AS `segment_duration`
-									FROM `events` AS a
-									JOIN `event_contacts` AS b
-									ON b.`event_id` = a.`event_id`
-									JOIN `event_eventtypes` AS c
-									ON c.`event_id` = a.`event_id`
-									WHERE b.`proxy_id` = ".$db->qstr($result["proxy_id"])."
-									AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")";*/
-						
 						$query = "	SELECT a.`event_id`, a.`event_title`, a.`course_id`, c.`eventtype_id`, c.`duration` AS `segment_duration`
 									FROM `events` AS a
 									JOIN `event_contacts` AS b
@@ -211,14 +189,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 									ON d.`course_id` = a.`course_id`
 									WHERE b.`proxy_id` = ".$db->qstr($result["proxy_id"])."
 									AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")
-									AND d.`organisation_id` = '1'";
-						
+									AND d.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 						$sresults	= $db->GetAll($query);
-						if($sresults) {
+						if ($sresults) {
 							$report_results["departments"][$department_id][$division_id]["people"][$i]["contributor"]	= true;
 
 							foreach($sresults as $sresult) {
-								if(!in_array($sresult["event_id"], $event_ids)) {
+								if (!in_array($sresult["event_id"], $event_ids)) {
 									$event_ids[]		= $sresult["event_id"];
 									$increment_total	= true;
 								} else {
@@ -231,7 +208,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["lecture"]["total_events"]	+= 1;
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["lecture"]["total_minutes"]		+= (int) $sresult["segment_duration"];
 
-										if($increment_total) {
+										if ($increment_total) {
 											$report_results["courses"]["lecture"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["lecture"]["total_events"]	+= 1;
 											$report_results["departments"][$department_id][$division_id]["courses"]["lecture"]["total_minutes"]	+= (int) $sresult["segment_duration"];
@@ -248,7 +225,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["lab"]["total_events"]	+= 1;
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["lab"]["total_minutes"]		+= (int) $sresult["segment_duration"];
 
-										if($increment_total) {
+										if ($increment_total) {
 											$report_results["courses"]["lab"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["lab"]["total_events"]	+= 1;
 											$report_results["departments"][$department_id][$division_id]["courses"]["lab"]["total_minutes"]	+= (int) $sresult["segment_duration"];
@@ -265,7 +242,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["small_group"]["total_events"]		+= 1;
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["small_group"]["total_minutes"]		+= (int) $sresult["segment_duration"];
 
-										if($increment_total) {
+										if ($increment_total) {
 											$report_results["courses"]["small_group"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["small_group"]["total_events"]		+= 1;
 											$report_results["departments"][$department_id][$division_id]["courses"]["small_group"]["total_minutes"]	+= (int) $sresult["segment_duration"];
@@ -282,7 +259,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["patient_contact"]["total_events"]		+= 1;
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["patient_contact"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
-										if($increment_total) {
+										if ($increment_total) {
 											$report_results["courses"]["patient_contact"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["patient_contact"]["total_events"]	+= 1;
 											$report_results["departments"][$department_id][$division_id]["courses"]["patient_contact"]["total_minutes"]	+= (int) $sresult["segment_duration"];
@@ -299,7 +276,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["symposium"]["total_events"]		+= 1;
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["symposium"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
-										if($increment_total) {
+										if ($increment_total) {
 											$report_results["courses"]["symposium"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["symposium"]["total_events"]	+= 1;
 											$report_results["departments"][$department_id][$division_id]["courses"]["symposium"]["total_minutes"]	+= (int) $sresult["segment_duration"];
@@ -316,7 +293,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["directed_learning"]["total_events"]		+= 1;
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["directed_learning"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
-										if($increment_total) {
+										if ($increment_total) {
 											$report_results["courses"]["directed_learning"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["directed_learning"]["total_events"]	+= 1;
 											$report_results["departments"][$department_id][$division_id]["courses"]["directed_learning"]["total_minutes"]	+= (int) $sresult["segment_duration"];
@@ -333,7 +310,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["review"]["total_events"]		+= 1;
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["review"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
-										if($increment_total) {
+										if ($increment_total) {
 											$report_results["courses"]["review"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["review"]["total_events"]	+= 1;
 											$report_results["departments"][$department_id][$division_id]["courses"]["review"]["total_minutes"]	+= (int) $sresult["segment_duration"];
@@ -350,7 +327,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["exam"]["total_events"]		+= 1;
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["exam"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
-										if($increment_total) {
+										if ($increment_total) {
 											$report_results["courses"]["exam"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["exam"]["total_events"]	+= 1;
 											$report_results["departments"][$department_id][$division_id]["courses"]["exam"]["total_minutes"]	+= (int) $sresult["segment_duration"];
@@ -367,7 +344,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["clerkship_seminar"]["total_events"]		+= 1;
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["clerkship_seminar"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
-										if($increment_total) {
+										if ($increment_total) {
 											$report_results["courses"]["clerkship_seminar"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["clerkship_seminar"]["total_events"]	+= 1;
 											$report_results["departments"][$department_id][$division_id]["courses"]["clerkship_seminar"]["total_minutes"]	+= (int) $sresult["segment_duration"];
@@ -384,7 +361,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["events"]["total_events"]	+= 1;
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["events"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
-										if($increment_total) {
+										if ($increment_total) {
 											$report_results["courses"]["events"]["total_minutes"]+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["events"]["total_events"]	+= 1;
 											$report_results["departments"][$department_id][$division_id]["courses"]["events"]["total_minutes"]+= (int) $sresult["segment_duration"];
@@ -399,6 +376,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								}
 							}
 						}
+
 						$query = "SELECT * FROM `ar_internal_contributions`
 									WHERE `proxy_id` = ".$db->qstr($result["proxy_id"])."
 									AND `year_reported` BETWEEN 
@@ -406,7 +384,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 											AND 
 										".date("Y", $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"])."
 									AND `role_description` IN ('Interviewer', 'Reader')";
-						if($int_use_cache) {
+						if ($int_use_cache) {
 							$iresults	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 						} else {
 							$iresults	= $db->GetAll($query);
@@ -423,7 +401,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								}
 								$report_results["departments"][$department_id][$division_id]["people"][$i]["interview"]["total_events"]		+= $sessions;
 
-								if($increment_total) {
+								if ($increment_total) {
 									$report_results["courses"]["interview"]["total_events"]													+= $sessions;
 									$report_results["departments"][$department_id][$division_id]["courses"]["interview"]["total_events"]	+= $sessions;
 								}
@@ -439,7 +417,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." 
 											AND 
 										".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]);
-						if($int_use_cache) {
+						if ($int_use_cache) {
 							$oresults	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 						} else {
 							$oresults	= $db->GetAll($query);
@@ -457,7 +435,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								}
 								$report_results["departments"][$department_id][$division_id]["people"][$i]["observership"]["total_events"]		+= $days;
 
-								if($increment_total) {
+								if ($increment_total) {
 									$report_results["courses"]["observership"]["total_events"]													+= $days;
 									$report_results["departments"][$department_id][$division_id]["courses"]["observership"]["total_events"]		+= $days;
 								}
@@ -468,21 +446,21 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						}
 					}
 				}
-				if(isset($report_results) && !empty($report_results)) {
+				if (isset($report_results) && !empty($report_results)) {
 					ksort($report_results["departments"]);
 
 				$department_list = array_keys($report_results["departments"]);
 				foreach($department_list as $department) {
 					ksort($report_results["departments"][$department]);
 
-					if(is_array($report_results["departments"][$department][$default_na_name])) {
+					if (is_array($report_results["departments"][$department][$default_na_name])) {
 						$tmp_array = $report_results["departments"][$department][$default_na_name];
 						unset($report_results["departments"][$department][$default_na_name]);
 						$report_results["departments"][$department][$default_na_name] = $tmp_array;
 					}
 				}
 
-				if(is_array($report_results["departments"][$default_na_name])) {
+				if (is_array($report_results["departments"][$default_na_name])) {
 					$tmp_array = $report_results["departments"][$default_na_name];
 					unset($report_results["departments"][$default_na_name]);
 					$report_results["departments"][$default_na_name] = $tmp_array;
@@ -493,7 +471,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]);
 				echo "</div>";
 
-				if((is_array($report_results["departments"])) && (count($report_results["departments"]))) {
+				if ((is_array($report_results["departments"])) && (count($report_results["departments"]))) {
 					$absolute_duration_total_lecture			= 0;
 					$absolute_duration_total_lab				= 0;
 					$absolute_duration_total_small_group		= 0;
@@ -584,7 +562,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							</thead>
 							<tbody>
 								<?php
-								if((is_array($department_entries)) && (count($department_entries))) {
+								if ((is_array($department_entries)) && (count($department_entries))) {
 									foreach($department_entries as $division_name => $division_entries) {
 										$division_duration_total_lecture			= 0;
 										$division_duration_total_lab				= 0;
@@ -616,10 +594,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										echo "	<td colspan=\"15\" style=\"padding-left: 2%\"><strong>".html_encode($division_name)."</strong></td>\n";
 										echo "</tr>\n";
 
-										if((is_array($division_entries["people"])) && (count($division_entries["people"]))) {
+										if ((is_array($division_entries["people"])) && (count($division_entries["people"]))) {
 											$i = 0;
 											foreach($division_entries["people"] as $result) {
-												if(!$result["number"]) {
+												if (!$result["number"]) {
 													$no_staff_number[] = array("fullname" => $result["fullname"], "email" => $result["email"]);
 												}
 												$duration_total					= 0;
@@ -652,7 +630,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 
 												$session_total		= ($session_lecture + $session_lab + $session_small_group + $session_patient_contact + $session_symposium + $session_directed_learning + $session_review + $session_exam + $session_clerkship_seminar + $session_events);
 
-												if(($PROCESSED["show_all_teachers"]) || ((bool) $result["contributor"])) {
+												if (($PROCESSED["show_all_teachers"]) || ((bool) $result["contributor"])) {
 													?>
 													<tr <?php echo ((!$result["number"]) ? " class=\"np\"" : ""); ?>>
 														<td class="modified<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo ((!$result["number"]) ? "<img src=\"".ENTRADA_URL."/images/checkbox-no-number.gif\" width=\"14\" height=\"14\" alt=\"No Number\" title=\"No Number\" />" : "&nbsp;"); ?></td>
@@ -677,7 +655,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 												}
 											}
 										}
-										if((is_array($division_entries["courses"])) && (count($division_entries["courses"]))) {
+										if ((is_array($division_entries["courses"])) && (count($division_entries["courses"]))) {
 											$division_duration_total_lecture			= ((isset($division_entries["courses"]["lecture"]["events_minutes"])) ? $division_entries["courses"]["lecture"]["events_minutes"] : 0);
 											$division_duration_total_lab				= ((isset($division_entries["courses"]["lab"]["events_minutes"])) ? $division_entries["courses"]["lab"]["events_minutes"] : 0);
 											$division_duration_total_small_group		= ((isset($division_entries["courses"]["small_group"]["events_minutes"])) ? $division_entries["courses"]["small_group"]["events_minutes"] : 0);
@@ -729,7 +707,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 											$division_duration_final_total		= ($division_duration_total_lecture + $division_duration_total_lab + $division_duration_total_small_group + $division_duration_total_patient_contact + $division_duration_total_symposium + $division_duration_total_directed_learning + $division_duration_total_review + $division_duration_total_exam + $division_duration_total_clerkship_seminar + $division_duration_total_events);
 											$division_session_final_total		= ($division_session_total_lecture + $division_session_total_lab + $division_session_total_small_group + $division_session_total_patient_contact + $division_session_total_symposium + $division_session_total_directed_learning + $division_session_total_review + $division_session_total_exam + $division_session_total_clerkship_seminar + $division_session_total_events);
 
-											if($division_duration_final_total && $division_session_final_total) {
+											if ($division_duration_final_total && $division_session_final_total) {
 												$department_duration_final_total	+= $division_duration_final_total;
 												$department_session_final_total		+= $division_session_final_total;
 												?>
@@ -856,7 +834,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					</thead>
 					<tbody>
 						<?php
-						if((is_array($report_results["courses"])) && (count($report_results["courses"]))) {
+						if ((is_array($report_results["courses"])) && (count($report_results["courses"]))) {
 							$duration_total_lecture				= ((isset($report_results["courses"]["lecture"]["events_minutes"])) ? $report_results["courses"]["lecture"]["events_minutes"] : 0);
 							$duration_total_lab					= ((isset($report_results["courses"]["lab"]["events_minutes"])) ? $report_results["courses"]["lab"]["events_minutes"] : 0);
 							$duration_total_small_group			= ((isset($report_results["courses"]["small_group"]["events_minutes"])) ? $report_results["courses"]["small_group"]["events_minutes"] : 0);
@@ -884,7 +862,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							$duration_final_total	= ($duration_total_lecture + $duration_total_lab + $duration_total_pbl + $duration_total_small_group + $duration_total_patient_contact + $duration_total_symposium + $duration_total_directed_learning + $duration_total_review + $duration_total_exam + $duration_total_clerkship_seminar + $duration_total_events);
 							$session_final_total	= ($session_total_lecture + $session_total_lab + $session_total_pbl + $session_total_small_group + $session_total_patient_contact + $session_total_symposium + $session_total_directed_learning + $session_total_review + $session_total_exam + $session_total_clerkship_seminar + $session_total_events);
 							
-							if($duration_final_total && $session_final_total) {
+							if ($duration_final_total && $session_final_total) {
 								?>
 								<tr>
 									<td colspan="14"">&nbsp;</td>
@@ -914,7 +892,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					</tbody>
 				</table>
 				<?php
-				if((is_array($no_staff_number)) && ($total_no_staff_number = count($no_staff_number))) {
+				if ((is_array($no_staff_number)) && ($total_no_staff_number = count($no_staff_number))) {
 					?>
 					<div class="no-printing">
 						<h2>Numberless Faculty</h2>
@@ -932,11 +910,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$columns++;
 										echo "\t<td".((($i == $total_no_staff_number) && ($columns < $max_columns)) ? " colspan=\"".(($max_columns - $columns) + 1)."\"" :"").">".html_encode($result["fullname"])."</td>\n";
 
-										if(($columns == $max_columns) || ($i == $total_no_staff_number)) {
+										if (($columns == $max_columns) || ($i == $total_no_staff_number)) {
 											$columns = 0;
 											echo "</tr>\n";
 
-											if($i < $total_no_staff_number) {
+											if ($i < $total_no_staff_number) {
 												echo "<tr>\n";
 											}
 										}

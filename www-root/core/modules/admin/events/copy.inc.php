@@ -171,35 +171,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 							}
 
-							$query	= "	SELECT $EVENT_ID `event_id`, a.`ed10_id`, a.`major_topic`, a.`minor_topic`, a.`minor_desc`, $updated_date `updated_date`, $USER_ID `updated_by`
-										FROM `event_ed10` a
+							$query	= "	SELECT $EVENT_ID `event_id`, a.`topic_id`, a.`topic_coverage`, a.`topic_time`, $updated_date `updated_date`, $USER_ID `updated_by`
+										FROM `event_topics` a
 										WHERE a.`event_id` = ".$db->qstr($event_id)."
-										ORDER BY a.`eed10_id` ASC";
+										ORDER BY a.`etopic_id` ASC";
 							$results = $db->GetAll($query);
 							if ($results) {
 								foreach ($results as $result) {
-									if (!$db->AutoExecute("event_ed10", $result, "INSERT")) {
+									if (!$db->AutoExecute("event_topics", $result, "INSERT")) {
 										$ERROR++;
-										$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event ED10</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+										$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Topic</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
 
-										application_log("error", "Unable to insert a new event_ed10 record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
-										break 2;
-									}
-								}
-							}
-
-							$query	= "	SELECT $EVENT_ID `event_id`, a.`ed11_id`, a.`major_topic`, a.`minor_topic`, a.`minor_desc`, $updated_date `updated_date`, $USER_ID `updated_by`
-										FROM `event_ed11` a
-										WHERE a.`event_id` = ".$db->qstr($event_id)."
-										ORDER BY a.`eed11_id` ASC";
-							$results = $db->GetAll($query);
-							if ($results) {
-								foreach ($results as $result) {
-									if (!$db->AutoExecute("event_ed11", $result, "INSERT")) {
-										$ERROR++;
-										$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event ED11</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
-
-										application_log("error", "Unable to insert a new event_ed11 record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
+										application_log("error", "Unable to insert a new event_topic record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
 										break 2;
 									}
 								}
@@ -213,8 +196,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$original_file = FILE_STORAGE_PATH."/".$result["efile_id"];
 
 										if (@file_exists($original_file)) {
-											$result["event_id"]			= $EVENT_ID;
-											$result["accesses"]			= 0;
+											$result["event_id"]		= $EVENT_ID;
+											$result["accesses"]		= 0;
 											$result["release_date"]		= $result["release_date"] ? $event_start - ($original_start - $result["release_date"]) : 0;
 											$result["release_until"]	= $result["release_until"] ? $event_start - ($original_start - $result["release_until"]) : 0;
 											$result["updated_date"]		= $updated_date;
@@ -270,7 +253,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 							}
 
-							$query	= "	SELECT $EVENT_ID `event_id`, a.`objective_id`, a.`objective_type`, a.`objective_details`, $updated_date `updated_date`, $USER_ID `updated_by`
+							$query	= "	SELECT $EVENT_ID `event_id`, a.`objective_id`, a.`objective_details`, a.`objective_type`, $updated_date `updated_date`, $USER_ID `updated_by`
 										FROM `event_objectives` a
 										WHERE a.`event_id` = ".$db->qstr($event_id)."
 										ORDER BY a.`eobjective_id` ASC";
@@ -304,11 +287,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 							}
 
-							$query	= "	SELECT * FROM `event_quizzes` WHERE `event_id` = ".$db->qstr($event_id)." ORDER BY `equiz_id` ASC";
+							$query	= "	SELECT * FROM `attached_quizzes` WHERE `content_type` = 'event' AND `content_id` = ".$db->qstr($event_id)." ORDER BY `aquiz_id` ASC";
 							$results = $db->GetAll($query);
 							if ($results) {
 								foreach ($results as $result) {
-									$result["event_id"]			= $EVENT_ID;
+									$result["contact_id"]		= $EVENT_ID;
 									$result["accesses"]			= 0;
 									$result["release_date"]		= $result["release_date"] ? $event_start - ($original_start - $result["release_date"]) : 0;
 									$result["release_until"]	= $result["release_until"] ? $event_start - ($original_start - $result["release_until"]) : 0;
@@ -316,9 +299,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									$result["updated_by"]		= $USER_ID;
 
 									array_shift($result);
-									if ($db->AutoExecute("event_quizzes", $result, "INSERT")) {
-										$copied[$event_id]["event_title"] = $result["event_title"];
-									} else {
+									if (!$db->AutoExecute("attached_quizzes", $result, "INSERT")) {
 										$ERROR++;
 										$ERRORSTR[] = "Unable to quiz link [".$result["quiz_title"]."] to new event_id [".$EVENT_ID."].<br /><br />The system administrator was informed of this error; please try again later.";
 
@@ -327,8 +308,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									}
 								}
 							}
-							
+
+							$query	= "	SELECT * FROM `event_lti_consumers` WHERE `event_id` = ".$db->qstr($event_id)." ORDER BY `id` ASC";
+							$results = $db->GetAll($query);
+							if ($results) {
+								foreach ($results as $result) {
+									$result["event_id"]		    = $EVENT_ID;
+									$result["valid_from"]		= $result["valid_from"] ? $event_start - ($original_start - $result["valid_from"]) : 0;
+									$result["valid_until"]	    = $result["valid_until"] ? $event_start - ($original_start - $result["valid_until"]) : 0;
+									$result["updated_date"]		= $updated_date;
+									$result["updated_by"]		= $USER_ID;
+
+									array_shift($result);
+									if (!$db->AutoExecute("event_lti_consumers", $result, "INSERT")) {
+										$ERROR++;
+										$ERRORSTR[] = "There was an error while trying to save the selected <strong>LTI Event Consumer</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+
+										application_log("error", "Unable to insert a new event_lti_consumer record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
+										break 2;
+									}
+								}
+							}
+
 							$copied[$event_id]["event_title"] = $event_info["event_title"];
+                            
+                            history_log($EVENT_ID, 'created this learning event.', $ENTRADA_USER->getID());
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "There was a problem copying this event $event_id to $EVENT_ID into the system. The system administrator was informed of this error; please try again later.";
@@ -444,6 +448,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						setDateValue(document.getElementById("cEvent_date"),start);
 						document.getElementById('cEvent_hour').value = hour;
 						document.getElementById('cEvent_min').value = min;
+						updateTime("cEvent");
 						return;
 					}
 					function deleteNewEvent(rVal) {
@@ -522,7 +527,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 			
 							if ($administrator) {
-								$url	= "javascript:newEventDate(". $result["event_id"]. ", '". $result["event_title"]. "', '".date('Y-m-d', $result["event_start"]). "', '".date('H', $result["event_start"]). "', '".date('i', $result["event_start"])."')";
+								//Escape event title by replacing double quotes with &quot; and single quotes with \'
+								$event_title_escaped = str_replace(array('"', "'"), array('&quot;', "\\'"), $result["event_title"]);
+								$url	= "javascript:newEventDate(". $result["event_id"]. ", '". $event_title_escaped . "', '".date('Y-m-d', $result["event_start"]). "', '".date('H', $result["event_start"]). "', '".date('i', $result["event_start"])."')";
 								echo "<tr id=\"rEvent-".$result["event_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
 								echo "	<td class=\"modified\"><a href=\"$url\"><img src=\"".ENTRADA_URL."/images/btn_add.gif\" alt=\"Copy Event and Content\" title=\"Copy Event and Content\" border=\"0\" /></a></td>\n";
 								echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";

@@ -392,10 +392,10 @@ if ($RECORD_ID) {
 							?>
 							<ul class="page-action">
 								<?php if ($ADD_COMMENT) : ?>
-								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>">Add File Comment</a></li>
+								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add File Comment</a></li>
 								<?php endif; ?>
 								<?php if ($ADD_REVISION) : ?>
-								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>">Upload Revised File</a></li>
+								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Upload Revised File</a></li>
 								<?php endif; ?>
 								<?php if (($MOVE_FILE) && ($community_shares_select != "")) : ?>
 								<li><a href="javascript:fileMove(<?php echo $RECORD_ID; ?>)">Move File</a></li>
@@ -455,13 +455,13 @@ if ($RECORD_ID) {
 						?>
 						<ul class="page-action">
 							<?php if ($ADD_COMMENT) : ?>
-							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>">Add File Comment</a></li>
+							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add File Comment</a></li>
 							<?php endif; ?>
 							<?php if ($ADD_REVISION) : ?>
-							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>">Upload Revised File</a></li>
+							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Upload Revised File</a></li>
 							<?php endif; ?>
 							<?php if ($MOVE_FILE) : ?>
-							<li><a href="javascript:fileMove(<?php echo $RECORD_ID; ?>)">Move File</a></li>
+							<li><a href="javascript:fileMove(<?php echo $RECORD_ID; ?>)" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Move File</a></li>
 							<?php endif; ?>
 							<li class="top"><a href="#top">Top Of Page</a></li>
 						</ul>

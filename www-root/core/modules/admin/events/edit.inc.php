@@ -37,9 +37,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 
 	if (isset($_GET["mode"]) && $_GET["mode"] == "draft") {
 		$is_draft				= true;
@@ -52,6 +49,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$devent_id				= (int) $_GET["id"];
 		$where_query			= 'WHERE `devent_id` = '.$db->qstr($devent_id);
 	} else {
+        $is_draft               = false;
+
 		$tables['events']		= 'events';
 		$tables['audience']		= 'event_audience';
 		$tables['contacts']		= 'event_contacts';
@@ -68,6 +67,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$event_info	= $db->GetRow($query);
 
 		if ($event_info) {
+            if ($event_info["recurring_id"]) {
+                $query = "SELECT * FROM `events`
+                            WHERE `recurring_id` = ".$db->qstr($event_info["recurring_id"])."
+                            AND `event_id` != ".$db->qstr($EVENT_ID);
+                $recurring_events = $db->GetAll($query);
+            } else {
+                $recurring_events = false;
+            }
 
 			if (!$ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
 				application_log("error", "A program coordinator attempted to edit an event [".$EVENT_ID."] that they were not the coordinator for.");
@@ -94,6 +101,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				// Error Checking
 				switch($STEP) {
 					case 2 :
+                        
+                        $stats = array();
+                        
 						/**
 						 * Required field "course_id" / Course
 						 */
@@ -121,6 +131,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						 */
 						if ((isset($_POST["event_title"])) && ($event_title = clean_input($_POST["event_title"], array("notags", "trim")))) {
 							$PROCESSED["event_title"] = $event_title;
+
+                            $changed = false;
+                            $changed = md5_change_value($EVENT_ID, 'event_id', 'event_title', $PROCESSED["event_title"], 'events');
+                            if ($changed) {
+                                $stats[] = 'title';
+                            }
 						} else {
 							add_error("The <strong>Event Title</strong> field is required.");
 						}
@@ -132,6 +148,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						if ((isset($start_date["start"])) && ((int) $start_date["start"])) {
 							$PROCESSED["event_start"] = (int) $start_date["start"];
 						}
+                        
+                        $changed = false;
+                        $changed = md5_change_value($EVENT_ID, 'event_id', 'event_start', $PROCESSED["event_start"], 'events');
+                        if ($changed) {
+                            $stats[] = 'start';
+						}
 
 						/**
 						 * Non-required field "event_location" / Event Location
@@ -141,6 +163,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						} else {
 							$PROCESSED["event_location"] = "";
 						}
+						
+                        $changed = false;
+                        $changed = md5_change_value($EVENT_ID, 'event_id', 'event_location', $PROCESSED["location"], 'events');
+                        if ($changed) {
+                            $stats[] = 'location';
+                        }
 
 						/**
 						 * Required fields "eventtype_id" / Event Type
@@ -296,12 +324,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						} else {
 							$PROCESSED["release_date"] = 0;
 						}
+                        
+                        $changed = false;
+                        $changed = md5_change_value($EVENT_ID, 'event_id', 'release_date', $PROCESSED["release_date"], 'events');
+                        if ($changed) {
+                            $stats[] = 'release_date';
+                        }
+
 						if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
 							$PROCESSED["release_until"] = (int) $viewable_date["finish"];
 						} else {
 							$PROCESSED["release_until"] = 0;
 						}
 
+                        $changed = false;
+                        $changed = md5_change_value($EVENT_ID, 'event_id', 'release_until', $PROCESSED["release_until"], 'events');
+                        if ($changed) {
+                            $stats[] = 'release_until';
+                        }
+                        
 						if (isset($_POST["post_action"])) {
 							switch($_POST["post_action"]) {
 								case "content" :
@@ -325,6 +366,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
 						}
 
+                        if (isset($_POST["audience_visible"]) && $tmp_input = clean_input($_POST["audience_visible"], "int")) {
+                            $PROCESSED["audience_visible"] = "1";
+                        } else {
+                            $PROCESSED["audience_visible"] = "0";
+                        }
+                        
 						if (!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
@@ -362,6 +409,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								 * If there are faculty associated with this event, add them
 								 * to the event_contacts table.
 								 */
+                                
+                                //creates an array of existing contacts 
+                                //used to compare changes to the faculty
+                                $existing_contacts_query = "    SELECT `proxy_id`
+                                                                FROM `".$tables["contacts"]."`
+                                                                WHERE `event_id` = ".$db->qstr($EVENT_ID);
+                                $existing_contacts = $db->GetAll($existing_contacts_query);
+                                foreach ($existing_contacts as $existing_contact) {
+                                    $existing_contact_array[] = $existing_contact['proxy_id'];
+                                }
+                                
 								$query = "DELETE FROM `".$tables["contacts"]."` ".$where_query;
 								if ($db->Execute($query)) {
 									if ((is_array($PROCESSED["associated_faculty"])) && (count($PROCESSED["associated_faculty"]))) {
@@ -378,6 +436,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										}
 									}
 								}
+								
+                                //compares the previous faculty list with the new one
+                                
+                                $changed = false;
+                                //only try to compare the arrays if faculty are already associated
+                                if (is_array($existing_contact_array) && is_array($PROCESSED["associated_faculty"])) {
+                                    $changed = compare_array_values($PROCESSED["associated_faculty"], $existing_contact_array);
+                                }
+                                // if no faculty are set, but a list is set and not empty then set changed to true
+                                if (!is_array($existing_contact_array) && is_array($PROCESSED["associated_faculty"]) && !empty($PROCESSED["associated_faculty"])) {
+                                    $changed = true;
+                                }
+                                if ($changed) {
+                                    $stats[] = 'contacts';
+                                }
 
 								$query = "DELETE FROM `".$tables["audience"]."` ".$where_query;
 								if ($db->Execute($query)) {
@@ -509,6 +582,231 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									break;
 								}
 
+                                if ($recurring_events && isset($_POST["recurring_event_ids"]) && @count($_POST["recurring_event_ids"]) && isset($_POST["update_recurring_fields"]) && @count($_POST["update_recurring_fields"])) {
+                                    $query = "	SELECT a.*, b.`organisation_id`
+                                            FROM `events` AS a
+                                            LEFT JOIN `courses` AS b
+                                            ON b.`course_id` = a.`course_id`
+                                            WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
+                                    $event_info	= $db->GetRow($query);
+
+                                    $updating_recurring_events = array();
+                                    $query = "SELECT * FROM `events`
+                                            WHERE `recurring_id` = ".$db->qstr($event_info["recurring_id"])."
+                                            AND `event_id` != ".$db->qstr($EVENT_ID)."
+                                            ORDER BY `event_start` ASC";
+                                    $temp_recurring_events = $db->GetAll($query);
+                                    if ($temp_recurring_events) {
+                                        foreach ($temp_recurring_events as $temp_event) {
+                                            if (in_array($temp_event["event_id"], $_POST["recurring_event_ids"])) {
+                                                $updating_recurring_events[] = $temp_event;
+                                            }
+                                        }
+                                    }
+                                    $PROCESSED_RECURRING_EVENT = array();
+                                    unset($PROCESSED_RECURRING_EVENT["recurring_id"]);
+                                    if ($updating_recurring_events) {
+                                        if (in_array("course", $_POST["update_recurring_fields"])) {
+                                            $PROCESSED_RECURRING_EVENT["course_id"] = $PROCESSED["course_id"];
+                                        }
+                                        if (in_array("event_title", $_POST["update_recurring_fields"])) {
+                                            $PROCESSED_RECURRING_EVENT["event_title"] = $PROCESSED["event_title"];
+                                        }
+                                        if (in_array("event_location", $_POST["update_recurring_fields"])) {
+                                            $PROCESSED_RECURRING_EVENT["event_location"] = $PROCESSED["event_location"];
+                                        }
+
+                                        foreach ($updating_recurring_events as $order => $recurring_event) {
+                                            $recurring_where_query  = "WHERE `event_id` = ".$db->qstr($recurring_event["event_id"]);
+
+                                            if (in_array("event_types", $_POST["update_recurring_fields"])) {
+                                                $query = "DELETE FROM `".$tables["event_types"]."` ".$recurring_where_query;
+                                                if ($db->Execute($query)) {
+                                                    foreach($PROCESSED["event_types"] as $event_type) {
+                                                        $eventtype_data = array("event_id" => $recurring_event["event_id"], "eventtype_id" => $event_type[0], "duration" => $event_type[1]);
+                                                        if ($is_draft) {
+                                                            $eventtype_data["devent_id"] = $devent_id;
+                                                        }
+                                                        if (!$db->AutoExecute($tables["event_types"], $eventtype_data, "INSERT")) {
+                                                            add_error("There was an error while trying to save the selected <strong>Event Type</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                            application_log("error", "Unable to insert a new event_eventtype record while adding a new event. Database said: ".$db->ErrorMsg());
+                                                        }
+                                                    }
+                                                } else {
+                                                    add_error("There was an error while trying to update the selected <strong>Event Types</strong> for one of the selected recurring events.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                    application_log("error", "Unable to delete any eventtype records while editing an event. Database said: ".$db->ErrorMsg());
+                                                }
+                                            }
+
+                                            if (in_array("associated_faculty", $_POST["update_recurring_fields"])) {
+                                                /**
+                                                 * If there are faculty associated with this event, add them
+                                                 * to the event_contacts table.
+                                                 */
+                                                $query = "DELETE FROM `".$tables["contacts"]."` ".$recurring_where_query;
+                                                if ($db->Execute($query)) {
+                                                    if ((is_array($PROCESSED["associated_faculty"])) && (count($PROCESSED["associated_faculty"]))) {
+                                                        foreach($PROCESSED["associated_faculty"] as $contact_order => $proxy_id) {
+                                                            $contact_data = array("event_id" => $recurring_event["event_id"], "proxy_id" => $proxy_id,"contact_role"=>$PROCESSED["contact_role"][$contact_order], "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
+                                                            if ($is_draft) {
+                                                                $contact_data["devent_id"] = $devent_id;
+                                                            }
+                                                            if (!$db->AutoExecute($tables["contacts"], $contact_data, "INSERT")) {
+                                                                add_error("There was an error while trying to attach an <strong>Associated Faculty</strong> to one of the selected recurring events.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                                application_log("error", "Unable to insert a new event_contact record while adding a new event. Database said: ".$db->ErrorMsg());
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            if (in_array("associated_learners", $_POST["update_recurring_fields"])) {
+                                                $query = "DELETE FROM `".$tables["audience"]."` ".$recurring_where_query;
+                                                if ($db->Execute($query)) {
+                                                    switch ($PROCESSED["event_audience_type"]) {
+                                                        case "course" :
+                                                            /**
+                                                             * Course ID (there is only one at this time, but this processes more than 1).
+                                                             */
+                                                            if (count($PROCESSED["associated_course_ids"])) {
+                                                                foreach($PROCESSED["associated_course_ids"] as $course_id) {
+                                                                    $audience_data = array("event_id" => $recurring_event["event_id"], "audience_type" => "course_id", "audience_value" => (int) $course_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
+                                                                    if ($is_draft) {
+                                                                        $audience_data["devent_id"] = $devent_id;
+                                                                    }
+                                                                    if (!$db->AutoExecute($tables["audience"], $audience_data, "INSERT")) {
+                                                                        add_error("There was an error while trying to attach the <strong>Course ID</strong> to one of the selected recurring events.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                                        application_log("error", "Unable to insert a new event_audience, course_id record while adding a new event. Database said: ".$db->ErrorMsg());
+                                                                    }
+                                                                }
+                                                            }
+                                                            break;
+                                                        case "custom" :
+                                                            /**
+                                                             * Cohort
+                                                             */
+                                                            if (count($PROCESSED["associated_cohort_ids"])) {
+                                                                foreach($PROCESSED["associated_cohort_ids"] as $group_id) {
+                                                                    $audience_data = array("event_id" => $recurring_event["event_id"], "audience_type" => "cohort", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
+                                                                    if ($is_draft) {
+                                                                        $audience_data["devent_id"] = $devent_id;
+                                                                    }
+                                                                    if (!$db->AutoExecute($tables["audience"], $audience_data, "INSERT")) {
+                                                                        $ERROR++;
+                                                                        $ERRORSTR[] = "There was an error while trying to attach the selected <strong>Cohort</strong> to one of the selected recurring events.<br /><br />The system administrator was informed of this error; please try again later.".$db->ErrorMsg();
+
+                                                                        application_log("error", "Unable to insert a new event_audience, cohort record while adding a new event. Database said: ".$db->ErrorMsg());
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            /**
+                                                             * Course Groups
+                                                             */
+                                                            if (count($PROCESSED["associated_cgroup_ids"])) {
+                                                                foreach($PROCESSED["associated_cgroup_ids"] as $cgroup_id) {
+                                                                    $audience_data = array("event_id" => $recurring_event["event_id"], "audience_type" => "group_id", "audience_value" => (int) $cgroup_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
+                                                                    if ($is_draft) {
+                                                                        $audience_data["devent_id"] = $devent_id;
+                                                                    }
+                                                                    if (!$db->AutoExecute($tables["audience"], $audience_data, "INSERT")) {
+                                                                        $ERROR++;
+                                                                        $ERRORSTR[] = "There was an error while trying to attach the selected <strong>Group</strong> to one of the selected recurring events.<br /><br />The system administrator was informed of this error; please try again later.";
+
+                                                                        application_log("error", "Unable to insert a new event_audience, group_id record while adding a new event. Database said: ".$db->ErrorMsg());
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            /**
+                                                             * Learners
+                                                             */
+                                                            if (count($PROCESSED["associated_proxy_ids"])) {
+                                                                foreach($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+                                                                    $audience_data = array("event_id" => $recurring_event["event_id"], "audience_type" => "proxy_id", "audience_value" => (int) $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
+                                                                    if ($is_draft) {
+                                                                        $audience_data["devent_id"] = $devent_id;
+                                                                    }
+                                                                    if (!$db->AutoExecute($tables["audience"], $audience_data, "INSERT")) {
+                                                                        $ERROR++;
+                                                                        $ERRORSTR[] = "There was an error while trying to attach the selected <strong>Proxy ID</strong> to one of the selected recurring events.<br /><br />The system administrator was informed of this error; please try again later.";
+
+                                                                        application_log("error", "Unable to insert a new event_audience, proxy_id record while adding a new event. Database said: ".$db->ErrorMsg());
+                                                                    }
+                                                                }
+                                                            }
+                                                            break;
+                                                        default :
+                                                            add_error("There was no audience information provided, so this event is without an audience.");
+                                                            break;
+                                                    }
+                                                    /**
+                                                     * Remove attendance records for anyone who is no longer a valid audience member of the course.
+                                                     */
+                                                    $audience = events_fetch_event_audience_attendance($recurring_event["event_id"]);
+                                                    if ($audience) {
+                                                        $valid_audience = array();
+                                                        foreach ($audience as $learner){
+                                                            $valid_audience[] = $learner["id"];
+
+                                                        }
+
+                                                        if (!empty($valid_audience)) {
+                                                            $query = "DELETE FROM `event_attendance` WHERE `event_id` = ".$db->qstr($recurring_event["event_id"])." AND `proxy_id` NOT IN (".implode(",", $valid_audience).")";
+                                                            $db->Execute($query);
+                                                        }
+
+                                                    } else {
+                                                        $query = "DELETE FROM `event_attendance` WHERE `event_id` = ".$db->qstr($recurring_event["event_id"]);
+                                                        $db->Execute($query);
+                                                    }
+
+                                                } else {
+                                                    application_log("error", "Unable to delete audience details from event_audience table during an edit. Database said: ".$db->ErrorMsg());
+                                                }
+                                            }
+
+                                            if (!has_error() && @array_intersect($_POST["update_recurring_fields"], array("event_title", "event_location", "course"))) {
+                                                if (!$db->AutoExecute("`events`", $PROCESSED_RECURRING_EVENT, "UPDATE", "`event_id` = ".$db->qstr($recurring_event["event_id"]))) {
+                                                    add_error("There was an error while trying to save changes to the selected <strong>Recurring Event</strong>.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                    application_log("error", "Unable to update an event record while editing a recurring event. Database said: ".$db->ErrorMsg());
+                                                }
+                                            }
+
+                                        }
+                                        if (!has_error()) {
+                                            $query = "	SELECT b.*
+                                                    FROM `community_courses` AS a
+                                                    LEFT JOIN `community_pages` AS b
+                                                    ON a.`community_id` = b.`community_id`
+                                                    LEFT JOIN `community_page_options` AS c
+                                                    ON b.`community_id` = c.`community_id`
+                                                    WHERE c.`option_title` = 'show_history'
+                                                    AND c.`option_value` = 1
+                                                    AND b.`page_url` = 'course_calendar'
+                                                    AND b.`page_active` = 1
+                                                    AND a.`course_id` = ".$db->qstr($event_info["course_id"]);
+                                            $result = $db->GetRow($query);
+                                            if ($result) {
+                                                $COMMUNITY_ID = $result["community_id"];
+                                                $PAGE_ID = $result["cpage_id"];
+                                                communities_log_history($COMMUNITY_ID, $PAGE_ID, $event_info["recurring_id"], "community_history_edit_recurring_events", 1);
+                                            }
+
+                                            $SUCCESS++;
+                                            $SUCCESSSTR[] = "You have successfully edited the recurring events associated with <strong>".html_encode($event_info["event_title"])."</strong> in the system.";
+
+                                            communities_log_history($COMMUNITY_ID, $PAGE_ID, $recurring_event["event_id"], "community_history_edit_learning_event", 1);
+                                            application_log("success", "Recurring Events [".$event_info["recurring_id"]."] have been modified.");
+                                        }
+                                    }
+                                }
+
 								if (!$ERROR) {
 									$query = "	SELECT b.*
 												FROM `community_courses` AS a
@@ -528,12 +826,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										communities_log_history($COMMUNITY_ID, $PAGE_ID, $EVENT_ID, "community_history_edit_learning_event", 1);
 									}
 
-									$SUCCESS++;
-									$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.<br /><br />".$msg;
-									$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+                                    $SUCCESS++;
+                                    $SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.<br /><br />".$msg;
+                                    $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 									application_log("success", "Event [".$EVENT_ID."] has been modified.");
 								}
+                                
+                                if (!empty($stats)) {
+                                    $stats_string = implode(", ", $stats);
+                                    history_log($EVENT_ID, 'edited this learning event in sections: ' . $stats_string, $PROXY_ID);
+                                }
 							} else {
 								add_error("There was a problem updating this event in the system. The system administrator was informed of this error; please try again later.".$db->ErrorMsg());
 
@@ -613,9 +916,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					case 1 :
 					default :
 
+                        $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+                        $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+                        $HEAD[] = "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 
-						$LASTUPDATED = $result["updated_date"];
+						$LASTUPDATED = (isset($event_info["updated_date"]) && $event_info["updated_date"] ? $event_info["updated_date"] : 0);
 
 						/**
 						 * Compiles the full list of faculty members.
@@ -844,7 +1150,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 </script>
                                 <ul id="faculty_list" class="menu" style="margin-top: 15px">
                                     <?php
-                                    if (is_array($PROCESSED["associated_faculty"]) && count($PROCESSED["associated_faculty"])) {
+                                    if (isset($PROCESSED["associated_faculty"]) && is_array($PROCESSED["associated_faculty"]) && count($PROCESSED["associated_faculty"])) {
                                         foreach ($PROCESSED["associated_faculty"] as $faculty) {
                                             if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
                                                 ?>
@@ -859,7 +1165,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 <input type="hidden" id="faculty_id" name="faculty_id" value="" />
 							</div>
 						</div>
-
+                        <div class="control-group">
+                            <label class="control-label form-nrequired" for="faculty_name">Audience Display:</label>
+                            <div class="controls">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td style="vertical-align:top;"><input type="checkbox" name="audience_visible" id="audience_visible" value="1" <?php echo ($event_info["audience_visible"] == "1" || $PROCESSED["audience_visible"] == "1") ? "checked=\"checked\"" : ""; ?> /></td>
+                                            <td>
+                                                <label for="audience_visible" class="radio-group-title">Show audience to learners</label>
+                                                <div class="content-small">This option controls students ability to view the audience.</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                         <?php
                         if ($PROCESSED["course_id"]) {
                             require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");
@@ -926,7 +1247,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     ?>
                                     <span class="content-small">After saving:</span>
                                     <select id="post_action" name="post_action">
-                                        <option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add content to this event</option>
+                                        <option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) && !$event_info["recurring_id"]) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add content to this event</option>
                                         <option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add a new event</option>
                                         <option value="copy"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") ? " selected=\"selected\"" : ""); ?>>Duplicate this event</option>
                                         <option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to Manage Events</option>
@@ -941,6 +1262,101 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 <input type="submit" class="btn btn-primary" value="Save" />
 							</div>
 						</div>
+                        <?php
+                        if (isset($recurring_events) && $recurring_events) {
+                            $sidebar_html = "<div class=\"content-small\">Please select which fields (if any) you would like to apply to related recurring events: </div>\n";
+                            $sidebar_html .= "<div class=\"pad-left\">\n";
+                            $sidebar_html .= "  <ul class=\"menu none\">\n";
+                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"course\" id=\"cascade_course\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_course\">Course</label></li>\n";
+                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_title\" id=\"cascade_event_title\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_title\">Event Title</label></li>\n";
+                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_location\" id=\"cascade_event_location\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_location\">Event Location</label></li>\n";
+                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_types\" id=\"cascade_event_types\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_types\">Event Types</label></li>\n";
+                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"associated_faculty\" id=\"cascade_associated_faculty\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_associated_faculty\">Associated Faculty</label></li>\n";
+                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"associated_learners\" id=\"cascade_associated_learners\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_associated_learners\">Associated Learners</label></li>\n";
+                            $sidebar_html .= "  </ul>\n";
+                            $sidebar_html .= "</div>\n";
+                            $sidebar_html .= "<div><strong><a href=\"#recurringEvents\" data-toggle=\"modal\" data-target=\"#recurringEvents\"><i class=\"icon-edit\"></i> <span id=\"recurring_events_count\">".(isset($_POST["recurring_event_ids"]) && @count($_POST["recurring_event_ids"]) ? @count($_POST["recurring_event_ids"]) : @count($recurring_events))."</span> Recurring Events Selected</a></strong></div>";
+                            new_sidebar_item("Recurring Events", $sidebar_html, "recurring-events-sidebar");
+                            ?>
+                            <style type="text/css">
+                                #recurring-events-sidebar.fixed {
+                                    position: fixed;
+                                    top: 20px;
+                                    z-index: 1;
+                                    width: 225px;
+                                    border-bottom: 5px solid #ffffff;
+                                }
+                                #recurring-events-sidebar .panel-head {
+                                    background: linear-gradient(to bottom, #8A0808 0%, #3B0B0B 100%);
+                                }
+
+                            </style>
+                            <script type="text/javascript">
+                                var shown = false;
+                                jQuery(document).ready(function () {
+                                    var top = jQuery('#recurring-events-sidebar').offset().top - parseFloat(jQuery('#recurring-events-sidebar').css('marginTop').replace(/auto/, 100)) + 320;
+                                    jQuery(window).scroll(function (event) {
+                                        var y = jQuery(this).scrollTop();
+                                        if (y >= top) {
+                                            jQuery('#recurring-events-sidebar').addClass('fixed');
+                                        } else {
+                                            jQuery('#recurring-events-sidebar').removeClass('fixed');
+                                        }
+                                    });
+                                    if (jQuery(this).scrollTop() >= top) {
+                                        jQuery('#recurring-events-sidebar').addClass('fixed');
+                                    }
+                                });
+
+                                function toggleRecurringEventField(checked, fieldname) {
+                                    if (checked && jQuery('#update_' + fieldname).length < 1) {
+                                        jQuery('#editEventForm').append('<input type="hidden" name="update_recurring_fields[]" value="'+fieldname+'" id="update_"'+fieldname+' />');
+                                    } else if (!checked && jQuery('#update_' + fieldname).length >= 1) {
+                                        jQuery('#update_' + fieldname).remove();
+                                    }
+                                }
+                            </script>
+                            <div id="recurringEvents" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="Select Associated Recurring Events" aria-hidden="true">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h3>Associated Recurring Events</h3>
+                                </div>
+                                <div class="modal-body">
+                                    <div id="display-generic-box" class="alert alert-block alert-info">
+                                        <ul>
+                                            <li>
+                                                Please select which of the following related recurring events you would like to apply the selected changes to:
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <?php
+                                    foreach ($recurring_events as $recurring_event) {
+                                        ?>
+                                        <div class="row-fluid">
+                                        <span class="span1">
+                                            &nbsp;
+                                        </span>
+                                        <span class="span1">
+                                            <input type="checkbox" id="recurring_event_<?php echo $recurring_event["event_id"] ?>" class="recurring_events" onclick="jQuery('#recurring_events_count').html(jQuery('.recurring_events:checked').length)" name="recurring_event_ids[]" value="<?php echo $recurring_event["event_id"]; ?>"<?php echo (!isset($_POST["recurring_event_ids"]) || in_array($recurring_event["event_id"], $_POST["recurring_event_ids"]) ? " checked=\"checked\"" : ""); ?> />
+                                        </span>
+                                        <label class="span10" for="recurring_event_<?php echo $recurring_event["event_id"] ?>">
+                                            <strong class="space-right">
+                                                <?php echo html_encode($recurring_event["event_title"]); ?>
+                                            </strong>
+                                            [<span class="content-small"><?php echo html_encode(date(DEFAULT_DATE_FORMAT, $recurring_event["event_start"])); ?></span>]
+                                        </label>
+                                        </div>
+                                    <?php
+                                    }
+                                    ?>
+                                </div>
+                                <div class="modal-footer">
+                                    <a href="#" class="btn" data-dismiss="modal">Close</a>
+                                </div>
+                            </div>
+                            <?php
+                        }
+                        ?>
 						</form>
 
 						<script type="text/javascript">
@@ -970,7 +1386,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												'course_id' : course_id,
 												'event_id' : '<?php echo $EVENT_ID; ?>',
 												'event_audience_cohorts' : cohorts,
-												'event_audience_course_groups' : '<?php echo $course_groups; ?>',
+												'event_audience_course_groups' : course_groups,
 												'event_audience_students' : students
 											},
 											method: 'post',
@@ -1061,6 +1477,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if ($(element)) {
 									$(element).checked = false;
 								}
+                                if (multiselect[audience_type]) {
+                                    var tr_element = $(element).parentNode.parentNode;
+                                    tr_element.removeClassName('selected');
+                                }
 								var audience = $('event_audience_'+audience_id).value.split(',');
 								for (var i = 0; i < audience.length; i++) {
 									if (audience[i] == element) {

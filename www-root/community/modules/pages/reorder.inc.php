@@ -86,7 +86,8 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 		$page_records	= $db->GetAll($page_ids_query);
 
 		foreach($page_records as $record) {
-			$url = end(explode("/", $record['page_url']));
+            $pieces = explode("/", $record['page_url']);
+			$url = end($pieces);
 			$page_ids[$record['cpage_id']] = array('found' => false, 'old_url_suffix'=>$url, 'old_id'=>$record['cpage_id']); //set this array up so that if a page_id is in this community, $page_ids[id] = true
 		}
 

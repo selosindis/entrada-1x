@@ -24,12 +24,12 @@
  *
 */
 
-if((!defined("PARENT_INCLUDED")) || (!defined("IN_VENUE"))) {
+if((!defined("PARENT_INCLUDED")) || (!defined("IN_ENCOUNTER_TRACKING"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		header("Location: ".ENTRADA_URL);
 		exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('venue', 'delete', false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed('encounter_tracking', 'delete', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -40,43 +40,32 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_VENUE"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/office/venues?section=delete", "title" => "Delete Venues");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/logbook?section=delete", "title" => "Delete Logbook Entry");
 	
-	echo "<h1>Delete Venues</h1>";
+	echo "<h1>Delete Logbook Entry</h1>";
 	
 	if (isset($_POST["delete"])) {
-		foreach ($_POST["delete"] as $venue_id) {
-			if ($tmp_input = clean_input($venue_id, "numeric")) {
+		foreach ($_POST["delete"] as $entry_id) {
+			if ($tmp_input = clean_input($entry_id, "numeric")) {
 				$PROCESSED["delete"][] = $tmp_input;
-				$venues[] = Models_Venue::fetchRow($tmp_input);
+				$entries[] = Models_Logbook_Entry::fetchRow($tmp_input);
 			}
 		}
 	}
 	
 	switch ($STEP) {
 		case 2 :
-			foreach ($venues as $venue) {
-				$venue_data = $venue->toArray();
-				$venue_data["is_active"] = 0;
-				if ($venue->fromArray($venue_data)->update()) {
-					add_statistic("venues", "delete", "venue_id", $venue->getID(), $ENTRADA_USER->getID());
-					$venue_rooms = $venue->getRooms();
-					if (is_array($venue_rooms)) {
-						foreach ($venue_rooms as $room) {
-							if (!$room->fromArray(array("is_active" => 0))->update()) {
-								add_error("Failed to update venue room <strong>".$room->getName()."</strong>. An Administrator has been informed, please try again later. You will now be redirected to the venues index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/office/venues\"><strong>click here</strong></a> to continue.");
-								application_log("Failed to delete venue room, DB said: ".$db->ErrorMsg());
-							} else {
-								add_statistic("venue_rooms", "delete", "vroom_id", $room->getID(), $ENTRADA_USER->getID());
-							}
-						}
-					}
+			foreach ($entries as $entry) {
+				$entry_data = $entry->toArray();
+				$entry_data["entry_active"] = 0;
+				if ($entry->fromArray($entry_data)->update()) {
+					add_statistic("encounter_tracking", "delete", "lentry_id", $entry->getID(), $ENTRADA_USER->getID());
 					if (!$ERROR) {
-						add_success("Successfully deleted <strong>".$venue->getName()."</strong>. You will now be redirected to the venues index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/office/venues\"><strong>click here</strong></a> to continue.");
+						add_success("Successfully deleted a <strong>Logbook Entry</strong>. You will now be redirected to the logbook index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/logbook\"><strong>click here</strong></a> to continue.");
 					}
 				} else {
-					add_error("Failed to delete <strong>".$venue->getName()."</strong>, an Administrator has been informed, please try again later. You will now be redirected to the venues index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/office/venues\"><strong>click here</strong></a> to continue.");
-					application_log("Failed to delete venue room, DB said: ".$db->ErrorMsg());
+					add_error("Failed to delete a <strong>Logbook Entry</strong>, an Administrator has been informed, please try again later. You will now be redirected to the logbook index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/logbook\"><strong>click here</strong></a> to continue.");
+					application_log("Failed to delete logbook entry, DB said: ".$db->ErrorMsg());
 				}
 			}
 		break;
@@ -90,47 +79,43 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_VENUE"))) {
 			if ($SUCCESS) {
 				echo display_success();
 			}
-			$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/office/venues\\'', 5000)";
+			$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/logbook\\'', 5000)";
 		break;
 		case 1 :
 		default :
 		
-			if (isset($venues) && is_array($venues)) { ?>
-				<div class="alert alert-info">You have selected the following venues to be deleted. Please confirm below that you would like to delete them.</div>
-				<form action="<?php echo html_encode(ENTRADA_URL); ?>/admin/office/venues?section=delete&step=2" method="POST" id="needs-assessment-list">
+			if (isset($entries) && is_array($entries)) { ?>
+				<div class="alert alert-info">You have selected the following entries to be deleted. Please confirm below that you would like to delete them.</div>
+				<form action="<?php echo html_encode(ENTRADA_URL); ?>/logbook?section=delete&step=2" method="POST" id="logbook-entry-list">
 					<table class="table table-striped table-bordered" width="100%" cellpadding="0" cellspacing="0" border="0">
 						<thead>
 							<tr>
 								<th width="5%"></th>
-								<th>Name</th>
-								<th>Address</th>
-								<th>City</th>
-								<th>Province</th>
-								<th>Country</th>
-								<th width="8%">Rooms</th>
+                                <th class="course">Course</th>
+                                <th class="date">Encounter Date</th>
+                                <th class="institution">Institution</th>
+                                <th class="location">Setting</th>
 							</tr>
 						</thead>
 						<tbody>
-							<?php foreach ($venues as $venue) { ?>
-							<tr class="needs-assessment" data-id="<?php echo html_encode($venue->getID()); ?>">
-								<td><input class="delete" type="checkbox" name="delete[<?php echo html_encode($venue->getID()); ?>]" value="<?php echo html_encode($venue->getID()); ?>" <?php echo html_encode((in_array($venue->getID(), $PROCESSED["delete"]) ? "checked=\"checked\"" : "")); ?> /></td>
-								<td class="name"><a href="<?php echo html_encode(ENTRADA_URL); ?>/admin/office/venues?section=edit&venue_id=<?php echo html_encode($venue->getID()); ?>"><?php echo html_encode($venue->getName()); ?></a></td>
-								<td class="address"><a href="<?php echo html_encode(ENTRADA_URL); ?>/admin/office/venues?section=edit&venue_id=<?php echo html_encode($venue->getID()); ?>"><?php echo html_encode($venue->getAddress()); ?></a></td>
-								<td class="city"><a href="<?php echo html_encode(ENTRADA_URL); ?>/admin/office/venues?section=edit&venue_id=<?php echo html_encode($venue->getID()); ?>"><?php echo html_encode($venue->getCity()); ?></a></td>
-								<td class="province"><a href="<?php echo html_encode(ENTRADA_URL); ?>/admin/office/venues?section=edit&venue_id=<?php echo html_encode($venue->getID()); ?>"><?php echo html_encode($venue->getProvince()); ?></a></td>
-								<td class="country"><a href="<?php echo html_encode(ENTRADA_URL); ?>/admin/office/venues?section=edit&venue_id=<?php echo html_encode($venue->getID()); ?>"><?php echo html_encode($venue->getCountry()); ?></a></td>
-								<td class="rooms"><a href="<?php echo html_encode(ENTRADA_URL); ?>/admin/office/venues?section=edit&venue_id=<?php echo html_encode($venue->getID()); ?>"><?php echo html_encode(is_array($venue->getRooms()) ? count($venue->getRooms()) : "-"); ?></a></td>
+							<?php foreach ($entries as $entry) { ?>
+							<tr class="logbook-entry" data-id="<?php echo html_encode($entry->getID()); ?>">
+								<td><input class="delete" type="checkbox" name="delete[<?php echo html_encode($entry->getID()); ?>]" value="<?php echo html_encode($entry->getID()); ?>" <?php echo html_encode((in_array($entry->getID(), $PROCESSED["delete"]) ? "checked=\"checked\"" : "")); ?> /></td>
+								<td class="course"><a href="<?php echo html_encode(ENTRADA_URL); ?>/logbook?section=edit&entry_id=<?php echo html_encode($entry->getID()); ?>"><?php echo html_encode($entry->getCourseName()); ?></a></td>
+								<td class="date"><a href="<?php echo html_encode(ENTRADA_URL); ?>/logbook?section=edit&entry_id=<?php echo html_encode($entry->getID()); ?>"><?php echo html_encode(date("F jS, Y", $entry->getEncounterDate())); ?></a></td>
+								<td class="institution"><a href="<?php echo html_encode(ENTRADA_URL); ?>/logbook?section=edit&entry_id=<?php echo html_encode($entry->getID()); ?>"><?php echo html_encode($entry->getInstitution()); ?></a></td>
+								<td class="location"><a href="<?php echo html_encode(ENTRADA_URL); ?>/logbook?section=edit&entry_id=<?php echo html_encode($entry->getID()); ?>"><?php echo html_encode($entry->getLocation()); ?></a></td>
 							</tr>
 							<?php } ?>
 						</tbody>
 					</table>
 					<div class="row-fluid">
-						<a href="<?php echo html_encode(ENTRADA_URL); ?>/admin/office/venues" class="btn" role="button">Cancel</a>
+						<a href="<?php echo html_encode(ENTRADA_URL); ?>/logbook" class="btn" role="button">Cancel</a>
 						<input type="submit" class="btn btn-primary pull-right" value="Delete" />
 					</div>
 				</form>
 			<?php } else { ?>
-				<div class="alert alert-info">No venues have been selected to be deleted. Please <a href="<?php echo html_encode(ENTRADA_URL); ?>/admin/office/venues">click here</a> to return to the venue index.</div>
+				<div class="alert alert-info">No logbook entries have been selected to be deleted. Please <a href="<?php echo html_encode(ENTRADA_URL); ?>/logbook">click here</a> to return to the logbook index.</div>
 			<?php }
 
 		break;

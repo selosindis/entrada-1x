@@ -17,7 +17,7 @@ h2{
   color:#c94d21;
 }
 h1{
-  font-size:26px;
+  /*font-size:26px;*/
   font-weight:500;
   letter-spacing:-0.5px;
 /*  margin-bottom:28px;*/
@@ -30,7 +30,10 @@ h2{
   margin-bottom:5px;
 }
 label{
-  display:inline-block;
+display:inline-block;
+}
+label.checkbox, label.radio {
+display:block;
 }
 .alert ul{
   margin-bottom:0;
@@ -52,10 +55,13 @@ select{
 .nav-tabs > li > a {
   text-align:center;
 }
+.table th.borderless, .table td.borderless,.borderless,.noborder {
+border:none;
+}
 .well{
   background-color:#FAFAFA;
   border:1px solid #DDD;
-   border: 1px solid rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.075);
   -moz-box-shadow:0 2px 0 rgba(0, 0, 0, 0.03);
   -webkit-box-shadow:0 2px 0 rgba(0, 0, 0, 0.03);
   box-shadow:0 2px 0 rgba(0, 0, 0, 0.03);
@@ -525,6 +531,8 @@ div.ps-tab-style {
 	margin-top: 40px;
 }
 
+
+
 /** Dashboard Module **/
 
 .dashboard-notices {
@@ -533,6 +541,119 @@ div.ps-tab-style {
     margin-bottom: 5px;
 	padding-right: 14px !important;
 }
+
+
+/** Event views **/
+.statsUL {
+    list-style: none;
+    padding: 0px;
+    margin: 0px;
+}
+.statsLI {
+    border-top: #D8D8D8;
+    border-top-style: solid;
+    border-width: 1px;
+    list-style: none;
+    padding: 10px 5px;
+}
+.statsLIHeader{
+    list-style: none;
+    padding: 5px; 
+}
+.statsLISpan1{
+    width: 250px;
+    display: inline-block;
+}
+.sortStats{
+    width: 200px;
+    display: inline-block;
+    padding: 5px;
+    text-align: left;
+}
+.sortStatsHeader{
+    cursor: pointer;
+    width: 200px;
+    display: inline-block;
+    padding: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: left;
+}
+.sortStatsName{
+    width: 300px;
+    padding-right: 30px;
+}
+.sortStatsViews{
+    width: 50px;
+    padding-right: 60px;
+    text-align: center;
+}
+.sortStatsDate{
+    width: 150px;
+    text-align: center;
+}
+.sortStatsNameModel{
+    width: 250px;
+    padding-right: 30px;
+}
+.sortStatsViewsModel{
+    width: 40px;
+    text-align: center;
+}
+.sortStatsDateModel{
+    padding-left: 10px;
+    width: 150px;
+    text-align: center;
+}
+#userViews{
+    padding-right: 50px;
+}
+
+#event_details_1.span5, #event_details_1.span7 {
+    float: right;
+}
+div.event-message {
+    background-image: none;
+    margin: 2px 0px;
+    padding: 0;
+}
+
+div.event-message h3{
+    display: block;
+}
+div.event-description .span4 h3, div.event-message .span4 h3, #event_details_2 h3 {
+    line-height: 20px;
+    font-size: 14px;
+    margin: 2px 0px;
+}
+
+div.event-description .span8, div.event-message .span8, #event_details_2 span {
+    margin-top: 2px;
+    font-size: 14px;
+    display: block
+}
+#event_details_1 .span12 hr, #event_details_2 .span12 hr{
+    margin-right: 2.12766%;
+}
+#event_details_2 h3 {
+    font-size: 12px;
+}
+#event_details_2 span  {
+    font-size: 12px;
+}
+#event_details_1 .span12, #event_details_2 .span12 {
+    min-height: 12px;
+}
+#event_details_2 div.course_contact_1, #event_details_2 div.course_contact_2 {
+    float: left;
+
+}
+#event_details_2 div.course_contact_1 h5 {
+    margin: 1px 0px;
+    margin-right: 6px;
+}
+
+/** End Event views **/
 
 /** Events Module **/
 div.event-navbar-middle {

@@ -951,6 +951,7 @@ if ($COMMUNITY_ID) {
 				</tbody>
 			</table>
 		</form>
+		</div><!--/row-fluid-->
 							<?php
 							} else {
 								echo display_notice(array("Your community has no administrators at this time; the MEdTech Unit has been informed of this error, please try again later."));
@@ -958,7 +959,6 @@ if ($COMMUNITY_ID) {
 								application_log("error", "Someone [".$ENTRADA_USER->getID()."] accessed the Manage Members page in a community [".$COMMUNITY_ID."] with no administrators present.");
 							}
 							?>
-		</div><!--/row-fluid-->
 	</div>
 	<div class="tab-page members">
 		<h3 class="tab">Add Members</h3>

@@ -13,41 +13,47 @@
 	<link href="{$sys_website_url}/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery.min.js"></script>
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery-ui.min.js"></script>
+    <script type="text/javascript">var COMMUNITY_ID = "{$community_id}";</script>
 	<script type="text/javascript">jQuery.noConflict();</script>
+    <script src="{$template_relative}/js/collapse-menu.js"></script>
 
+	<link href="{$template_relative}/css/bootstrap.min.css" rel="stylesheet" type="text/css" media="all" />
 	<link href="{$template_relative}/css/stylesheet.css" rel="stylesheet" type="text/css" media="all" />
+
 	<link href="{$template_relative}/css/print.css" rel="stylesheet" type="text/css" media="print" />
 
-	{$page_head}
+	<link href="{$protocol}://fonts.googleapis.com/css?family=Roboto:400,400italic,700,700italic,300,300italic" rel="stylesheet" type="text/css" />
 
-	<style type="text/css">
-	#site-header {literal}{{/literal}
-		background: transparent url('{$template_relative}/images/header-{$site_theme}.gif') no-repeat bottom;
-	{literal}}{/literal}
-	</style>
+	{$page_head}
 </head>
 <body>
 {$sys_system_navigator}
-<div id="site-container">
-	<div id="site-header">
-		<div>
-			<img src="{$template_relative}/images/community-icon.gif" width="101" height="130" alt="" style="vertical-align: bottom; margin-right: 10px" />
-			<span class="community-title">{$site_community_title}</span>
+<div class="container" id="default-community-container">
+	<div class="row">
+		<div class="span2-5" id="default-community-leftnav">
+			{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
 		</div>
-	</div>
-	<div id="site-body">
-		<table id="content-table" style="width: 100%; table-layout: fixed" cellspacing="0" cellpadding="0" border="0">
-		<colgroup>
-			<col style="width: 19%" />
-			<col style="width: 62%" />
-			<col style="width: 19%" />
-		</colgroup>
-		<tbody>
-			<tr>
-				<td class="column">
-					{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
-				</td>
-				<td class="column">
+		<div class="span9-5 content-container" id="default-community-content">
+			<div class="row">
+				<div class="span9-5">
+					<div class="header table">
+						<div class="table-cell">
+							<div class="header-icon"></div>
+						</div>
+						<div class="table-cell table-cell-full-width">
+							<div class="table">
+								<div class="table-cell middle community-title">{$site_community_title}</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+                <div id="community-nav-collapse">
+                    <a id="community-nav-collapse-toggle" href="#"><span class="menu-icon" id="community-nav-menu-icon" title="Administrative Navigation"></span></a>
+                </div>
+				<div class="span6-5 content-area">
+                    
 					{$site_breadcrumb_trail}
 					{$child_nav}
 					<div class="content">
@@ -61,35 +67,50 @@
 								<p> <a href="{$next_page_url}"> Next >></a></p>
 							{elseif $next_page_url == "#" && $previous_page_url != "#"}
 								<p> <a href="{$previous_page_url}"><< Previous</a> </p>
-							{else $next_page_url == "#" && $previous_page_url == "#"}
+							{elseif $next_page_url == "#" && $previous_page_url == "#"}
 								<p> </p>
 							{/if}
 						</div>
 					{/if}
-				</td>
-				<td class="column">
-					{$page_sidebar}
-				</td>
-			</tr>
-		</tbody>
-		</table>
-	</div>
-	<div id="site-footer">
-		<div style="padding: 10px 5px 15px 22%; text-align: left" class="content-copyright">
-			{php}echo COPYRIGHT_STRING;{/php}
+				</div>
+				<div id="right-community-nav" class="span3 right-community-nav-expanded">
+                    <div class="inner-sidebar no-printing">
+                        {if $is_logged_in && $user_is_admin}
+                            {include file="sidebar-blocks/admin_block.tpl"}
+                        {/if}
+                        {include file="sidebar-blocks/entrada_block.tpl"}
+                        {if $is_logged_in && $user_is_member}
+                            {include file="sidebar-blocks/community_block.tpl"}
+                        {/if}
+                        {if $allow_membership}
+                            {include file="sidebar-blocks/community_join_block.tpl"}
+                        {/if}
+                    </div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
-{php}if(((!defined("DEVELOPMENT_MODE")) || (!(bool) DEVELOPMENT_MODE)) && (defined("GOOGLE_ANALYTICS_CODE")) && (GOOGLE_ANALYTICS_CODE != "")) :{/php}
-<script type="text/javascript">
-	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-</script>
-<script type="text/javascript">
-	var pageTracker = _gat._getTracker("{php} echo GOOGLE_ANALYTICS_CODE;{/php}");
-	pageTracker._initData();
-	pageTracker._trackPageview();
-</script>
-{php}endif;{/php}
+<div class="container">
+    <div class="row">
+        <div class="footer span12">
+            <div class="content-copyright">
+                {$copyright_string}
+            </div>
+        </div>
+    </div>
+</div>
+
+{if !$development_mode && $google_analytics_code}
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        var pageTracker = _gat._getTracker("{$google_analytics_code}");
+        pageTracker._initData();
+        pageTracker._trackPageview();
+    </script>
+{/if}
 </body>
 </html>

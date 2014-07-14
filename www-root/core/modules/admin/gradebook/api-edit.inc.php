@@ -61,6 +61,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             JOIN `group_organisations` AS c
                             ON b.`group_id` = c.`group_id`
                             WHERE a.`course_id` =". $db->qstr($COURSE_ID)."
+                            AND a.`active` = '1'
                             AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
                             GROUP BY b.`group_id`
                             ORDER BY b.`group_name`";
@@ -93,11 +94,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						ON a.`assessment_id` = c.`assessment_id`
 						AND (c.`option_id` = 5 OR c.`option_id` = 6)
 						WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+						AND a.`active` = '1'
 						AND a.`cohort` = ".$db->qstr($COHORT)."
 						GROUP BY a.`assessment_id`";
 			$assessments = $db->GetAll($query);
 			if($assessments) {
-				
 				$student_query = "SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`number`, c.`group_name` AS `cohort`
                                     FROM `group_members` AS a 
                                     JOIN `".AUTH_DATABASE."`.`user_data` AS b

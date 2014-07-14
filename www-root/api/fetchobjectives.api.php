@@ -38,6 +38,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	$course_id		= (int) (isset($_GET["course_id"]) ? $_GET["course_id"] : false);
 	$event_id		= (int) (isset($_GET["event_id"]) ? $_GET["event_id"] : false);
 	$assessment_id	= (int) (isset($_GET["assessment_id"]) ? $_GET["assessment_id"] : false);
+	$org_id         = (int) (isset($_GET["org_id"]) ? $_GET["org_id"] : (isset($ENTRADA_USER) && $ENTRADA_USER->getActiveOrganisation() ? $ENTRADA_USER->getActiveOrganisation() : false));
 	$objective_ids_string = "";
 	if (isset($_GET["objective_ids"]) && ($objective_ids = explode(",", $_GET["objective_ids"])) && @count($objective_ids)) {
 		foreach ($objective_ids as $objective_id) {
@@ -75,11 +76,13 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$qu_arr[1] = "	LEFT JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`";
 		$qu_arr[3] = "	AND b.`objective_id` IN (".$objective_ids_string.")";	
-	}	
+	} else {
+        $qu_arr[1] = "";
+    }
 	$qu_arr[1] .= "		JOIN `objective_organisation` AS c ON a.`objective_id` = c.`objective_id` ";
 	$qu_arr[2] = "		WHERE a.`objective_parent` = ".$db->qstr($id)." 
 						AND a.`objective_active` = '1'
-						AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+						AND c.`organisation_id` = ".$db->qstr($org_id);
 	$qu_arr[4] = "		ORDER BY a.`objective_order`";
 	$query = implode(" ",$qu_arr);
 	$objectives = $db->GetAll($query);
@@ -104,7 +107,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			$query = "	SELECT a.* FROM `global_lu_objectives` AS a
 						JOIN `objective_organisation` AS b ON a.`objective_id` = b.`objective_id`
 						WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
-						AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+						AND b.`organisation_id` = ".$db->qstr($org_id);
 			$fields["has_child"] = $db->GetAll($query) ? true : false;			
 			$obj_array[] = $fields;
 		}

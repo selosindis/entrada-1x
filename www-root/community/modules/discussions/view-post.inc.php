@@ -144,7 +144,7 @@ if ($RECORD_ID) {
 					if ($POST_REPLY) {
 						?>
 						<ul class="page-action">
-							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=reply-post&id=<?php echo $RECORD_ID; ?>">Reply To Post</a></li>
+                            <li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=reply-post&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Reply To Post</a></li>
 						</ul>
 						<?php
 					}
@@ -198,7 +198,7 @@ if ($RECORD_ID) {
 				if ($POST_REPLY) {
 					?>
 					<ul class="page-action">
-						<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=reply-post&id=<?php echo $RECORD_ID; ?>">Reply To Post</a></li>
+                        <li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=reply-post&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Reply To Post</a></li>
 						<li class="top"><a href="#top">Top Of Page</a></li>
 					</ul>
 					<?php

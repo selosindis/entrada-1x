@@ -53,13 +53,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 		$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/observerships\\'', 5000)";
 		return;
 	}
-	//
-	//if ($OBSERVERSHIP->getStudentId() !== $ENTRADA_USER->getActiveId() || !in_array(strtolower($OBSERVERSHIP->getStatus()),array('pending','rejected'))) {
-	//	echo display_error("You are not authorized to update the selected Observership. Returning to your Observerships index.");
-	//	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/profile/observerships\\'', 5000)";
-	//	return;
-	//}
-
+    
 	$student = User::get($OBSERVERSHIP->getStudentID());
 
 	$BREADCRUMB = array();

@@ -203,10 +203,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					 */
 					if ((isset($_POST["password"])) && ($password = clean_input($_POST["password"], "trim"))) {
 						if ((strlen($password) >= 6) && (strlen($password) <= 48)) {
-                            $PROCESSED["salt"] = hash("sha256", (uniqid(rand(), 1) . time() . $PROXY_ID));
+                                   $PROCESSED["salt"] = hash("sha256", (uniqid(rand(), 1) . time() . $PROXY_ID));
 							$PROCESSED["password"] = sha1($password.$PROCESSED["salt"]);
 						} else {
-                            add_error("The new password must be between 6 and 48 characters in length.");
+                                   add_error("The new password must be between 6 and 48 characters in length.");
 						}
 					}
 
@@ -287,8 +287,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					 * Required field "email" / Primary E-Mail.
 					 */
 					if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
-						if (@valid_address($email)) {
-							$PROCESSED["email"] = $email;
+						if (valid_address($email)) {
+							$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `email` = ".$db->qstr($email)."
+									   AND `id` != ".$db->qstr($PROXY_ID);
+							$result	= $db->GetRow($query);
+							if ($result) {
+								$ERROR++;
+								$ERRORSTR[] = "The e-mail address <strong>".html_encode($email)."</strong> already exists in the system for username <strong>".html_encode($result["username"])."</strong>. Please provide a unique e-mail address for this user.";
+							} else {
+								$PROCESSED["email"] = $email;
+							}
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "The primary e-mail address you have provided is invalid. Please make sure that you provide a properly formatted e-mail address.";
@@ -426,6 +434,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									$private_hashes[$result["app_id"]][$result["organisation_id"]][$result["group"]][$result["role"]] = $result["private_hash"];
 								}
 							}
+                            
+                            //loads current user preferences to check if the roles being changes is currently selected.
+                            //if it's selected we'll change it to the first role listed for the user
+                            $current_user_preferences = preferences_load_user('organisation_switcher', $PROXY_ID);
+                            if ($current_user_preferences['access_id']) {
+                                $current_access_id = $current_user_preferences['access_id'];
+                            }
+                            
+                            //gets current role/groups
+                            $current_group_role = load_org_group_role($PROXY_ID, $current_access_id);
+                            $current_role = $current_group_role[$current_access_id]['role'];
+                            $current_group = $current_group_role[$current_access_id]['group'];
 
 							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_access`
 									  WHERE `user_id` = ".$db->qstr($PROXY_ID) . "
@@ -433,6 +453,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							if ($db->Execute($query)) {
 								if (is_array($permissions)){
 									$index = 0;
+									$clinical_set = false;
 									foreach ($permissions as $perm) {
 										if (!$perm["org_id"]) {
 											$ERROR++;
@@ -498,9 +519,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												}
 											}
 
-											if ($PROCESSED_ACCESS["group"] == "faculty") {
+											if ($PROCESSED_ACCESS["group"] == "faculty" && !$clinical_set) {
 												if (isset($perm["clinical"])) {
 													$PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
+													$clinical_set = true;
 													$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
 																SET `clinical` = " . $PROCESSED["clinical"] . "
 																WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
@@ -514,6 +536,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 											if (!$ERROR) {
 												if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
+                                                    if (($PROCESSED_ACCESS["group"] == $current_group) && ($PROCESSED_ACCESS["role"] == $current_role)) {
+                                                        $new_access_id = $db->Insert_Id();
+                                                        //update the user preferance to the new ID
+                                                        $current_user_preferences['access_id'] = $new_access_id;
+                                                    } else {
+                                                        unset($current_user_preferences['access_id']);
+                                                    }
+
 													if (($PROCESSED_ACCESS["group"] == "medtech") || ($PROCESSED_ACCESS["role"] == "admin")) {
 														application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
 													}
@@ -528,12 +558,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									} //end for each org_id
 								} //end if is_array
 							} //end if delete user_access records
+                            
+                            //updates user prefereances for organisation_switcher if needed
+                            $old_user_preferences = preferences_load_user('organisation_switcher', $PROXY_ID);
+                            preferences_update_user('organisation_switcher', $PROXY_ID, $old_user_preferences, $current_user_preferences);
+                            
+                            //removes the users cache file
+                            $ENTRADA_CACHE->remove("user_" . AUTH_APP_ID . "_" . $PROXY_ID);
 
 							/**
-							 * This section of code handles updating the users departmental data.
+							 * This section of code handles updating the users departmental data. Should CHECK to see if a department is set before removing the record from
+                             * user departments as this is set nightly by a cronjob for users who have not explicitly had a department set in entrada / central
 							 */
-							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_departments` WHERE `user_id` = ".$db->qstr($PROXY_ID);
-							if ($db->Execute($query)) {
 								if (isset($_POST["my_departments"]) && $in_departments = json_decode($_POST["my_departments"], true)) {
 									$in_departments = json_decode($in_departments["dept_list"], true);
 									if (is_array($in_departments)) {
@@ -544,16 +580,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											}
 										}
 									}
-								}
-
-								if(count($PROCESSED_DEPARTMENTS)) {
+                                $query = "DELETE FROM `".AUTH_DATABASE."`.`user_departments` WHERE `user_id` = ".$db->qstr($PROXY_ID)." AND `entrada_only` = '1'";
+                                if ($db->Execute($query)) {
+                                    if (isset($PROCESSED_DEPARTMENTS) && is_array($PROCESSED_DEPARTMENTS) && $PROCESSED_DEPARTMENTS[0] != '0') {
 									foreach ($PROCESSED_DEPARTMENTS as $department_id) {
-										if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROXY_ID, "dep_id" => $department_id), "INSERT")) {
+                                            if((int) $department_id != 0) {
+                                                if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROXY_ID, "dep_id" => $department_id, "entrada_only" => '1'), "INSERT")) {
 											application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
 										}
 									}
 								}
 							}
+                                }
+                            }
 
                             /**
                              * Remove the user from any cohorts they may reside in.
@@ -635,6 +674,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($PROCESSED["firstname"]." ".$PROCESSED["lastname"])."</strong> account in the authentication system.<br /><br />You will now be redirected to the users profile page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 							header( "refresh:5;url=".$url );
+							
+							if ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"] == 1)) {
+								$PROXY_ID = $PROCESSED_ACCESS["user_id"];
+								do {
+									$HASH = generate_hash();
+								} while($db->GetRow("SELECT `id` FROM `".AUTH_DATABASE."`.`password_reset` WHERE `hash` = ".$db->qstr($HASH)));
+
+								if ($db->AutoExecute(AUTH_DATABASE.".password_reset", array("ip" => $_SERVER["REMOTE_ADDR"], "date" => time(), "user_id" => $PROXY_ID, "hash" => $HASH, "complete" => 0), "INSERT")) {
+									// Send welcome & password reset e-mail.
+									$notification_search	= array("%firstname%", "%lastname%", "%username%", "%password_reset_url%", "%application_url%", "%application_name%");
+									$notification_replace	= array($PROCESSED["firstname"], $PROCESSED["lastname"], $PROCESSED["username"], PASSWORD_RESET_URL."?hash=".rawurlencode($PROXY_ID.":".$HASH), ENTRADA_URL, APPLICATION_NAME);
+
+									$message = str_ireplace($notification_search, $notification_replace, ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_EDIT_USER_NOTIFICATION));
+
+									if (!@mail($PROCESSED["email"], "Updated User Account: ".APPLICATION_NAME, $message, "From: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">\nReply-To: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">")) {
+										$NOTICE++;
+										$NOTICESTR[] = "The user was successfully added; however, we could not send them a new account e-mail notice. The MEdTech Unit has been informed of this problem, please send this new user a password reset notice manually.<br /><br />You will now be redirected back to the user index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+
+										application_log("error", "New user [".$PROCESSED["username"]."] was given access to OCR but the e-mail notice failed to send.");
+									}
+								} else {
+									$NOTICE++;
+									$NOTICESTR[] = "The user was successfully added; however, we could not send them a new account e-mail notice. The MEdTech Unit has been informed of this problem, please send this new user a password reset notice manually.<br /><br />You will now be redirected back to the user index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+
+									application_log("error", "New user [".$PROCESSED["username"]."] was given access to OCR but the e-mail notice failed to send. Database said: ".$db->ErrorMsg());
+								}
+							}
 
 							application_log("success", "Proxy ID [".$ENTRADA_USER->getID()."] successfully updated the proxy id [".$PROXY_ID."] user profile.");
 						} else {
@@ -1126,7 +1192,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                                         </ol>
                                                     </td>
                                                 </tr>
-                                            </tfoot>
+                                            </tbody>
                                         </table>
                                     </div>
                                 </div>
@@ -1161,12 +1227,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 							<div id="send_notification_msg" style="display: none;">
 								<label for="notification_message" class="form-required">Notification Message</label>
-								<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
+								<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_EDIT_USER_NOTIFICATION); ?></textarea>
 								<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
 							</div>
 						</div>
 						<?php
-						load_rte();
 						if ($custom_fields) {
 							$pub_types = array (
 								"ar_poster_reports"				=> array("id_field" => "poster_reports_id", "title" => "title"),

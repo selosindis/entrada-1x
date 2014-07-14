@@ -85,7 +85,7 @@ class CsvImporter {
 		*/
 
 		$event_id				= ((isset($row[0]) ? clean_input($row[0], "int") : 0 ));
-		$parent_event			= ((isset($row[1]) ? clean_input($row[1], "int") : 0 ));
+		$parent_event			= ($row[1] === "1" ? "1" : ($row[1] === "0" ? "0" : NULL));
 		$term					= ((isset($row[2]) ? clean_input($row[2], array("trim","striptags")) : 0 ));
 		$course_code			= ((isset($row[3]) ? clean_input($row[3], array("trim","striptags")) : 0 ));
 		$course_name			= ((isset($row[4]) ? clean_input($row[4], array("trim","striptags")) : 0 ));
@@ -104,6 +104,7 @@ class CsvImporter {
 		$teacher_names			= ((isset($row[17]) && !empty($row[17]) ? explode(";", $row[17]) : 0 ));
 		$event_duration			= 0;
 		$objectives_release_date = ((isset($row[18]) ? clean_input($row[18], array("trim","striptags")) : 0 ));
+		$event_tutors			= ((isset($row[19]) && !empty($row[19]) ? explode(";", clean_input($row[19], array("nows", "striptags"))) : 0 ));
 
 		// check draft for existing event_id and get the devent_id if found
 		if ($event_id != 0) {
@@ -124,11 +125,13 @@ class CsvImporter {
 		$output[$event_id]["event_id"] = $event_id;
 
 		// check the parent_id column
-		if ($parent_event == 1) {
-			$output[$event_id]["parent_event"] = 0;
-			$this->last_parent = $event_id;
-		} else if ($parent_event == 0) {
-			$output[$event_id]["parent_event"] = $this->last_parent;
+		if (!is_null($parent_event)) {
+			if ($parent_event === 1) {
+				$output[$event_id]["parent_event"] = 0;
+				$this->last_parent = $event_id;
+			} else if ($parent_event === 0) {
+				$output[$event_id]["parent_event"] = $this->last_parent;
+			}
 		} else {
 			$err["errors"][] = "Parent ID field must be 1 or 0.";
 			$skip_row = true;
@@ -289,14 +292,15 @@ class CsvImporter {
 		}
 
 		if (!empty($event_teachers)) {
+            $e_teachers = array();
 			foreach ($event_teachers as $teacher) {
-				if (!empty($teacher)) {
-					$event_teachers[$teacher] = $db->qstr((int) $teacher);
+				if (!empty($teacher) && $teacher != "0") {
+					$e_teachers[$teacher] = $db->qstr((int) $teacher);
 				}
 			}
 			$query = "	SELECT `id`
 						FROM `".AUTH_DATABASE."`.`user_data`
-						WHERE `number` IN (".implode(", ", $event_teachers).")";
+						WHERE `number` IN (".implode(", ", $e_teachers).")";
 			$results = $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {
@@ -305,6 +309,24 @@ class CsvImporter {
 			}
 		}
 
+		if (!empty($event_tutors)) {
+            $e_tutors = array();
+			foreach ($event_tutors as $teacher) {
+				if (!empty($teacher) && $teacher != "0") {
+					$e_tutors[$teacher] = $db->qstr((int) $teacher);
+				}
+			}
+			$query = "	SELECT `id`
+						FROM `".AUTH_DATABASE."`.`user_data`
+						WHERE `number` IN (".implode(", ", $e_tutors).")";
+			$results = $db->GetAll($query);
+			if ($results) {
+				foreach ($results as $result) {
+					$output[$event_id]["tutors"][] = $result["id"];
+				}
+			}
+		}
+		
 		if (!$skip_row) {
 			return $output;
 		} else {
@@ -378,6 +400,17 @@ class CsvImporter {
                     foreach ($row["teachers"] as $teacher) {
                         $query =	$mode." `draft_contacts` (`devent_id`, `proxy_id`, `contact_role`, `contact_order`, `updated_date`, `updated_by`)
                                     VALUES (".$db->qstr($devent_id).", ".$db->qstr($teacher).", 'teacher', ".$db->qstr($i).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
+                                    $where;
+                        $result = $db->Execute($query);
+                        $i++;
+                    }
+                }
+				
+				if (isset($row["tutors"])) {
+                    $i = 0;
+                    foreach ($row["tutors"] as $tutor) {
+                        $query =	$mode." `draft_contacts` (`devent_id`, `proxy_id`, `contact_role`, `contact_order`, `updated_date`, `updated_by`)
+                                    VALUES (".$db->qstr($devent_id).", ".$db->qstr($tutor).", 'tutor', ".$db->qstr($i).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
                                     $where;
                         $result = $db->Execute($query);
                         $i++;

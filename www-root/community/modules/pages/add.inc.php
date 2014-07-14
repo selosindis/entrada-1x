@@ -28,24 +28,25 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 	$PAGE_TYPES	= array();
 	$STEP = 1;
 
-	$query				= "	SELECT `module_shortname`, `module_title`
-							FROM `communities_modules`
-							WHERE `module_id` IN (
-								SELECT `module_id`
-								FROM `community_modules`
-								WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
-								AND `module_active` = '1'
-							)
-							ORDER BY `module_title` ASC";
-	$module_pagetypes	= $db->GetAll($query);
+	$query = "SELECT `module_shortname`, `module_title`
+                FROM `communities_modules`
+                WHERE `module_id` IN (
+                    SELECT `module_id`
+                    FROM `community_modules`
+                    WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
+                    AND `module_active` = '1'
+                )
+                ORDER BY `module_title` ASC";
+	$module_pagetypes = $db->GetAll($query);
 
-	$PAGE_TYPES[]		= array("module_shortname" => "default", "module_title" => "Default Content");
+	$PAGE_TYPES[] = array("module_shortname" => "default", "module_title" => "Default Content");
 	
 	foreach ($module_pagetypes as $module_pagetype) {
-		$PAGE_TYPES[]	= array("module_shortname" => $module_pagetype["module_shortname"], "module_title" => $module_pagetype["module_title"]);
+		$PAGE_TYPES[] = array("module_shortname" => $module_pagetype["module_shortname"], "module_title" => $module_pagetype["module_title"]);
 	}
 	
-	$PAGE_TYPES[]	= array("module_shortname" => "url", "module_title" => "External URL");
+	$PAGE_TYPES[] = array("module_shortname" => "url", "module_title" => "External URL");
+	$PAGE_TYPES[] = array("module_shortname" => "lticonsumer", "module_title" => "BasicLTI Consumer");
 					
 	foreach ($PAGE_TYPES as $PAGE) {
 		if (isset($_GET["type"])) {
@@ -198,6 +199,34 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								$ERROR++;
 								$ERRORSTR[] = "The <strong>External URL</strong> field is required, please enter a valid website address.";
 							}
+						} else if($PAGE_TYPE == "lticonsumer") {
+							$ltiJSONArray = array();
+							if((isset($_POST["lti_url"])) && ($lti_url = clean_input($_POST["lti_url"], array("trim", "notags")))) {
+								$ltiJSONArray["lti_url"] = $lti_url;
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "The <strong>LTI Launch URL</strong> field is required, please enter a valid URL address.";
+							}
+
+							if((isset($_POST["lti_key"])) && ($lti_key = clean_input($_POST["lti_key"], array("trim", "notags")))) {
+								$ltiJSONArray["lti_key"] = $lti_key;
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "The <strong>LTI Key</strong> field is required, please enter a key.";
+							}
+
+							if((isset($_POST["lti_secret"])) && ($lti_secret = clean_input($_POST["lti_secret"], array("trim", "notags")))) {
+								$ltiJSONArray["lti_secret"] = $lti_secret;
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "The <strong>LTI Secret</strong> field is required, please enter a secret.";
+							}
+
+							if(isset($_POST["lti_params"])) {
+								$ltiJSONArray["lti_params"] = $_POST["lti_params"];
+							}
+
+							$PROCESSED["page_content"] = json_encode($ltiJSONArray);
 						} else {
 							/**
 							 * Non-Required "page_content" / Page Contents.
@@ -558,6 +587,25 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</td>
 								</tr>
 								<?php
+							} elseif ($PAGE_TYPE == "lticonsumer") {
+								?>
+								<tr>
+									<td><label for="lti_url" class="form-required">LTI Launch URL:</label></td>
+									<td><input type="textbox" id="lti_url" name="lti_url" style="width: 99%;" value="<?php echo ((isset($PROCESSED["lti_url"])) ? html_encode($PROCESSED["lti_url"]) : ""); ?>" /></td>
+								</tr>
+								<tr>
+									<td><label for="lti_key" class="form-required">LTI Key:</label></td>
+									<td><input type="textbox" id="lti_key" name="lti_key" style="width: 99%;" value="<?php echo ((isset($PROCESSED["lti_key"])) ? html_encode($PROCESSED["lti_key"]) : ""); ?>" /></td>
+								</tr>
+								<tr>
+									<td><label for="lti_secret" class="form-required">LTI Secret:</label></td>
+									<td><input type="textbox" id="lti_secret" name="lti_secret" style="width: 99%;" value="<?php echo ((isset($PROCESSED["lti_secret"])) ? html_encode($PROCESSED["lti_secret"]) : ""); ?>" /></td>
+								</tr>
+								<tr>
+									<td style="vertical-align: top"><label for="lti_params">LTI Additional Parameters:</label></td>
+									<td><textarea class="expandable" id="lti_params" name="lti_params" style="width: 98%;"><?php echo ((isset($PROCESSED["lti_params"])) ? html_encode($PROCESSED["lti_params"]) : ""); ?></textarea></td>
+								</tr>
+								<?php
 							} else {
 								?>
 								<tr>
@@ -570,6 +618,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								</tr>
 								<?php
 							}
+
 							if ($PAGE_TYPE == "events" || $PAGE_TYPE == "announcements") {
 								?>
 								<tr>

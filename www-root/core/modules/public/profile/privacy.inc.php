@@ -26,7 +26,7 @@ if (!defined("IN_PROFILE")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
-	$PAGE_META["title"]			= "Privacy Settings";
+	$PAGE_META["title"]			= "Privacy Preferences";
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";
 
@@ -36,7 +36,7 @@ if (!defined("IN_PROFILE")) {
 	$VALID_MAX_DIMENSIONS		= array("photo-width" => 216, "photo-height" => 300, "thumb-width" => 75, "thumb-height" => 104);
 	$RENDER						= false;
 
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/profile?section=privacy", "title" => "Privacy Settings");
+	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/profile?section=privacy", "title" => "Privacy Preferences");
 
 	$PROCESSED		= array();
 
@@ -78,7 +78,7 @@ if (!defined("IN_PROFILE")) {
 			
 			
 		
-	<h1 style="margin-top: 0px">Privacy Level Setting</h1>
+	<h1>Privacy Preferences</h1>
 	<form action="<?php echo ENTRADA_URL; ?>/profile?section=privacy" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>">
 		<input type="hidden" name="action" value="privacy-update" />
 		<input type="hidden" name="tab" value="privacy-level" />

@@ -51,7 +51,7 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 	</head>
 	<body>
 	<?php
-	$query = "	SELECT a.*, b.`course_name`, b.`organisation_id`
+	$query = "	SELECT a.*, b.`course_name`, b.`course_code`, b.`organisation_id`
 				FROM `events` AS a
 				LEFT JOIN `courses` AS b
 				ON b.`course_id` = a.`course_id`
@@ -84,7 +84,7 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 					<div class="colLeft">
 						<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
 						<tr>
-							<td colspan="2" style="padding-bottom: 5px"><a href="<?php echo ENTRADA_URL; ?>/courses?id=<?php echo $event_info["course_id"]; ?>" target="_blank" style="font-weight: bold"><?php echo html_encode($event_info["course_name"]); ?></a></td>
+							<td colspan="2" style="padding-bottom: 5px"><a href="<?php echo ENTRADA_URL; ?>/courses?id=<?php echo $event_info["course_id"]; ?>" target="_blank" style="font-weight: bold"><?php echo html_encode($event_info["course_code"]) . ": " . html_encode($event_info["course_name"]); ?></a></td>
 						</tr>
 						<tr>
 							<td><strong>Date &amp; Time</strong></td>

@@ -32,7 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } elseif (!$ENTRADA_ACL->amIAllowed('quizquestion', 'update', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
+	
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
 	echo display_error();
@@ -40,12 +40,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
-	$query = "SELECT * FROM `quizzes_lu_questiontypes` WHERE `questiontype_active` = '1'";
-	$question_types = $db->GetAll($query);
+    $question_types = Models_Quiz_QuestionType::fetchAllRecords();
 	if ($question_types) {
 		$question_type_ids = array();
 		foreach ($question_types as $question_type) {
-			$question_type_ids[] = $question_type["questiontype_id"];
+			$question_type_ids[] = $question_type->getQuestionTypeID();
 		}
 	}
 	
@@ -57,15 +56,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		$type = 1;
 	}
 
+    if (isset($_GET["qquestion_id"]) && $tmp_input = clean_input($_GET["qquestion_id"], "int")) {
+        $qquestion_group_id = $tmp_input;
+    }
+    
 	if ($RECORD_ID) {
-		$query			= "	SELECT a.*
-							FROM `quizzes` AS a
-							WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-							AND a.`quiz_active` = '1'";
-		$quiz_record	= $db->GetRow($query);
-		if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), "update")) {
+        $quiz_record = Models_Quiz::fetchRowByID($RECORD_ID);
+		if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record->getQuizID()), "update")) {
 			if ($ALLOW_QUESTION_MODIFICATIONS) {
-				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
+				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record->getQuizTitle(), 32));
 				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=add-question&id=".$RECORD_ID, "title" => "Add Quiz Question");
 
 				/**
@@ -105,12 +104,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						if ((isset($_POST["question_text"])) && ($tmp_input = clean_input($_POST["question_text"], array("trim", "allowedtags")))) {
 							$PROCESSED["question_text"] = $tmp_input;
 						} else {
-							$ERROR++;
-							$ERRORSTR[] = "The <strong>Quiz Question</strong> field is required.";
+							add_error("The <strong>Quiz Question</strong> field is required.");
 						}
 
 
 						switch ($type) {
+                            case 4 :
 							case 3 :
 							case 2 :
 								$PROCESSED["question_points"] = 0;
@@ -177,16 +176,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								 * There must be at least 2 possible responses to proceed.
 								 */
 								if (count($PROCESSED["quiz_question_responses"]) < 2) {
-									$ERROR++;
-									$ERRORSTR[] = "You must provide at least <strong>two possible responses</strong> to this question.";
+									add_error("You must provide at least <strong>two possible responses</strong> to this question.");
 								}
 
 								/**
 								 * You must specify the correct response
 								 */
 								if (!$correct_response_found) {
-									$ERROR++;
-									$ERRORSTR[] = "You must specify which of the responses is the <strong>correct response</strong>.";
+									add_error("You must specify which of the responses is the <strong>correct response</strong>.");
 								}
 
 								/**
@@ -195,8 +192,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								if ((isset($_POST["question_points"])) && ($tmp_input = clean_input($_POST["question_points"], array("trim", "int")))) {
 									$PROCESSED["question_points"] = $tmp_input;
 								} else {
-									$ERROR++;
-									$ERRORSTR[] = "You must provide the <strong>number of points</strong> given for the correct response to this question.";
+									add_error("You must provide the <strong>number of points</strong> given for the correct response to this question.");
 								}
 
 							break;
@@ -205,8 +201,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						/**
 						 * Get the next order of this question from the quiz_questions table.
 						 */
-						$query	= "SELECT MAX(`question_order`) AS `next_order` FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($RECORD_ID)." AND `question_active` = '1'";
-						$result = $db->GetRow($query);
+                        $result["next_order"] = Models_Quiz_Question::fetchNextOrder($quiz_record->getQuizID());
 						if ($result) {
 							$PROCESSED["question_order"] = ($result["next_order"] + 1);
 						} else {
@@ -240,9 +235,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						}
 
 						if (!$ERROR) {
-							if($ENTRADA_ACL->amIAllowed(new QuizQuestionResource(null, $quiz_record['quiz_id']), 'create')) {
-								if ($db->AutoExecute("quiz_questions", $PROCESSED, "INSERT")) {
-									if ($qquestion_id = $db->Insert_Id()) {
+                            
+                            if (isset($type) && isset($qquestion_group_id) && $type == 1) {
+                                $PROCESSED["qquestion_group_id"] = $qquestion_group_id;
+                            }
+							if($ENTRADA_ACL->amIAllowed(new QuizQuestionResource(null, $quiz_record->getQuizID()), 'create')) {
+                                $quiz_question = new Models_Quiz_Question($PROCESSED);
+								if ($quiz_question->insert()) {
+									$qquestion_id = $quiz_question->getQquestionID();
+                                    if ($qquestion_id) {
 										/**
 										 * Add the quiz question responses to the quiz_question_responses table.
 										 * Ummm... we really need to switch to InnoDB tables to get transaction support.
@@ -257,11 +258,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 																"response_is_html"	=> $quiz_question_response["response_is_html"],
 																"response_feedback"	=> $quiz_question_response["response_feedback"]
 																);
-
-												if (!$db->AutoExecute("quiz_question_responses", $PROCESSED, "INSERT")) {
-													$ERROR++;
-													$ERRORSTR[] = "There was an error while trying to attach a <strong>Question Response</strong> to this quiz question.<br /><br />The system administrator was informed of this error; please try again later.";
-
+                                                $quiz_question_response = new Models_Quiz_Question_Response($PROCESSED);
+                                                if (!$quiz_question_response->insert()) {
+													add_error("There was an error while trying to attach a <strong>Question Response</strong> to this quiz question.<br /><br />The system administrator was informed of this error; please try again later.");
 													application_log("error", "Unable to insert a new quiz_question_responses record while adding a new quiz question [".$qquestion_id."] to quiz_id [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
 												}
 											}
@@ -278,14 +277,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											break;
 											case "content" :
 											default :
-
 												$url = ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID;
 												$msg	= "You will now be redirected back to the quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 											break;
 										}
-
-										$SUCCESS++;
-										$SUCCESSSTR[]	= "You have successfully added this question to your <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz.<br /><br />".$msg;
+										
+										add_success("You have successfully added this question to your <strong>".html_encode($quiz_record->getQuizTitle())."</strong> quiz.<br /><br />".$msg);
 										$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 										/**
@@ -295,21 +292,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 										application_log("success", "New quiz question [".$qquestion_id."] added to quiz_id [".$RECORD_ID."].");
 									} else {
-										$ERROR++;
-										$ERRORSTR[] = "We were unable to add this question to your quiz at this time.<br /><br />The system administrator was informed of this error; please try again later.";
-
+										add_error("We were unable to add this question to your quiz at this time.<br /><br />The system administrator was informed of this error; please try again later.");
 										application_log("error", "Failed to receive an Insert_Id() from the question insert to quiz_id [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
 									}
 								} else {
-									$ERROR++;
-									$ERRORSTR[] = "There was a problem inserting this quiz question. The system administrator was informed of this error; please try again later.";
-
+									add_error("There was a problem inserting this quiz question. The system administrator was informed of this error; please try again later.");
 									application_log("error", "There was an error inserting a quiz question to quiz_id [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
 								}
 							} else {
-								$ERROR++;
-								$ERRORSTR[] = "You do not have permission to create this quiz question. The system administrator was informed of this error; please try again later.";
-
+								add_error("You do not have permission to create this quiz question. The system administrator was informed of this error; please try again later.");
 								application_log("error", "There was an error inserting a quiz question to quiz_id [".$RECORD_ID."] because the user [".$ENTRADA_USER->getID()."] didn't have permission to create a quiz question.");
 							}
 						}
@@ -355,10 +346,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<tr>
 								<td></td>
 								<td>Quiz Title</td>
-								<td><strong><?php echo clean_input($quiz_record["quiz_title"], array("trim", "encode")); ?></strong></td>
+								<td><strong><?php echo clean_input($quiz_record->getQuizTitle(), array("trim", "encode")); ?></strong></td>
 							</tr>
 							<?php
-							if ($quiz_description = clean_input($quiz_record["quiz_description"], array("trim"))) {
+							if ($quiz_description = clean_input($quiz_record->getQuizDescription(), array("trim"))) {
 								?>
 								<tr>
 									<td></td>
@@ -376,27 +367,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								<td style="vertical-align: top">Quiz Authors</td>
 								<td>
 									<?php
-									$quiz_quthors	= array();
-									$query		= "	SELECT CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
-													FROM `quiz_contacts` AS a
-													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-													ON a.`proxy_id` = b.`id`
-													WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-													ORDER BY b.`lastname` ASC, b.`firstname` ASC";
-									$results	= $db->GetAll($query);
-									if ($results) {
-										foreach ($results as $result) {
-											$quiz_quthors[] = "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a>";
+                                    $quiz_authors = Models_Quiz_Contact::fetchAllRecords($RECORD_ID);
+                                    if ($quiz_authors) {
+										foreach ($quiz_authors as $quiz_author) {
+                                            $author = User::get($quiz_author->getProxyID());
+                                            if ($author->getID()) {
+                                                $q_a[] = "<a href=\"mailto:".html_encode($author->getEmail())."\">".html_encode($author->getFullname(false))."</a>";
+                                            }
 										}
 									}
-
-									echo implode("; ", $quiz_quthors);
+                                    if (isset($q_a) && !empty($q_a)) {
+                                        echo implode("; ", $q_a);
+                                    }
 									?>
 								</td>
 							</tr>
 						</tbody>
 						</table>
-						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;type=<?php echo $type; ?>&amp;step=2" method="post" id="addQuizQuestionForm" class="form-horizontal">
+						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;type=<?php echo $type; ?><?php echo isset($qquestion_group_id) ? "&amp;qquestion_id=".$qquestion_group_id : ""; ?>&amp;step=2" method="post" id="addQuizQuestionForm" class="form-horizontal">
 						<input type="hidden" name="questiontype_id" value="<?php echo $type; ?>" />
 						<table style="width: 100%; margin-bottom: 25px" cellspacing="0" cellpadding="2" border="0" summary="Add Quiz Question">
 						<colgroup>
@@ -408,12 +396,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<tr>
 								<td colspan="3">
 									<h2 title="Quiz Content Add Question">Add Quiz Question</h2>
-									<?php if ($type == 2) { ?>
+                                    <?php if ($type != 1) { ?>
+                                    <input type="hidden" id="question_points" name="question_points" value="0" />
+                                    <?php } ?>
+									<?php if ($type == 2 || $type == 4) { ?>
 										<div class="display-generic"><strong>Note:</strong> The Descriptive Text will appear to users taking the quiz.</div>
-										<input type="hidden" id="question_points" name="question_points" value="0" />
 									<?php } else if ($type == 3) { ?>
 										<div class="display-generic"><strong>Note:</strong> The Descriptive Text will not appear to users taking the quiz, but will appear on the quiz management page.</div>
-										<input type="hidden" id="question_points" name="question_points" value="0" />
 									<?php } ?>
 									<?php
 									if ($ERROR) {
@@ -446,7 +435,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													<?php
 												} else {
 													foreach ($question_types as $question_type) {
-														echo "<option value=\"new".$question_type["questiontype_id"]."\"".(isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) && ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new".$question_type["questiontype_id"]) ? " selected=\"selected\"" : "").">Add ".($type == $question_type["questiontype_id"] ? "another " : "a new ").strtolower($question_type["questiontype_title"])."</option>";
+														echo "<option value=\"new".$question_type->getQuestionTypeID()."\"".(isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) && ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new".$question_type->getQuestionTypeID()) ? " selected=\"selected\"" : "").">Add ".($type == $question_type->getQuestionTypeID() ? "another " : "a new ").strtolower($question_type->getQuestionTypeTitle())."</option>";
 													}
 												}
 												?>
@@ -525,7 +514,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											<tr>
 												<td style="padding: 5px 0px 10px 0px; border-bottom: 1px #CCCCCC solid">&nbsp;</td>
 												<td colspan="3" style="padding: 5px 0px 15px 0px; border-bottom: 1px #CCCCCC solid">
-													<input type="checkbox" id="toggle_response_feedback_<?php echo $number; ?>" onclick="Effect.toggle('container_response_feedback_<?php echo $number; ?>', 'appear', { duration: 0.3 }); if (this.checked == true) setTimeout('$(\'response_feedback_<?php echo $number; ?>\').focus();', 50);"<?php echo (((isset($PROCESSED["quiz_question_responses"][$number]["response_feedback"])) && (trim($PROCESSED["quiz_question_responses"][$number]["response_feedback"]) != "")) ? " checked=\"true\"" : ""); ?> />
+													<input type="checkbox" id="toggle_response_feedback_<?php echo $number; ?>" data-number="<?php echo html_encode($number); ?>" onclick="Effect.toggle('container_response_feedback_<?php echo $number; ?>', 'appear', { duration: 0.3 }); if (this.checked == true) setTimeout('$(\'response_feedback_<?php echo $number; ?>\').focus();', 50);"<?php echo (((isset($PROCESSED["quiz_question_responses"][$number]["response_feedback"])) && (trim($PROCESSED["quiz_question_responses"][$number]["response_feedback"]) != "")) ? " checked=\"true\"" : ""); ?> />
 													<label for="toggle_response_feedback_<?php echo $number; ?>" class="form-nrequired" style="margin-left: 5px; vertical-align: middle"> Provide feedback if this response is chosen <span id="response_feedback_term_<?php echo $number; ?>" class="response_feedback_term <?php echo (($response_correct) ? "correctly" : "incorrectly"); ?>"><?php echo (($response_correct) ? "correctly" : "incorrectly"); ?></span>.</label>
 													<div id="container_response_feedback_<?php echo $number; ?>" style="margin-left: 15px;<?php echo (((!isset($PROCESSED["quiz_question_responses"][$number]["response_feedback"])) || (trim($PROCESSED["quiz_question_responses"][$number]["response_feedback"]) == "")) ? " display: none" : ""); ?>">
 														<textarea class="expandable" id="response_feedback_<?php echo $number; ?>" name="response_feedback[<?php echo $number; ?>]" style="width: 95%; height: 0px"><?php echo ((isset($PROCESSED["quiz_question_responses"][$number]["response_feedback"])) ? clean_input($PROCESSED["quiz_question_responses"][$number]["response_feedback"], "encode") : ""); ?></textarea>
@@ -538,6 +527,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									</tbody>
 									</table>
 									<script type="text/javascript">
+                                    jQuery(document).ready(function () {
+                                        jQuery("input[id^=toggle_response_feedback_]").on("change", function () {
+                                            var number = jQuery(this).attr("data-number");
+                                            if (jQuery(this).is(":checked")) {
+                                                if (jQuery("#response_feedback_" + number).is(":disabled")) {
+                                                    jQuery("#response_feedback_" + number).prop("disabled", false);
+                                                }
+                                            } else {
+                                                jQuery("#response_feedback_" + number).prop("disabled", true);
+                                            }
+                                        });
+                                    });    
+                                        
 									$$('table.quiz-question td.selectCorrect input[type=radio]').each(function (el) {
 										$(el).observe('click', alterFeedbackTerm);
 									});
@@ -583,26 +585,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					break;
 				}
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You cannot add a question to a quiz that has already been taken. This precaution exists to protect the integrity of the data in the database.<br /><br />If you would like to add questions to this quiz you can <strong>copy the quiz</strong> from the <strong>Manage Quizzes</strong> index.";
-
+				add_error("You cannot add a question to a quiz that has already been taken. This precaution exists to protect the integrity of the data in the database.<br /><br />If you would like to add questions to this quiz you can <strong>copy the quiz</strong> from the <strong>Manage Quizzes</strong> index.");
 				echo display_error();
 
 				application_log("error", "Attempted to add a quiz question to quiz [".$RECORD_ID."] that has already been taken.");
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "In order to add a question to a quiz, you must provide a valid quiz identifier.";
-
-			echo display_error();
+			add_error("In order to add a question to a quiz, you must provide a valid quiz identifier.");
+            echo display_error();
 
 			application_log("notice", "Failed to provide a valid quiz identifer [".$RECORD_ID."] when attempting to add a quiz question.");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "In order to add a question to a quiz, you must provide a quiz identifier.";
-
-		echo display_error();
+        add_error("In order to add a question to a quiz, you must provide a quiz identifier.");
+        echo display_error();
 
 		application_log("notice", "Failed to provide a quiz identifier when attempting to add a quiz question.");
 	}

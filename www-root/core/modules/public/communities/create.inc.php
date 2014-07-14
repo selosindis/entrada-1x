@@ -379,7 +379,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                                                                 `page_title` = ".$db->qstr($PROCESSED["community_title"])." 
                                                             WHERE `cpage_id` = ".$db->qstr($cpage_id);
                                                 if (!$db->Execute($query)) {
-                                                    application_log("Unable to set `page_title` and `menu_title` for a community page [".$cpage_id."] to that of the `community_title`.");
+                                                    application_log("error", "Unable to set `page_title` and `menu_title` for a community page [".$cpage_id."] to that of the `community_title`.");
                                                 }
                                             } else {
                                                 $page_option["cpage_id"] = $cpage_id;
@@ -741,13 +741,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                             <label class="control-label form-required" for="type_id">Community Type:</label>
                             <div class="controls">
                                  <?php
-                                 echo "<select name=\"type_id\" id=\"type_id\" onchange=\"loadCommunityType(this.options[this.selectedIndex].value)\">";
-                                 echo "<option value=\"0\">-- Select your community type --</option>";
+                                 echo "<select name=\"type_id\" id=\"type_id\">";
                                  foreach ($community_types as $community_type) {
                                      echo "<option value = \"".$community_type["octype_id"]."\"".(isset($PROCESSED["octype_id"]) && $PROCESSED["octype_id"] == $community_type["octype_id"] ? " selected=\"selected\"" : "").">".$community_type["community_type_name"]."</option>";
                                  }
                                  echo "</select>";
                                  ?>
+                                <script type="text/javascript">
+                                    jQuery(function($) {
+                                        loadCommunityType($('#type_id').val());
+
+                                        $('#type_id').change(function() {
+                                            loadCommunityType(this.value);
+                                        });
+                                    });
+                                </script>
                              </div>
                         </div>
                         <?php
@@ -1017,7 +1025,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                 <?php
                 if ($MAILING_LISTS["active"]) {
                     ?>
-                    <h3>Community Mailing List</h2>
+                    <h3>Community Mailing List</h3>
                     <div class="control-group">
                         <label class="control-label form-nrequired">Community Mailing List:</label>
                         <div class="controls">
@@ -1092,7 +1100,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						<?php
 						foreach ($results as $result) {
 							echo "<tr>\n";
-							//echo "	<td colspan=\"2\"><div class=\"strong-green\"><img src=\"".ENTRADA_URL."/images/btn_attention.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" /> ".html_encode($result["category_title"])."</div></td>\n";
 							echo "	<td colspan=\"2\"><h4 class=\"categ-title\"> ".html_encode($result["category_title"])."</h4></td>\n";
 							echo "</tr>\n";
 							$query	= "SELECT *

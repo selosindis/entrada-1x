@@ -105,6 +105,9 @@ define("CLERKSHIP_EVALUATION_LOCKOUT", 0);
 define("CLERKSHIP_TOP_CATEGORY_ID", 1);
 define("CLERKSHIP_SETTINGS_REQUIREMENTS", false);
 
+
+define("EVALUATION_LOCKOUT", ONE_WEEK);
+
 $CLERKSHIP_REQUIRED_WEEKS = 14;
 $CLERKSHIP_CATEGORY_TYPE_ID = 13;
 $CLERKSHIP_EVALUATION_FORM = "http://url_of_your_schools_precptor_evaluation_of_clerk_form.pdf";
@@ -145,6 +148,8 @@ define("LDAP_SEARCH_DN", "uid=readonly,ou=people,dc=yourschool,dc=ca");			// The
 define("LDAP_SEARCH_DN_PASS", "");												// The LDAP password for the SearchDN above. These fields are optional.
 define("LDAP_MEMBER_ATTR", "UniUid");											// The member attribute used to identify the users unique LDAP ID.
 define("LDAP_USER_QUERY_FIELD", "UniCaPKey");									// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
+define("LDAP_CGROUP_BASE_DN", "ou=cgroups,ou=groups,o=main,dc=yourschool,dc=ca");
+define("LDAP_USER_IDENTIFIER", "youruniquemember");
 define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : This field allows you to specify which local user_data field is used to search for a valid username.
 
 define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
@@ -175,6 +180,8 @@ define("DEFAULT_CHARSET", "UTF-8");												// The character encoding which w
 define("DEFAULT_COUNTRY_ID", 39);												// The default contry id used to determine provinces / states, etc.
 define("DEFAULT_PROVINCE_ID", 9);												// The default provice id that is selected (use 0 for none).
 
+define("DEFAULT_CITY", "City");
+define("DEFAULT_POSTALCODE", "0123456");
 define("DEFAULT_DATE_FORMAT", "D M d/y g:ia");
 define("DEFAULT_ROWS_PER_PAGE", 25);
 
@@ -297,6 +304,7 @@ define("STORAGE_USER_PHOTOS", $config->entrada_storage . "/user-photos");		// Fu
 define("FILE_STORAGE_PATH", $config->entrada_storage . "/event-files");			// Full directory path where off-line files are stored without trailing slash.
 define("MSPR_STORAGE",$config->entrada_storage . "/msprs");						//Full directory path where student Medical School Performance Reports should be sotred
 define("SEARCH_INDEX_PATH",$config->entrada_storage . "/search-indexes");		//Full directory path where student Medical School Performance Reports should be sotred
+define("EPORTFOLIO_STORAGE_PATH", $config->entrada_storage . "/eportfolio");	// Full directory path where eportfolio files should be sotred 
 
 define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and parametres to sendmail.
 
@@ -304,7 +312,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.5.1");										// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.6.0"); 										// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Ecosystem";
@@ -352,8 +360,10 @@ $COMMUNITY_RESERVED_PAGES[] = "rss";
 
 define("COMMUNITY_NOTIFY_TIMEOUT", 3600);										// Lock file expirary time
 define("COMMUNITY_MAIL_LIST_MEMBERS_TIMEOUT", 1800);							// Lock file expirary time
+define("COMMUNITY_MAIL_LIST_CLEANUP_TIMEOUT", 1800);							// Lock file expirary time
 define("COMMUNITY_NOTIFY_LOCK", CACHE_DIRECTORY."/notify_mail.lck");			// Full directory path to the cache directory without a trailing slash (for RSS).
 define("COMMUNITY_MAIL_LIST_MEMBERS_LOCK", CACHE_DIRECTORY."/mail_list_members.lck"); // Full directory path to the cache directory without a trailing slash (for RSS).
+define("COMMUNITY_MAIL_LIST_CLEANUP_LOCK", CACHE_DIRECTORY."/mail_list_cleanup.lck"); // Full directory path to the cache directory without a trailing slash (for RSS).
 define("COMMUNITY_NOTIFY_LIMIT", 100);											// Per batch email mailout limit
 define("COMMUNITY_MAIL_LIST_MEMBERS_LIMIT", 100);								// Per batch google requests limit
 
@@ -466,6 +476,39 @@ undergrad@yourschool.ca
 USERNOTIFICATION;
 
 /**
+ * This is the default notification message that is used in the Manage Users
+ * module when someone is updating a user in the system. It can be changed
+ * by the admin that is adding the user via a textarea when the new user
+ * is created.
+ */
+$DEFAULT_EDIT_USER_NOTIFICATION = <<<USERNOTIFICATION
+Dear %firstname% %lastname%,
+
+Your account has been updated in %application_name%, our web-based integrated teaching and learning system.
+
+Before logging in, you may need to reset your password. You can do this by clicking the following link:
+
+%password_reset_url%
+
+You can log into %application_name% by visiting the following link:
+
+%application_url%
+
+Username: %username%
+
+If you require any assistance with this system, please do not hesitate to contact us:
+
+Central Education Office
+E-Mail: undergrad@yourschool.ca
+Telephone: +1 (613) 533-6000 x2494
+
+Sincerely,
+
+Central Education Office
+undergrad@yourschool.ca
+USERNOTIFICATION;
+
+/**
  * This is the default notification message that is sent to a new community guest user when the are imported
  * using the import-community-guests.php tool.
  */
@@ -509,6 +552,8 @@ $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventconte
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
+$MODULES["eportfolio"] = array("title" => "Manage ePortfolios", "resource" => "eportfolio", "permission" => "update");
+$MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "read");
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
 $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");

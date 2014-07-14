@@ -25,7 +25,7 @@
  *
 */
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/medbiqinstructional?org=".$ORGANISATION['organisation_id'], "title" => "Manage Medbiquitos Instructional Methods");
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/medbiqassessment?org=".$ORGANISATION['organisation_id'], "title" => "Manage Medbiquitos Assessment Methods");
 
 if (!defined("PARENT_INCLUDED")) {
 	exit;

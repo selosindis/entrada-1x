@@ -96,7 +96,7 @@ abstract class MailingListBase
     	if ($type == "inactive") {
     		$this->type = $type;
     		$query = "	UPDATE `community_mailing_list_members`
-    					SET `member_active` = '0'
+    					SET `member_active` = '-1'
     					WHERE `community_id` = ".$db->qstr($this->community_id);
     					$db->Execute($query);
     	}
@@ -158,10 +158,16 @@ class GoogleMailingList extends MailingListBase
 		$client = Zend_Gdata_ClientLogin::getHttpClient($GOOGLE_APPS["admin_username"], $GOOGLE_APPS["admin_password"], Zend_Gdata_Gapps::AUTH_SERVICE_NAME);
 		$service = new Zend_Gdata_Gapps($client, $GOOGLE_APPS["domain"]);
 		$this->service = $service;
+        if ($this->type == "discussion" || $this->type == "announcements") {
+            $found_group = $this->service->retrieveGroup($this->list_name);
+            if (!isset($found_group) || !$found_group) {
+                $this->create_group($this->type, $this->list_name);
+            }
+        }
 	}
 	
 	public function fetch_current_list() {
-		
+
 		if ($list_members = $this->service->retrieveAllMembers($this->list_name)) {
 			
 			$members = array();
@@ -297,19 +303,38 @@ class GoogleMailingList extends MailingListBase
 		return $return;
 		
 	}
-	
-	public function change_mode($mode) {
-		
-		$return = false;
-		
-		if ($mode == "Owner" || $mode == "Member") {
-			if ($this->service->updateGroup($this->list_name, NULL, NULL, $mode)) {
-				$return = true;
-			}
-		}
-		
-		return $return;
-	}
+
+    public function change_mode($mode) {
+        $return = false;
+        $list_status_map = array("discussion" => "Member", "announcements" => "Owner");
+        if (array_key_exists($mode, $list_status_map) && ($list_status_map[$mode] == "Owner" || $list_status_map[$mode] == "Member")) {
+            $found_group = $this->service->retrieveGroup($this->list_name);
+            if (!isset($found_group) || !$found_group) {
+                $this->create_group($mode, $this->list_name);
+            }
+            if ($this->service->updateGroup($this->list_name, NULL, NULL, $list_status_map[$mode])) {
+                $return = true;
+            }
+        } elseif ($mode == "inactive") {
+            $return = true;
+        }
+
+        return $return;
+    }
+
+    public function create_group($mode, $list_name) {
+
+        $return = false;
+
+        $list_status_map = array("discussion" => "Member", "announcements" => "Owner");
+        if (array_key_exists($mode, $list_status_map) && ($list_status_map[$mode] == "Owner" || $list_status_map[$mode] == "Member")) {
+            if ($this->service->createGroup($list_name, $list_name, NULL, $list_status_map[$mode])) {
+                $return = true;
+            }
+        }
+
+        return $return;
+    }
 	
 	public function extended_mode_change($mode) {
 		return $this->change_mode($mode);

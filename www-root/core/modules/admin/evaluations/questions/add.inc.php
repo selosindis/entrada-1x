@@ -37,7 +37,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/questions?section=add", "title" => "Add Question");
-
 	/**
 	 * Required field "questiontype_id" / Question Type
 	 * Currently only multile choice questions are supported, although
@@ -95,6 +94,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 				break;
 				case 1 :
+                case 5 :
+                case 6 :
 				default :
 					/**
 					 * Required field "allow_comments" / Allow Question Comments.
@@ -162,7 +163,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						if ($response_is_html) {
 							$response_text = clean_input($response_text, array("trim", "allowedtags"));
 						} else {
-							$response_text = clean_input($response_text, array("trim"));
+							$response_text = clean_input($response_text, array("trim", "notags"));
 						}
 
 						if (($response_key) && ($response_text != "")) {
@@ -176,6 +177,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 							$PROCESSED["evaluation_question_responses"][$i]["response_text"] = $response_text;
 							$PROCESSED["evaluation_question_responses"][$i]["response_order"] = $i;
+
+                            if (isset($_POST["response_descriptor_id"][$response_key]) && clean_input($_POST["response_descriptor_id"][$response_key], "int")) {
+                                $PROCESSED["evaluation_question_responses"][$i]["erdescriptor_id"] = clean_input($_POST["response_descriptor_id"][$response_key], "int");
+                            }
 
 							/**
 							 * Check if this is the selected minimum passing level or not.
@@ -211,6 +216,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 
 						$PROCESSED["evaluation_rubric_categories"][$i]["category"] = $category;
+                        if (isset($_POST["category_description"][$i]) && ($tmp_input = clean_input($_POST["category_description"][$i], array("trim", "notags")))) {
+                            $PROCESSED["evaluation_rubric_categories"][$i]["category_description"] = $tmp_input;
+                        }
 						$PROCESSED["evaluation_rubric_categories"][$i]["category_order"] = $i;
 						$PROCESSED["evaluation_rubric_categories"][$i]["objective_ids"] = array();
 						if ((isset($_POST["objective_ids_".$i])) && (is_array($_POST["objective_ids_".$i]))) {
@@ -289,6 +297,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								$PROCESSED_QUESTION = array("questiontype_id" => 3,
 															"question_text" => $category["category"],
 															"question_code" => $category["category"],
+                                                            "question_description" => (isset($category["category_description"]) && $category["category_description"] ? $category["category_description"] : NULL),
+															"organisation_id" => $ENTRADA_USER->getActiveOrganisation(),
 															"allow_comments" => $PROCESSED["allow_comments"]);
 								$equestion_id = 0;
 								if ($db->AutoExecute("evaluations_lu_questions", $PROCESSED_QUESTION, "INSERT") && ($equestion_id = $db->Insert_Id()) &&
@@ -307,6 +317,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 															);
 											$eqresponse_id = 0;
 											if ($db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT") && ($eqresponse_id = $db->Insert_Id())) {
+                                                if (isset($question_response["erdescriptor_id"]) && $question_response["erdescriptor_id"]) {
+                                                    $PROCESSED_RESPONSE_DESCRIPTOR = array(
+                                                        "eqresponse_id" => $eqresponse_id,
+                                                        "erdescriptor_id" => $question_response["erdescriptor_id"]
+                                                    );
+                                                    if (!$db->AutoExecute("evaluation_question_response_descriptors", $PROCESSED_RESPONSE_DESCRIPTOR, "INSERT")) {
+                                                        add_error("There was an error while trying to attach a <strong>Response Descriptor</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                        application_log("error", "Unable to insert a new evaluation_question_response_descriptors record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+                                                    }
+                                                }
 												/**
 												 * Add the responses criteria to the evaluation_rubric_criteria table.
 												 */
@@ -379,6 +400,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							}
 						}
 					} else {
+						$PROCESSED["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
 						if ($db->AutoExecute("evaluations_lu_questions", $PROCESSED, "INSERT") && ($equestion_id = $db->Insert_Id())) {	
 							/**
 							 * Add the question responses to the evaluations_lu_question_responses table.
@@ -394,7 +416,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													"minimum_passing_level"	=> $question_response["minimum_passing_level"]
 													);
 
-									if (!$db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT")) {
+									if (!$db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT") && ($eqresponse_id = $db->Insert_Id())) {
+                                        if (isset($question_response["erdescriptor_id"]) && $question_response["erdescriptor_id"]) {
+                                            $PROCESSED_RESPONSE_DESCRIPTOR = array(
+                                                "eqresponse_id" => $eqresponse_id,
+                                                "erdescriptor_id" => $question_response["erdescriptor_id"]
+                                            );
+                                            if (!$db->AutoExecute("evaluation_question_response_descriptors", $PROCESSED_RESPONSE_DESCRIPTOR, "INSERT")) {
+                                                add_error("There was an error while trying to attach a <strong>Response Descriptor</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                application_log("error", "Unable to insert a new evaluation_question_response_descriptors record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+                                            }
+                                        }
 										add_error("There was an error while trying to attach a <strong>Question Response</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
 
 										application_log("error", "Unable to insert a new evaluations_lu_question_responses record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
@@ -490,6 +523,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			require_once("javascript/evaluations.js.php");
 			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js\"></script>";
 			$HEAD[]	= "<script type=\"text/javascript\"> var SITE_URL = '".ENTRADA_URL."'; </script>";
+            if (!in_array($PROCESSED["questiontype_id"], array(2, 4))) {
+                $HEAD[]	= "
+                <script type=\"text/javascript\">
+                    jQuery(document).ready(function() {
+                        modalDescriptorDialog = new Control.Modal($('false-link'), {
+                            position:		'center',
+                            overlayOpacity:	0.75,
+                            closeOnClick:	'overlay',
+                            className:		'modal',
+                            fade:			true,
+                            fadeDuration:	0.30,
+                            width: 455
+                        });
+                    });
+
+                    function openDescriptorDialog(response_number, erdescriptor_id) {
+                        new Ajax.Request('".ENTRADA_URL."/admin/evaluations/questions?section=api-descriptors&response_number='+response_number+'&organisation_id=".$ENTRADA_USER->getActiveOrganisation()."&erdescriptor_id='+erdescriptor_id, {
+                            method: 'get',
+                            onComplete: function(transport) {
+                                loaded = [];
+                                modalDescriptorDialog.container.update(transport.responseText);
+                                modalDescriptorDialog.open();
+                            }
+                        });
+                    }
+                </script>";
+            }
 			if ($PROCESSED["questiontype_id"] == 3) {
 				$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_evaluation_rubric.js\"></script>";
 				$HEAD[] = "<script type=\"text/javascript\">
@@ -595,6 +655,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			</tbody>
 			</table>
 			</form>
+            <?php
+                if (in_array($questiontype["questiontype_shortname"], array("rubric", "selectbox", "matrix_single", "vertical_matrix"))) {
+
+
+                }
+            ?>
 			<?php
 		break;
 	}

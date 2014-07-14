@@ -111,8 +111,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 
 					/**
-					 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
-					 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
+					 * Non-required field "evaluation_start" / Evaluation Start (validated through validate_calendars function).
+					 * Non-required field "evaluation_finish" / Evaluation Finish (validated through validate_calendars function).
 					 */
 					$viewable_date = validate_calendars("evaluation", false, false);
 					if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
@@ -199,6 +199,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 
 					/**
+					 * Non-required field "identify_comments" / Identify Comments
+					 */
+					if (isset($_POST["identify_comments"]) && ($_POST["identify_comments"])) {
+						$PROCESSED["identify_comments"] = true;
+					} else {
+						$PROCESSED["identify_comments"] = false;
+					}
+
+					/**
 					 * Required field "min_submittable" / Min Submittable
 					 */
 					if (isset($_POST["min_submittable"]) && ($min_submittable = clean_input($_POST["min_submittable"], "int")) && ($min_submittable >= 1)) {
@@ -212,32 +221,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					/**
 					 * Required field "max_submittable" / Max Submittable
 					 */
-					if (isset($_POST["max_submittable"]) && ($max_submittable = clean_input($_POST["max_submittable"], "int")) && ($max_submittable <= 99)) {
+					if (isset($_POST["max_submittable"]) && (($max_submittable = clean_input($_POST["max_submittable"], "int")) || ($max_submittable === 0)) && ($max_submittable <= 999)) {
 						$PROCESSED["max_submittable"] = $max_submittable;
 					} elseif ($evaluation_target_type == "peer") {
 						$PROCESSED["max_submittable"] = 0;
 					} else {
-						add_error("The evaluation <strong>Max Submittable</strong> field is required and must be less than 99.");
+						add_error("The evaluation <strong>Max Submittable</strong> field is required and must be less than 999.");
 					}
 
 					if ($PROCESSED["min_submittable"] > $PROCESSED["max_submittable"]) {
 						add_error("Your <strong>Min Submittable</strong> value may not be greater than your <strong>Max Submittable</strong> value.");
-					}
-
-					/**
-					 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
-					 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
-					 */
-					$viewable_date = validate_calendars("viewable", false, false);
-					if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
-						$PROCESSED["release_date"] = (int) $viewable_date["start"];
-					} else {
-						$PROCESSED["release_date"] = 0;
-					}
-					if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
-						$PROCESSED["release_until"] = (int) $viewable_date["finish"];
-					} else {
-						$PROCESSED["release_until"] = 0;
 					}
 					
 					/**
@@ -1116,7 +1109,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             </tbody>
                         </table>
                         <div class="control-group">
-                            <label for="evaluation_mandatory" class="form-required control-label">Evaluation Mandatory:</label>
+                            <label for="evaluation_mandatory" class="form-nrequired control-label">Evaluation Mandatory:</label>
                             <div class="controls">
                                 <label class="checkbox">
                                     <input type="checkbox" id="evaluation_mandatory" name="evaluation_mandatory"<?php echo (!isset($PROCESSED["evaluation_mandatory"]) || $PROCESSED["evaluation_mandatory"] ? " checked=\"checked\"" : ""); ?> />
@@ -1125,7 +1118,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             </div>
                         </div>
                         <div class="control-group">
-                            <label for="allow_target_review" class="form-required control-label">Allow Target Review:</label>
+                            <label for="allow_target_review" class="form-nrequired control-label">Allow Target Review:</label>
                             <div class="controls">
                                 <label class="checkbox">
                                     <input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (isset($PROCESSED["allow_target_review"]) && $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
@@ -1134,7 +1127,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             </div>
                         </div>
                         <div class="control-group">
-                            <label for="allow_target_request" class="form-required control-label">Allow Target Request:</label>
+                            <label for="allow_target_request" class="form-nrequired control-label">Allow Target Request:</label>
                             <div class="controls">
                                 <label class="checkbox">
                                     <input type="checkbox" onclick="$('evaluation_requests').toggle(this.checked);" id="allow_target_request" name="allow_target_request"<?php echo (isset($PROCESSED["allow_target_request"]) && $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
@@ -1187,7 +1180,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             </div>
                         </div>
                         <div class="control-group">
-                            <label for="allow_repeat_targets" class="form-required control-label">Allow Multiple Attempts on Each Target:</label>
+                            <label for="allow_repeat_targets" class="form-nrequired control-label">Allow Multiple Attempts on Each Target:</label>
                             <div class="controls">
                                 <label class="checkbox">
                                     <input type="checkbox" id="allow_repeat_targets" name="allow_repeat_targets"<?php echo (isset($PROCESSED["allow_repeat_targets"]) && $PROCESSED["allow_repeat_targets"] ? " checked=\"checked\"" : ""); ?> />
@@ -1196,7 +1189,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             </div>
                         </div>
                         <div class="control-group">
-                            <label for="show_comments" class="form-required control-label">Show Comments in Review:</label>
+                            <label for="show_comments" class="form-nrequired control-label">Show Comments in Review:</label>
                             <div class="controls">
                                 <label class="checkbox">
                                     <input type="checkbox" onclick="$('identify_comments_holder').toggle(this.checked);" id="show_comments" name="show_comments"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? " checked=\"checked\"" : ""); ?> />
@@ -1207,7 +1200,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                         <div class="control-group">
                             <div class="controls">
                                 <div class="control-group" id="identify_comments_holder"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? "\"" : " style=\"display: none;\""); ?>>
-                                    <label for="identify_comments" class="form-required control-label">Identify Comments:</label>
+                                    <label for="identify_comments" class="form-nrequired control-label">Identify Comments:</label>
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" id="identify_comments" name="identify_comments"<?php echo (isset($PROCESSED["identify_comments"]) && $PROCESSED["identify_comments"] ? " checked=\"checked\"" : ""); ?> />
@@ -1267,6 +1260,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                 <input type="hidden" id="reviewer_id" name="reviewer_id" value="" />
                             </div>
                         </div>
+						<div class="control-group">
+							<label for="evaluation_exclusions" class="control-label form-nrequired">
+								Evaluator Exclusions<br />
+								<span class="content-small">Evaluators in the Exclusions list are not allowed (or required) to fill out the evaluation, despite being in the evaluators list.</span>
+							</label>
+							<div class="controls">
+								<input type="text" id="exclusion_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+								<?php $ONLOAD[] = "exclusion_list = new AutoCompleteList({ type: 'exclusion', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=evaluators&id=".$EVALUATION_ID."', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})"; ?>
+								<div class="autocomplete" id="exclusion_name_auto_complete"></div>
+								<input type="hidden" id="associated_exclusion" name="associated_exclusion" />
+								<input type="button" class="button-sm" id="add_associated_exclusion" value="Add" style="vertical-align: middle" />
+								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+								<ul id="exclusion_list" class="menu" style="margin-top: 15px">
+								<?php
+								if (is_array($PROCESSED["associated_exclusions"]) && count($PROCESSED["associated_exclusions"])) {
+									foreach ($PROCESSED["associated_exclusions"] as $exclusion) {
+										if ((array_key_exists($exclusion, $EVALUATOR_LIST)) && is_array($EVALUATOR_LIST[$exclusion])) {
+											?>
+											<li class="user" id="exclusion_<?php echo $EVALUATOR_LIST[$exclusion]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $EVALUATOR_LIST[$exclusion]["fullname"]; if ($exclusion != $ENTRADA_USER->getID()) {?> <img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="exclusion_list.removeItem('<?php echo $EVALUATOR_LIST[$exclusion]["proxy_id"]; ?>');" class="list-cancel-image" /><?php } ?></li>
+											<?php
+										}
+									}
+								}
+								?>
+								</ul>
+								<input type="hidden" id="exclusion_ref" name="exclusion_ref" value="" />
+								<input type="hidden" id="exclusion_id" name="exclusion_id" value="" />
+							</div>
+						</div>
                         <div class="control-group">
                             <label for="threshold_notifications_type" class="form-nrequired control-label">Mandatory Threshold Notifications:</label>
                             <div class="controls">
@@ -1282,12 +1304,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                                 <strong>Note</strong>: When set to a value other than Disabled, notifications will be sent out to the identified user(s) whenever an evaluation is submitted in which a question is answered below the <strong>Minimum Pass</strong> set for that question.
                                             </div>
                             </div>
-                        </div>
-                        <h2>Time Release Options</h2>
-                        <div class="control-group">
-                            <table>
-                                <?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), 1); ?>
-                            </table>
                         </div>
                         <div class="form-actions">
                             <input type="submit" class="btn btn-primary" value="Proceed" />

@@ -101,9 +101,8 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll">Add Poll</a></li>
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&term=vote">Add Vote</a></li>
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&term=survey">Add Survey</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Poll</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&term=vote" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Vote</a></li>
 			</ul>
 		</div>
 		<div style="clear: both"></div>
@@ -215,11 +214,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 						$show_results = true;
 					}
 					$allow_main_load = true;
-				}
-				else if (($COMMUNITY_MEMBER && (int)$result['allow_member_results'] == 1)
-				|| (!(int) $community_details["community_protected"] && (int)$result['allow_public_results'] == 1)
-				|| (!(int) $community_details["community_registration"] && (int)$result['allow_troll_results'] == 1))
-				{
+				} elseif (($COMMUNITY_MEMBER && (int)$result["allow_member_results"] == 1) || (!(int) $community_details["community_protected"] && (int)$result["allow_public_results"] == 1) || (!(int) $community_details["community_registration"] && (int)$result["allow_troll_results"] == 1)) {
 					if ((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers)))
 					{
 						$allow_main_load = true;
@@ -227,25 +222,15 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 							$show_results = true;
 						}
 					} 
-				}
-				else if (($COMMUNITY_MEMBER && (int)$result['allow_member_results_after'] == 1)
-				|| (!(int) $community_details["community_protected"] && (int)$result['allow_public_results_after'] == 1)
-				|| (!(int) $community_details["community_registration"] && (int)$result['allow_troll_results_after'] == 1))
-				{
-					if (((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers))))
-					{
+				} elseif (($COMMUNITY_MEMBER && (int)$result["allow_member_results_after"] == 1) || (!(int) $community_details["community_protected"] && (int)$result["allow_public_results_after"] == 1) || (!(int) $community_details["community_registration"] && (int)$result["allow_troll_results_after"] == 1)) {
+					if (((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers)))) {
 						$allow_main_load = true;
-						if (isset($vote_record["votes"]) && (int)$vote_record["votes"] > 0) {
+						if (isset($vote_record["votes"]) && (int) $vote_record["votes"] > 0) {
 							$show_results = true;
 						}
 					}
-				}
-				else if (($COMMUNITY_MEMBER && (int)$result['allow_member_read'] == 1)
-				|| (!(int) $community_details["community_protected"] && (int)$result['allow_public_read'] == 1)
-				|| (!(int) $community_details["community_registration"] && (int)$result['allow_troll_read'] == 1))
-				{
-					if ((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers)))
-					{
+				} elseif (($COMMUNITY_MEMBER && (int)$result["allow_member_read"] == 1) || (!(int) $community_details["community_protected"] && (int) $result["allow_public_read"] == 1) || (!(int) $community_details["community_registration"] && (int) $result["allow_troll_read"] == 1)) {
+					if ((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers))) {
 						$allow_main_load = true;
 					}
 				}
@@ -258,7 +243,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 						echo	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "view-poll")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-poll&amp;id=".$result["cpolls_id"]."\">results</a>)" : "");
 					}
 					echo		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit-poll")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-poll&amp;id=".$result["cpolls_id"]."\">edit</a>)" : "");
-					echo		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "vote-poll")) ? ($allowVote && ((int)$result["release_date"] < mktime() && ((int)$result["release_until"] > mktime() || (int)$result["release_until"] == 0)) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=vote-poll&amp;id=".$result["cpolls_id"]."\">vote</a>)" : "") : "");
+					echo		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "vote-poll")) ? ($allowVote && ((int)$result["release_date"] < time() && ((int)$result["release_until"] > time() || (int)$result["release_until"] == 0)) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=vote-poll&amp;id=".$result["cpolls_id"]."\">vote</a>)" : "") : "");
 					echo 		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) ? " (<a class=\"action\" href=\"javascript:pollDelete('".$result["cpolls_id"]."')\">delete</a>)" : "");
 					echo		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "my-votes")) ? (isset($vote_record["votes"]) && (int)$vote_record["votes"] > 0 ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=my-votes&amp;id=".$result["cpolls_id"]."\">history</a>)" : "") : "");
 					echo "		<div class=\"content-small\">".html_encode(limit_chars($result["poll_description"], 125))."</div>\n";
@@ -277,7 +262,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 		<?php
 	} else {
 		$NOTICE++;
-		$NOTICESTR[] = "There are currently no polls available in this community.<br /><br />".((communities_module_access($COMMUNITY_ID, $MODULE_ID, "add-poll")) ? "As a community adminstrator you can add polls by clicking <a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-poll\">Add Poll</a>." : "Please check back later.");
+		$NOTICESTR[] = "There are currently no polls available on this page.<br /><br />".(($COMMUNITY_ADMIN) ? "As a community adminstrator you can add polls by clicking <a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-poll\">Add Poll</a>." : "");
 
 		echo display_notice();
 	}

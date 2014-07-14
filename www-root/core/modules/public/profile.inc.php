@@ -40,7 +40,7 @@ if (!defined("PARENT_INCLUDED")) {
 	define("IN_PROFILE", true);
 	
 	$VALID_MIME_TYPES			= array("image/pjpeg" => "jpg", "image/jpeg" => "jpg", "image/jpg" => "jpg", "image/gif" => "gif", "image/png" => "png");
-	$VALID_MAX_FILESIZE			= 2097512; // 2MB
+	$VALID_MAX_FILESIZE			= MAX_UPLOAD_FILESIZE;
 	$VALID_MAX_DIMENSIONS		= array("photo-width" => 216, "photo-height" => 300, "thumb-width" => 75, "thumb-height" => 104);
 	$RENDER						= false;
 	
@@ -75,7 +75,19 @@ if (!defined("PARENT_INCLUDED")) {
 					break;
 					case "assistant-remove" :
 						profile_remove_assistant();
-					break;
+						break;
+					case "privacy-copyright-google-update" :
+						profile_copyright_update_google_privacy();
+						break;
+					case "privacy-copyright-update" :
+						profile_copyright_update();
+						break;
+					case "copyright-google-update" :
+						copyright_update_google_privacy();
+						break;
+					case "copyright-update" :
+						copyright_update();
+						break;
 				}
 			}
 			add_profile_sidebar();
@@ -101,20 +113,21 @@ function add_profile_sidebar () {
 	global $ENTRADA_ACL, $ENTRADA_USER, $db;
 
 	$sidebar_html  = "<ul class=\"menu\">";
-	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile\">Personal Information</a></li>\n";
-	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=privacy\">Privacy Settings</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile\">Personal Information</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=privacy\">Privacy Preferences</a></li>\n";
 	if (((defined("COMMUNITY_NOTIFICATIONS_ACTIVE")) && ((bool) COMMUNITY_NOTIFICATIONS_ACTIVE)) || ((defined("NOTIFICATIONS_ACTIVE")) && ((bool) NOTIFICATIONS_ACTIVE))) {
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=notifications\">Manage My Notifications</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=notifications\">Notification Preferences</a></li>\n";
 	}
 	if ($ENTRADA_ACL->isLoggedInAllowed('assistant_support', 'create')) {
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=assistants\">My Admin Assistants</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=assistants\">My Admin Assistants</a></li>\n";
 	}
 
 	if ($_SESSION["details"]["group"] == "student") {
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=mspr\">My MSPR</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile/observerships\">My Observerships</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile/gradebook\">My Gradebooks</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments\">My Assignments</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=mspr\">My MSPR</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile/observerships\">My Observerships</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile/gradebook\">My Gradebooks</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile/gradebook/assignments\">My Assignments</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile/eportfolio\">My ePortfolio</a></li>\n";
 	}
 	
 	$sidebar_html .= "</ul>";
@@ -171,9 +184,25 @@ function profile_update_personal_info() {
 			}
 		}
 	}
-	
-	if ((isset($_POST["prefix"])) && (@in_array(trim($_POST["prefix"]), $PROFILE_NAME_PREFIX))) {
-		$PROCESSED["prefix"] = trim($_POST["prefix"]);
+
+    if (isset($PROFILE_NAME_PREFIX) && is_array($PROFILE_NAME_PREFIX) && isset($_POST["prefix"]) && in_array($_POST["prefix"], $PROFILE_NAME_PREFIX)) {
+        /*
+         * To prevent students from providing a prefix when they shouldn't be setting
+         * one I need to know if they already have one or not.
+         */
+        if ($ENTRADA_USER->getGroup() == "student") {
+            $query = "SELECT `prefix` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->GetProxyId());
+            $prefix = $db->GetOne($query);
+        } else {
+            $prefix = false;
+        }
+
+        if (($ENTRADA_USER->getGroup() != "student") || $prefix) {
+            /*
+             * Doing this safe because we are checking that the value of $_POST["prefix"] is set in the $PROFILE_NAME_PREFIX array above.
+             */
+            $PROCESSED["prefix"] = $_POST["prefix"];
+        }
 	} else {
 		$PROCESSED["prefix"] = "";
 	}
@@ -186,7 +215,7 @@ function profile_update_personal_info() {
 		
 	if($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == "faculty") {
 		if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
-			if (@valid_address($email)) {
+			if (valid_address($email)) {
 				$PROCESSED["email"] = $email;
 			} else {
 				$ERROR++;
@@ -199,7 +228,7 @@ function profile_update_personal_info() {
 	}
 	
 	if ((isset($_POST["email_alt"])) && ($_POST["email_alt"] != "")) {
-		if (@valid_address(trim($_POST["email_alt"]))) {
+		if (valid_address(trim($_POST["email_alt"]))) {
 			$PROCESSED["email_alt"] = strtolower(trim($_POST["email_alt"]));
 		} else {
 			$ERROR++;
@@ -634,4 +663,160 @@ function profile_update_notifications() {
 	}
 }
 
+function profile_copyright_update_google_privacy() {
+	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
+
+	if ((bool) $GOOGLE_APPS["active"]) {
+		/**
+		 * This actually creates a Google Hosted Apps account associated with their profile.
+		 * Note: The sessions variable ($_SESSION["details"]["google_id"]) is being
+		 * changed in index.php on line 242 to opt-in, which is merely used in the logic
+		 * of the first-login page, but only if the user has no google id and hasn't opted out.
+		 */
+		if (isset($_POST["google_account"])) {
+			if ((int) trim($_POST["google_account"])) {
+				if (google_create_id()) {
+					$SUCCESS++;
+					$SUCCESSSTR[] = "<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.";
+				}
+			} else {
+				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
+			}
+		}
+	}
+
+	if (isset($_POST["copyright"])) {
+		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+		}
+	}
+
+	/**
+	 * This actually changes the privacy settings in their profile.
+	 * Note: The sessions variable ($_SESSION["details"]["privacy_level"]) is actually being
+	 * changed in index.php on line 268, so that the proper tabs are displayed.
+	 */
+	if ((isset($_POST["privacy_level"])) && ($privacy_level = (int) trim($_POST["privacy_level"]))) {
+		if ($privacy_level > MAX_PRIVACY_LEVEL) {
+			$privacy_level = MAX_PRIVACY_LEVEL;
+		}
+		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))){
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update privacy setting. Database said: ".$db->ErrorMsg());
+		}
+	}
+}
+
+function profile_copyright_update() {
+	/**
+	 * This actually changes the privacy settings in their profile.
+	 * Note: The sessions variable ($_SESSION["details"]["privacy_level"]) is actually being
+	 * changed in index.php on line 268, so that the proper tabs are displayed.
+	 */
+	global $db, $ERROR, $ERRORSTR, $ENTRADA_USER;
+
+	if (isset($_POST["copyright"])) {
+		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+		}
+	}
+
+	if ((isset($_POST["privacy_level"])) && ($privacy_level = (int) trim($_POST["privacy_level"]))) {
+		if ($privacy_level > MAX_PRIVACY_LEVEL) {
+			$privacy_level = MAX_PRIVACY_LEVEL;
+		}
+		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
+				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
+				exit;
+			} else {
+				header("Location: ".ENTRADA_URL);
+				exit;
+			}
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update privacy setting. Database said: ".$db->ErrorMsg());
+		}
+
+	}
+}
+
+function copyright_update_google_privacy() {
+	/**
+	 * This actually changes the copyright setting.
+	 */
+	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
+
+	if ((bool) $GOOGLE_APPS["active"]) {
+		/**
+		 * This actually creates a Google Hosted Apps account associated with their profile.
+		 * Note: The sessions variable ($_SESSION["details"]["google_id"]) is being
+		 * changed in index.php on line 242 to opt-in, which is merely used in the logic
+		 * of the first-login page, but only if the user has no google id and hasn't opted out.
+		 */
+		if (isset($_POST["google_account"])) {
+			if ((int) trim($_POST["google_account"])) {
+				if (google_create_id()) {
+					$SUCCESS++;
+					$SUCCESSSTR[] = "<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.";
+				}
+			} else {
+				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
+			}
+		}
+	}
+
+	if (isset($_POST["copyright"])) {
+		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
+				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
+				exit;
+			} else {
+				header("Location: ".ENTRADA_URL);
+				exit;
+			}
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+		}
+
+	}
+}
+
+function copyright_update() {
+	/**
+	 * This actually changes the copyright setting in their profile.
+	 */
+	global $db, $ERROR, $ERRORSTR, $ENTRADA_USER;
+
+	if (isset($_POST["copyright"])) {
+		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
+				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
+				exit;
+			} else {
+				header("Location: ".ENTRADA_URL);
+				exit;
+			}
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+		}
+
+	}
+}
 ?>

@@ -110,7 +110,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 									$id = explode("_",$proxy_id);
 									$id = $id[1];
 									if ($proxy_id = clean_input($id, array("trim", "int"))) {
-										$PROCESSED["associated_audience"][] =  array("audience_type"=>"students","audience_value"=>$proxy_id);
+										$PROCESSED["associated_audience"][] =  array("audience_type"=>"student","audience_value"=>$proxy_id);
 									}
 								}
 							}
@@ -241,6 +241,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 						if ($ERROR) {
 							echo display_error();
 						}
+                        $query = "SELECT * FROM `assignments` WHERE `notice_id` = ".$db->qstr($NOTICE_ID)." AND `assignment_active` = 1";
+                        $notice_assignment = $db->GetRow($query);
+                        if ($notice_assignment) {
+                            echo display_notice("<strong>Please Note</strong>: This notice is meant to ");
+                        }
 						?>
 						<div class="row-fluid">	
 							<a href="<?php echo ENTRADA_URL; ?>/admin/notices?section=report&amp;notice_id=<?php echo $NOTICE_ID;?>" class="pull-right btn btn-primary btn-large"><i class="icon-flag icon-white"></i> View Notice Statistics</a>
@@ -298,8 +303,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 											parameters: {
 												'options_for' : audience_type,
 												'org_id' : org_id,
-												'associated_cohort' : $('associated_cohort').value,
-												'associated_student' : $('associated_student').value
+												'associated_cohort' : jQuery('#associated_cohort').val(),
+												'associated_student' : jQuery('#associated_student').val(),
+												'associated_faculty' : jQuery('#associated_faculty').val(),
+												'associated_staff' : jQuery('#associated_staff').val(),
+												'associated_course_list' : jQuery('#associated_course_list').val()
 											},
 											method: 'post',
 											onLoading: function() {
@@ -373,7 +381,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 
 							function addAudience(element, audience_id) {
 								if (!$('audience_'+element)) {
-									$('audience_list').innerHTML += '<li class="' + ((audience_id == 'students' || audience_id == 'faculty' || audience_id == 'staff' )? 'user' : 'group') + '" id="audience_'+element+'" style="cursor: move;">'+$($(element).value+'_label').innerHTML+'<img src="<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif" onclick="removeAudience(\''+element+'\', \''+audience_id+'\');" class="list-cancel-image" /></li>';
+									$('audience_list').innerHTML += '<li class="' + ((audience_id == 'student' || audience_id == 'faculty' || audience_id == 'staff' )? 'user' : 'group') + '" id="audience_'+element+'" style="cursor: move;">'+$($(element).value+'_label').innerHTML+'<img src="<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif" onclick="removeAudience(\''+element+'\', \''+audience_id+'\');" class="list-cancel-image" /></li>';
 									$$('#audience_list div').each(function (e) { e.hide(); });
 
 									Sortable.destroy('audience_list');

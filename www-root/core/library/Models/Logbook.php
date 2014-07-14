@@ -24,7 +24,7 @@ class Models_Logbook {
         if (!$logged_objectives) {
             $logged_objectives = array();
             foreach ($this->logbook_entries as $entry) {
-                if (!key_exists($entry->getCourseID(), $logged_objectives)) {
+                if (!array_key_exists($entry->getCourseID(), $logged_objectives)) {
                     $logged_objectives[$entry->getCourseID()] = array();
                 }
                 if (@count($entry->getObjectives())) {
@@ -44,10 +44,10 @@ class Models_Logbook {
             foreach ($course_objectives as $course_objective) {
                 $objective = Models_Objective::fetchRow($course_objective["objective_id"]);
                 if ($objective && $objective->getLoggable()) {
-                    if (!key_exists($course_objective["course_id"], $required_objectives)) {
+                    if (!array_key_exists($course_objective["course_id"], $required_objectives)) {
                         $required_objectives[$course_objective["course_id"]] = array();
                     }
-                    if (!key_exists($course_objective["course_id"], $logged_objectives) || !key_exists($objective->getID(), $logged_objectives[$course_objective["course_id"]])) {
+                    if (!array_key_exists($course_objective["course_id"], $logged_objectives) || !array_key_exists($objective->getID(), $logged_objectives[$course_objective["course_id"]])) {
                         $required_objectives[$course_objective["course_id"]][$objective->getID()] = $objective;
                     }
                 }
@@ -96,6 +96,39 @@ class Models_Logbook {
                     }
                     if (!$descendant_ids && $objective->getLoggable()) {
                         $objectives[$objective->getID()] = $objective;
+                    }
+                }
+            }
+        }
+        return $objectives;
+    }
+    
+    public function getAllRequiredObjectivesMobile($course_id = false) {
+        global $db;
+        
+        if (!$course_id) {
+            $course_id = $this->getCourseID();
+        }
+        
+        $objectives = array();
+        
+        $query = "SELECT `objective_id` FROM `course_objectives`
+                    ".($course_id ? "WHERE `course_id` = ".$db->qstr($course_id) : "");
+        $objective_ids = $db->GetAll($query);
+        if ($objective_ids) {
+            $objective_ids_array = $objective_ids;
+            foreach ($objective_ids as $objective_id) {
+                $objective = Models_Objective::fetchRow($objective_id["objective_id"]);
+                if ($objective) {
+                    $descendant_ids = Models_Objective::getChildIDs($objective_id["objective_id"]);
+                    foreach ($descendant_ids as $descendant_id) {
+                        $descendant = Models_Objective::fetchRow($descendant_id);
+                        if ($descendant && $descendant->getLoggable() && !(Models_Objective::getChildIDs($descendant_id))) {
+                            $objectives[$descendant->getID()] = $descendant->toArray();
+                        }
+                    }
+                    if (!$descendant_ids && $objective->getLoggable()) {
+                        $objectives[$objective->getID()] = $objective->toArray();
                     }
                 }
             }
@@ -161,7 +194,7 @@ class Models_Logbook {
     
     public static function getAgeRanges () {
         global $db;
-       echo $query = "SELECT * FROM `logbook_lu_ageranges` WHERE `agerange_active` = 1";
+        $query = "SELECT * FROM `logbook_lu_ageranges` WHERE `agerange_active` = 1";
         $ageranges = $db->GetAll($query);
         if ($ageranges) {
             return $ageranges;

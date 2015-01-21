@@ -1,0 +1,10 @@
+%CONTACT_NAME%,
+
+This is an automatically generated message to inform you that the following Queen's University medical learners are scheduled to stay in <strong>%APARTMENT_TITLE%</strong>. 
+
+%OCCUPANTS_AND_DATES%
+
+Should you have any questions regarding the accommodation list, please feel free to contact %REGIONALED_CONTACT% at %REGIONALED_EMAIL%. 
+
+Sincerely,
+%APPLICATION_NAME%

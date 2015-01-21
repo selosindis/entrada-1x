@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<mysqldump xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<database name="entrada">
+	<table_data name="event_attendance">
+	<row>
+		<field name="eattendance_id">1</field>
+		<field name="event_id">1</field>
+		<field name="proxy_id">1</field>
+		<field name="updated_date">0</field>
+		<field name="updated_by">0</field>
+	</row>
+	</table_data>
+    <table_data name="portfolio-advisors">
+        <row>
+            <field name="padvisor_id">1</field>
+            <field name="proxy_id">2</field>
+            <field name="portfolio_id" xsi:nil="true" />
+            <field name="active">1</field>
+        </row>
+    </table_data>
+</database>
+</mysqldump>

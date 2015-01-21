@@ -1,0 +1,13 @@
+.project
+nbproject
+.tmproj
+.DS_Store
+.htaccess
+.idea
+www-root/core/config/config.inc.php
+www-root/calendars
+www-root/syllabi
+*.buildpath
+*.eclipse.*.prefs
+*.swp
+.settings

@@ -42,17 +42,15 @@ $org_blacklist = array (1);
 
 $query = "SELECT a.`course_id`, a.`course_code`
             FROM `courses` AS a
-            JOIN `course_audience` AS b
-            ON a.`course_id` = b.`course_id`
-            JOIN `curriculum_periods` AS c
-            ON b.`cperiod_id` = c.`cperiod_id`
+            JOIN `curriculum_periods` AS b
+            ON a.`curriculum_type_id` = b.`curriculum_type_id`
             WHERE a.`sync_ldap` = '1'
-            AND a.`organisation_id` NOT IN(".implode(",",$org_blacklist).")
+            AND a.`organisation_id` NOT IN(".implode(",", $org_blacklist).")
             AND a.`course_active` = '1'
-            AND b.`audience_active` = '1'
-            AND c.`active` = '1'
-            AND UNIX_TIMESTAMP(NOW()) > c.`start_date` - 1209600 
-            AND UNIX_TIMESTAMP(NOW()) < c.`finish_date`";
+            AND b.`active` = '1'
+            AND UNIX_TIMESTAMP(NOW()) > b.`start_date` - 1209600 
+            AND UNIX_TIMESTAMP(NOW()) < b.`finish_date`
+            GROUP BY a.`course_id`";
 $results = $db->GetAll($query);
 if ($results) {
     foreach ($results as $result) {

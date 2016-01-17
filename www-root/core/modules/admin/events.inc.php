@@ -63,9 +63,6 @@ if(!defined("PARENT_INCLUDED")) {
 		 */
 		if ($ENTRADA_ACL->amIAllowed("eventcontent", "update", false)) {
 			switch ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]) {
-				case "admin" :
-					$admin_wording = "Administrator View";
-				break;
 				case "pcoordinator" :
 					$admin_wording = "Coordinator View";
 				break;
@@ -76,13 +73,14 @@ if(!defined("PARENT_INCLUDED")) {
 				case "lecturer" :
 					$admin_wording = "Teacher View";
 				break;
+				case "admin" :
 				default :
-					$admin_wording = "";
+					$admin_wording = "Administrator View";
 				break;
 			}
 
 			$sidebar_html  = "<ul class=\"menu none\">\n";
-			$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE."/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => false, "section" => false)) : "")."\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>Student View</span></a></li>\n";
+			$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE."/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => false, "section" => false)) : "")."\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>Learner View</span></a></li>\n";
 			if ($admin_wording) {
 				$sidebar_html .= "<li><a href=\"".ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => "manage")) : "")."\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>".html_encode($admin_wording)."</span></a></li>\n";
 			}

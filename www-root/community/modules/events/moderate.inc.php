@@ -171,7 +171,7 @@ if ($RECORD_ID) {
 				{
 					id:				'requestDialog',
 					width:			350,
-					height:			75,
+					height:			100,
 					title:			'Release Confirmation',
 					className:		'medtech',
 					okLabel:		'Yes',
@@ -186,15 +186,17 @@ if ($RECORD_ID) {
 			);
 		}
 	</script>
-<div id="module-header">
-	<?php
-	if ($total_pages > 1) {
-		echo "<div id=\"pagination-links\">\n";
-		echo "Pages: ".$pagination->GetPageLinks();
-		echo "</div>\n";
-	}
-	?>
-</div>
+    <div id="module-header">
+        <?php
+        if ($total_pages > 1) {
+            echo "<div class=\"pagination pagination-right\">";
+            echo "    <ul>";
+            echo        $pagination->GetPageLinks();
+            echo "    </ul>\n";
+            echo "</div>\n";
+        }
+        ?>
+    </div>
 	<?php
 		$query		= "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`username`
 						FROM `community_events` AS a

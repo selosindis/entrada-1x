@@ -57,8 +57,13 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));		
 		if($result) {			
 			if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result['course_id'], $result['organisation_id']), 'read')) {
+                $is_administrator = false;
+
+                if ($ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
+                    $is_administrator	= true;
+                }
 				$accesses = $result["accesses"];
-				if(($result["release_date"]) && ($result["release_date"] > time())) {
+				if(!$is_administrator && ($result["release_date"]) && ($result["release_date"] > time())) {
 					$TITLE	= "Not Available";
 					$BODY	= display_notice(array("The link that you are trying to access is not available until <strong>".date(DEFAULT_DATE_FORMAT, $result["release_date"])."</strong>.<br /><br />For further information or to contact a teacher, please see the <a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"font-weight: bold\">event page</a>."));
 
@@ -68,7 +73,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					}
 					exit;
 				} else {
-					if(($result["release_until"]) && ($result["release_until"] < time())) {
+					if(!$is_administrator && ($result["release_until"]) && ($result["release_until"] < time())) {
 						$TITLE	= "Not Available";
 						$BODY	= display_notice(array("The link that you are trying to access was only available until <strong>".date(DEFAULT_DATE_FORMAT, $result["release_until"])."</strong>.<br /><br />For further information or to contact a teacher, please see the <a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"font-weight: bold\">event page</a>."));
 

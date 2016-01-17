@@ -47,11 +47,12 @@ $community_url	= "";
 
 $logged_in		= (((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) ? true : false);
 $user_proxy_id 	= (isset($ENTRADA_USER) && $ENTRADA_USER ? $ENTRADA_USER->getID() : 0);
+$user_private_hash = "";
 
 /**
  * Check for PATH_INFO to process the url and get the module.
  */
-if(isset($_SERVER["PATH_INFO"])) {
+if (isset($_SERVER["PATH_INFO"])) {
 	$tmp_url		= array();
 	$tmp_page_url 	= array();
 	$path_info		= explode(":", clean_input($_SERVER["PATH_INFO"], array("trim", "lower")));
@@ -59,18 +60,18 @@ if(isset($_SERVER["PATH_INFO"])) {
 	/**
 	 * Check if there is any path details provided
 	 */
-	if((isset($path_info[0])) && ($tmp_path = explode("/", $path_info[0])) && (is_array($tmp_path))) {
+	if ((isset($path_info[0])) && ($tmp_path = explode("/", $path_info[0])) && (is_array($tmp_path))) {
 		foreach($tmp_path as $directory) {
 			$directory = clean_input($directory, array("trim", "credentials"));
 
-			if($directory != "rss" && $directory != "rss10" && $directory != "rss20" && $directory) {
+			if ($directory != "rss" && $directory != "rss10" && $directory != "rss20" && $directory) {
 				$tmp_url[] = $directory;
 			} elseif ($directory == "rss" || $directory == "rss10" || $directory == "rss20") {
 				$feed_type = $directory;
 			}
 		}
 
-		if((is_array($tmp_url)) && (count($tmp_url))) {
+		if ((is_array($tmp_url)) && (count($tmp_url))) {
 			$community_url = "/".implode("/", $tmp_url);
 		}
 	}
@@ -81,7 +82,7 @@ if(isset($_SERVER["PATH_INFO"])) {
 	if ((isset($path_info[1])) && ($tmp_page = explode("/", $path_info[1])) && (is_array($tmp_page))) {
 		foreach($tmp_page as $page_url) {
 			$page_url = clean_input($page_url, array("trim", "credentials"));
-			if(($page_url != "calendar.ics") && ($page_url != "ics") && ($page_url != "rss") && ($page_url != "rss10") && ($page_url != "rss20")) {
+			if (($page_url != "calendar.ics") && ($page_url != "ics") && ($page_url != "rss") && ($page_url != "rss10") && ($page_url != "rss20")) {
 				$tmp_page_url[] = $page_url;
 			} elseif (($page_url == "calendar.ics") || ($page_url == "ics") || ($page_url == "rss") || ($page_url == "rss10") || ($page_url == "rss20")) {
 				$feed_type = $page_url;
@@ -89,6 +90,13 @@ if(isset($_SERVER["PATH_INFO"])) {
 		}
 
 		$page_url = implode("/", $tmp_page_url);
+	}
+
+	/**
+	 * Check if there is a private hash
+	 */
+	if ((isset($path_info[2])) && (substr($path_info[2], 0, 8) == "private-") && ($tmp_input = str_ireplace("private-", "", $path_info[2]))) {
+		$user_private_hash = $tmp_input;
 	}
 }
 
@@ -128,65 +136,109 @@ if ($page_id) {
 			if (($page_record) && ((int) $page_record["community_protected"]) == 1 || ((int) $page_record["allow_public_view"]) == 0) {
 
 				if (!$logged_in) {
-					if (!isset($_SERVER["PHP_AUTH_USER"])) {
-						http_authenticate();
-					} else {
-						require_once("Entrada/authentication/authentication.class.php");
-
-						$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
-						$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
-						$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
-
-						$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
-						$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
-
-						$auth->setUserAuthentication($username, $password, AUTH_METHOD);
-						$result = $auth->Authenticate(
-												array(
-														"id",
-														"prefix",
-														"firstname",
-														"lastname",
-														"email",
-														"telephone",
-														"role",
-														"group",
-														"access_starts",
-														"access_expires",
-														"last_login",
-														"privacy_level"
-													)
-												);
-						if ($result["STATUS"] == "success") {
-							if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
-								$ERROR++;
-								application_log("error", "User[".$username."] tried to access account prior to activation date.");
-							} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
-								$ERROR++;
-								application_log("error", "User[".$username."] tried to access account after expiration date.");
-							} else {
-								$user_proxy_id	= $result["ID"];
-								$user_firstname	= $result["FIRSTNAME"];
-								$user_lastname	= $result["LASTNAME"];
-								$user_email		= $result["EMAIL"];
-								$user_role		= $result["ROLE"];
-								$user_group		= $result["GROUP"];
-
-								$member = $db->GetRow("SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($user_proxy_id)." AND `community_id` = ".$db->qstr($page_record["community_id"])." AND `member_active` = '1'");
-								if ((!$member && $page_record["allow_troll_view"] ==  0) || ($member && $page_record["allow_member_view"] == 0 && $member["member_acl"] == 0)) {
-									exit;
-								}
+					if ($user_private_hash) {
+						$query = "  SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, a.`grad_year`, b.`role`, b.`group`, b.`organisation_id`, b.`access_expires`
+									FROM `" . AUTH_DATABASE . "`.`user_data` AS a
+									LEFT JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
+									ON b.`user_id` = a.`id`
+									WHERE b.`private_hash` = " . $db->qstr($user_private_hash) . "
+									AND b.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+									AND b.`account_active` = 'true'
+									AND (b.`access_starts`='0' OR b.`access_starts` <= " . $db->qstr(time()) . ")
+									AND (b.`access_expires`='0' OR b.`access_expires` >= " . $db->qstr(time()) . ")
+									GROUP BY a.`id`";
+						$result = $db->GetRow($query);
+						if ($result) {
+							// If $ENTRADA_USER was previously initialized in init.inc.php before the
+							// session was authorized it is set to false and needs to be re-initialized.
+							if ($ENTRADA_USER == false) {
+								$ENTRADA_USER = User::get($result["id"]);
 							}
+							$_SESSION["details"]["id"] = $user_proxy_id = $result["id"];
+							$_SESSION["details"]["access_id"] = $ENTRADA_USER->getAccessId();
+							$_SESSION["details"]["username"] = $user_username = $result["username"];
+							$_SESSION["details"]["firstname"] = $user_firstname = $result["firstname"];
+							$_SESSION["details"]["lastname"] = $user_lastname = $result["lastname"];
+							$_SESSION["details"]["email"] = $user_email = $result["email"];
+							$_SESSION["details"]["role"] = $user_role = $result["role"];
+							$_SESSION["details"]["group"] = $user_group = $result["group"];
+							$_SESSION["details"]["organisation_id"] = $user_organisation_id = $result["organisation_id"];
+							$_SESSION["details"]["app_id"] = AUTH_APP_ID;
+							$_SESSION["details"]["grad_year"] = $result["grad_year"];
+							$_SESSION["details"]["expires"] = $result["access_expires"];
 						} else {
-							$ERROR++;
-							application_log("access", $result["MESSAGE"]);
+							/**
+							 * If the query above fails, redirect them back here but without the
+							 * private hash which will trigger the HTTP Authentication.
+							 */
+							header("Location: ".COMMUNITY_URL."/feeds".$path_info[0].":".$path_info[1]);
+							exit;
 						}
-
-						if ($ERROR) {
+					} else {
+						/**
+						 * If they are not already authenticated, and they don't have a private
+						 * hash in the URL, then send them through to HTTP authentication.
+						 */
+						if (!isset($_SERVER["PHP_AUTH_USER"])) {
 							http_authenticate();
-						}
+						} else {
+							require_once("Entrada/authentication/authentication.class.php");
 
-						unset($username, $password);
+							$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
+							$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+							$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
+
+							$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
+							$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
+
+							$auth->setUserAuthentication($username, $password, AUTH_METHOD);
+							$result = $auth->Authenticate(
+								array(
+									"id",
+									"prefix",
+									"firstname",
+									"lastname",
+									"email",
+									"telephone",
+									"role",
+									"group",
+									"access_starts",
+									"access_expires",
+									"last_login",
+									"privacy_level"
+								)
+							);
+							if ($result["STATUS"] == "success") {
+								if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
+									$ERROR++;
+									application_log("error", "User[".$username."] tried to access account prior to activation date.");
+								} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
+									$ERROR++;
+									application_log("error", "User[".$username."] tried to access account after expiration date.");
+								} else {
+									$user_proxy_id	= $result["ID"];
+									$user_firstname	= $result["FIRSTNAME"];
+									$user_lastname	= $result["LASTNAME"];
+									$user_email		= $result["EMAIL"];
+									$user_role		= $result["ROLE"];
+									$user_group		= $result["GROUP"];
+
+									$member = $db->GetRow("SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($user_proxy_id)." AND `community_id` = ".$db->qstr($page_record["community_id"])." AND `member_active` = '1'");
+									if ((!$member && $page_record["allow_troll_view"] ==  0) || ($member && $page_record["allow_member_view"] == 0 && $member["member_acl"] == 0)) {
+										exit;
+									}
+								}
+							} else {
+								$ERROR++;
+								application_log("access", $result["MESSAGE"]);
+							}
+
+							if ($ERROR) {
+								http_authenticate();
+							}
+
+							unset($username, $password);
+						}
 					}
 				}
 			}
@@ -262,65 +314,109 @@ if ($page_id) {
 			if (($page_record) && ((int) $page_record["community_protected"]) == 1 || ((int) $page_record["allow_public_view"]) == 0) {
 
 				if (!$logged_in) {
-					if (!isset($_SERVER["PHP_AUTH_USER"])) {
-						http_authenticate();
-					} else {
-						require_once("Entrada/authentication/authentication.class.php");
-
-						$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
-						$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
-						$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
-
-						$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
-						$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
-
-						$auth->setUserAuthentication($username, $password, AUTH_METHOD);
-						$result = $auth->Authenticate(
-												array(
-														"id",
-														"prefix",
-														"firstname",
-														"lastname",
-														"email",
-														"telephone",
-														"role",
-														"group",
-														"access_starts",
-														"access_expires",
-														"last_login",
-														"privacy_level"
-													)
-												);
-						if ($result["STATUS"] == "success") {
-							if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
-								$ERROR++;
-								application_log("error", "User[".$username."] tried to access account prior to activation date.");
-							} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
-								$ERROR++;
-								application_log("error", "User[".$username."] tried to access account after expiration date.");
-							} else {
-								$user_proxy_id	= $result["ID"];
-								$user_firstname	= $result["FIRSTNAME"];
-								$user_lastname	= $result["LASTNAME"];
-								$user_email		= $result["EMAIL"];
-								$user_role		= $result["ROLE"];
-								$user_group		= $result["GROUP"];
-
-								$member = $db->GetRow("SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($user_proxy_id)." AND `community_id` = ".$db->qstr($page_record["community_id"])." AND `member_active` = '1'");
-								if ((!$member && $page_record["allow_troll_view"] ==  0) || ($member && $page_record["allow_member_view"] == 0 && $member["member_acl"] == 0)) {
-									exit;
-								}
+					if ($user_private_hash) {
+						$query = "  SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, a.`grad_year`, b.`role`, b.`group`, b.`organisation_id`, b.`access_expires`
+									FROM `" . AUTH_DATABASE . "`.`user_data` AS a
+									LEFT JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
+									ON b.`user_id` = a.`id`
+									WHERE b.`private_hash` = " . $db->qstr($user_private_hash) . "
+									AND b.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+									AND b.`account_active` = 'true'
+									AND (b.`access_starts`='0' OR b.`access_starts` <= " . $db->qstr(time()) . ")
+									AND (b.`access_expires`='0' OR b.`access_expires` >= " . $db->qstr(time()) . ")
+									GROUP BY a.`id`";
+						$result = $db->GetRow($query);
+						if ($result) {
+							// If $ENTRADA_USER was previously initialized in init.inc.php before the
+							// session was authorized it is set to false and needs to be re-initialized.
+							if ($ENTRADA_USER == false) {
+								$ENTRADA_USER = User::get($result["id"]);
 							}
+							$_SESSION["details"]["id"] = $user_proxy_id = $result["id"];
+							$_SESSION["details"]["access_id"] = $ENTRADA_USER->getAccessId();
+							$_SESSION["details"]["username"] = $user_username = $result["username"];
+							$_SESSION["details"]["firstname"] = $user_firstname = $result["firstname"];
+							$_SESSION["details"]["lastname"] = $user_lastname = $result["lastname"];
+							$_SESSION["details"]["email"] = $user_email = $result["email"];
+							$_SESSION["details"]["role"] = $user_role = $result["role"];
+							$_SESSION["details"]["group"] = $user_group = $result["group"];
+							$_SESSION["details"]["organisation_id"] = $user_organisation_id = $result["organisation_id"];
+							$_SESSION["details"]["app_id"] = AUTH_APP_ID;
+							$_SESSION["details"]["grad_year"] = $result["grad_year"];
+							$_SESSION["details"]["expires"] = $result["access_expires"];
 						} else {
-							$ERROR++;
-							application_log("access", $result["MESSAGE"]);
+							/**
+							 * If the query above fails, redirect them back here but without the
+							 * private hash which will trigger the HTTP Authentication.
+							 */
+							header("Location: ".COMMUNITY_URL."/feeds".$path_info[0].":".$path_info[1]);
+							exit;
 						}
-
-						if ($ERROR) {
+					} else {
+						/**
+						 * If they are not already authenticated, and they don't have a private
+						 * hash in the URL, then send them through to HTTP authentication.
+						 */
+						if (!isset($_SERVER["PHP_AUTH_USER"])) {
 							http_authenticate();
-						}
+						} else {
+							require_once("Entrada/authentication/authentication.class.php");
 
-						unset($username, $password);
+							$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
+							$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+							$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
+
+							$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
+							$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
+
+							$auth->setUserAuthentication($username, $password, AUTH_METHOD);
+							$result = $auth->Authenticate(
+								array(
+									"id",
+									"prefix",
+									"firstname",
+									"lastname",
+									"email",
+									"telephone",
+									"role",
+									"group",
+									"access_starts",
+									"access_expires",
+									"last_login",
+									"privacy_level"
+								)
+							);
+							if ($result["STATUS"] == "success") {
+								if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
+									$ERROR++;
+									application_log("error", "User[".$username."] tried to access account prior to activation date.");
+								} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
+									$ERROR++;
+									application_log("error", "User[".$username."] tried to access account after expiration date.");
+								} else {
+									$user_proxy_id	= $result["ID"];
+									$user_firstname	= $result["FIRSTNAME"];
+									$user_lastname	= $result["LASTNAME"];
+									$user_email		= $result["EMAIL"];
+									$user_role		= $result["ROLE"];
+									$user_group		= $result["GROUP"];
+
+									$member = $db->GetRow("SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($user_proxy_id)." AND `community_id` = ".$db->qstr($page_record["community_id"])." AND `member_active` = '1'");
+									if ((!$member && $page_record["allow_troll_view"] ==  0) || ($member && $page_record["allow_member_view"] == 0 && $member["member_acl"] == 0)) {
+										exit;
+									}
+								}
+							} else {
+								$ERROR++;
+								application_log("access", $result["MESSAGE"]);
+							}
+
+							if ($ERROR) {
+								http_authenticate();
+							}
+
+							unset($username, $password);
+						}
 					}
 				}
 			}
@@ -472,65 +568,109 @@ if ($page_id) {
 				if (($discussion_record) && ((int) $discussion_record["community_protected"]) == 1 || ((int) $discussion_record["allow_public_view"]) == 0 || ((int) $discussion_record["allow_public_read"]) == 0) {
 
 					if (!$logged_in) {
-						if (!isset($_SERVER["PHP_AUTH_USER"])) {
-							http_authenticate();
-						} else {
-							require_once("Entrada/authentication/authentication.class.php");
-
-							$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
-							$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
-							$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
-
-							$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
-							$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
-
-							$auth->setUserAuthentication($username, $password, AUTH_METHOD);
-							$result = $auth->Authenticate(
-													array(
-															"id",
-															"prefix",
-															"firstname",
-															"lastname",
-															"email",
-															"telephone",
-															"role",
-															"group",
-															"access_starts",
-															"access_expires",
-															"last_login",
-															"privacy_level"
-														)
-													);
-							if ($result["STATUS"] == "success") {
-								if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
-									$ERROR++;
-									application_log("error", "User[".$username."] tried to access account prior to activation date.");
-								} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
-									$ERROR++;
-									application_log("error", "User[".$username."] tried to access account after expiration date.");
-								} else {
-									$user_proxy_id	= $result["ID"];
-									$user_firstname	= $result["FIRSTNAME"];
-									$user_lastname	= $result["LASTNAME"];
-									$user_email		= $result["EMAIL"];
-									$user_role		= $result["ROLE"];
-									$user_group		= $result["GROUP"];
-
-									$member = $db->GetRow("SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($user_proxy_id)." AND `community_id` = ".$db->qstr($page_record["community_id"])." AND `member_active` = '1'");
-									if ((!$member && $page_record["allow_troll_view"] ==  0) || ($member && $page_record["allow_member_view"] == 0 && $member["member_acl"] == 0)) {
-										exit;
-									}
+						if ($user_private_hash) {
+							$query = "  SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, a.`grad_year`, b.`role`, b.`group`, b.`organisation_id`, b.`access_expires`
+									FROM `" . AUTH_DATABASE . "`.`user_data` AS a
+									LEFT JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
+									ON b.`user_id` = a.`id`
+									WHERE b.`private_hash` = " . $db->qstr($user_private_hash) . "
+									AND b.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+									AND b.`account_active` = 'true'
+									AND (b.`access_starts`='0' OR b.`access_starts` <= " . $db->qstr(time()) . ")
+									AND (b.`access_expires`='0' OR b.`access_expires` >= " . $db->qstr(time()) . ")
+									GROUP BY a.`id`";
+							$result = $db->GetRow($query);
+							if ($result) {
+								// If $ENTRADA_USER was previously initialized in init.inc.php before the
+								// session was authorized it is set to false and needs to be re-initialized.
+								if ($ENTRADA_USER == false) {
+									$ENTRADA_USER = User::get($result["id"]);
 								}
+								$_SESSION["details"]["id"] = $user_proxy_id = $result["id"];
+								$_SESSION["details"]["access_id"] = $ENTRADA_USER->getAccessId();
+								$_SESSION["details"]["username"] = $user_username = $result["username"];
+								$_SESSION["details"]["firstname"] = $user_firstname = $result["firstname"];
+								$_SESSION["details"]["lastname"] = $user_lastname = $result["lastname"];
+								$_SESSION["details"]["email"] = $user_email = $result["email"];
+								$_SESSION["details"]["role"] = $user_role = $result["role"];
+								$_SESSION["details"]["group"] = $user_group = $result["group"];
+								$_SESSION["details"]["organisation_id"] = $user_organisation_id = $result["organisation_id"];
+								$_SESSION["details"]["app_id"] = AUTH_APP_ID;
+								$_SESSION["details"]["grad_year"] = $result["grad_year"];
+								$_SESSION["details"]["expires"] = $result["access_expires"];
 							} else {
-								$ERROR++;
-								application_log("access", $result["MESSAGE"]);
+								/**
+								 * If the query above fails, redirect them back here but without the
+								 * private hash which will trigger the HTTP Authentication.
+								 */
+								header("Location: ".COMMUNITY_URL."/feeds".$path_info[0].":".$path_info[1]);
+								exit;
 							}
-
-							if ($ERROR) {
+						} else {
+							/**
+							 * If they are not already authenticated, and they don't have a private
+							 * hash in the URL, then send them through to HTTP authentication.
+							 */
+							if (!isset($_SERVER["PHP_AUTH_USER"])) {
 								http_authenticate();
-							}
+							} else {
+								require_once("Entrada/authentication/authentication.class.php");
 
-							unset($username, $password);
+								$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
+								$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+								$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
+
+								$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
+								$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
+
+								$auth->setUserAuthentication($username, $password, AUTH_METHOD);
+								$result = $auth->Authenticate(
+									array(
+										"id",
+										"prefix",
+										"firstname",
+										"lastname",
+										"email",
+										"telephone",
+										"role",
+										"group",
+										"access_starts",
+										"access_expires",
+										"last_login",
+										"privacy_level"
+									)
+								);
+								if ($result["STATUS"] == "success") {
+									if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
+										$ERROR++;
+										application_log("error", "User[".$username."] tried to access account prior to activation date.");
+									} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
+										$ERROR++;
+										application_log("error", "User[".$username."] tried to access account after expiration date.");
+									} else {
+										$user_proxy_id	= $result["ID"];
+										$user_firstname	= $result["FIRSTNAME"];
+										$user_lastname	= $result["LASTNAME"];
+										$user_email		= $result["EMAIL"];
+										$user_role		= $result["ROLE"];
+										$user_group		= $result["GROUP"];
+
+										$member = $db->GetRow("SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($user_proxy_id)." AND `community_id` = ".$db->qstr($page_record["community_id"])." AND `member_active` = '1'");
+										if ((!$member && $page_record["allow_troll_view"] ==  0) || ($member && $page_record["allow_member_view"] == 0 && $member["member_acl"] == 0)) {
+											exit;
+										}
+									}
+								} else {
+									$ERROR++;
+									application_log("access", $result["MESSAGE"]);
+								}
+
+								if ($ERROR) {
+									http_authenticate();
+								}
+
+								unset($username, $password);
+							}
 						}
 					}
 				}
@@ -605,65 +745,109 @@ if ($page_id) {
 				$discussion_record 	= $db->GetRow($query);
 				if (($discussion_record) && ((int) $discussion_record["community_protected"]) == 1 || ((int) $discussion_record["allow_public_view"]) == 0 || ((int) $discussion_record["allow_public_read"]) == 0) {
 					if (!$logged_in) {
-						if (!isset($_SERVER["PHP_AUTH_USER"])) {
-							http_authenticate();
-						} else {
-							require_once("Entrada/authentication/authentication.class.php");
-
-							$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
-							$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
-							$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
-
-							$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
-							$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
-
-							$auth->setUserAuthentication($username, $password, AUTH_METHOD);
-							$result = $auth->Authenticate(
-													array(
-															"id",
-															"prefix",
-															"firstname",
-															"lastname",
-															"email",
-															"telephone",
-															"role",
-															"group",
-															"access_starts",
-															"access_expires",
-															"last_login",
-															"privacy_level"
-														)
-													);
-							if ($result["STATUS"] == "success") {
-								if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
-									$ERROR++;
-									application_log("error", "User[".$username."] tried to access account prior to activation date.");
-								} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
-									$ERROR++;
-									application_log("error", "User[".$username."] tried to access account after expiration date.");
-								} else {
-									$user_proxy_id	= $result["ID"];
-									$user_firstname	= $result["FIRSTNAME"];
-									$user_lastname	= $result["LASTNAME"];
-									$user_email		= $result["EMAIL"];
-									$user_role		= $result["ROLE"];
-									$user_group		= $result["GROUP"];
-
-									$member = $db->GetRow("SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($user_proxy_id)." AND `community_id` = ".$db->qstr($discussion_record["community_id"])." AND `member_active` = '1'");
-									if ((!$member && $page_record["allow_troll_view"] ==  0) || ($member && $page_record["allow_member_view"] == 0 && $member["member_acl"] == 0)) {
-										exit;
-									}
+						if ($user_private_hash) {
+							$query = "  SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, a.`grad_year`, b.`role`, b.`group`, b.`organisation_id`, b.`access_expires`
+									FROM `" . AUTH_DATABASE . "`.`user_data` AS a
+									LEFT JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
+									ON b.`user_id` = a.`id`
+									WHERE b.`private_hash` = " . $db->qstr($user_private_hash) . "
+									AND b.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+									AND b.`account_active` = 'true'
+									AND (b.`access_starts`='0' OR b.`access_starts` <= " . $db->qstr(time()) . ")
+									AND (b.`access_expires`='0' OR b.`access_expires` >= " . $db->qstr(time()) . ")
+									GROUP BY a.`id`";
+							$result = $db->GetRow($query);
+							if ($result) {
+								// If $ENTRADA_USER was previously initialized in init.inc.php before the
+								// session was authorized it is set to false and needs to be re-initialized.
+								if ($ENTRADA_USER == false) {
+									$ENTRADA_USER = User::get($result["id"]);
 								}
+								$_SESSION["details"]["id"] = $user_proxy_id = $result["id"];
+								$_SESSION["details"]["access_id"] = $ENTRADA_USER->getAccessId();
+								$_SESSION["details"]["username"] = $user_username = $result["username"];
+								$_SESSION["details"]["firstname"] = $user_firstname = $result["firstname"];
+								$_SESSION["details"]["lastname"] = $user_lastname = $result["lastname"];
+								$_SESSION["details"]["email"] = $user_email = $result["email"];
+								$_SESSION["details"]["role"] = $user_role = $result["role"];
+								$_SESSION["details"]["group"] = $user_group = $result["group"];
+								$_SESSION["details"]["organisation_id"] = $user_organisation_id = $result["organisation_id"];
+								$_SESSION["details"]["app_id"] = AUTH_APP_ID;
+								$_SESSION["details"]["grad_year"] = $result["grad_year"];
+								$_SESSION["details"]["expires"] = $result["access_expires"];
 							} else {
-								$ERROR++;
-								application_log("access", $result["MESSAGE"]);
+								/**
+								 * If the query above fails, redirect them back here but without the
+								 * private hash which will trigger the HTTP Authentication.
+								 */
+								header("Location: ".COMMUNITY_URL."/feeds".$path_info[0].":".$path_info[1]);
+								exit;
 							}
-
-							if ($ERROR) {
+						} else {
+							/**
+							 * If they are not already authenticated, and they don't have a private
+							 * hash in the URL, then send them through to HTTP authentication.
+							 */
+							if (!isset($_SERVER["PHP_AUTH_USER"])) {
 								http_authenticate();
-							}
+							} else {
+								require_once("Entrada/authentication/authentication.class.php");
 
-							unset($username, $password);
+								$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
+								$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+								$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
+
+								$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
+								$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
+
+								$auth->setUserAuthentication($username, $password, AUTH_METHOD);
+								$result = $auth->Authenticate(
+									array(
+										"id",
+										"prefix",
+										"firstname",
+										"lastname",
+										"email",
+										"telephone",
+										"role",
+										"group",
+										"access_starts",
+										"access_expires",
+										"last_login",
+										"privacy_level"
+									)
+								);
+								if ($result["STATUS"] == "success") {
+									if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
+										$ERROR++;
+										application_log("error", "User[".$username."] tried to access account prior to activation date.");
+									} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
+										$ERROR++;
+										application_log("error", "User[".$username."] tried to access account after expiration date.");
+									} else {
+										$user_proxy_id	= $result["ID"];
+										$user_firstname	= $result["FIRSTNAME"];
+										$user_lastname	= $result["LASTNAME"];
+										$user_email		= $result["EMAIL"];
+										$user_role		= $result["ROLE"];
+										$user_group		= $result["GROUP"];
+
+										$member = $db->GetRow("SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($user_proxy_id)." AND `community_id` = ".$db->qstr($page_record["community_id"])." AND `member_active` = '1'");
+										if ((!$member && $page_record["allow_troll_view"] ==  0) || ($member && $page_record["allow_member_view"] == 0 && $member["member_acl"] == 0)) {
+											exit;
+										}
+									}
+								} else {
+									$ERROR++;
+									application_log("access", $result["MESSAGE"]);
+								}
+
+								if ($ERROR) {
+									http_authenticate();
+								}
+
+								unset($username, $password);
+							}
 						}
 					}
 				}
@@ -739,8 +923,11 @@ if ($page_id) {
 			application_log("error", "The community module [".$module_name."] requested by proxy_id [".$user_proxy_id."] was unable to be loaded by the serve-feed.php file.");
 		break;
 	}
+	/**
+	 * @todo Does this elseif need to be here? If $_SERVER["PATH_INFO"] is not set, $community_url and $feed_type never get initialized and thus could not be equal to $_SERVER["PATH_INFO"].
+	 *
+	 */
 } elseif ($community_url.($feed_type ? "/".$feed_type : "") == $_SERVER["PATH_INFO"]) {
-
 	$query				= "	SELECT *
 							FROM `communities`
 							WHERE `community_id` = ".$db->qstr($community_id)."
@@ -904,9 +1091,9 @@ if ($page_id) {
 				/**
 				 * Setup Zend_Translate for language file support.
 				 */
-				if ($ENTRADA_CACHE) Zend_Translate::setCache($ENTRADA_CACHE);
+				if ($ENTRADA_CACHE) Entrada_Translate::setCache($ENTRADA_CACHE);
 
-				$translate = new Zend_Translate("array", ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
+				$translate = new Entrada_Translate("array", ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
 
 				foreach ($rss_output as $result) {
 

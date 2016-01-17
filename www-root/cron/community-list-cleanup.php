@@ -21,6 +21,7 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
+$db->debug = true;
 
 if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"]) {
     require_once("Entrada/mail-list/mail-list.class.php");
@@ -39,6 +40,16 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
                     foreach ($lists as $list) {
                         $query = "SELECT a.*, b.`cmlmember_id`, b.`member_active` as `list_member_active`, b.`list_administrator`, c.`email` FROM `community_members` AS a
                                     LEFT JOIN `community_mailing_list_members` AS b
+                                    ON a.`community_id` = b.`community_id`
+                                    AND a.`proxy_id` = b.`proxy_id`
+                                    JOIN `".AUTH_DATABASE."`.`user_data` AS c
+                                    ON a.`proxy_id` = c.`id`
+                                    WHERE a.`community_id` = ".$db->qstr($list["community_id"])."
+                                    AND c.`email` LIKE '%@%'
+                                    GROUP BY a.`community_id`, a.`proxy_id`
+                                    UNION
+                                    SELECT b.*, a.`cmlmember_id`, a.`member_active` as `list_member_active`, a.`list_administrator`, c.`email` FROM `community_mailing_list_members` AS a
+                                    LEFT JOIN `community_members` AS b
                                     ON a.`community_id` = b.`community_id`
                                     AND a.`proxy_id` = b.`proxy_id`
                                     JOIN `".AUTH_DATABASE."`.`user_data` AS c
@@ -143,7 +154,7 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
             /**
              * Found old lock file get rid of it
              */
-            if (filemtime(COMMUNITY_MAIL_LIST_CLEANUP_LOCK) < time() - COMMUNITY_MAIL_LIST_CLEANUP_TIMEOUT ) {
+            if (1 || filemtime(COMMUNITY_MAIL_LIST_CLEANUP_LOCK) < time() - COMMUNITY_MAIL_LIST_CLEANUP_TIMEOUT ) {
                 if (!@unlink(COMMUNITY_MAIL_LIST_CLEANUP_LOCK)) {
                     application_log("error", "Unable to delete mail-list cleanup lock file: ".COMMUNITY_MAIL_LIST_CLEANUP_LOCK);
                 }

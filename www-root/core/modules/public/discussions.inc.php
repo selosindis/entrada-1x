@@ -82,7 +82,7 @@ if(!defined("PARENT_INCLUDED")) {
 						}
 					}
 				}
-				header("Location: ".ENTRADA_URL."/events?".(($USE_QUERY) ? ((isset($_GET["drid"])) ? "drid" : "rid")."=".$RESULT_ID : "id=".$EVENT_ID)."#event_comments");
+				header("Location: ".ENTRADA_URL."/events?".(($USE_QUERY) ? ((isset($_GET["drid"])) ? "drid" : "rid")."=".$RESULT_ID : "id=".$EVENT_ID)."#event-comments-section");
 				exit;
 			} else {
 				header("Location: ".ENTRADA_URL."/events");

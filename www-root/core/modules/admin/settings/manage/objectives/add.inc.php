@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * This file is used to add events to the entrada.events table.
+ * This file is used to add objectives in the entrada.global_lu_objectives table.
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
@@ -24,58 +24,38 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('objective', 'create', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/settings/manage/".$MODULE."\\'', 15000)";
+} elseif (!$ENTRADA_ACL->amIAllowed("objective", "create", false)) {
+	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/settings/manage/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("section" => "add"))."&amp;id=".$ORGANISATION_ID, "title" => "Adding Objective");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("section" => "add"))."&amp;id=".$ORGANISATION_ID, "title" => "Add Curriculum Tag");
 	
 	if (isset($_GET["parent_id"]) && ($id = clean_input($_GET["parent_id"], array("notags", "trim")))) {
-				$PARENT_ID = $id;
+		$PARENT_ID = $id;
 	}
 	
 	if (isset($_GET["mode"]) && $_GET["mode"] == "ajax") {
 		$MODE = "ajax";
 	}
-	
+
 	if ($MODE == "ajax" && isset($PARENT_ID) && $PARENT_ID != 0) {
 		ob_clear_open_buffers();
 		
 		switch ($STEP) {
 			case 2 :
 				/**
-				* Required field "objective_name" / Objective Name
-				*/
-				if (isset($_POST["objective_name"]) && ($objective_name = clean_input($_POST["objective_name"], array("notags", "trim")))) {
-					$PROCESSED["objective_name"] = $objective_name;
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "The <strong>Objective Name</strong> is a required field.";
-				}
-
-				/**
-				* Non-required field "objective_code" / Objective Code
-				*/
-				if (isset($_POST["objective_code"]) && ($objective_code = clean_input($_POST["objective_code"], array("notags", "trim")))) {
-					$PROCESSED["objective_code"] = $objective_code;
-				} else {
-					$PROCESSED["objective_code"] = "";
-				}
-
-				/**
-				* Non-required field "objective_parent" / Objective Parent
-				*/
+				 * Non-required field "objective_parent" / Tag Parent
+				 */
 				if (isset($_POST["objective_id"]) && ($objective_parent = clean_input($_POST["objective_id"], array("int")))) {
 					$PROCESSED["objective_parent"] = $objective_parent;
 
@@ -83,10 +63,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				} else {
 					$PROCESSED["objective_parent"] = 0;
 				}
-				
+
 				/**
-				* Non-required field "objective_description" / Objective Description
-				*/
+				 * Non-required field "objective_code" / Tag Code
+				 */
+				if (isset($_POST["objective_code"]) && ($objective_code = clean_input($_POST["objective_code"], array("notags", "trim")))) {
+					$PROCESSED["objective_code"] = $objective_code;
+				} else {
+					$PROCESSED["objective_code"] = "";
+				}
+
+				/**
+				 * Required field "objective_name" / Tag Name
+				 */
+				if (isset($_POST["objective_name"]) && ($objective_name = clean_input($_POST["objective_name"], array("notags", "trim")))) {
+					$PROCESSED["objective_name"] = $objective_name;
+				} else {
+					add_error("The <strong>Tag Name</strong> is a required field.");
+				}
+
+				/**
+				 * Non-required field "objective_description" / Tag Description
+				 */
 				if (isset($_POST["objective_description"]) && ($objective_description = clean_input($_POST["objective_description"], array("notags", "trim")))) {
 					$PROCESSED["objective_description"] = $objective_description;
 				} else {
@@ -94,8 +92,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				}
 				
 				/**
-				* Non-required field "objective_loggable" / Objective Loggable
-				*/
+				 * Non-required field "objective_loggable" / Tag loggable in Experience Logbook.
+				 */
 				if (isset($_POST["objective_loggable"]) && $_POST["objective_loggable"]) {
 					$PROCESSED["objective_loggable"] = 1;
 				} else {
@@ -103,15 +101,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				}
 
 				/**
-				* Required field "objective_order" / Objective Order
-				*/
-				if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
+				 * Required field "objective_order" / Display Order
+				 */
+				if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int"))) && $objective_order > 0) {
 					$PROCESSED["objective_order"] = clean_input($_POST["objective_order"], array("int")) - 1;
 				} else {
 					$PROCESSED["objective_order"] = 0;
 				}
-				
-				if (!$ERROR && isset($PROCESSED["objective_order"])) {
+
+				if (!has_error()) {
 					$query = "SELECT a.`objective_id` FROM `global_lu_objectives` AS a
 								LEFT JOIN `objective_organisation` AS b
 								ON a.`objective_id` = b.`objective_id`
@@ -126,8 +124,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						foreach ($objectives as $objective) {
 							$count++;
 							if (!$db->AutoExecute("global_lu_objectives", array("objective_order" => $count), "UPDATE", "`objective_id` = ".$db->qstr($objective["objective_id"]))) {
-								$ERROR++;
-								$ERRORSTR[] = "There was a problem adding this objective to the system. The system administrator was informed of this error; please try again later.";
+								add_error("There was a problem adding this objective to the system. The system administrator was informed of this error; please try again later.");
 
 								application_log("error", "There was an error updating an objective. Database said: ".$db->ErrorMsg());
 							}
@@ -135,18 +132,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					}
 				}
 
-				if (!$ERROR) {
+				if (!has_error()) {
 					$PROCESSED["updated_date"] = time();
 					$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 					if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "INSERT")) {
 						if ($OBJECTIVE_ID = $db->Insert_Id()) {
 							$PROCESSED["objective_id"] = $OBJECTIVE_ID;
-							$params = array("objective_id"=>$OBJECTIVE_ID,"organisation_id"=>$ORGANISATION_ID);
-							if(!$db->AutoExecute("objective_organisation", $params, "INSERT")) {
-								$ERROR++;
-								echo json_encode(array("status" => "error", "msg" => "Error associating organisation with objective."));
-							}
+
+							$objective = array(
+									"objective_id" => $OBJECTIVE_ID,
+									"organisation_id" => $ORGANISATION_ID,
+							);
+
+							$db->AutoExecute("objective_organisation", $objective, "INSERT");
 						}
 					} else {
 						$ERROR++;
@@ -154,10 +153,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					}
 				}
 				
-				if (!$ERROR) {
+				if (!has_error()) {
 					echo json_encode(array("status" => "success", "updates" => $PROCESSED));
 				}
-				
 			break;
 			case 1 :
 			default :
@@ -165,11 +163,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				?>
 				<script type="text/javascript">
 					function selectObjective(parent_id, objective_id) {
-						new Ajax.Updater('m_selectObjectiveField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/objectives-list.api.php', {parameters: {'pid': parent_id, 'id': objective_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
+						new Ajax.Updater('m_selectObjectiveField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/objectives-list.api.php', {
+							parameters: {
+								'section': 'add',
+								'id': objective_id,
+								'pid': parent_id,
+								'organisation_id': <?php echo $ORGANISATION_ID; ?>
+							}
+						});
 						return;
 					}
 					function selectOrder(objective_id, parent_id) {
-						new Ajax.Updater('m_selectOrderField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/objectives-list.api.php', {parameters: {'id': objective_id, 'type': 'order', 'pid': parent_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
+						new Ajax.Updater('m_selectOrderField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/objectives-list.api.php', {
+							parameters: {
+								'section': 'add',
+								'type': 'order',
+								'id': objective_id,
+								'pid': parent_id,
+								'organisation_id': <?php echo $ORGANISATION_ID; ?>
+							}
+						});
 						return;
 					}
 					jQuery(function(){
@@ -177,60 +190,52 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						selectOrder(<?php echo $PARENT_ID; ?>, <?php echo $PARENT_ID; ?>);
 					});
 				</script>
-				<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "add", "step" => 2, "mode" => "ajax")); ?>" method="post">
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
-					<colgroup>
-						<col style="width: 30%" />
-						<col style="width: 70%" />
-					</colgroup>
-					<thead>
-						<tr>
-							<td colspan="2"><h2>Objective Details</h2></td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td><label for="objective_code" class="form-nrequired">Objective Code:</label></td>
-							<td><input type="text" id="objective_code" name="objective_code" value="<?php echo ((isset($PROCESSED["objective_code"])) ? html_encode($PROCESSED["objective_code"]) : ""); ?>" maxlength="100" style="width: 300px" /></td>
-						</tr>
-						<tr>
-							<td><label for="objective_name" class="form-required">Objective Name:</label></td>
-							<td><input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($PROCESSED["objective_name"])) ? html_encode($PROCESSED["objective_name"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
-						</tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><label for="objective_description" class="form-nrequired">Objective Description: </label></td>
-							<td>
-								<textarea id="objective_description" name="objective_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["objective_description"])) ? html_encode($PROCESSED["objective_description"]) : ""); ?></textarea>
-							</td>
-						</tr>
-                        <tr>
-                            <td colspan="2">&nbsp;</td>
-                        </tr>
-                        <tr>
-                            <td style="vertical-align: top; padding-top: 15px"><label for="objective_loggable" class="form-nrequired">Objective Loggable:</label></td>
-                            <td style="vertical-align: top"><input type="checkbox" id="objective_loggable" name="objective_loggable" value="1"<?php echo (isset($PROCESSED["objective_loggable"]) && $PROCESSED["objective_loggable"] ? " checked=\"checked\"" : ""); ?> /></td>
-                        </tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top; padding-top: 15px"><label for="objective_id" class="form-required">Objective Parent:</label></td>
-							<td style="vertical-align: top"><div id="m_selectObjectiveField_<?php echo $time; ?>"></div></td>
-						</tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top"><label for="objective_order" class="form-required">Objective Order:</label></td>
-							<td style="vertical-align: top"><div id="m_selectOrderField_<?php echo $time; ?>"></div></td>
-						</tr>
-						
-					</tbody>
-					</table>
-				</form>
+				<div class="row-fluid">
+					<h2>Tag Details</h2>
+
+					<form id="add-curriculum-tag-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "add", "step" => 2, "mode" => "ajax")); ?>" method="post" class="form-horizontal">
+						<div class="control-group">
+							<label for="objective_id" class="form-required control-label">Tag Parent</label>
+							<div class="controls">
+								<div id="m_selectObjectiveField_<?php echo $time; ?>"></div>
+							</div>
+						</div>
+
+						<div class="control-group">
+							<label for="objective_code" class="form-nrequired control-label">Tag Code</label>
+							<div class="controls">
+								<input type="text" id="objective_code" name="objective_code" value="<?php echo ((isset($PROCESSED["objective_code"])) ? html_encode($PROCESSED["objective_code"]) : ""); ?>" class="span5">
+							</div>
+						</div>
+
+						<div class="control-group">
+							<label for="objective_name" class="form-required control-label">Tag Name</label>
+							<div class="controls">
+								<input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($PROCESSED["objective_name"])) ? html_encode($PROCESSED["objective_name"]) : ""); ?>" class="span11">
+							</div>
+						</div>
+
+						<div class="control-group">
+							<label for="objective_description" class="form-nrequired control-label">Tag Description</label>
+							<div class="controls">
+								<textarea id="objective_description" name="objective_description" class="span11"><?php echo ((isset($PROCESSED["objective_description"])) ? html_encode($PROCESSED["objective_description"]) : ""); ?></textarea>
+							</div>
+						</div>
+
+						<div class="control-group">
+							<div class="controls">
+								<label class="checkbox"><input type="checkbox" id="objective_loggable" name="objective_loggable" value="1"<?php echo (isset($PROCESSED["objective_loggable"]) && $PROCESSED["objective_loggable"] ? " checked=\"checked\"" : ""); ?> /> This curriculum tag should be loggable in Experience Logbook.</label>
+							</div>
+						</div>
+
+						<div class="control-group">
+							<label for="objective_order" class="form-required control-label">Display Order</label>
+							<div class="controls">
+								<div id="m_selectOrderField_<?php echo $time; ?>"></div>
+							</div>
+						</div>
+					</form>
+				</div>
 				<?php
 			break;
 		}
@@ -241,17 +246,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	switch ($STEP) {
 		case 2 :
 			/**
-			 * Required field "objective_name" / Objective Name
-			 */
-			if (isset($_POST["objective_name"]) && ($objective_name = clean_input($_POST["objective_name"], array("notags", "trim")))) {
-				$PROCESSED["objective_name"] = $objective_name;
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Objective Name</strong> is a required field.";
-			}
-
-			/**
-			 * Non-required field "objective_code" / Objective Code
+			 * Non-required field "objective_code" / Tag Set Code
 			 */
 			if (isset($_POST["objective_code"]) && ($objective_code = clean_input($_POST["objective_code"], array("notags", "trim")))) {
 				$PROCESSED["objective_code"] = $objective_code;
@@ -260,16 +255,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			}
 
 			/**
-			 * Required field "objective_order" / Objective Order
+			 * Required field "objective_name" / Tag Set Name
 			 */
-			if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
-				$PROCESSED["objective_order"] = clean_input($_POST["objective_order"], array("int")) - 1;
+			if (isset($_POST["objective_name"]) && ($objective_name = clean_input($_POST["objective_name"], array("notags", "trim")))) {
+				$PROCESSED["objective_name"] = $objective_name;
 			} else {
-				$PROCESSED["objective_order"] = 0;
+				add_error("The <strong>Tag Set Name</strong> is a required field.");
 			}
 
 			/**
-			 * Non-required field "objective_description" / Objective Description
+			 * Non-required field "objective_description" / Tag Set Description
 			 */
 			if (isset($_POST["objective_description"]) && ($objective_description = clean_input($_POST["objective_description"], array("notags", "trim")))) {
 				$PROCESSED["objective_description"] = $objective_description;
@@ -277,7 +272,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				$PROCESSED["objective_description"] = "";
 			}
 
-			if (!$ERROR && isset($PROCESSED["objective_order"])) {
+			/**
+			 * Required field "objective_order" / Display Order
+			 */
+			if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
+				$PROCESSED["objective_order"] = clean_input($_POST["objective_order"], array("int")) - 1;
+			} else {
+				$PROCESSED["objective_order"] = 0;
+			}
+
+			if (!has_error()) {
 				$query = "SELECT a.`objective_id` FROM `global_lu_objectives` AS a
 							LEFT JOIN `objective_organisation` AS b
 							ON a.`objective_id` = b.`objective_id`
@@ -292,8 +296,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					foreach ($objectives as $objective) {
 						$count++;
 						if (!$db->AutoExecute("global_lu_objectives", array("objective_order" => $count), "UPDATE", "`objective_id` = ".$db->qstr($objective["objective_id"]))) {
-							$ERROR++;
-							$ERRORSTR[] = "There was a problem adding this objective to the system. The system administrator was informed of this error; please try again later.";
+							add_error("There was a problem adding this objective to the system. The system administrator was informed of this error; please try again later.");
 
 							application_log("error", "There was an error updating an objective. Database said: ".$db->ErrorMsg());
 						}
@@ -301,84 +304,72 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				}
 			}
 			
-			if (!$ERROR) {
+			if (!has_error()) {
 				$PROCESSED["objective_parent"] = 0;
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "INSERT")) {
 					if ($OBJECTIVE_ID = $db->Insert_Id()) {
-						if ($PROCESSED["objective_parent"] == 0) {
-							$params = array("objective_id"=>$OBJECTIVE_ID,"organisation_id"=>$ORGANISATION_ID);
-							if($db->AutoExecute("objective_organisation", $params, "INSERT")){
-								$url = ENTRADA_URL . "/admin/settings/manage/objectives?org=".$ORGANISATION_ID;
-								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["objective_name"])."</strong> to the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-								application_log("success", "New Objective [".$OBJECTIVE_ID."] added to the system.");
-							} else{
-								$ERROR++;
-								$ERRORSTR[] = "There was a problem associating this objective to your organisation. The system administrator was informed of this error; please try again later.";
 
-								application_log("error", "There was an error associating an objective with an organisation. Database said: ".$db->ErrorMsg());
-							}
-						} else {
-							$params = array("objective_id"=>$OBJECTIVE_ID,"organisation_id"=>$ORGANISATION_ID);
-							if($db->AutoExecute("objective_organisation", $params, "INSERT")) {
-								$url = ENTRADA_URL . "/admin/settings/manage/objectives?org=".$ORGANISATION_ID;
-								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["objective_name"])."</strong> to the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-								application_log("success", "New Objective [".$OBJECTIVE_ID."] added to the system.");
-							} else{
-								$ERROR++;
-								$ERRORSTR[] = "There was a problem associating this objective to your organisation. The system administrator was informed of this error; please try again later.";
+						$objective = array(
+								"objective_id" => $OBJECTIVE_ID,
+								"organisation_id" => $ORGANISATION_ID,
+								"audience_type" => "COURSE",
+								"audience_value" => "all",
+								"updated_date" => time(),
+								"updated_by" => $ENTRADA_USER->getID()
+						);
 
-								application_log("error", "There was an error associating an objective with an organisation. Database said: ".$db->ErrorMsg());
-							}
+						if ($db->AutoExecute("objective_audience", $objective, "INSERT") && $db->AutoExecute("objective_organisation", $objective, "INSERT")) {
+							$url = ENTRADA_URL . "/admin/settings/manage/objectives?org=".$ORGANISATION_ID;
+
+							add_success("You have successfully added <strong>".html_encode($PROCESSED["objective_name"])."</strong> to the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+
+							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+
+							application_log("success", "New Objective [".$OBJECTIVE_ID."] added to the system.");
+						} else{
+							add_error("There was a problem adding this Curriculum Tag to the system. The system administrator was informed of this error; please try again later.");
+
+							application_log("error", "There was an error associating an objective with an organisation. Database said: ".$db->ErrorMsg());
 						}
 					}
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "There was a problem inserting this objective into the system. The system administrator was informed of this error; please try again later.";
+					add_error("There was a problem inserting this objective into the system. The system administrator was informed of this error; please try again later.");
 
 					application_log("error", "There was an error inserting an objective. Database said: ".$db->ErrorMsg());
 				}
 			}
 
-			if ($ERROR) {
+			if (has_error()) {
 				$STEP = 1;
 			}
 		break;
 		case 1 :
 		default :
-			/*if (isset($_SESSION[APPLICATION_IDENTIFIER]["objectives"]["objective_parent"]) && ($objective_parent = (int) $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["objective_parent"])) {
-				$PROCESSED["objective_parent"] = $objective_parent;
-				
-			} else {*/
-				$PROCESSED["objective_parent"] = 0;
-			/*}*/
+			$PROCESSED["objective_parent"] = 0;
 		break;
 	}
 
 	// Display Content
 	switch ($STEP) {
 		case 2 :
-			if ($SUCCESS) {
+			if (has_success()) {
 				echo display_success();
 			}
 
-			if ($NOTICE) {
+			if (has_notice()) {
 				echo display_notice();
 			}
 
-			if ($ERROR) {
+			if (has_error()) {
 				echo display_error();
 			}
 		break;
 		case 1 :
-			
-			if ($ERROR) {
+		default:
+			if (has_error()) {
 				echo display_error();
 			}
 
@@ -395,67 +386,45 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						</script>";
 			$ONLOAD[] = "selectObjective(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
 			$ONLOAD[] = "selectOrder(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
-			
 			?>
-			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
-			<colgroup>
-				<col style="width: 30%" />
-				<col style="width: 70%" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td colspan="2"><h1>Objective Set Details</h1></td>
-				</tr>
-			</thead>
-			<tfoot>
-				<tr>
-					<td colspan="2" style="padding-top: 15px; text-align: right">
-						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/objectives?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td colspan="2">
-						<?php 
-							$objective_name = $translate->_("events_filter_controls");
-							add_notice("<strong>Note:</strong><br />If this is a parent for Curriculum Objectives please label it '".html_encode($objective_name["co"]["global_lu_objectives_name"])."'.<br />If this is a parent for Mandates Objectives (such as MCC Presentations) please label it '".html_encode($objective_name["cp"]["global_lu_objectives_name"])."'.");
-							echo display_notice();
-						?>
-					</td>
-				</tr>
-				<tr>
-					<td><label for="objective_code" class="form-nrequired">Objective Set Code:</label></td>
-					<td><input type="text" id="objective_code" name="objective_code" value="<?php echo ((isset($PROCESSED["objective_code"])) ? html_encode($PROCESSED["objective_code"]) : ""); ?>" maxlength="100" style="width: 300px" /></td>
-				</tr>
-				<tr>
-					<td><label for="objective_name" class="form-required">Objective Set Name:</label></td>
-					<td><input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($PROCESSED["objective_name"])) ? html_encode($PROCESSED["objective_name"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
-				</tr>
-				<tr>
-					<td colspan="2">&nbsp;</td>
-				</tr>
-				<tr>
-					<td style="vertical-align: top;"><label for="objective_description" class="form-nrequired">Objective Set Description: </label></td>
-					<td>
-						<textarea id="objective_description" name="objective_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["objective_description"])) ? html_encode($PROCESSED["objective_description"]) : ""); ?></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="2">&nbsp;</td>
-				</tr>
-				<tr>
-					<td style="vertical-align: top"><label for="objective_order" class="form-required">Objective Set Order:</label></td>
-					<td style="vertical-align: top"><div id="selectOrderField"></div></td>
-				</tr>
-			</tbody>
-			</table>
+			<h1>Add Curriculum Tag Set</h1>
+			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post" class="form-horizontal">
+				<div class="control-group">
+					<label for="objective_code" class="form-nrequired control-label">Tag Set Code</label>
+					<div class="controls">
+						<input type="text" id="objective_code" name="objective_code" value="<?php echo ((isset($PROCESSED["objective_code"])) ? html_encode($PROCESSED["objective_code"]) : ""); ?>" class="span5">
+					</div>
+				</div>
+
+				<div class="control-group">
+					<label for="objective_name" class="form-required control-label">Tag Set Name</label>
+					<div class="controls">
+						<input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($PROCESSED["objective_name"])) ? html_encode($PROCESSED["objective_name"]) : ""); ?>" class="span11">
+					</div>
+				</div>
+
+				<div class="control-group">
+					<label for="objective_description" class="form-nrequired control-label">Tag Set Description</label>
+					<div class="controls">
+						<textarea id="objective_description" name="objective_description" class="span11 expandable"><?php echo ((isset($PROCESSED["objective_description"])) ? html_encode($PROCESSED["objective_description"]) : ""); ?></textarea>
+					</div>
+				</div>
+
+				<div class="control-group">
+					<label for="objective_order" class="form-required control-label">Display Order</label>
+					<div class="controls">
+						<div id="selectOrderField"></div>
+					</div>
+				</div>
+
+				<div class="control-group">
+					<a href="<?php echo ENTRADA_URL; ?>/admin/settings/manage/objectives?org=<?php echo $ORGANISATION_ID;?>" class="btn"><?php echo $translate->_("global_button_cancel"); ?></a>
+					<div class="pull-right">
+						<input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
+					</div>
+				</div>
 			</form>
 			<?php
-		default:
 		break;
 	}
 }
-?>

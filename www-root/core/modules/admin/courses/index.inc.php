@@ -167,12 +167,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
 	$PAGE_NEXT	= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
 
-	echo "<h1>Manage " . $module_title . "</h1>\n";
+	echo "<h1>Manage " . $translate->_("courses") . "</h1>\n";
 
 	if ($ENTRADA_ACL->amIAllowed('course', 'create', false)) {
 		?>
 		<div class="pull-right clearfix space-below">
-				<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New <?php echo $module_singular_name; ?></a>
+				<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New <?php echo $translate->_("course"); ?></a>
 		</div>
 		<?php
 	}
@@ -329,19 +329,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                 echo "      </button>";
                                 echo "      <ul class=\"dropdown-menu toggle-left\">";
                                     if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
-                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $result["course_id"], "step" => false))."\" >Course Details</a></li>\n";
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $result["course_id"], "step" => false))."\" >Details</a></li>\n";
                                     }
                                     if($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), "read")) {
-                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $result["course_id"], "step" => false))."\" >Course Content</a></li>\n";
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $result["course_id"], "step" => false))."\" >Content</a></li>\n";
                                     }
                                     if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
-                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $result["course_id"], "step" => false))."\" >Course Enrolment</a></li>\n";
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $result["course_id"], "step" => false))."\" >Enrolment</a></li>\n";
                                     }
                                     if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
-                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $result["course_id"], "step" => false))."\">Course Groups</a></li>\n";
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $result["course_id"], "step" => false))."\">Groups</a></li>\n";
                                     }
                                     if($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
-                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\">Course Gradebook</a></li>";
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\">Gradebook</a></li>";
+                                    }
+                                    if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/reports?id=" . $result["course_id"] . "\" >Course Reports</a></li>\n";
                                     }
                                 echo "      </ul>";
                             } else {
@@ -365,18 +368,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	} else {
 		?>
 		<div class="display-notice">
-			<h3>No Available <?php echo $module_title; ?></h3>
-
-			<?php if ($ENTRADA_ACL->amIAllowed('course', 'create', false)) : ?>
-			There are currently no <?php echo strtolower($module_title); ?> available in the system.
-			<br /><br />
-			You should start by adding a new <?php echo strtolower($module_singular_name); ?> by clicking the <strong>Add <?php echo $module_title; ?></strong> link above.
-			<?php else : ?>
-			It appears that there are no <?php echo strtolower($module_title); ?> that you are able access in the system.
-			<br /><br />
-			If you believe you are receiving this message in error, please contact an administrator.
-			<?php endif; ?>
-		</div>
+			<h3>No Available <?php echo $translate->_("courses"); ?></h3>
+            <?php if ($ENTRADA_ACL->amIAllowed('course', 'create', false)) : ?>
+                There are currently no <?php echo strtolower($translate->_("courses")); ?> available in the system.
+                <br /><br />
+                You should start by adding a new <?php echo strtolower($translate->_("course")); ?> by clicking the <strong>Add <?php echo $translate->_("courses"); ?></strong> link above.
+            <?php else : ?>
+                It appears that there are no <?php echo strtolower($translate->_("courses")); ?> that you are able access in the system.
+                <br /><br />
+                If you believe you are receiving this message in error, please contact an administrator.
+            <?php endif; ?>
+        </div>
 		<?php
 	}
 

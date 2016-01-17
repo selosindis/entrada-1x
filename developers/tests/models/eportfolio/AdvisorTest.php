@@ -49,6 +49,11 @@ class AdvisorTest extends BaseTestCase
     public function tearDown() {
         parent::tearDown();
     }
+    
+    public static function setUpBeforeClass() {
+        parent::setUpBeforeClass();
+        require_once ("Models/eportfolio/Advisor.php");
+    }
 
     /**
      * Test inserting and fetching a record.
@@ -56,7 +61,7 @@ class AdvisorTest extends BaseTestCase
      * @covers Models_Eportfolio_Advisor::fetchRow
      */
     public function test_fetchRow() {
-        //expected\
+        //expected
         $test_padvisor = new Models_Eportfolio_Advisor($this->data);
         //actual
         $advisor = Models_Eportfolio_Advisor::fetchRow(2);

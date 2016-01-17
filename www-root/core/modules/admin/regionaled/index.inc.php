@@ -37,6 +37,12 @@ if (!defined("IN_REGIONALED")) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
+	$query = "	SELECT `proxy_id`
+				FROM `" . CLERKSHIP_DATABASE . "`.`apartment_regionaled_users`
+				WHERE `proxy_id` = " . $db->qstr($ENTRADA_USER->getId());
+	
+	$is_regionaled = $db->getOne($query);
+	if ($is_regionaled) {
 	?>
 	<h1>Regional Education</h1>
 
@@ -122,7 +128,10 @@ if (!defined("IN_REGIONALED")) {
 	}
 	?>
 	</div>
-
+	<?php
+	} 
+	?>
+	<h2 title="Unconfirmed Accommodation Assignments">Unconfirmed Accommodation Assignments</h2>	
 	<?php
 	$query = "	SELECT a.*, b.`apartment_title`, c.`region_name`, d.`id` AS `proxy_id`, d.`firstname`, d.`lastname`, e.`group` AS `learner_type`
 				FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS a
@@ -134,18 +143,21 @@ if (!defined("IN_REGIONALED")) {
 				ON d.`id` = a.`proxy_id`
 				LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS e
 				ON e.`user_id` = d.`id`
-				AND e.`group` IN ('student', 'Clerk', 'Resident')
+				JOIN `".CLERKSHIP_DATABASE."`.`apartment_contacts` f
+				ON f.`apartment_id` = a.`apartment_id`
+				JOIN `".AUTH_DATABASE."`.`departments` g
+				ON g.`department_id` = f.`department_id`
+				AND e.`group` IN ('student', 'Clerk')
 				AND e.`account_active` = 'true'
 				AND e.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 				WHERE a.`confirmed` = '0'
 				AND a.`inhabiting_finish` > UNIX_TIMESTAMP()
+				AND f.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId()) . "
 				GROUP BY d.`id`
 				ORDER BY a.`inhabiting_start` ASC";
 	$results = $db->GetAll($query);
 	if ($results) {
 		?>
-		<h2 title="Unconfirmed Accommodation Assignments">Unconfirmed Accommodation Assignments</h2>
-
 		<div id="unconfirmed-accommodation-assignments">
 			<div class="display-generic">
 				The following list of learners have been assigned accommodations but have not yet confirmed the assignment.
@@ -201,5 +213,10 @@ if (!defined("IN_REGIONALED")) {
 			</form>
 		</div>
 		<?php
+	} else {
+		$NOTICE++;
+		$NOTICESTR[] = "There are no learners that have not confirmed their accommodations in the system at this time.";
+
+		echo display_notice($NOTICESTR);
 	}
 }

@@ -29,11 +29,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('community', 'create')) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
+} elseif (!$ENTRADA_ACL->amIAllowed("community", "create")) {
+	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -675,26 +674,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                     ?>
                 </div>
                 <div class="control-group">
-                    <label class="control-label form-required" for="community_title">Community Name:</label>
+                    <label class="control-label form-required" for="community_title">Community Name</label>
                     <div class="controls">
                         <input type="text" id="community_title" name="community_title" value="<?php echo html_encode((isset($PROCESSED["community_title"]) && $PROCESSED["community_title"] ? $PROCESSED["community_title"] : "")); ?>" onkeyup="validateShortname(this.value)" />
                         <span class="content-small">(<strong>Example:</strong> Medicine Club)</span>
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label" for="community_keywords">Community Keywords:</label>
+                    <label class="control-label" for="community_keywords">Community Keywords</label>
                     <div class="controls">
                         <input type="text" id="community_keywords" name="community_keywords" value="<?php echo html_encode((isset($PROCESSED["community_keywords"]) && $PROCESSED["community_keywords"] ? $PROCESSED["community_keywords"] : "")); ?>"  />
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label" for="community_description">Community Description:</label>
+                    <label class="control-label" for="community_description">Community Description</label>
                     <div class="controls">
                         <textarea id="community_description" name="community_description"><?php echo html_encode((isset($PROCESSED["community_description"]) && $PROCESSED["community_description"] ? $PROCESSED["community_description"] : "")); ?></textarea>
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label form-required" for="community_shortname">Community Shortname:</label>
+                    <label class="control-label form-required" for="community_shortname">Community Shortname</label>
                     <div class="controls">
                         <input type="text" id="community_shortname" name="community_shortname" onkeyup="validateShortname(this.value)" value="<?php echo (isset($PROCESSED["community_shortname"]) && $PROCESSED["community_shortname"] ? $PROCESSED["community_shortname"] : "") ?>" />
                         <span class="content-small">(<strong>Example:</strong> medicine_club)</span>
@@ -738,7 +737,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                     } else {
                         ?>
                         <div class="control-group">
-                            <label class="control-label form-required" for="type_id">Community Type:</label>
+                            <label class="control-label form-required" for="type_id">Community Type</label>
                             <div class="controls">
                                  <?php
                                  echo "<select name=\"type_id\" id=\"type_id\">";
@@ -765,7 +764,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                 <div id="type_options"<?php echo (!isset($PROCESSED["octype_id"]) || !$PROCESSED["octype_id"] ? " style=\"display: none;\"" : ""); ?>>
 
                     <div class="control-group">
-                        <label class="control-label form-nrequired">Community Template:</label>
+                        <label class="control-label form-nrequired">Community Template</label>
                         <div class="controls">
                             <?php
                             if (isset($PROCESSED["octype_id"]) && $PROCESSED["octype_id"]) {
@@ -899,7 +898,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
                 <h3>Community Permissions</h3>
                 <div class="control-group">
-                    <label class="control-label form-nrequired">Access Permissions:</label>
+                    <label class="control-label form-nrequired">Access Permissions</label>
                     <div class="controls">
                         <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Access Permissions">
                             <colgroup>
@@ -926,7 +925,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label form-nrequired">Registration Options:</label>
+                    <label class="control-label form-nrequired">Registration Options</label>
                     <div class="controls">
                         <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Registration Options">
                             <colgroup>
@@ -997,21 +996,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="vertical-align: top"><input type="radio" name="community_registration" id="community_registration_3" value="3" onclick="selectRegistrationOption('3')" style="vertical-align: middle"<?php echo (((isset($PROCESSED["community_registration"])) && ($PROCESSED["community_registration"] == 3)) ? " checked=\"checked\"" : ""); ?> /></td>
-                                    <td>
-                                        <label for="community_registration_3" class="normal-green">Community Registration</label>
-                                        <div class="content-small">Only members of the selected Communities can register to be part of this community.</div>
-                                        <div id="community_registration_show_communities" style="display: none; padding: 5px 5px 0px 5px">
-                                            <select id="community_registration_communities" name="community_registration_communities[]" multiple="multiple" size="10" style="width: 85%; height: 150px">
-                                                <?php
-                                                $COMMUNITIES_FETCH_CHILDREN = ((isset($community_communities)) ? $community_communities : array());
-                                                echo communities_fetch_children(0, false, 0, false, "select");
-                                                ?>
-                                            </select>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
                                     <td style="vertical-align: top"><input type="radio" name="community_registration" id="community_registration_4" value="4" onclick="selectRegistrationOption('4')" style="vertical-align: middle"<?php echo (((isset($PROCESSED["community_registration"])) && ($PROCESSED["community_registration"] == 4)) ? " checked=\"checked\"" : ""); ?> /></td>
                                     <td>
                                         <label for="community_registration_4" class="normal-green">Private Community</label>
@@ -1027,7 +1011,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                     ?>
                     <h3>Community Mailing List</h3>
                     <div class="control-group">
-                        <label class="control-label form-nrequired">Community Mailing List:</label>
+                        <label class="control-label form-nrequired">Community Mailing List</label>
                         <div class="controls">
                             <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Mailing List Mode">
                                 <colgroup>

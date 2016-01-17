@@ -22,12 +22,12 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQRESOURCES"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_MEDBIQRESOURCES")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read",false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read", false)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -35,61 +35,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQRESOURCES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	?>
-	<h1>Manage Medbiquitos Resources</h1>
+	<h1>Medbiquitous Resources</h1>
 
-	<div class="clearfix">
-		<div class="pull-right">
-			<a href="<?php echo ENTRADA_URL; ?>/admin/settings/manage/medbiqresources?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="btn btn-primary">Add New Medbiquitos Resource</a>
-		</div>
-
-	</div><br/>
+	<div class="row-fluid">
+        <span class="pull-right">
+            <a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/settings/manage/medbiqresources?section=add&amp;org=<?php echo $ORGANISATION_ID;?>"><i class="icon-plus-sign icon-white"></i> Add Resource</a>
+        </span>
+	</div>
+	<br />
 	<?php
-
-	/*
-	 * To change this template, choose Tools | Templates
-	 * and open the template in the editor.
-	 */
-	$query = "	SELECT * FROM `medbiq_resources`				
+	$query = "	SELECT * FROM `medbiq_resources`
 				WHERE `active` = '1' 
 				ORDER BY `resource` ASC";
-    
 	$results = $db->GetAll($query);
-
-	if($results){
-	?>
-	<form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/medbiqresources?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
-	<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Medbiq Resources">
-		<colgroup>
-			<col class="modified" />
-			<col class="title" />
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="modified">&nbsp;</td>
-				<td class="title">Resource</td>
-			</tr>
-		</thead>
-		<tbody>
-			<?php
-				foreach($results as $result){
-					echo "<tr><td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$result["resource_id"]."\"/></td>";
-					echo"<td><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqresources?section=edit&amp;org=".$ORGANISATION_ID."&amp;medbiq_resource_id=".$result["resource_id"]."\">".$result["resource"]."</a></td></tr>";
-				}
-			?>
-		</tbody>
-	</table>
-	<br/>
-	<input type="submit" class="btn btn-danger" value="Deactivate Selected" />
-	</form>
-	<?php
-
+	if ($results) {
+		?>
+		<form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/medbiqresources?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
+			<table class="table table-striped" summary="Medbiquitous Resources">
+				<colgroup>
+					<col style="width: 3%" />
+					<col style="width: 97%" />
+				</colgroup>
+				<tbody>
+					<?php
+					foreach($results as $result){
+						echo "<tr>";
+						echo "	<td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$result["resource_id"]."\"/></td>";
+						echo "	<td><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqresources?section=edit&amp;org=".$ORGANISATION_ID."&amp;medbiq_resource_id=".$result["resource_id"]."\">".$result["resource"]."</a></td>";
+						echo "</tr>";
+					}
+					?>
+				</tbody>
+			</table>
+			<input type="submit" class="btn btn-danger" value="Deactivate Selected" />
+		</form>
+		<?php
+	} else {
+		add_notice("There are currently no Medbiquitous Resources assigned to this organization.");
+		echo display_notice();
 	}
-	else{
-		$NOTICE++;
-		$NOTICESTR[] = "There are currently no Medbiquitous Resources assigned to this Organisation";
-		echo "<br/>".display_notice();
-
-	}
-
 }
-

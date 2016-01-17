@@ -104,19 +104,17 @@ if(isset($GROUP_ID) && isset($ACTION)) {
 						$nmembers_results		= false;
 						$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
 											FROM `".AUTH_DATABASE."`.`user_data` AS a
-											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+											JOIN `".AUTH_DATABASE."`.`user_access` AS b
 											ON a.`id` = b.`user_id`
-											WHERE
-											a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-											AND b.`group` = ".$db->qstr($GROUP)."
+											AND b.`organisation_id` = " . $db->qstr($ORGANISATION_ID) . "
+											WHERE b.`group` = ".$db->qstr($GROUP)."
 											".($ROLE != 'all' ? "AND b.`role` = ".$db->qstr($ROLE) : "")."
 											AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 											AND b.`account_active` = 'true'
 											AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 											AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-											GROUP BY a.`id`
 											ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-
+                        
 						//Fetch list of current members
 						$current_member_list	= array();
 						$query				= "SELECT * FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `active` = '1'";

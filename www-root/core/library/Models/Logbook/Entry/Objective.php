@@ -131,7 +131,7 @@ class Models_Logbook_Entry_Objective {
                 $result["objective"] = Models_Objective::fetchRow($result["objective_id"]);
             }
 			$leo = new self();
-			$entry_objective = $ao->fromArray($result);
+			$entry_objective = $leo->fromArray($result);
 		}
 		
         return $entry_objective;

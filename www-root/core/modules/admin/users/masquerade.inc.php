@@ -40,7 +40,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($PROXY_ID && $PROXY_ID != $_SESSION["details"]["id"]) {
-		$ENTRADA_USER = User::get($PROXY_ID);
 		
 		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROXY_ID);
 		$user_data = $db->GetRow($query);
@@ -64,6 +63,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                 session_destroy();
 
                 session_start();
+                $ENTRADA_USER = User::get($PROXY_ID);
                 $_SESSION["previous_session"] = $previous_session;
 
                 /**

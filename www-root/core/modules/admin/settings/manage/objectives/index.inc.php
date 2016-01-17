@@ -27,7 +27,7 @@
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 		header("Location: ".ENTRADA_URL);
 		exit;
 } elseif (!$ENTRADA_ACL->amIAllowed('objective', 'update', false)) {
@@ -42,52 +42,51 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/sortable_tree.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
-	echo "<h1>Manage Objective Sets</h1>";
-	if($ENTRADA_ACL->amIAllowed('objective', 'create', false)) {
+	echo "<h1>Curriculum Tag Sets</h1>";
+	if ($ENTRADA_ACL->amIAllowed("objective", "create", false)) {
 		?>
-		<div class="clearfix">
-			<div class="pull-right">
-				<a href="<?php echo ENTRADA_URL; ?>/admin/settings/manage/objectives?section=add&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=1" class="btn btn-primary">Add New Objective</a>
-			</div>
+		<div class="row-fluid">
+			<span class="pull-right">
+				<a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/settings/manage/objectives?section=add&amp;org=<?php echo $ORGANISATION_ID;?>"><i class="icon-plus-sign icon-white"></i> Add Curriculum Tag Set</a>
+			</span>
 		</div>
-		<div style="clear: both"></div>
+		<br />
 		<?php
 	}
 
-	$query = "	SELECT a.* FROM `global_lu_objectives` AS a
-				LEFT JOIN `objective_organisation` AS b
+	$query = "SELECT a.*
+				FROM `global_lu_objectives` AS a
+				JOIN `objective_organisation` AS b
 				ON a.`objective_id` = b.`objective_id`
 				WHERE a.`objective_parent` = '0'
 				AND a.`objective_active` = '1'
-				AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+				AND b.`organisation_id` = ?
 				ORDER BY a.`objective_order` ASC";
-	$result = $db->GetAll($query);
-	if(isset($result) && count($result)>0){
+	$results = $db->GetAll($query, array($ORGANISATION_ID));
+	if ($results) {
 		?>
-		<form action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("section" => "delete", "step" => 1, "org" => $ORGANISATION_ID)); ?>" method="post">
-			<table class="tableList" cellspacing="0" summary="List of Objectives">
-				<thead>
-					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="title">Objective Sets</td>
-					</tr>
-				</thead>
+		<form action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives?section=delete&amp;org=".$ORGANISATION_ID; ?>" method="post">
+			<table class="table table-striped" summary="Curriculum Tag Sets">
+				<colgroup>
+					<col style="width: 3%" />
+					<col style="width: 97%" />
+				</colgroup>
+				<tbody>
+					<?php
+					foreach ($results as $result) {
+						echo "<tr>";
+						echo "	<td><input type=\"checkbox\" name=\"deactivate[]\" value=\"".$result["objective_id"]."\"/></td>";
+						echo"	<td><a href=\"".ENTRADA_URL."/admin/settings/manage/objectives?section=edit&amp;org=$ORGANISATION_ID&amp;id=".$result["objective_id"]."\">".$result["objective_name"]."</a></td>";
+						echo "</tr>";
+					}
+					?>
+				</tbody>
 			</table>
-			<ul class="objectives-list">
-			<?php
-//			echo objectives_inlists_conf(0, 0, array('id'=>'pagelists'));
-			foreach ($result as $objective) {
-				echo "<li><div class=\"objective-container\"><span class=\"delete\" style=\"width:27px;display:inline-block;\"><input type=\"checkbox\" id=\"delete_".$objective["objective_id"]."\" name=\"delete[".$objective["objective_id"]."][objective_id]\" value=\"".$objective["objective_id"]."\"".(($selected == $objective["objective_id"]) ? " checked=\"checked\"" : "")." onclick=\"$$('#".$objective["objective_id"]."-children input[type=checkbox]').each(function(e){e.checked = $('delete_".$objective["objective_id"]."').checked; if (e.checked) e.disable(); else e.enable();});\"/></span>\n";
-				echo "<a href=\"" . ENTRADA_URL . "/admin/settings/manage/objectives?" . replace_query(array("section" => "edit", "id" => $objective["objective_id"])) . "\">".$objective["objective_name"]."</a></div></li>";
-			}
-			?>
-			</ul>
-			<input type="submit" class="btn btn-danger" value="Delete Selected" />
+			<input type="submit" class="btn btn-danger" value="Deactivate Selected" />
 		</form>
 		<?php
 	} else {
-		$NOTICE++;
-		$NOTICESTR[] = "There are currently no Objectives assigned to this Organisation";
+		add_notice("There are currently no Curriculum Tag Sets assigned to this organization.");
 		echo display_notice();
 	}
 }

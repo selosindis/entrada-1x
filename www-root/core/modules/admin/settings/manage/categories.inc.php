@@ -25,11 +25,11 @@
  *
 */
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID, "title" => "Manage Clerkship Categories");
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID, "title" => "Clinical Categories");
 
 if (!defined("PARENT_INCLUDED")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("categories", "update", false)) {

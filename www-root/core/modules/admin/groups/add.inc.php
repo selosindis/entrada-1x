@@ -32,8 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 } elseif (!$ENTRADA_ACL->amIAllowed('group', 'create', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -71,8 +70,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			if ((isset($_POST["group_name"])) && ($group_name = clean_input($_POST["group_name"], array("notags", "trim")))) {
 				$PROCESSED["group_name"] = $group_name;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Group Name</strong> field is required.";
+				add_error("The <strong>Group Name</strong> field is required.");
 			}
 
 			/**
@@ -81,8 +79,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			if ((isset($_POST["group_type"])) && ($group_type = clean_input($_POST["group_type"], array("trim"))) && in_array($group_type, array("course_list", "cohort"))) {
 				$PROCESSED["group_type"] = $group_type;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Group Type</strong> field is required.";
+				add_error("The <strong>Group Type</strong> field is required.");
 			}
 
 			/**
@@ -92,8 +89,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				if (isset($_POST["course_id"]) && $course_id = clean_input($_POST["course_id"], array("int"))) {
 					$PROCESSED["group_value"] = $course_id;
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "The <strong>Course</strong> field is required for course lists.";
+					add_error("The <strong>Course</strong> field is required for course lists.");
 				}
 			} else {
 				$PROCESSED["group_value"] = false;
@@ -119,8 +115,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			$proxy_ids = explode(',', $_POST["group_member_ids"]);
 
 			foreach ($proxy_ids as &$proxy_id) {
-				$proxy_id = (int) $proxy_id;
+				$proxy_id = (int) trim($proxy_id);
 			}
+
+            unset($proxy_id);
 
             $PROCESSED["entrada_only"] = 1;
 			$PROCESSED["updated_date"] = time();
@@ -135,33 +133,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
                          WHERE a.`group_name` = ".$db->qstr($PROCESSED["group_name"]);
 				$result = $db->GetRow($query);
 				if ($result) {
-					$ERROR++;
-					$ERRORSTR[] = "Lucky you, the <strong>goup name</strong> you are trying to create already exits.";
+					add_error("Lucky you, the <strong>group name</strong> you are trying to create already exists.");
 				} else {
 					if (!$db->AutoExecute("groups", $PROCESSED, "INSERT")) {
-						$ERROR++;
-						$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
+						add_error("There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.");
 						application_log("error", "Unable to insert a new group ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
 					}
 
 					$GROUP_ID = $db->Insert_Id();
 					$PROCESSED["group_id"] = $GROUP_ID;
 					if (!$db->AutoExecute("group_organisations", $PROCESSED, "INSERT")) {
-						$ERROR++;
-						$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
+						add_error("There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.");
 						application_log("error", "Unable to insert a new group organisation for group_id [".$GROUP_ID."[. Database said: ".$db->ErrorMsg());
 					} else {
-						$added = 0;
 						foreach ($proxy_ids as $proxy_id) {
-							if (($proxy_id = (int) trim($proxy_id))) {
-								$PROCESSED["proxy_id"]	= $proxy_id;
-								$added++;
-								if (!$db->AutoExecute("group_members", $PROCESSED, "INSERT")) {
-									$ERROR++;
-									$ERRORSTR[]	= "Failed to insert this member into the group. Please contact a system administrator if this problem persists.";
-									application_log("error", "Error while inserting member into database. Database server said: ".$db->ErrorMsg());
-								}
-							}
+                            $PROCESSED["proxy_id"]	= $proxy_id;
+                            if (!$db->AutoExecute("group_members", $PROCESSED, "INSERT")) {
+								add_error("Failed to insert this member into the group. Please contact a system administrator if this problem persists.");
+                                application_log("error", "Error while inserting member into database. Database server said: ".$db->ErrorMsg());
+                            }
 						}
 					}
 				}
@@ -179,15 +169,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
                         break;
                     }
 
-                    $SUCCESS++;
-                    $SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["event_title"])."</strong> to the system.<br /><br />".$msg;
+                    add_success("You have successfully added <strong>".html_encode($PROCESSED["event_title"])."</strong> to the system.<br /><br />".$msg);
                     $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
                     application_log("success", "Added new cohort group [".$GROUP_ID." / ".$PROCESSED["group_name"]."] to org_id [".$PROCESSED["organisation_id"]."] the system.");
                 }
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "There was a problem inserting group into the system. The system administrator was informed of this error; please try again later.";
+				add_error("There was a problem inserting group into the system. The system administrator was informed of this error; please try again later.");
 
 				application_log("error", "There was an error inserting a group. Database said: ".$db->ErrorMsg());
 			}

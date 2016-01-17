@@ -39,8 +39,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Copy Forward" );
 	
 	$arrayOfTables = array( 
-						"ar_undergraduate_nonmedical_teaching|Undergraduate (Other) Teaching",
-						"ar_graduate_teaching|Graduate Teaching",
+						"ar_undergraduate_nonmedical_teaching|Non-Captured Undergraduate Teaching",
+						"ar_graduate_teaching|Non-Captured Graduate Teaching",
 						"ar_undergraduate_supervision|Undergraduate Supervision",
 						"ar_graduate_supervision|Graduate Supervision",
 						"ar_memberships|Membership on Graduate Examining and Supervisory Committees (Excluding Supervision)",
@@ -64,8 +64,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						"ar_profile|Activity Profile");
 						
 	$arrayOfClinicalTables = array( 
-						"ar_undergraduate_nonmedical_teaching|Undergraduate (Other) Teaching",
-						"ar_graduate_teaching|Graduate Teaching",
+						"ar_undergraduate_nonmedical_teaching|Non-Captured Undergraduate Teaching",
+						"ar_graduate_teaching|Non-Captured Graduate Teaching",
 						"ar_undergraduate_supervision|Undergraduate Supervision",
 						"ar_graduate_supervision|Graduate Supervision",
 						"ar_memberships|Membership on Graduate Examining and Supervisory Committees (Excluding Supervision)",

@@ -229,113 +229,170 @@ if ($RECORD_ID) {
 					}
 					</script>
 					<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=edit-gallery&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post">
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit Photo Gallery">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 20%" />
-						<col style="width: 77%" />
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="3" style="padding-top: 15px; text-align: right">
-                                <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-							<td colspan="3"><h2>Gallery Details</h2></td>
-						</tr>
-						<tr>
-							<td colspan="2"><label for="gallery_title" class="form-required">Gallery Title</label></td>
-							<td><input type="text" id="gallery_title" name="gallery_title" value="<?php echo ((isset($PROCESSED["gallery_title"])) ? html_encode($PROCESSED["gallery_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
-						</tr>
-						<tr>
-							<td colspan="2" style="vertical-align: top"><label for="gallery_description" class="form-nrequired">Gallery Description</label></td>
-							<td style="vertical-align: top">
-								<textarea id="gallery_description" name="gallery_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["gallery_description"])) ? html_encode($PROCESSED["gallery_description"]) : ""); ?></textarea>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="2" style="vertical-align: top"><label for="gallery_cgphoto_id" class="form-nrequired">Gallery Thumbnail</label></td>
-							<td style="vertical-align: top">
-								<select id="gallery_cgphoto_id" name="gallery_cgphoto_id" style="width: 245px" onchange="updateThumbnailPreview(this.options[this.selectedIndex].value)">
-								<option value="0"<?php echo ((!(int) $gallery_record["gallery_cgphoto_id"]) ? " selected=\"selected\"" : ""); ?>>No Thumbnail Selected</option>
-								<?php
-								$query		= "SELECT `cgphoto_id`, `photo_title` FROM `community_gallery_photos` WHERE `cgallery_id` = ".$db->qstr($RECORD_ID)." AND `photo_active` = '1' ORDER BY `photo_title` ASC";
-								$results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
-								if ($results) {
-									foreach($results as $result) {
-										echo "<option value=\"".(int) $result["cgphoto_id"]."\"".(($result["cgphoto_id"] == $gallery_record["gallery_cgphoto_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["photo_title"])."</option>\n";
-									}
-								}
-								?>
-								</select>
-								<img id="thumbnail-preview-holder" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/galleries-no-photo.gif"; ?>" width="<?php echo $VALID_MAX_DIMENSIONS["thumb"]; ?>" height="<?php echo $VALID_MAX_DIMENSIONS["thumb"]; ?>" alt="<?php echo html_encode($PROCESSED["gallery_title"]); ?> - Gallery Thumbnail" title="<?php echo html_encode($PROCESSED["gallery_title"]); ?> - Gallery Thumbnail" style="border: 1px #CCCCCC solid; vertical-align: top; margin-left: 10px" />
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3"><h2>Gallery Permissions</h2></td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								<table class="permissions" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-								<colgroup>
-									<col style="width: 40%" />
-									<col style="width: 20%" />
-									<col style="width: 20%" />
-									<col style="width: 20%" />
-								</colgroup>
-								<thead>
-									<tr>
-										<td>Group</td>
-										<td style="border-left: none">View Gallery</td>
-										<td style="border-left: none">Upload Photos</td>
-										<td style="border-left: none">Allow Comments</td>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td class="left"><strong>Community Administrators</strong></td>
-										<td class="on"><input type="checkbox" id="allow_admin_read" name="allow_admin_read" value="1" checked="checked" onclick="this.checked = true" /></td>
-										<td><input type="checkbox" id="allow_admin_post" name="allow_admin_post" value="1" checked="checked" onclick="this.checked = true" /></td>
-										<td class="on"><input type="checkbox" id="allow_admin_reply" name="allow_admin_reply" value="1" checked="checked" onclick="this.checked = true" /></td>
-									</tr>
-									<tr>
-										<td class="left"><strong>Community Members</strong></td>
-										<td class="on"><input type="checkbox" id="allow_member_read" name="allow_member_read" value="1"<?php echo (((!isset($PROCESSED["allow_member_read"])) || ((isset($PROCESSED["allow_member_read"])) && ($PROCESSED["allow_member_read"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-										<td><input type="checkbox" id="allow_member_upload" name="allow_member_upload" value="1"<?php echo (((!isset($PROCESSED["allow_member_upload"])) || ((isset($PROCESSED["allow_member_upload"])) && ($PROCESSED["allow_member_upload"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-										<td class="on"><input type="checkbox" id="allow_member_comment" name="allow_member_comment" value="1"<?php echo (((!isset($PROCESSED["allow_member_comment"])) || ((isset($PROCESSED["allow_member_comment"])) && ($PROCESSED["allow_member_comment"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-									</tr>
-									<?php if (!(int) $community_details["community_registration"]) :  ?>
-									<tr>
-										<td class="left"><strong>Browsing Non-Members</strong></td>
-										<td class="on"><input type="checkbox" id="allow_troll_read" name="allow_troll_read" value="1"<?php echo (((!isset($PROCESSED["allow_troll_read"])) || ((isset($PROCESSED["allow_troll_read"])) && ($PROCESSED["allow_troll_read"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-										<td><input type="checkbox" id="allow_troll_upload" name="allow_troll_upload" value="1"<?php echo (((isset($PROCESSED["allow_troll_upload"])) && ($PROCESSED["allow_troll_upload"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-										<td class="on"><input type="checkbox" id="allow_troll_comment" name="allow_troll_comment" value="1"<?php echo (((isset($PROCESSED["allow_troll_comment"])) && ($PROCESSED["allow_troll_comment"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-									</tr>
-									<?php endif; ?>
-									<?php if (!(int) $community_details["community_protected"]) :  ?>
-									<tr>
-										<td class="left"><strong>Non-Authenticated / Public Users</strong></td>
-										<td class="on"><input type="checkbox" id="allow_public_read" name="allow_public_read" value="1"<?php echo (((isset($PROCESSED["allow_public_read"])) && ($PROCESSED["allow_public_read"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-										<td><input type="checkbox" id="allow_public_upload" name="allow_public_upload" value="0" onclick="noPublic(this)" /></td>
-										<td class="on"><input type="checkbox" id="allow_public_comment" name="allow_public_comment" value="0" onclick="noPublic(this)" /></td>
-									</tr>
-									<?php endif; ?>
-								</tbody>
-								</table>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3"><h2>Time Release Options</h2></td>
-						</tr>
-						<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-					</tbody>
-					</table>
+						<table summary="Edit Photo Gallery">
+							<colgroup>
+								<col style="width: 20%" />
+								<col style="width: 80%" />
+							</colgroup>
+							<tfoot>
+								<tr>
+									<td colspan="2" style="padding-top: 15px; text-align: right">
+		                                <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
+									</td>
+								</tr>
+							</tfoot>
+							<tbody>
+								<tr>
+									<td colspan="2">
+										<h2>Gallery Details</h2>
+									</td>
+								</tr>
+								<tr>
+									<td style="vertical-align: top;">
+										<label for="gallery_title" class="form-required">Gallery Title</label>
+									</td>
+									<td>
+										<input type="text" id="gallery_title" name="gallery_title" class="span12" value="<?php echo ((isset($PROCESSED["gallery_title"])) ? html_encode($PROCESSED["gallery_title"]) : ""); ?>" maxlength="64" />
+									</td>
+								</tr>
+								<tr>
+									<td style="vertical-align: top;">
+										<label for="gallery_description" class="form-nrequired">Gallery Description</label>
+									</td>
+									<td>
+										<textarea id="gallery_description" name="gallery_description" class="span12" style="height: 100px"><?php echo ((isset($PROCESSED["gallery_description"])) ? html_encode($PROCESSED["gallery_description"]) : ""); ?></textarea>
+									</td>
+								</tr>
+								<tr>
+									<td style="vertical-align: top;">
+                                        <label for="gallery_cgphoto_id" class="form-nrequired">Gallery Thumbnail</label>
+                                    </td>
+                                    <td>
+										<select id="gallery_cgphoto_id" name="gallery_cgphoto_id" class="span8" onchange="updateThumbnailPreview(this.options[this.selectedIndex].value)">
+                                            <option value="0"<?php echo ((!(int) $gallery_record["gallery_cgphoto_id"]) ? " selected=\"selected\"" : ""); ?>>No Thumbnail Selected</option>
+                                            <?php
+                                            $query		= "SELECT `cgphoto_id`, `photo_title` FROM `community_gallery_photos` WHERE `cgallery_id` = ".$db->qstr($RECORD_ID)." AND `photo_active` = '1' ORDER BY `photo_title` ASC";
+                                            $results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
+                                            if ($results) {
+                                                foreach($results as $result) {
+                                                    echo "<option value=\"".(int) $result["cgphoto_id"]."\"".(($result["cgphoto_id"] == $gallery_record["gallery_cgphoto_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["photo_title"])."</option>\n";
+                                                }
+                                            }
+                                            ?>
+                                        </select>
+                                        <br />
+                                        <img id="thumbnail-preview-holder" class="img-polaroid center" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/galleries-no-photo.gif"; ?>" width="<?php echo $VALID_MAX_DIMENSIONS["thumb"]; ?>" height="<?php echo $VALID_MAX_DIMENSIONS["thumb"]; ?>" alt="<?php echo html_encode($PROCESSED["gallery_title"]); ?> - Gallery Thumbnail" title="<?php echo html_encode($PROCESSED["gallery_title"]); ?> - Gallery Thumbnail" />
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<h2>Gallery Permissions</h2>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<table class="table table-striped table-bordered">
+											<colgroup>
+												<col style="width: 40%" />
+												<col style="width: 20%" />
+												<col style="width: 20%" />
+												<col style="width: 20%" />
+											</colgroup>
+											<thead>
+												<tr>
+													<td>
+														Group
+													</td>
+													<td>
+														View Gallery
+													</td>
+													<td>
+														Upload Photos
+													</td>
+													<td>
+														Allow Comments
+													</td>
+												</tr>
+											</thead>
+											<tbody>
+												<tr>
+													<td>
+														<strong>Community Administrators</strong>
+													</td>
+													<td class="on">
+														<input type="checkbox" id="allow_admin_read" name="allow_admin_read" value="1" checked="checked" onclick="this.checked = true" />
+													</td>
+													<td>
+														<input type="checkbox" id="allow_admin_post" name="allow_admin_post" value="1" checked="checked" onclick="this.checked = true" />
+													</td>
+													<td class="on">
+														<input type="checkbox" id="allow_admin_reply" name="allow_admin_reply" value="1" checked="checked" onclick="this.checked = true" />
+													</td>
+												</tr>
+												<tr>
+													<td>
+														<strong>Community Members</strong>
+													</td>
+													<td class="on">
+														<input type="checkbox" id="allow_member_read" name="allow_member_read" value="1"<?php echo (((!isset($PROCESSED["allow_member_read"])) || ((isset($PROCESSED["allow_member_read"])) && ($PROCESSED["allow_member_read"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+													</td>
+													<td>
+														<input type="checkbox" id="allow_member_upload" name="allow_member_upload" value="1"<?php echo (((!isset($PROCESSED["allow_member_upload"])) || ((isset($PROCESSED["allow_member_upload"])) && ($PROCESSED["allow_member_upload"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+													</td>
+													<td class="on">
+														<input type="checkbox" id="allow_member_comment" name="allow_member_comment" value="1"<?php echo (((!isset($PROCESSED["allow_member_comment"])) || ((isset($PROCESSED["allow_member_comment"])) && ($PROCESSED["allow_member_comment"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+													</td>
+												</tr>
+												<?php if (!(int) $community_details["community_registration"]) :  ?>
+												<tr>
+													<td>
+														<strong>Browsing Non-Members</strong>
+													</td>
+													<td class="on">
+														<input type="checkbox" id="allow_troll_read" name="allow_troll_read" value="1"<?php echo (((!isset($PROCESSED["allow_troll_read"])) || ((isset($PROCESSED["allow_troll_read"])) && ($PROCESSED["allow_troll_read"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+													</td>
+													<td>
+														<input type="checkbox" id="allow_troll_upload" name="allow_troll_upload" value="1"<?php echo (((isset($PROCESSED["allow_troll_upload"])) && ($PROCESSED["allow_troll_upload"] == 1)) ? " checked=\"checked\"" : ""); ?> />
+													</td>
+													<td class="on">
+														<input type="checkbox" id="allow_troll_comment" name="allow_troll_comment" value="1"<?php echo (((isset($PROCESSED["allow_troll_comment"])) && ($PROCESSED["allow_troll_comment"] == 1)) ? " checked=\"checked\"" : ""); ?> />
+													</td>
+												</tr>
+												<?php endif; ?>
+												<?php if (!(int) $community_details["community_protected"]) :  ?>
+												<tr>
+													<td>
+														<strong>Non-Authenticated / Public Users</strong>
+													</td>
+													<td class="on">
+														<input type="checkbox" id="allow_public_read" name="allow_public_read" value="1"<?php echo (((isset($PROCESSED["allow_public_read"])) && ($PROCESSED["allow_public_read"] == 1)) ? " checked=\"checked\"" : ""); ?> />
+													</td>
+													<td>
+														<input type="checkbox" id="allow_public_upload" name="allow_public_upload" value="0" onclick="noPublic(this)" />
+													</td>
+													<td class="on">
+														<input type="checkbox" id="allow_public_comment" name="allow_public_comment" value="0" onclick="noPublic(this)" />
+													</td>
+												</tr>
+												<?php endif; ?>
+											</tbody>
+										</table>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<h2>Time Release Options</h2>
+									</td>	
+								</tr>
+								<tr>
+									<td colspan="2">
+										<table class="date-time">
+											<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+										</table>
+									</td>
+								</tr>
+							</tbody>
+						</table>
 					</form>
 					<?php
 				break;

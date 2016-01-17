@@ -71,18 +71,15 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                 $result = $db->GetRow($query);
                 if ($result) {
                     if ($result["course_description"] && $result["course_description"] != "") {
-                        echo "<h1>Course Description</h1>\n";
-                        echo "<div class=\"community-page-content\" style=\"margin-top: 10px;\">
-                              <p>\n";
-                        echo $result["course_description"] . "\n";
-                        echo "</p></div>\n";
+                        echo "<div class=\"community-page-content\">\n";
+                        echo $result["course_description"];
+                        echo "</div>\n";
                     }
                     if ($result["course_message"] && $result["course_message"] != "") {
                         echo "<h1>Directors Message</h1>\n";
-                        echo "<div class=\"community-page-content\" style=\"margin-top: 10px;\">
-                              <p>\n";
-                        echo $result["course_message"] . "\n";
-                        echo "</p></div>\n";
+                        echo "<div class=\"community-page-content\" style=\"margin-top: 10px;\">\n";
+                        echo $result["course_message"];
+                        echo "</div>\n";
                     }
                 }
 
@@ -100,8 +97,9 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             AND a.`contact_type` = 'director'
                             GROUP BY b.`id`
                             ORDER BY `contact_order` ASC";
-                if ($results = $db->GetAll($query)) {
-                    echo "<h2>Course Director".(count($results) > 1 ? "s" : "")."</h2>\n";
+                $results = $db->GetAll($query);
+                if ($results) {
+                    echo "<h2>" . (count($results) > 1 ? $translate->_("course_directors") : $translate->_("course_director")) . "</h2>\n";
                     foreach ($results as $key => $result) {
                         echo "<div id=\"result-".$result["id"]."\" style=\"width: 100%; padding: 5px 0px 5px 5px; line-height: 16px; text-align: left;\">\n";
                         echo "	<table style=\"width: 100%;\" class=\"profile-card\">\n";
@@ -139,16 +137,14 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             $uploaded_file_active = true;
                         }
 
-                        if ($offical_file_active) {
-                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
-                        }
-
                         if ($uploaded_file_active) {
-                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                        } elseif ($offical_file_active) {
+                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         }
 
                         if ((!$offical_file_active) && (!$uploaded_file_active)) {
-                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
                         }
 
                         echo "			</div>\n";
@@ -240,9 +236,11 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
                             WHERE a.`course_id` IN (".implode(", ", $course_ids).")
                             AND a.`course_active` = '1'
-                            GROUP BY b.`id`";
-                if ($results = $db->GetAll($query)) {
-                    echo "<h2>Program Coordinator</h2>\n";
+                            GROUP BY b.`id`
+                            ORDER BY `contact_order` ASC";
+                $results = $db->GetAll($query);
+                if ($results) {
+                    echo "<h2>" . (count($results) > 1 ? $translate->_("program_coordinators") : $translate->_("program_coordinator")) . "</h2>\n";
                     foreach ($results as $key => $result) {
                         echo "<div id=\"result-".$result["id"]."\" style=\"width: 100%; padding: 5px 0px 5px 5px; line-height: 16px; text-align: left;\">\n";
                         echo "	<table style=\"width: 100%;\" class=\"profile-card\">\n";
@@ -280,16 +278,15 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             $uploaded_file_active = true;
                         }
 
-                        if ($offical_file_active) {
-                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
-                        }
 
                         if ($uploaded_file_active) {
-                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                        } elseif ($offical_file_active) {
+                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         }
 
                         if ((!$offical_file_active) && (!$uploaded_file_active)) {
-                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
                         }
 
                         echo "			</div>\n";
@@ -383,8 +380,9 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             AND a.`contact_type` = 'ccoordinator'
                             GROUP BY b.`id`
                             ORDER BY `contact_order` ASC";
-                if ($results = $db->GetAll($query)) {
-                    echo "<h2>Curriculum Coordinator".(count($results) > 1 ? "s" : "")."</h2>\n";
+                $results = $db->GetAll($query);
+                if ($results) {
+                    echo "<h2>" . (count($results) > 1 ? $translate->_("curriculum_coordinators") : $translate->_("curriculum_coordinator")) . "</h2>\n";
                     foreach ($results as $key => $result) {
                         echo "<div id=\"result-".$result["id"]."\" style=\"width: 100%; padding: 5px 0px 5px 5px; line-height: 16px; text-align: left;\">\n";
                         echo "	<table style=\"width: 100%;\" class=\"profile-card\">\n";
@@ -422,16 +420,14 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             $uploaded_file_active = true;
                         }
 
-                        if ($offical_file_active) {
-                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
-                        }
-
                         if ($uploaded_file_active) {
-                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                        } elseif ($offical_file_active) {
+                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         }
 
                         if ((!$offical_file_active) && (!$uploaded_file_active)) {
-                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
                         }
 
                         echo "			</div>\n";
@@ -563,7 +559,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                     ?>
                         <div style="position: relative; clear: both">
                             <div style="width: 100%">
-                                <h2>Course History</h2>
+                                <h2>Recent Updates</h2>
                                 <?php
                                 echo $history_messages;
                                 ?>
@@ -705,10 +701,31 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                 $PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
                 $PAGE_NEXT		= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
 
-                echo "<form action=\"\" method=\"get\">\n";
-                echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
-                echo "</form>\n";
+                /**
+                 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
+                 */
+                $limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]);
+                foreach ($course_ids as $course_id) {
+                    $filters["course"][] = (int) trim($course_id, '\'');
+                }
 
+                $_SESSION[APPLICATION_IDENTIFIER]["community_page"][$COMMUNITY_ID]["filters"] = $filters;
+
+                $learning_events = events_fetch_filtered_events(
+                    $ENTRADA_USER->getActiveId(),
+                    $ENTRADA_USER->getActiveGroup(),
+                    $ENTRADA_USER->getActiveRole(),
+                    $ENTRADA_USER->getActiveOrganisation(),
+                    $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"],
+                    $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"],
+                    $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"],
+                    $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"],
+                    0,
+                    $filters,
+                    true,
+                    (isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
+                    $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"],
+                    $COMMUNITY_ID);
                 ?>
                 <script type="text/javascript">
                     function setDateValue(field, date) {
@@ -719,56 +736,13 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         return;
                     }
                 </script>
-                <table style="width: 100%; margin: 10px 0px 10px 0px" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="width: 53%; vertical-align: top; text-align: left">
-                        <table style="width: 298px; height: 23px" cellspacing="0" cellpadding="0" border="0" summary="Display Duration Type">
-                        <tr>
-                            <td style="width: 22px; height: 23px"><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dstamp" => ($DISPLAY_DURATION["start"] - 2))); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-back.gif" border="0" width="22" height="23" alt="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"]); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"]); ?>" /></a></td>
-                            <td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"] == "day") ? "<img src=\"".ENTRADA_URL."/images/cal-day-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "day"))."\"><img src=\"".ENTRADA_URL."/images/cal-day-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" /></a>"); ?></td>
-                            <td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"] == "week") ? "<img src=\"".ENTRADA_URL."/images/cal-week-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "week"))."\"><img src=\"".ENTRADA_URL."/images/cal-week-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" /></a>"); ?></td>
-                            <td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"] == "month") ? "<img src=\"".ENTRADA_URL."/images/cal-month-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "month"))."\"><img src=\"".ENTRADA_URL."/images/cal-month-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" /></a>"); ?></td>
-                            <td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"] == "year") ? "<img src=\"".ENTRADA_URL."/images/cal-year-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "year"))."\"><img src=\"".ENTRADA_URL."/images/cal-year-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" /></a>"); ?></td>
-                            <td style="width: 47px; height: 23px; border-left: 1px #9D9D9D solid"><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dstamp" => ($DISPLAY_DURATION["end"] + 1))); ?>" title="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-next.gif" border="0" width="22" height="23" alt="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"]); ?>" title="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"]); ?>" /></a></td>
-                            <td style="width: 33px; height: 23px; text-align: right"><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?<?php echo replace_query(array("dstamp" => time())); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-home.gif" width="23" height="23" alt="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"]; ?>." title="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"]; ?>." border="0" /></a></td>
-                            <td style="width: 33px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)" style="cursor: pointer" id="calendar-holder" /></td>
-                        </tr>
-                        </table>
-                    </td>
-                    <td style="width: 47%; vertical-align: top; text-align: right">
-                        <?php
-                        if($TOTAL_PAGES > 1) {
-                            echo "<form action=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."\" method=\"get\" id=\"pageSelector\">\n";
-                            echo "<div style=\"white-space: nowrap\">\n";
-                            echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
-                            if($PAGE_PREVIOUS) {
-                                echo "<a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("pv" => $PAGE_PREVIOUS))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$PAGE_PREVIOUS.".\" title=\"Back to page ".$PAGE_PREVIOUS.".\" style=\"vertical-align: middle\" /></a>\n";
-                            } else {
-                                echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-                            }
-                            echo "</span>";
-                            echo "<span style=\"vertical-align: middle\">\n";
-                            echo "<select name=\"pv\" onchange=\"document.getElementById('pageSelector').submit();\"".(($TOTAL_PAGES <= 1) ? " disabled=\"disabled\"" : "").">\n";
-                            for($i = 1; $i <= $TOTAL_PAGES; $i++) {
-                                echo "<option value=\"".$i."\"".(($i == $PAGE_CURRENT) ? " selected=\"selected\"" : "").">".(($i == $PAGE_CURRENT) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
-                            }
-                            echo "</select>\n";
-                            echo "</span>\n";
-                            echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
-                            if($PAGE_CURRENT < $TOTAL_PAGES) {
-                                echo "<a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("pv" => $PAGE_NEXT))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$PAGE_NEXT.".\" title=\"Forward to page ".$PAGE_NEXT.".\" style=\"vertical-align: middle\" /></a>";
-                            } else {
-                                echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-                            }
-                            echo "</span>\n";
-                            echo "</div>\n";
-                            echo "</form>\n";
-                        }
-                        ?>
-                    </td>
-                </tr>
-                </table>
+
                 <?php
+
+                /**
+                 * Output the calendar controls.
+                 */
+                events_output_calendar_controls("community", (COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL));
 
                 /**
                  * Provide the queries with the columns to order by.
@@ -789,32 +763,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                     break;
                 }
 
-                /**
-                 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
-                 */
-                $limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]);
-                foreach ($course_ids as $course_id) {
-                    $filters["course"][] = (int) trim($course_id, '\'');
-                }
-
-                $_SESSION[APPLICATION_IDENTIFIER]["community_page"][$COMMUNITY_ID]["filters"] = $filters;
-
-                $results = events_fetch_filtered_events(
-                        $ENTRADA_USER->getActiveId(),
-                        $ENTRADA_USER->getActiveGroup(),
-                        $ENTRADA_USER->getActiveRole(),
-                        $ENTRADA_USER->getActiveOrganisation(),
-                        $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"],
-                        $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"],
-                        $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"],
-                        $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"],
-                        0,
-                        $filters,
-                        true,
-                        (isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
-                        $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"],
-                        $COMMUNITY_ID);
-                if($results["events"]) {
+                if ($learning_events["events"]) {
                     ?>
                     <div class="tableListTop">
                         <img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
@@ -862,9 +811,8 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         $count_group		= 0;
                         $count_individual	= 0;
 
-
-                        foreach($results["events"] as $result) {
-                            if(((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
+                        foreach ($learning_events["events"] as $result) {
+                            if (((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
                                 $attachments	= attachment_check($result["event_id"]);
                                 $url			= ENTRADA_URL."/events?rid=".$result["event_id"]."&community=".$COMMUNITY_ID;
                                 $is_modified	= false;
@@ -968,38 +916,6 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                 echo "<form action=\"\" method=\"get\">\n";
                 echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
                 echo "</form>\n";
-
-                /**
-                 * Sidebar item that will provide another method for sorting, ordering, etc.
-                 */
-                $sidebar_html  = "Sort columns:\n";
-                $sidebar_html .= "<ul class=\"menu\">\n";
-                $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "date") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "date"))."\" title=\"Sort by Date &amp; Time\">by date &amp; time</a></li>\n";
-                $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "teacher") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "teacher"))."\" title=\"Sort by Teacher\">by primary teacher</a></li>\n";
-                $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "title"))."\" title=\"Sort by Event Title\">by event title</a></li>\n";
-                $sidebar_html .= "</ul>\n";
-                $sidebar_html .= "Order columns:\n";
-                $sidebar_html .= "<ul class=\"menu\">\n";
-                $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"]) == "asc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("so" => "asc"))."\" title=\"Ascending Order\">in ascending order</a></li>\n";
-                $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"]) == "desc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("so" => "desc"))."\" title=\"Descending Order\">in descending order</a></li>\n";
-                $sidebar_html .= "</ul>\n";
-                $sidebar_html .= "Rows per page:\n";
-                $sidebar_html .= "<ul class=\"menu\">\n";
-                $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
-                $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
-                $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
-                $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
-                $sidebar_html .= "</ul>\n";
-                $sidebar_html .= "&quot;Show Only&quot; settings:\n";
-
-                new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
-
-                $sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-                $sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-updated.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> recently updated</div>\n";
-                $sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-individual.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> individual learning event</div>\n";
-                $sidebar_html .= "</div>\n";
-
-                new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
             break;
             case (preg_match("/objectives$/", $PAGE_URL) != 0) :
                 $course_ids_str = "";
@@ -1028,7 +944,6 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 
                 $show_objectives = false;
                 list($objectives,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(),$course_ids,-1, 1, false);
-
                 ?>
                 <script type="text/javascript">
                 function renewList (hierarchy) {
@@ -1094,7 +1009,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             <tr>
                                 <td width="20">&nbsp;</td>
                                 <td colspan="3">Assignment Title</td>
-                                <td colspan="2">Course Code</td>
+                                <td colspan="2"><?php echo $translate->_("course"); ?> Code</td>
                                 <td colspan="2">Due Date</td>
                             </tr>
                         </thead>

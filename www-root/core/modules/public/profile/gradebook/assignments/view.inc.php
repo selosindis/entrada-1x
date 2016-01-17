@@ -170,7 +170,7 @@ if ($RECORD_ID) {
 							$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$RECORD_ID, "title" => limit_chars($file_record["assignment_title"], 32));
 						}
 						$ADD_COMMENT	= true;//shares_module_access($file_record["cshare_id"], "add-comment");
-						$ADD_REVISION	= $assignment["assignment_uploads"]==1?false:true;//shares_file_module_access($file_record["csfile_id"], "add-revision");
+						$ADD_REVISION	= $assignment["assignment_uploads"] == 1 ? true : false;//shares_file_module_access($file_record["csfile_id"], "add-revision");
 						$MOVE_FILE		= false;//shares_file_module_access($file_record["csfile_id"], "move-file");
 						$NAVIGATION		= false;//shares_file_navigation($file_record["cshare_id"], $RECORD_ID);
 						//$community_shares_select = community_shares_in_select($file_record["cshare_id"]);
@@ -326,7 +326,7 @@ if ($RECORD_ID) {
                                   LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                   ON a.`proxy_id`=b.`id`
                                   WHERE a.`assignment_id`=".$db->qstr($RECORD_ID)."
-                                  AND a.`proxy_id`=".$db->qstr($PROXY_ID)."
+                                  AND a.`proxy_id`=".$db->qstr($USER_ID)."
                                   AND a.`file_active`=1
                                   AND c.`file_type`='submission'
                                   AND a.`file_version`=
@@ -511,8 +511,7 @@ if ($RECORD_ID) {
                                         FROM `assignment_comments` AS a
                                         LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                         ON b.`id` = a.`proxy_id`
-                                        WHERE a.`proxy_id` = b.`id`
-                                        AND a.`proxy_to_id` = ".$db->qstr($PROXY_ID)."
+                                        WHERE a.`proxy_to_id` = ".$db->qstr($USER_ID)."
                                         AND a.`assignment_id` = ".$db->qstr($RECORD_ID)."
                                         AND a.`comment_active` = '1'
                                         ORDER BY a.`release_date` ASC";
@@ -570,7 +569,7 @@ if ($RECORD_ID) {
                             }
                             if ($ADD_COMMENT) { 
                             ?>
-                                <a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-comment&assignment_id=<?php echo $RECORD_ID; ?>">
+                                <a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-comment&assignment_id=<?php echo $RECORD_ID; ?>&pid=<?php echo $USER_ID; ?>">
                                     <button class="btn btn-default">Add Assignment Comment</button>
                                 </a>
                             <?php
@@ -585,7 +584,7 @@ if ($RECORD_ID) {
                         }
                         
                         $max_files = (int)$db->GetOne("SELECT `max_file_uploads` FROM `assignments` WHERE `assignment_id`=".$db->qstr($RECORD_ID));
-                        $num_files = (int)$db->GetOne("SELECT COUNT(*) FROM `assignment_files` WHERE `assignment_id`=".$db->qstr($RECORD_ID));
+                        $num_files = (int)$db->GetOne("SELECT COUNT(*) FROM `assignment_files` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveID())." AND `file_active` = 1");
                         ?>
                         <div style="padding-top:15px; text-align:right;">
                             <p>You may upload <?php echo $max_files; ?> file<?php echo $max_files !== 1 ? 's' : ''; ?> for this assignment.</p>

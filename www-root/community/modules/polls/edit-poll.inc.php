@@ -373,9 +373,8 @@ if ($RECORD_ID) {
 				<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=edit-poll&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" onsubmit="selIt()">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit <?php echo $terminology; ?>">
 				<colgroup>
-					<col style="width: 3%" />
 					<col style="width: 20%" />
-					<col style="width: 77%" />
+					<col style="width: 80%" />
 				</colgroup>
 				<tfoot>
 					<tr>
@@ -386,29 +385,33 @@ if ($RECORD_ID) {
 				</tfoot>
 				<tbody>
 					<tr>
-						<td colspan="3"><h2><?php echo $terminology; ?> Details</h2></td>
+						<td colspan="2"><h2><?php echo $terminology; ?> Details</h2></td>
 					</tr>
 					<tr>
-						<td colspan="2"><label for="poll_title" class="form-required">Title</label></td>
-						<td style="text-align: right">
-							<input type="text" id="poll_title" name="poll_title" value="<?php echo ((isset($PROCESSED["poll_title"])) ? html_encode($PROCESSED["poll_title"]) : ""); ?>" maxlength="64" style="width: 94%" />
+						<td><label for="poll_title" class="form-required">Title</label></td>
+						<td>
+							<input type="text" id="poll_title" name="poll_title" value="<?php echo ((isset($PROCESSED["poll_title"])) ? html_encode($PROCESSED["poll_title"]) : ""); ?>" maxlength="64" style="width: 300px" />
 						</td>
 					</tr>
 					<tr>
-						<td colspan="2" style="vertical-align: top !important"><label for="poll_description" class="form-nrequired">Description</label></td>
-						<td style="text-align: right; vertical-align: top">
-							<textarea id="poll_description" name="poll_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["poll_description"])) ? html_encode($PROCESSED["poll_description"]) : ""); ?></textarea>
+						<td><label for="poll_description" class="form-nrequired">Description</label></td>
+						<td>
+							<textarea id="poll_description" name="poll_description" style="width: 98%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["poll_description"])) ? html_encode($PROCESSED["poll_description"]) : ""); ?></textarea>
 						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
 					</tr>
 					<?php
 					if ($fully_editable) {
 						?>
 						<tr>
-							<td colspan="2"><label for="allow_multiple" class="form-nrequired">Allow Multiple Votes</label></td>
-							<td style="padding-left: 15px">
+						<td style="vertical-align:middle;">
+							<label for="allow_multiple" class="form-nrequired">Allow Multiple Votes</label>
+						</td>
+						<td colspan="2">
+							<table class="table table-bordered no-thead" style="margin-bottom: 0;">
+								<colgroup>
+									<col style="width: 5%" />
+									<col style="width: auto" />
+								</colgroup>
 								<?php 
 									if (isset($PROCESSED["allow_multiple"]) && $PROCESSED["allow_multiple"] == "1")
 									{
@@ -423,43 +426,52 @@ if ($RECORD_ID) {
 										$display	= "none";
 									}
 								 ?>
-								<input type="radio" name="allow_multiple" id="allow_multiple_0" value="0"<?php echo $noChecked; ?> onclick="showHide(this.value);" style="vertical-align: middle" /> <label for="allow_multiple_0" class="form-nrequired" style="vertical-align: middle">No</label>
-								<input type="radio" name="allow_multiple" id="allow_multiple_1" value="1"<?php echo $yesChecked; ?> onclick="showHide(this.value);" style="vertical-align: middle" /> <label for="allow_multiple_1" class="form-nrequired" style="vertical-align: middle">Yes</label>
-								<input type="text" name="number_of_votes" id="number_of_votes" size="4" value="<?php echo (!isset($PROCESSED["number_of_votes"]) ? 0 : $PROCESSED["number_of_votes"]); ?>" maxlength="4" style="display: <?php echo $display; ?>; vertical-align: middle; margin-right: 10px" />
-								<span id="multiple_note" class="content-small" style="display: <?php echo $display; ?>; vertical-align: middle">
-									<strong>Note:</strong> Set to 0 for unlimited.
-								</span>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
+								<tr>
+								 	<td class="center">
+								 		<input type="radio" name="allow_multiple" id="allow_multiple_0" value="0"<?php echo $noChecked; ?> onclick="showHide(this.value);" style="vertical-align: middle" />
+								 	</td>
+								 	<td>
+								 		<label for="allow_multiple_0" class="form-nrequired" style="vertical-align: middle">No</label>
+								 	</td>
+								</tr>
+								<tr>
+								 	<td class="center">
+								 		<input type="radio" name="allow_multiple" id="allow_multiple_1" value="1"<?php echo $yesChecked; ?> onclick="showHide(this.value);" style="vertical-align: middle" />
+								 	</td>
+								 	<td>
+								 		<label for="allow_multiple_1" class="form-nrequired" style="vertical-align: middle">Yes</label>
+								 	</td>
+								</tr>
+							</table>
+							<input type="text" name="number_of_votes" id="number_of_votes" size="3" value="<?php echo (!isset($PROCESSED["number_of_votes"]) ? 0 : $PROCESSED["number_of_votes"]); ?>" style="display: <?php echo $display; ?>; vertical-align: middle; margin-top: 15px !important; width: 300px" />
+							<span id="multiple_note" class="content-small" style="display: <?php echo $display; ?>; vertical-align: middle; margin-left:10px;">
+								<strong>Note:</strong> Set to 0 for unlimited.
+							</span>
+						</td>
+					</tr>
 						<?php
 					}		
 					?>	
 					<tr>
-						<td colspan="3">
-							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Questions">
+						<td colspan="2">
+							<table summary="Questions">
 							<colgroup>
-								<col style="width: 3%" />
-								<col style="width: 17%" />
+								<col style="width: 20%" />
 								<col style="width: 80%" />
 							</colgroup>
-							<thead>
-								<tr>
-									<td colspan="3">
-										<a name="poll_questions_section"></a><h2 id="poll_questions_section" title="Questions">Questions</h2>
-									</td>
-								</tr>
-							</thead>
+							<tr>
+								<td colspan="2">
+									<a name="poll_questions_section"></a><h2 id="poll_questions_section" title="Questions">Questions</h2>
+								</td>
+							</tr>
 							<tbody id="poll-content-questions">
 								<tr>
-									<td colspan="3">
+									<td colspan="2">
 										<?php
 										if ($fully_editable) {
 											?>
-											<div style="padding-bottom: 2px">
-												<ul class="page-action">
+											<div>
+												<ul class="page-action" style="margin-left: 0;">
 													<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>">Add New Question</a></li>
 												</ul>
 											</div>
@@ -475,21 +487,21 @@ if ($RECORD_ID) {
 										if ($questions) {
 											?>
 											<div class="poll-questions" id="poll-content-questions-holder">
-												<ol class="questions" id="poll-questions-list">
+												<ol class="questions" id="poll-questions-list" style="margin-left: 0; margin-bottom: 15px;">
 												<?php
 												$count = 1;
 												foreach ($questions as $question) {
 													echo "<li id=\"question_".$count++."\" class=\"question\">";
-													echo "	<div class=\"question".((!$fully_editable) ? " noneditable" : " editable")."\">\n";
+													echo "	<div class=\"question-title".((!$fully_editable) ? " editable" : " editable")."\">\n";
 		
 													if ($fully_editable) {
 														echo "	<div style=\"float: right\">\n";
-														echo "		<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-question&amp;id=".$question["cpquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
-														echo "		<a id=\"question_delete_".$question["cpquestion_id"]."\" class=\"question-controls-delete\" href=\"javascript:questionDelete(".$question["cpquestion_id"].")\" title=\"".$question["cpquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
+														echo "		<a class=\"btn btn-primary\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-question&amp;id=".$question["cpquestion_id"]."\" style=\"height: 20px;\"><i class=\"icon-edit icon-white\" style=\"margin-top: 3px;\"></i></a>";
+														echo "		<a class=\"btn btn-danger\" id=\"question_delete_".$question["cpquestion_id"]."\" class=\"question-controls-delete\" href=\"javascript:questionDelete(".$question["cpquestion_id"].")\" title=\"".$question["cpquestion_id"]."\" style=\"height: 20px;\"><i class=\"icon-trash icon-white\" style=\"margin-top: 3px;\"></i></a>";
 														echo "	</div>\n";
 													}
 		
-													echo "		<span id=\"question_text_".$question["cpquestion_id"]."\" class=\"question\">".clean_input($question["poll_question"], "allowedtags")."</span>";
+													echo "		<span id=\"question_text_".$question["cpquestion_id"]."\">".clean_input($question["poll_question"], "allowedtags")."</span>";
 													echo "	</div>\n";
 													echo "	<ul class=\"responses\">\n";
 													$query		= "	SELECT a.*
@@ -507,6 +519,7 @@ if ($RECORD_ID) {
 												}
 												?>
 												</ol>
+												<div id="note" class="content-small" style="clear: both; margin-left: 20px;"><strong>Please Note:</strong> You can reorder questions by dragging and dropping the question.</div>
 											</div>
 											<?php
 											if ($fully_editable) {
@@ -553,37 +566,37 @@ if ($RECORD_ID) {
 						</td>
 					</tr>
 					<tr>
-						<td colspan="3"><h2><?php echo $terminology; ?> Permissions</h2></td>
+						<td colspan="2"><h2><?php echo $terminology; ?> Permissions</h2></td>
 					</tr>
 					<tr>
-						<td colspan="3">
-							<table class="permissions" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+						<td colspan="2">
+							<table class="table table-striped table-bordered">
 							<colgroup>
-								<col style="width: 30%" />
-								<col style="width: 16%" />
-								<col style="width: 16%" />
-								<col style="width: 16%" />
-								<col style="width: 22%" />
+								<col style="width: 35%" />
+								<col style="width: 15%" />
+								<col style="width: 15%" />
+								<col style="width: 15%" />
+								<col style="width: 20%" />
 							</colgroup>
 							<thead>
 								<tr>
 									<td>Group</td>
-									<td style="border-left: none">View</td>
-									<td style="border-left: none">Vote</td>
-									<td style="border-left: none">View Results</td>
-									<td style="border-left: none">Post-Vote Results</td>
+									<td>View</td>
+									<td>Vote</td>
+									<td>View Results</td>
+									<td>Post-Vote Results</td>
 								</tr>
 							</thead>
 							<tbody>
 								<tr>
-									<td class="left"><strong>Community Administrators</strong></td>
+									<td><strong>Community Administrators</strong></td>
 									<td class="on"><input type="checkbox" id="allow_admin_read" name="allow_admin_read" value="1" checked="checked" onclick="this.checked = true" /></td>
 									<td><input type="checkbox" id="allow_admin_vote" name="allow_admin_vote" value="1" checked="checked" onclick="this.checked = true" /></td>
 									<td><input type="checkbox" id="allow_admin_results" name="allow_admin_results" value="1" checked="checked" onclick="this.checked = true" /></td>
 									<td><input type="checkbox" id="allow_admin_results_after" name="allow_admin_results_after" value="1" disabled="true" /></td>
 								</tr>
 								<tr>
-									<td class="left"><strong>Community Members</strong></td>
+									<td><strong>Community Members</strong></td>
 									<td class="on"><input type="checkbox" id="allow_member_read" name="allow_member_read" value="1"
 									<?php 
 									$membersDisplay = "none";
@@ -616,7 +629,7 @@ if ($RECORD_ID) {
 								</tr>
 								<?php if (!(int) $community_details["community_registration"]) :  ?>
 								<tr>
-									<td class="left"><strong>Browsing Non-Members</strong></td>
+									<td><strong>Browsing Non-Members</strong></td>
 									<td class="on"><input type="checkbox" id="allow_troll_read" name="allow_troll_read" value="1"<?php echo (((!isset($PROCESSED["allow_troll_read"])) || ((isset($PROCESSED["allow_troll_read"])) && ($PROCESSED["allow_troll_read"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
 									<td><input type="checkbox" id="allow_troll_vote" name="allow_troll_vote" value="1"<?php echo (((isset($PROCESSED["allow_troll_vote"])) && ($PROCESSED["allow_troll_vote"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
 									<td><input type="checkbox" id="allow_troll_results" name="allow_troll_results" value="1"<?php echo (((isset($PROCESSED["allow_troll_results"])) && ($PROCESSED["allow_troll_results"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
@@ -625,7 +638,7 @@ if ($RECORD_ID) {
 								<?php endif; ?>
 								<?php if (!(int) $community_details["community_protected"]) :  ?>
 								<tr>
-									<td class="left"><strong>Non-Authenticated / Public Users</strong></td>
+									<td><strong>Non-Authenticated / Public Users</strong></td>
 									<td class="on"><input type="checkbox" id="allow_public_read" name="allow_public_read" value="1"<?php echo (((isset($PROCESSED["allow_public_read"])) && ($PROCESSED["allow_public_read"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
 									<td><input type="checkbox" id="allow_public_vote" name="allow_public_vote" value="0" onclick="noPublic(this)" /></td>
 									<td><input type="checkbox" id="allow_public_results" name="allow_public_results" value="0" onclick="noPublic(this)" /></td>
@@ -665,59 +678,67 @@ if ($RECORD_ID) {
 						}
 					?>
 					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr id="all_members">
-							<td>
-								<input name="all_members_vote" id="all_members_vote" type="radio" value="1" <?php echo (!(isset($CLEANED_MEMBERS_ARRAY) && (is_array($CLEANED_MEMBERS_ARRAY)) && (count($CLEANED_MEMBERS_ARRAY))) ? "checked=\"checked\" " : ""); ?>" onclick="showHideMembers()"/>
-							</td>
-							<td colspan="2">
-								<label for="all_members_vote" class="form-nrequired">Allow all members to vote</label>
-							</td>
-					</tr>
-					<tr id="specific_members">
-							<td>
-								<input id="specific_members_vote" name="all_members_vote" type="radio" value="0" <?php echo (isset($CLEANED_MEMBERS_ARRAY) && (is_array($CLEANED_MEMBERS_ARRAY)) && (count($CLEANED_MEMBERS_ARRAY)) ? "checked=\"checked\" " : ""); ?>" onclick="showHideMembers()"/>
-							</td>
-							<td colspan="2">
-								<label for="specific_members_vote" class="form-nrequired">Select specific members to vote</label>
-							</td>
+						<td colspan="2">
+							<table class="table table-bordered no-thead">
+								<colgroup>
+									<col style="width: 5%" />
+									<col style="width: auto" />
+								</colgroup>
+								<tr id="all_members">
+									<td class="center">
+										<input name="all_members_vote" id="all_members_vote" type="radio" value="1" <?php echo (!(isset($CLEANED_MEMBERS_ARRAY) && (is_array($CLEANED_MEMBERS_ARRAY)) && (count($CLEANED_MEMBERS_ARRAY))) ? "checked=\"checked\" " : ""); ?> onclick="showHideMembers()"/>
+									</td>
+									<td>
+										<label for="all_members_vote" class="form-nrequired">Allow all members to vote</label>
+									</td>
+								</tr>
+								<tr id="specific_members">
+									<td class="center">
+										<input id="specific_members_vote" name="all_members_vote" type="radio" value="0" <?php echo (isset($CLEANED_MEMBERS_ARRAY) && (is_array($CLEANED_MEMBERS_ARRAY)) && (count($CLEANED_MEMBERS_ARRAY)) ? "checked=\"checked\" " : ""); ?> onclick="showHideMembers()"/>
+									</td>
+									<td>
+										<label for="specific_members_vote" class="form-nrequired">Select specific members to vote</label>
+									</td>
+								</tr>
+							</table>
+						</td>
 					</tr>
 					<tr>
-						<td colspan="3" width="100%">
+						<td colspan="2" width="100%">
 							<div id="members-list" <?php echo (!(isset($CLEANED_MEMBERS_ARRAY) && (is_array($CLEANED_MEMBERS_ARRAY)) && (count($CLEANED_MEMBERS_ARRAY))) ? "style=\"display: none;\"" : "") ?>>
 								<div id="members_note" class="content-small" style="padding-top: 15px;">
 									<strong>Please Note:</strong> If you would like to restrict voting to only certain community members please add these members to the &quot;Selected Members&quot; column below.
 								</div>
-								<table style="margin-top: 10px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
+								<table summary="Add Member">
 									<colgroup>
-										<col style="width: 50%" />
-										<col style="width: 15%" />
-										<col style="width: 35%" />
-									</colgroup>
-									<tbody>		
+									<col style="width: 300px" />
+									<col style="width: auto" />
+								</colgroup>
+									<tbody>	
 										<tr>
-											<td colspan="2" style="vertical-align: top">
+											<td colspan="2">
+												<h3>Members to be Added</h3>
+											</td>
+										</tr>	
+										<tr>
+											<td style="vertical-align: top">
 												<div class="member-add-type" id="existing-member-add-type">
 													<?php
 													$nmembers_query			= "";
 													$nmembers_results		= false;
-													$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`, d.`proxy_id` as `access`
+													$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
 																		FROM `".AUTH_DATABASE."`.`user_data` AS a
 																		LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 																		ON a.`id` = b.`user_id`
 																		LEFT JOIN `community_members` AS c
 																		ON a.`id` = c.`proxy_id`
-																		LEFT JOIN `community_polls_access` AS d
-																		ON d.`proxy_id` = c.`proxy_id`
-																		AND d.`cpolls_id` = ".$db->qstr($RECORD_ID)."
 																		WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 																		AND b.`account_active` = 'true'
 																		AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 																		AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 																		AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
 																		GROUP BY a.`id`
-																		ORDER BY b.`group`, b.`role`, a.`lastname` ASC, a.`firstname` ASC";
+																		ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 													//Fetch list of categories
 													$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
 													$organisation_results	= $db->GetAll($query);
@@ -745,8 +766,7 @@ if ($RECORD_ID) {
 														$nmembers_results = $db->GetAll($nmembers_query);
 														if($nmembers_results) {
 															$members = $member_categories;
-															$index = 1;
-															$access_ids = array();
+
 															foreach($nmembers_results as $member) {
 
 																$organisation_id = $member['organisation_id'];
@@ -754,24 +774,13 @@ if ($RECORD_ID) {
 																$role = $member['role'];
 
 																if($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
-																	$members[$organisation_id]['options'][$group.$role] = array('text' => $group. ' > '.$role, 'value' => $organisation_id.'|'.$group.'|'.$role, "index" => $index);
-																	if ($member["access"]) {
-																		$access_ids[$index][] = $member["proxy_id"];
-																	}
-																	$index++;
+																	$members[$organisation_id]['options'][$group.$role] = array('text' => $group. ' > '.$role, 'value' => $organisation_id.'|'.$group.'|'.$role);
 																} elseif ($group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$group."all"])) {
-																	$members[$organisation_id]['options'][$group."all"] = array('text' => $group. ' > all', 'value' => $organisation_id.'|'.$group.'|all', "index" => $index);
-																	if ($member["access"]) {
-																		$access_ids[$index][] = $member["proxy_id"];
-																	}
-																	$index++;
-																} elseif ($member["access"]) {
-																	$access_ids[$members[$organisation_id]['options'][($group != "guest" && $group != "student" ? $group."all" : $group.$role)]["index"]][] = $member["proxy_id"];
+																	$members[$organisation_id]['options'][$group."all"] = array('text' => $group. ' > all', 'value' => $organisation_id.'|'.$group.'|all');
 																}
 															}
-															
+
 															foreach($members as $key => $member) {
-																unset($member["options"]["index"]);
 																if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
 																	sort($members[$key]['options']);
 																}
@@ -791,13 +800,11 @@ if ($RECORD_ID) {
 													}
 													?>
 					
-													<input class="multi-picklist" id="community_members" name="community_members" style="display: none;" value="<?php echo $poll_member_id_string; ?>">
+													<input class="multi-picklist" id="community_members" name="community_members" style="display: none;">
 												</div>
 											</td>
 											<td style="vertical-align: top; padding-left: 20px;">
-												<input id="acc_community_members" style="display: none;" name="acc_community_members" value="<?php echo $poll_member_id_string; ?>"/>
-												<input id="prior_community_members" style="display: none;" name="prior_community_members" value="<?php echo $poll_member_id_string; ?>"/>
-												<h3>Members to be Added</h3>
+												<input id="acc_community_members" style="display: none;" name="acc_community_members"/>
 												<div id="community_members_list"></div>
 											</td>
 									</tbody>
@@ -806,9 +813,15 @@ if ($RECORD_ID) {
 						</td>
 					</tr>
 					<tr>
-						<td colspan="3"><h2>Time Release Options</h2></td>
+						<td colspan="2"><h2>Time Release Options</h2></td>
 					</tr>
-					<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+					<tr>
+						<td colspan="2">
+							<table class="date-time">
+								<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+							</table>
+						</td>
+					</tr>
 				</tbody>
 				</table>
 				</form>

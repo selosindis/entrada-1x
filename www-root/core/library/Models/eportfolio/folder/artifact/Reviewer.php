@@ -130,7 +130,7 @@ class Models_Eportfolio_Folder_Artifact_Reviewer {
 	}
 	
 	public function getReviewer() {
-		$reviewer = User::get($this->proxy_id);
+		$reviewer = User::fetchRowByID($this->proxy_id);
 		return $reviewer;
 	}
 	
@@ -143,7 +143,7 @@ class Models_Eportfolio_Folder_Artifact_Reviewer {
 	}
 	
 	public function getUpdatedBy() {
-		$user = User::get($this->updated_by);
+		$user = User::fetchRowByID($this->updated_by);
 		return $user;
 	}
 	

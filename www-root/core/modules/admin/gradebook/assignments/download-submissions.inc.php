@@ -117,7 +117,6 @@ if ($ASSIGNMENT_ID) {
 			if ($ERROR) {
 				echo display_error();
 			}
-	
 		} else {
 				application_log("error", "The provided file id was invalid [".$ASSIGNMENT_ID."] (View File).");
 				//header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=submit&id=".$ASSIGNMENT_ID);

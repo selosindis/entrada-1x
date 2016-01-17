@@ -1,14 +1,14 @@
-<div id="entrada-navigation" class="panel" summary="Entrada">
-    <div class="panel-head">
-        <h3>Entrada</h3>
+<section>
+    <div class="panel-header">
+        <h1>{$application_name}</h1>
     </div>
-</div>
-<div class="clearfix panel-body">
+    <div class="panel-content">
         {if $is_logged_in}
             {$entrada_navigation}
         {else}
-        <ul class="menu">
-            <li><a href="{$sys_website_url}">Log In</a></li>
-        </ul>
+            <ul class="menu">
+                <li><a href="{$sys_website_url}">{translate}Log In{/translate}</a></li>
+            </ul>
         {/if}
-</div>
+    </div>
+</section>

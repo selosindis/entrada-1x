@@ -115,7 +115,7 @@ if ($ACTION == "login") {
 			if ($_SESSION["auth"]["locked_out_until"] < time()) {
 				unset($_SESSION["auth"]["locked_out_until"]);
 			} else {
-				add_error("Your access to this system has been locked due to too many failed login attempts. You may try again at " . date("g:iA ", $lockout_result["locked_out_until"]));
+				add_error("Your access to this system has been locked due to too many failed login attempts. You may try again at " . date("g:iA ", $_SESSION["auth"]["locked_out_until"]));
 
 				application_log("error", "User[".$username."] tried to access account after being SESSION locked out.");
 			}
@@ -176,8 +176,7 @@ if ($ACTION == "login") {
                         AND `member_active` = 1";
 			$community_result = $db->GetRow($query);
 			if (!$community_result || ($community_result["total"] == 0)) {
-				// This guest user doesn't belong to any communities, don't let them log in.
-				$GUEST_ERROR = true;
+				$GUEST_ERROR = true; // This guest user doesn't belong to any communities, so don't let them log in.
 			}
 		}
 
@@ -194,43 +193,51 @@ if ($ACTION == "login") {
 
 			application_log("error", "Guest user[".$username."] tried to log in and isn't a member of any communities.");
 		} else {
-			if (function_exists("adodb_session_regenerate_id")) {
-				adodb_session_regenerate_id();
-			} else {
-				session_regenerate_id();
-			}
+            /**
+             * Ensure active session before regenerating the session_id (to avoid session fixation attacks.
+             */
+            if (Entrada_Utilities::is_session_started()) {
+                if (function_exists("adodb_session_regenerate_id")) {
+                    adodb_session_regenerate_id();
+                } else {
+                    session_regenerate_id();
+                }
+            }
 
 			application_log("access", "User [".$username."] successfully logged in.");
 
-			// If $ENTRADA_USER was previously initialized in init.inc.php before the
-			// session was authorized it is set to false and needs to be re-initialized.
+            /**
+             * If $ENTRADA_USER was previously initialized in init.inc.php before the session was authorized
+             * it is set to false and needs to be re-initialized.
+             */
 			if ($ENTRADA_USER == false) {
 				$ENTRADA_USER = User::get($result["ID"]);
 			}
+
 			$_SESSION["isAuthorized"] = true;
-			$_SESSION["details"] = array();
-			$_SESSION["details"]["app_id"] = (int) AUTH_APP_ID;
-			$_SESSION["details"]["id"] = $result["ID"];
-			$_SESSION["details"]["access_id"] = $result["ACCESS_ID"];
-			$_SESSION["details"]["username"] = $username;
-			$_SESSION["details"]["prefix"] = $result["PREFIX"];
-			$_SESSION["details"]["firstname"] = $result["FIRSTNAME"];
-			$_SESSION["details"]["lastname"] = $result["LASTNAME"];
-			$_SESSION["details"]["email"] = $result["EMAIL"];
-			$_SESSION["details"]["email_alt"] = $result["EMAIL_ALT"];
-			$_SESSION["details"]["email_updated"] = (int) $result["EMAIL_UPDATED"];
-			$_SESSION["details"]["google_id"] = $result["GOOGLE_ID"];
-			$_SESSION["details"]["telephone"] = $result["TELEPHONE"];
-			$_SESSION["details"]["role"] = $result["ROLE"];
-			$_SESSION["details"]["group"] = $result["GROUP"];
-			$_SESSION["details"]["organisation_id"] = $result["ORGANISATION_ID"];
-			$_SESSION["details"]["expires"] = $result["ACCESS_EXPIRES"];
-			$_SESSION["details"]["lastlogin"] = $result["LAST_LOGIN"];
-			$_SESSION["details"]["privacy_level"] = $result["PRIVACY_LEVEL"];
-			$_SESSION["details"]["copyright"] = $result["COPYRIGHT"];
-			$_SESSION["details"]["notifications"] = $result["NOTIFICATIONS"];
-			$_SESSION["details"]["private_hash"] = $result["PRIVATE_HASH"];
-			$_SESSION["details"]["allow_podcasting"] = false;
+            $_SESSION["details"] = array();
+            $_SESSION["details"]["app_id"] = (int) AUTH_APP_ID;
+            $_SESSION["details"]["id"] = $result["ID"];
+            $_SESSION["details"]["access_id"] = $result["ACCESS_ID"];
+            $_SESSION["details"]["username"] = $username;
+            $_SESSION["details"]["prefix"] = $result["PREFIX"];
+            $_SESSION["details"]["firstname"] = $result["FIRSTNAME"];
+            $_SESSION["details"]["lastname"] = $result["LASTNAME"];
+            $_SESSION["details"]["email"] = $result["EMAIL"];
+            $_SESSION["details"]["email_alt"] = $result["EMAIL_ALT"];
+            $_SESSION["details"]["email_updated"] = (int) $result["EMAIL_UPDATED"];
+            $_SESSION["details"]["google_id"] = $result["GOOGLE_ID"];
+            $_SESSION["details"]["telephone"] = $result["TELEPHONE"];
+            $_SESSION["details"]["role"] = $result["ROLE"];
+            $_SESSION["details"]["group"] = $result["GROUP"];
+            $_SESSION["details"]["organisation_id"] = $result["ORGANISATION_ID"];
+            $_SESSION["details"]["expires"] = $result["ACCESS_EXPIRES"];
+            $_SESSION["details"]["lastlogin"] = $result["LAST_LOGIN"];
+            $_SESSION["details"]["privacy_level"] = $result["PRIVACY_LEVEL"];
+            $_SESSION["details"]["copyright"] = $result["COPYRIGHT"];
+            $_SESSION["details"]["notifications"] = $result["NOTIFICATIONS"];
+            $_SESSION["details"]["private_hash"] = $result["PRIVATE_HASH"];
+            $_SESSION["details"]["allow_podcasting"] = false;
 
 			if (isset($ENTRADA_CACHE) && !DEVELOPMENT_MODE) {
 				if (!($ENTRADA_CACHE->test("acl_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID()))) {
@@ -242,6 +249,7 @@ if ($ACTION == "login") {
 			} else {
 				$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
 			}
+
             add_statistic("index", "login", "access_id", $ENTRADA_USER->getAccessId(), $ENTRADA_USER->getID());
 
 			if (isset($result["PRIVATE-ALLOW_PODCASTING"])) {
@@ -319,44 +327,49 @@ if ($ACTION == "login") {
 			header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($PROCEED_TO), array("nows", "url")));
 			exit;
 		}
+	} elseif (($ERROR === 0) && ($LOGIN_ATTEMPTS >= AUTH_MAX_LOGIN_ATTEMPTS)) {
+		$locked_out_until = time() + AUTH_LOCKOUT_TIMEOUT;
+
+		if (isset($USER_ACCESS_ID)) {
+			// Lock this user out
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `locked_out_until` = ?, `login_attempts` = NULL  WHERE `id` = ?", array($locked_out_until, $USER_ACCESS_ID))) {
+				application_log("error", "Unable to set `locked_out_until` for user [".$username."]. Database said ".$db->ErrorMsg());
+			}
+		} else {
+			if (isset($_SESSION["auth"]) && isset($_SESSION["auth"]["login_attempts"])) {
+				$_SESSION["auth"]["login_attempts"] = 0;
+				$_SESSION["auth"]["locked_out_until"] = $locked_out_until;
+			}
+		}
+
+		add_error("Your access to this system has been locked due to too many failed login attempts. You may try again at " . date("g:iA ", $locked_out_until));
 	} else {
 		/**
 		 * There can only be auth errors if not already locked out, so only fandangle this stuff
 		 * if no errors have been encountered before trying to authenticate.
 		 */
-		if ($ERROR == 0) {
+		if ($ERROR === 0) {
 			$remaining_attempts = (AUTH_MAX_LOGIN_ATTEMPTS - (isset($LOGIN_ATTEMPTS) && ((int)$LOGIN_ATTEMPTS) ? $LOGIN_ATTEMPTS : 0));
 
-			$ERROR++;
-			$ERRORSTR[$ERROR] = $result["MESSAGE"];
+			$error_message = $result["MESSAGE"];
 
-			if ($remaining_attempts == 0) {
-				$ERRORSTR[$ERROR] .= "<br /><br />This is your <strong>last login attempt</strong> before your account is locked for ".round((AUTH_LOCKOUT_TIMEOUT / 60))." minutes.";
-			} elseif ($remaining_attempts <= (AUTH_MAX_LOGIN_ATTEMPTS - 1)) {
-				$ERRORSTR[$ERROR] .= "<br /><br />You have <strong>".$remaining_attempts." attempt".(($remaining_attempts != 1) ? "s" : "")."</strong> remaining before your account is locked for ".round((AUTH_LOCKOUT_TIMEOUT / 60))." minutes.";
+			if ($remaining_attempts > 1 && $remaining_attempts <= (AUTH_MAX_LOGIN_ATTEMPTS - 1)) {
+				$error_message .= "<br /><br />You have <strong>".$remaining_attempts." attempts</strong> remaining before your account is locked for ".round((AUTH_LOCKOUT_TIMEOUT / 60))." minutes.";
+			} elseif ($remaining_attempts == 1) {
+				$error_message .= "<br /><br />This is your <strong>last login attempt</strong> before your account is locked for ".round((AUTH_LOCKOUT_TIMEOUT / 60))." minutes.";
 			}
+
+			add_error($error_message);
 
 			application_log("access", $result["MESSAGE"]);
 
 			if (isset($USER_ACCESS_ID)) {
-				if ($LOGIN_ATTEMPTS >= AUTH_MAX_LOGIN_ATTEMPTS) {
-					// Lock this user out
-					if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `locked_out_until` = ".(time()+AUTH_LOCKOUT_TIMEOUT).", `login_attempts` = NULL  WHERE `id` = ".$USER_ACCESS_ID)) {
-						application_log("error", "Unable to incrememnt the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
-					}
-				} else {
-					if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = ".($LOGIN_ATTEMPTS+1)." WHERE `id`=".$USER_ACCESS_ID)) {
-						application_log("error", "Unable to incrememnt the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
-					}
+				if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = ? WHERE `id`= ?", array(($LOGIN_ATTEMPTS + 1), $USER_ACCESS_ID))) {
+					application_log("error", "Unable to increment the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
 				}
 			} else {
-				if ((isset($_SESSION["auth"])) && (isset($_SESSION["auth"]["login_attempts"]))) {
-					if ($_SESSION["auth"]["login_attempts"] >= AUTH_MAX_LOGIN_ATTEMPTS) {
-						$_SESSION["auth"]["login_attempts"] = 0;
-						$_SESSION["auth"]["locked_out_until"] = (time() + AUTH_LOCKOUT_TIMEOUT);
-					} else {
-						$_SESSION["auth"]["login_attempts"]++;
-					}
+				if (isset($_SESSION["auth"]) && isset($_SESSION["auth"]["login_attempts"])) {
+					$_SESSION["auth"]["login_attempts"]++;
 				} else {
 					$_SESSION["auth"]["login_attempts"] = 1;
 				}
@@ -518,6 +531,7 @@ switch ($MODULE) {
 	case "privacy_policy" :
 	case "help" :
 	case "login" :
+    case "filebrowser" :
 		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR.$MODULE.".inc.php");
 	break;
 	default :

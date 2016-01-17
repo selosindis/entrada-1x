@@ -122,7 +122,7 @@ function add_profile_sidebar () {
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=assistants\">My Admin Assistants</a></li>\n";
 	}
 
-	if ($_SESSION["details"]["group"] == "student") {
+	if ($ENTRADA_USER->getActiveGroup() == "student") {
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=mspr\">My MSPR</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile/observerships\">My Observerships</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile/gradebook\">My Gradebooks</a></li>\n";
@@ -435,6 +435,17 @@ function profile_update_google() {
 						// Clear any open buffers and push through only the success message.
 						ob_clear_open_buffers();
 						echo display_success($SUCCESSSTR);
+                        $google_address = html_encode($_SESSION["details"]["google_id"]."@".$GOOGLE_APPS["domain"]);
+                        ?>
+                        <span class="input-large uneditable-input"><?php echo $google_address; ?></span>
+                        <?php
+                        if ($google_address) {
+                            ?>
+                            <div style="margin-top: 10px">
+                                <a href="#reset-google-password-box" id="reset-google-password" class="btn" data-toggle="modal">Change My <strong><?php echo ucwords($GOOGLE_APPS["domain"]); ?></strong> Password</a>
+                            </div>
+                        <?php
+                        }
 						exit;
 					}
 				} else {
@@ -442,6 +453,7 @@ function profile_update_google() {
 						// $ERRORSTR is set by the google_create_id() function.
 						// Clear any open buffers and push through only the error message.
 						ob_clear_open_buffers();
+                        echo "Your ".$GOOGLE_APPS["domain"]." account is <strong>not active</strong>. <br /> ( <a href=\"javascript: create_google_account()\" class=\"action\">create my account</a>)";
 						echo display_error($ERRORSTR);
 						exit;
 					}

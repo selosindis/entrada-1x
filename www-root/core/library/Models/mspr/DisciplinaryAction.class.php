@@ -15,7 +15,7 @@ class DisciplinaryAction extends AbstractStudentDetails {
 		$query		= "SELECT * FROM `student_disciplinary_actions` where `id`=".$db->qstr($id);
 		$result	= $db->GetRow($query);
 		if ($result) {
-			$user = User::get($result['user_id']);
+			$user = User::fetchRowByID($result['user_id']);
 			if ($user) {
 				$da = new DisciplinaryAction($user, $result['id'], $result['action_details']);
 				return $da;

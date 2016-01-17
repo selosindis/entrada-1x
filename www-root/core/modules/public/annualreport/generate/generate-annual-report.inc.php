@@ -42,8 +42,7 @@ $PAGE_META["category"]	= "Generate a PDF version of your Annual Report";
 $PAGE_META["keywords"]	= "";
 
 $BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/generate?section=generate-annual-report", "title" => "Annual Report Generation");
-define("QUFA_DISCLAIMER",		"The personal information collected on this form is collected under the legal authority of the Royal Charter of 1841, as amended.  The information collected is used for academic purposes.  Any questions may be directed to the Associate Dean for the Faculty of Health Sciences.
-In accordance with Article 28.2.2, this standardized form for evaluation of members has been approved by the parties, Queen's University and QUFA, effective June 19, 2008.");						// Static QUFA Messages
+define("QUFA_DISCLAIMER",		"The personal information collected on this form is collected under the legal authority of the Royal Charter of 1841, as amended.  The information collected is used for academic purposes.  Any questions may be directed to the Executive Vice-Dean for the Faculty of Health Sciences.  In accordance with Article 28.2.2, this standardized form for evaluation of members has been approved by the parties, Queen's University and QUFA effective August 29, 2011.");						// Static QUFA Messages
 
 // This grid should be expanded upon redirecting back to the prizes index.
 $_SESSION["reports_expand_grid"] = "reports_grid";
@@ -248,7 +247,7 @@ authority of the royal Charter of 1841, as amended.  The information
 collected is used for academic purposes.  Any questions may be directed to
 the Associate Dean for the Faculty of Health Sciences.</h2>
 
-<h2><center>Due: <?php echo $DUE_DATE; ?> <br /><br /> A Curriculum Vita (electronic or hardcopy) is required:</center></h2>				
+<h2><center>Due: <?php echo $DUE_DATE; ?> <br /><br /> A Curriculum Vitae (electronic or hardcopy) is required:</center></h2>				
 <?php
 echo "
 <center>(Please ensure a separate copy of the Role Definitions and Expectations is attached to the Head's Assessment 
@@ -262,7 +261,7 @@ The Annual Report by Clinical Faculty aligns two distinct evaluative processes:<
 } else {
 ?>
 <h1><center>Annual Report of QUFA Faculty Members</center></h1>
-<h2><center>Due: <?php echo $DUE_DATE; ?> <br /><br /> A Curriculum Vita (electronic or hardcopy) is required:</center></h2>				
+<h2><center>Due: <?php echo $DUE_DATE; ?> <br /><br /> A Curriculum Vitae (electronic or hardcopy) is required:</center></h2>				
 <?php
 }
 ?>
@@ -2734,7 +2733,7 @@ if($clinical_value == true) {
 	<?php
 } else {
 	?>
-	Faculty Member: <?php echo html_encode($faculty_member_GivenName). " " . html_encode($faculty_member_SurName); ?>&nbsp;&nbsp;Department: <? echo $department; ?><br /><br />
+	Faculty Member: <?php echo html_encode($faculty_member_GivenName). " " . html_encode($faculty_member_SurName); ?>&nbsp;&nbsp;Department: <?php echo $department; ?><br /><br />
 	Calendar Year:<?php echo $REPORT_YEAR; ?>
 	<h2 align="center">Department Head's (School of Medicine) / Director's Assessment of Annual Performance</h2>
 	<br />

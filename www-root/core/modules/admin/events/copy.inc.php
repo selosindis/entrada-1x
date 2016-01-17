@@ -210,7 +210,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 												application_log("error", "Unable to insert a new event_file record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
 												break 2;
-											}
+											} else {
+                                                switch ($result["file_category"]) {
+                                                    case "podcast" :
+                                                        $entity_type = 1;
+                                                    break;
+                                                    case "lecture_notes" :
+                                                        $entity_type = 5;
+                                                    break;
+                                                    case "lecture_slides" :
+                                                        $entity_type = 6;
+                                                    break;
+                                                    case "other" :
+                                                        $entity_type = 11;
+                                                    break;
+                                                    
+                                                }
+                                                
+                                                $event_resource_entity = new Models_Event_Resource_Entity(array(
+                                                    "event_id" => $EVENT_ID,
+                                                    "entity_type" => $entity_type,
+                                                    "entity_value" => $FILE_ID,
+                                                    "release_date" => 0,
+                                                    "release_until" => 0,
+                                                    "updated_date" => time(),
+                                                    "updated_by" => $ENTRADA_USER->getID(),
+                                                    "active" => 1
+                                                    )
+                                                );
+                                                
+                                                if (!$event_resource_entity->insert()) {
+                                                    $ERROR++;
+                                                    $ERRORSTR[] = "There was an error while trying to save the selected <strong>Event File</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+                                                    application_log("error", "Unable to insert a new event_file record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
+                                                }
+                                            }
 
 											if (!copy($original_file, FILE_STORAGE_PATH."/".$FILE_ID)) {
 												$ERROR++;
@@ -241,7 +275,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									$result["release_until"]	= $result["release_until"] ? $event_start - ($original_start - $result["release_until"]) : 0;
 									$result["updated_date"]		= $updated_date;
 									$result["updated_by"]		= $USER_ID;
-
+                                    $original_elink_id = $result["elink_id"];
 									array_shift($result);
 									if (!($db->AutoExecute("event_links", $result, "INSERT"))) {
 										$ERROR++;
@@ -249,7 +283,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 										application_log("error", "Unable to copy link [".$result["link_title"]."] to new event_id [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
 										break 2;
-									}
+									} else {
+                                        $ELINK_ID = $db->Insert_Id();
+                                        $resource = Models_Event_Resource_Entity::fetchRowByEventIDEntityValue($event_id, $original_elink_id);
+                                        if ($resource) {
+                                            $event_resource_entity = new Models_Event_Resource_Entity(array(
+                                                "event_id" => $EVENT_ID,
+                                                "entity_type" => $resource->getEntityType(),
+                                                "entity_value" => $ELINK_ID,
+                                                "release_date" => 0,
+                                                "release_until" => 0,
+                                                "updated_date" => time(),
+                                                "updated_by" => $ENTRADA_USER->getID(),
+                                                "active" => 1
+                                                )
+                                            );
+
+                                            if (!$event_resource_entity->insert()) {
+                                                $ERROR++;
+                                                $ERRORSTR[] = "There was an error while trying to save the selected <strong>Event File</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+                                                application_log("error", "Unable to insert a new event_file record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
+                                            }
+                                        }
+                                    }
 								}
 							}
 
@@ -291,7 +347,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$results = $db->GetAll($query);
 							if ($results) {
 								foreach ($results as $result) {
-									$result["contact_id"]		= $EVENT_ID;
+									$result["content_id"]		= $EVENT_ID;
 									$result["accesses"]			= 0;
 									$result["release_date"]		= $result["release_date"] ? $event_start - ($original_start - $result["release_date"]) : 0;
 									$result["release_until"]	= $result["release_until"] ? $event_start - ($original_start - $result["release_until"]) : 0;
@@ -305,7 +361,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 										application_log("error", "Unable to copy quiz [".$result["quiz_title"]."] to new event_id [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
 										break 2;
-									}
+									} else { 
+                                        $AQUIZ_ID = $db->Insert_Id();
+                                        $event_resource_entity = new Models_Event_Resource_Entity(array(
+                                            "event_id" => $EVENT_ID,
+                                            "entity_type" => 8,
+                                            "entity_value" => $AQUIZ_ID,
+                                            "release_date" => 0,
+                                            "release_until" => 0,
+                                            "updated_date" => time(),
+                                            "updated_by" => $ENTRADA_USER->getID(),
+                                            "active" => 1
+                                            )
+                                        );
+
+                                        if (!$event_resource_entity->insert()) {
+                                            $ERROR++;
+                                            $ERRORSTR[] = "There was an error while trying to save the selected <strong>Event File</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+                                            application_log("error", "Unable to insert a new event_file record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
+                                        }
+                                    }
 								}
 							}
 
@@ -379,7 +454,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$total_events = count($EVENT_IDS);
 				
-				$query = "	SELECT a.`event_id`, a.`event_title`, a.`event_start`, a.`event_phase`, a.`release_date`, a.`release_until`, a.`updated_date`, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, d.organisation_id
+				$query = "	SELECT a.`event_id`, a.`event_title`, a.`event_start`, a.`event_phase`, a.`release_date`, a.`release_until`, a.`updated_date`, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, d.`organisation_id`, d.`course_id`
 							FROM `events` AS a
 							LEFT JOIN `event_contacts` AS b
 							ON b.`event_id` = a.`event_id`

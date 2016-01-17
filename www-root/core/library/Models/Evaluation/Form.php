@@ -34,8 +34,9 @@ class Models_Evaluation_Form extends Models_Base {
                 $updated_date,
                 $updated_by;
 
-    protected static $table_name = "evaluation_forms";
-    protected static $default_sort_column = "eform_id";
+    protected $table_name = "evaluation_forms";
+    protected $primary_key         = "eform_id";
+    protected $default_sort_column = "eform_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -108,10 +109,13 @@ class Models_Evaluation_Form extends Models_Base {
 
     public static function fetchAllByAuthorAndTitle ($proxy_id, $title) {
         global $db;
+        
+        $self = new self();
+        $theTableName = $self->table_name;        
 
         $output = array();
 
-        $query = "SELECT a.* FROM `".self::$table_name."` AS a
+        $query = "SELECT a.* FROM `".$theTableName."` AS a
                     JOIN `evaluation_form_contacts` AS b
                     ON a.`eform_id` = b.`eform_id`
                     WHERE b.`contact_role` = 'author'

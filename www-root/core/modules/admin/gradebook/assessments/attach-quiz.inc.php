@@ -51,7 +51,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
             switch ($STEP) {
                 case 2 :
                     if ((isset($_GET["aquiz_id"])) && ($aquiz_id = clean_input($_GET["aquiz_id"], array("int")))) {
-                       $query = "SELECT a.*
+                       $query = "SELECT a.*, c.`content_type`, c.`content_id`, h.`member_acl` AS `community_admin`, e.`course_id`, i.`organisation_id`
                                     FROM `quizzes` AS a
                                     LEFT JOIN `quiz_contacts` AS b
                                     ON a.`quiz_id` = b.`quiz_id`
@@ -60,14 +60,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     LEFT JOIN `assessment_attached_quizzes` AS d
                                     ON d.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
                                     AND d.`aquiz_id` = c.`aquiz_id`
-                                    WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-                                    AND c.`aquiz_id` = ".$db->qstr($aquiz_id)."
+                                    LEFT JOIN `events` AS e
+                                    ON c.`content_type` = 'event'
+                                    AND c.`content_id` = e.`event_id`
+                                    LEFT JOIN `community_pages` AS f
+                                    ON c.`content_type` = 'community_page'
+                                    AND c.`content_id` = f.`cpage_id`
+                                    LEFT JOIN `communities` AS g
+                                    ON f.`community_id` = g.`community_id`
+                                    LEFT JOIN `community_members` AS h
+                                    ON g.`community_id` = h.`community_id`
+                                    AND h.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+                                    AND h.`member_active` = 1
+                                    LEFT JOIN `courses` AS i
+                                    ON e.`course_id` = i.`course_id`
+                                    WHERE c.`aquiz_id` = ".$db->qstr($aquiz_id)."
                                     AND d.`aquiz_id` IS NULL
                                     GROUP BY a.`quiz_id`";
                         $quiz = $db->GetRow($query);
                         if ($quiz) {
+                            if ((($quiz["content_type"] == "event" && $ENTRADA_ACL->amIAllowed(new EventContentResource($quiz["content_id"], $quiz["course_id"], $quiz["organisation_id"]), "update")) || ($quiz["content_type"] == "community_page" && $quiz["community_admin"]))) {
                             $PROCESSED["quiz_title"]    = $quiz["quiz_title"];
                             $PROCESSED["aquiz_id"]       = $aquiz_id;
+                        } else {
+                            $ERROR++;
+                                $ERRORSTR[] = "You do not have permission to view the results for the <strong>Quiz</strong> you selected.";
+                            }
                         } else {
                             $ERROR++;
                             $ERRORSTR[] = "The <strong>Quiz</strong> you selected does not exist or is not enabled.";
@@ -189,7 +207,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             THEN CONCAT('Event [', f.`event_title`, ' - ', DATE(FROM_UNIXTIME(f.`event_start`)), ']')
                                         WHEN g.`page_url` IS NOT NULL 
                                             THEN CONCAT('Community Page: ', h.`community_title`, ' [', g.`page_url`, ']')
-                                    END AS `content_title`
+                                    END AS `content_title`,
+                                i.`member_acl` AS `community_admin`, f.`course_id`, j.`organisation_id`
                                 FROM `quizzes` AS a
                                 LEFT JOIN `quiz_contacts` AS b
                                 ON a.`quiz_id` = b.`quiz_id`
@@ -209,8 +228,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 AND d.`content_id` = g.`cpage_id`
                                 LEFT JOIN `communities` AS h
                                 ON g.`community_id` = h.`community_id`
-                                WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-                                AND e.`aquiz_id` IS NULL
+                                LEFT JOIN `community_members` AS i
+                                ON h.`community_id` = i.`community_id`
+                                AND i.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+                                AND i.`member_active` = 1
+                                LEFT JOIN `courses` AS j
+                                ON f.`course_id` = j.`course_id`
+                                WHERE e.`aquiz_id` IS NULL
                                 GROUP BY d.`aquiz_id`
                                 ORDER BY a.`quiz_title`";
                     $results	= $db->GetAll($query);
@@ -254,12 +278,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         <tbody>
                             <?php
                             foreach ($results as $result) {
+                                if ((($result["content_type"] == "event" && $ENTRADA_ACL->amIAllowed(new EventContentResource($result["content_id"], $result["course_id"], $result["organisation_id"]), "update")) || ($result["content_type"] == "community_page" && $result["community_admin"]))) {
                                 echo "<tr id=\"quiz-".$result["aquiz_id"]."\">\n";
                                 echo "	<td>&nbsp;</td>\n";
                                 echo "	<td><a href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("aquiz_id" => $result["aquiz_id"], "step" => 2))."\">".html_encode($result["quiz_title"])."</a></td>\n";
                                 echo "	<td".(strlen(trim($result["content_title"])) > 48 ? " class=\"tooltipper\" title=\"".html_encode($result["content_title"])."\"" : "").">".html_encode($result["content_title"])."</td>\n";
                                 echo "	<td>".html_encode($result["question_total"])."</td>\n";
                                 echo "</tr>\n";
+                            }
                             }
                             ?>
                         </tbody>

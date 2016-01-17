@@ -398,6 +398,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							$ELECTIVE = $PROCESSED;
 							
 							if ($db->AutoExecute(CLERKSHIP_DATABASE.".electives", $ELECTIVE, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
+                                add_statistic("clerkship_electives", "edit", "event_id", $EVENT_ID, $ENTRADA_USER->getID());
 								$SUCCESS++;
 								$SUCCESSSTR[]  	= "You have successfully edited this <strong>".html_encode($PROCESSED["geo_location"])."</strong> elective in the system.<br /><br />".$msg;
 								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";

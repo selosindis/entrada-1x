@@ -25,12 +25,15 @@ return array (
 			"curriculum/search" => array (
 				"title" => "Curriculum",
 				"children" => array (
-					"curriculum/search" => array (
-						"title" => "Curriculum Search"
-					),
+                    "curriculum/search" => array (
+                        "title" => "Curriculum Search"
+                    ),
 					"curriculum/explorer" => array (
 						"title" => "Curriculum Explorer"
-					)
+					),
+                    "curriculum/matrix" => array (
+						"title" => "Curriculum Matrix"
+					),
 				)
 			),
 			"courses" => array ("title" => "Courses"),
@@ -59,7 +62,14 @@ return array (
     "global_button_proceed" => "Proceed",
     "login" => "Login",
     "logout" => "Logout",
+	"selected_courses" => "Selected Courses",
+	"available_courses" => "Available Courses",
+	"all_courses" => "All Courses",
+	"no_courses" => "No Courses",
 
+	/*
+	 * Feedback
+	 */
 	"global_feedback_widget" => array(
 		"global" => array(
 			"system"		=> array(
@@ -183,9 +193,12 @@ return array (
 	/*
 	 * Communities Module
 	 */
-    "public_communities_heading_line" => "Creating a <strong>new community</strong> in the <strong>Entrada Community System</strong> gives you a <strong>place to connect</strong> on-line.",
-    "public_communities_title" => "Entrada Communities",
     "breadcrumb_communities_title"=> "Entrada Communities",
+    "public_communities_heading_line" => "Need a <strong>collaborative space</strong> for your <strong>group</strong> to online?",
+    "public_communities_tag_line" => "The <strong>Entrada Community Platform</strong> gives your group a <strong>space to connect</strong> online. You can create websites, study groups, share documents, upload photos, maintain mailing lists, announcements, and more!",
+    "public_communities_title" => "Entrada Communities",
+    "public_communities_create" => "Create a Community",
+    "public_communities_count" => "<strong>Powering</strong> %s communities",
     "community_history_add_announcement" => "A new announcement (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
     "community_history_edit_announcement" => "Announcement (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been updated.",
     "community_history_add_forum" => "A new discussion forum (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
@@ -228,6 +241,19 @@ return array (
     "community_history_move_file" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-file&id=%RECORD_ID%\">%RECORD_TITLE%</a> file was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-folder&id=%PARENT_ID%\">folder</a>.",
 	"community_history_move_photo" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-photo&id=%RECORD_ID%\">%RECORD_TITLE%</a> photo was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-gallery&id=%PARENT_ID%\">gallery</a>.",
 
+    "Join Community" => "Join Community",
+    "Join this community to access more features." => "Join this community to access more features.",
+    "Admin Center" => "Admin Center",
+    "Manage Community" => "Manage Community",
+    "Manage Members" => "Manage Members",
+    "Manage Pages" => "Manage Pages",
+    "This Community" => "This Community",
+    "My membership" => "My membership",
+    "View all members" => "View all members",
+    "Quit this community" => "Quit this community",
+    "Log In" => "Log In",
+    "Additional Pages" => "Additional Pages",
+
 	/*
 	 * MSPR Module
 	 */
@@ -253,6 +279,15 @@ return array (
      */
 	"course" => "Course",
 	"courses" => "Courses",
+    "course_director" => "Course Director",
+    "course_directors" => "Course Directors",
+    "curriculum_coordinator" => "Curriculum Coordinator",
+    "curriculum_coordinators" => "Curriculum Coordinators",
+    "program_coordinator" => "Program Coordinator",
+    "program_coordinators" => "Program Coordinators",
+    "evaluation_rep" => "Evaluation Rep",
+    "student_rep" => "Student Rep",
+
 	"evaluation_filtered_words" => "Dr. Doctor; Firstname Lastname",
 
 	/*
@@ -290,5 +325,5 @@ return array (
         <p>The details provided for this assignment are as follows:</p>
         <p>Due Date: %due_date%</p>
         <p>Title: %assignment_title%</p>
-        <p>Description:<br />%assignment_description%</p>",
+        <p>Description:<br />%assignment_description%</p>"
 );

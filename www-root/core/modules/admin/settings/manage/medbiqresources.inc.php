@@ -25,11 +25,11 @@
  *
 */
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/medbiqresources?org=".$ORGANISATION['organisation_id'], "title" => "Manage Medbiquitos Resources");
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/medbiqresources?org=".$ORGANISATION['organisation_id'], "title" => "Medbiquitous Resources");
 
 if (!defined("PARENT_INCLUDED")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("objective", "update", false)) {

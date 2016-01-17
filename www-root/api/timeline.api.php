@@ -22,60 +22,61 @@
  */
 require_once("init.inc.php");
 
-if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
+    $search_query = "";
+    $search_org = 0;
+    $search_cohort = 0;
+    $search_academic_year = 0;
+
 	/**
 	 * The query that is actually be searched for.
 	 */
-	if((isset($_GET["q"])) && (trim($_GET["q"]))) {
-		$SEARCH_QUERY	= trim($_GET["q"]);
-		
-		if(strlen($SEARCH_QUERY) < 4) {
-			$SEARCH_QUERY = str_pad($SEARCH_QUERY, 4, "*");
-		}
+	if (isset($_GET["q"]) && ($tmp_input = clean_input($_GET["q"]))) {
+		$search_query = $tmp_input;
 	}
-	
+
 	/**
-	 * The class of that will be outputted.
+	 * Check if c variable is set for Class of.
 	 */
-	if ((isset($_GET["c"])) && ($tmp_input = clean_input($_GET["c"], "alphanumeric"))) {
-		$SEARCH_CLASS = $tmp_input;
+	if (isset($_GET["c"]) && ($tmp_input = clean_input($_GET["c"], array("nows", "int")))) {
+		$search_cohort = $tmp_input;
 	}
-	
+
+	/**
+	 * Check if o variable is set for Organisation
+	 */
+	if (isset($_GET["o"]) && ($tmp_input = clean_input($_GET["o"], array("nows", "int")))) {
+		$search_org = $tmp_input;
+	}
+
 	/**
 	 * Check if y variable is set for Academic year.
 	 */
-	if(isset($_GET["y"])) {
-		$SEARCH_YEAR = (int) trim($_GET["y"]);
-	
-		$SEARCH_DURATION["start"]	= mktime(0, 0, 0, 9, 1, $SEARCH_YEAR);
-		$SEARCH_DURATION["end"]		= strtotime("+1 year", $SEARCH_DURATION["start"]);
+	if (isset($_GET["y"]) && ($tmp_input = clean_input($_GET["y"], array("nows", "int")))) {
+		$search_academic_year = $tmp_input;
 	}
 	
 	header("Content-Type: text/xml; charset=".DEFAULT_CHARSET);
 	echo "<?xml version=\"1.0\" encoding=\"".DEFAULT_CHARSET."\" ?>\n";
 	
 	echo "<data>\n";
-	if((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"]) && ($SEARCH_QUERY)) {
-		$query = "	SELECT a.`event_id`, a.`event_title`, a.`event_goals`, a.`event_objectives`, a.`event_start`
-					FROM `events` AS a
-					LEFT JOIN `event_audience` AS b
-					ON b.`event_id` = a.`event_id`
-					WHERE b.`audience_type` = 'cohort'
-					AND b.`audience_value` = ".$db->qstr($SEARCH_CLASS)."
-					AND".(($SEARCH_YEAR) ? " (a.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
-					MATCH (a.`event_title`, a.`event_description`, a.`event_goals`, a.`event_objectives`, a.`event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)
-					ORDER BY a.`event_start` ASC, a.`event_title` ASC";
-		$results = $db->GetAll($query);
-		if($results) {
-			foreach($results as $key => $result) {
-				echo "\t<event start=\"".date("M j Y H:i:s \G\M\T", $result["event_start"])."\" title=\"".html_encode($result["event_title"])."\">\n";
-				echo html_encode("<a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\">".$result["event_title"]."</a>");
-				echo "\t</event>\n";
-			}
-		}
+	if ($search_query) {
+		$queries = Entrada_Curriculum_Search::prepare($search_query, $search_org, $search_cohort, $search_academic_year, true, false);
+
+        if ($queries) {
+            $query = $queries["search"];
+
+            $results = $db->GetAll($query);
+            if ($results) {
+                foreach ($results as $key => $result) {
+                    echo "\t<event start=\"" . date("M j Y H:i:s \G\M\T", $result["event_start"]) . "\" title=\"" . html_encode($result["event_title"]) . "\">\n";
+                    echo html_encode("<a href=\"" . ENTRADA_URL . "/events?id=" . $result["event_id"] . "\">" . $result["event_title"] . "</a>");
+                    echo "\t</event>\n";
+                }
+            }
+        }
 	}
 	echo "</data>\n";
 } else {
 	application_log("error", "Timeline API accessed without valid session_id.");	
 }
-?>

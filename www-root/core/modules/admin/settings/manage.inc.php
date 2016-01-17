@@ -22,9 +22,9 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "update",false)) {
@@ -52,20 +52,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage?org=".$ORGANISATION['organisation_id'], "title" => $ORGANISATION["organisation_title"]);
 
 					$sidebar_html  = "<ul class=\"menu\">";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/departments?org=".$ORGANISATION_ID."\">Manage Departments</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes?org=".$ORGANISATION_ID."\">Manage Curriculum Types</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes?org=".$ORGANISATION_ID."\">Manage Event Types</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/hottopics?org=".$ORGANISATION_ID."\">Manage Hot Topics</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/restricteddays?org=".$ORGANISATION_ID."\">Manage Restricted Days</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/metadata?org=".$ORGANISATION_ID."\">Manage Meta Data</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID."\">Manage Clerkship Categories</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/objectives?org=".$ORGANISATION_ID."\">Manage Objective Sets</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqinstructional?org=".$ORGANISATION_ID."\">Medbiq Instructional Methods</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqassessment?org=".$ORGANISATION_ID."\">Medbiq Assessment Methods</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqresources?org=".$ORGANISATION_ID."\">Medbiq Resources</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/descriptors?org=".$ORGANISATION_ID."\">Manage Evaluation Response Descriptors</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/characteristics?org=".$ORGANISATION_ID."\">Assessment Characteristics</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID."\">Clinical Rotation Categories</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes?org=".$ORGANISATION_ID."\">Curriculum Layout</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/objectives?org=".$ORGANISATION_ID."\">Curriculum Tags</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/departments?org=".$ORGANISATION_ID."\">Departments</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/descriptors?org=".$ORGANISATION_ID."\">Evaluation Response Descriptors</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/hottopics?org=".$ORGANISATION_ID."\">Hot Topics</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes?org=".$ORGANISATION_ID."\">Learning Event Types</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqassessment?org=".$ORGANISATION_ID."\">Medbiq Assessment Methods</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqinstructional?org=".$ORGANISATION_ID."\">Medbiq Instructional Methods</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqresources?org=".$ORGANISATION_ID."\">Medbiq Resources</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/restricteddays?org=".$ORGANISATION_ID."\">Restricted Days</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/metadata?org=".$ORGANISATION_ID."\">User Meta Data</a></li>\n";
 					$sidebar_html .= "</ul>";
-					new_sidebar_item("Organisation Management", $sidebar_html, "config-org-nav", "open");
+					new_sidebar_item($ORGANISATION["organisation_title"], $sidebar_html, "config-org-nav", "open");
 
 
 					$module_file = $router->getRoute();

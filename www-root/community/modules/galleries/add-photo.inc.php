@@ -293,17 +293,15 @@ if ($RECORD_ID) {
 					var addPhotoHTML =	'<div id="photo_#{photo_id}" class="photo-upload">' +
 										'	<table class="upload">' +
 										'	<colgroup>' +
-										'		<col style="width: 30%" />' +
-										'		<col style="width: 70%" />' +
+										'		<col style="width: 20%" />' +
+										'		<col style="width: 80%" />' +
 										'	</colgroup>' +
-										'	<thead>' +
-										'		<tr>' +
-										'			<td colspan="2">' +
-										'				<h3 id="photo_#{photo_id}_title">Photo #{photo_number})</h3>' +
-										'				<div style="text-align: right">(<a class="action" href="#" onclick="$(\'photo_#{photo_id}\').remove();">remove</a>)</div>' +
-										'			</td>' +
-										'		</tr>' +
-										'	</thead>' +
+										'	<tr>' +
+										'		<td colspan="2">' +
+										'			<h2 id="photo_#{photo_id}_title">Photo #{photo_number})</h2>' +
+										'			<div style="text-align: right">(<a class="action" href="#" onclick="$(\'photo_#{photo_id}\').remove();">remove</a>)</div>' +
+										'		</td>' +
+										'	</tr>' +
 										'	<tbody>' +
 										'		<tr>' +
 										'			<td style="vertical-align: top"><label for="photo_file_#{photo_id}" class="form-required">Select Local Photo</label></td>' +
@@ -316,26 +314,40 @@ if ($RECORD_ID) {
 										'		</tr>' +
 										'		<tr>' +
 										'			<td><label for="photo_title_#{photo_id}" class="form-required">Photo Title</label></td>' +
-										'			<td><input type="text" id="photo_title_#{photo_id}" name="photo_title[#{photo_id}]" value="" maxlength="64" style="width: 95%" /></td>' +
+										'			<td><input type="text" id="photo_title_#{photo_id}" name="photo_title[#{photo_id}]" value="" maxlength="64" style="width: 300px" /></td>' +
 										'		</tr>' +
 										'		<tr>' +
-										'			<td style="vertical-align: top"><label for="photo_description_#{photo_id}" class="form-nrequired">Photo Description</label></td>' +
-										'			<td style="vertical-align: top">' +
-										'				<textarea id="photo_description_#{photo_id}" name="photo_description[#{photo_id}]" style="width: 95%; height: 60px" cols="50" rows="5"></textarea>' +
+										'			<td><label for="photo_description_#{photo_id}" class="form-nrequired">Photo Description</label></td>' +
+										'			<td>' +
+										'				<textarea id="photo_description_#{photo_id}" name="photo_description[#{photo_id}]" style="width: 98%; height: 60px" cols="50" rows="5"></textarea>' +
 										'			</td>' +
+										'		</tr>' +
+										'		<tr>' +
+										'			<td colspan="2">&nbsp;</td>' +
 										'		</tr>' +
 										<?php
 										if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
 											?>
-											'		<tr>'+
-											'			<td colspan="2">&nbsp;</td>'+
-											'			</tr>'+
-											'			<tr>'+
-											'				<td colspan="2">'+
-											'					<input type="checkbox" style="vertical-align: middle" name="enable_notifications[#{photo_id}]" id="enable_notifications_#{photo_id}" />'+
-											'					<label for="enable_notifications_#{photo_id}" class="form-nrequired" style="vertical-align: middle">Receive notifications when this users comment on this photo</label>'+
-											'				</td>'+
-											'			</tr>'+
+											'		<tr>' +
+							                '            <td colspan="2">' +
+							                '            	<table class="table table-bordered no-thead">' +
+							                '            		<colgroup>' +
+								            '                        <col style="width: 5%" />' +
+								            '                        <col style="width: auto" />' +
+								            '                    </colgroup>' +
+							                '            		<tbody>' +
+										    '                    	<tr>' +
+										    '                    		<td class="center">' +
+											'	                            <input type="checkbox" name="enable_notifications[<?php echo $tmp_photo_id; ?>]" id="enable_notifications_<?php echo $tmp_photo_id; ?>" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>' +
+										    '                    		</td>' +
+										    '                    		<td>' +
+										    '                    			<label for="enable_notifications_<?php echo $tmp_photo_id; ?>" class="form-nrequired">Receive notifications when this users comment on this photo</label>' +
+										    '                    		</td>' +
+										    '                    	</tr>' +
+									        '                	</tbody>' +
+								            '            	</table>' +
+							                '            </td>' +
+						                    '        </tr>' +
 											<?php
 										}
 										?>
@@ -343,190 +355,200 @@ if ($RECORD_ID) {
 										'	</table>' +
 										'</div>';
 					</script>
-					<div class="display-generic">
+					<div>
 						To add multiple JPEG, GIF or PNG images at once, click the &quot;Add Another Photo&quot; link below, which will increase the number of photo selections available. Please note that images with dimensions larger than <?php echo $VALID_MAX_DIMENSIONS["photo"]; ?> x <?php echo $VALID_MAX_DIMENSIONS["photo"]; ?>px will be automatically resized, and the combined file size of all uploaded images may not exceed <?php echo readable_size(MAX_UPLOAD_FILESIZE); ?>.
 					</div>
-
-					<div style="float: right">
+					<div style="float: right; margin-top: 10px;">
 						<ul class="page-action">
-							<li><a style="cursor: pointer" onclick="addPhoto(addPhotoHTML)">Add Another Photo</a></li>
+							<li>
+								<a style="cursor: pointer" onclick="addPhoto(addPhotoHTML)">Add Another Photo</a>
+							</li>
 						</ul>
 					</div>
 					<div style="clear: both"></div>
 					
 					<form id="upload-photo-form" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-photo&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>" onsubmit="uploadPhotos()">
-					<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Upload Photo">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 20%" />
-						<col style="width: 77%" />
-					</colgroup>
-					<tfoot>
-						<?php if ($COPYRIGHT) {
-						?>
-						<tr><td colspan="3">&nbsp;<hr></td></tr>
-						<tr>
-							<td colspan="3">
-								<h2><?php echo $translate->_("copyright_title"); ?></h2>
-							</td>
-						</tr>
-						<tr>
-							<td />
-							<td colspan="2">
-								<div class="display-generic">
-									<?php echo $copyright_settings["copyright-uploads"]; ?>
-									<label class="checkbox">
-										<input type="checkbox" value="1" onchange="acceptButton(this)"> <?php echo $translate->_("copyright_accept_label"); ?>
-									</label>
-								</div>
-							</td>
-						</tr>
-					<?php
-					} ?>
-						<tr>
-							<td colspan="3" style="padding-top: 1px; text-align: right">
-								<div id="display-upload-button">
-									<input type="submit" class="btn btn-primary" id="upload-button" value="Upload" <?php echo ($COPYRIGHT ? " disabled=\"disabled\"" : "");?> />
-								</div>
-							</td>
-						</tr>
-						<?php if ($COPYRIGHT) {
-						?>
-						<tr><td colspan="3">&nbsp;<hr></td></tr>
-						<tr>
-							<td colspan="3">
-								<h2><?php echo $translate->_("copyright_title"); ?></h2>
-							</td>
-						</tr>
-						<tr>
-							<td />
-							<td colspan="2">
-								<div class="display-generic">
-									<?php echo $copyright_settings["copyright-uploads"]; ?>
-									<label class="checkbox">
-										<input type="checkbox" value="1" onchange="acceptButton(this)"> <?php echo $translate->_("copyright_accept_label"); ?>
-									</label>
-								</div>
-							</td>
-						</tr>
-					<?php
-					} ?>
-					</tfoot>
-					<tbody>
-						<tr>
-							<td colspan="3">
-								<div id="photo_list">
-								<?php
-									foreach ($photo_uploads as $tmp_photo_id => $photo_upload) {
-										if ($photo_upload["success"]) {
-											?>
-											<div id="photo_<?php echo $tmp_photo_id; ?>" class="photo-upload">
-												<table class="uploaded">
-													<colgroup>
-															<col style="width: 30%" />
-															<col style="width: 70%" />
-													</colgroup>
-													<thead>
-														<tr>
-															<td colspan="2">
-																<h3 id="photo_<?php echo $tmp_photo_id; ?>_title">Photo <?php echo ($tmp_photo_id + 1); ?></h3>
-															</td>
-														</tr>
-													</thead>
-													<tbody>
-														<tr>
-															<td style="vertical-align: top;">
-																<?php echo communities_galleries_fetch_thumbnail($photo_upload["photo_id"], $photo_upload["title"]); ?>
-															</td>
-															<td style="vertical-align: top;">
-																<h3><?php echo html_encode($photo_upload["title"]); ?></h3>
-																<div>
-																	<?php echo nl2br(html_encode($photo_upload["description"])); ?>
-																</div>
-															</td>
-														</tr>
-													</tbody>
-												</table>
-											</div>
-											<?php
-										} else {
-											?>
-											<div id="photo_<?php echo $tmp_photo_id; ?>" class="photo-upload">
-												<table class="upload">
-												<colgroup>
-														<col style="width: 30%" />
-														<col style="width: 70%" />
-												</colgroup>
-												<thead>
-													<tr>
-														<td colspan="2">
-															<h3 id="photo_<?php echo $tmp_photo_id; ?>_title">Photo <?php echo ($tmp_photo_id + 1); ?>)</h3>
-															<?php
-															if ($tmp_photo_id) {
-																?>
-																<div style="text-align: right">(<a class="action" href="#" onclick="$('photo_<?php echo $tmp_photo_id; ?>').remove();">remove</a>)</div>
-																<?php
-															}
-															?>
-
-														</td>
-													</tr>
-												</thead>
-												<tbody>
-													<tr>
-														<td style="vertical-align: top"><label for="photo_file_<?php echo $tmp_photo_id; ?>" class="form-required">Select Local Photo</label></td>
-														<td style="vertical-align: top">
-															<input type="file" id="photo_file_<?php echo $tmp_photo_id; ?>" name="photo_files[<?php echo $tmp_photo_id; ?>]" onchange="fetchPhotoFilename('<?php echo $tmp_photo_id; ?>')" />
-														</td>
-													</tr>
-													<tr>
-														<td colspan="2">&nbsp;</td>
-													</tr>
-													<tr>
-														<td><label for="photo_title_<?php echo $tmp_photo_id; ?>" class="form-required">Photo Title</label></td>
-														<td><input type="text" id="photo_title_<?php echo $tmp_photo_id; ?>" name="photo_title[<?php echo $tmp_photo_id; ?>]" value="<?php echo ((isset($photo_upload["title"])) ? html_encode($photo_upload["title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
-													</tr>
-													<tr>
-														<td style="vertical-align: top"><label for="photo_description_<?php echo $tmp_photo_id; ?>" class="form-nrequired">Photo Description</label></td>
-														<td style="vertical-align: top">
-															<textarea id="photo_description_<?php echo $tmp_photo_id; ?>" name="photo_description[<?php echo $tmp_photo_id; ?>]" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($photo_upload["description"])) ? html_encode($photo_upload["description"]) : ""); ?></textarea>
-														</td>
-													</tr>
-													<?php
-													if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
-														?>
-														<tr>
-															<td colspan="2">&nbsp;</td>
-														</tr>
-														<tr>
-															<td colspan="2">
-																<input type="checkbox" style="vertical-align: middle" name="enable_notifications[<?php echo $tmp_photo_id; ?>]" id="enable_notifications_<?php echo $tmp_photo_id; ?>" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>
-																<label for="enable_notifications_<?php echo $tmp_photo_id; ?>" class="form-nrequired" style="vertical-align: middle">Receive notifications when this users comment on this photo</label>
-															</td>
-														</tr>
-														<?php
-													}
+						<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
+						<table summary="Upload Photo">
+							<colgroup>
+								<col style="width: 20%" />
+								<col style="width: 80%" />
+							</colgroup>
+							<tfoot>
+	                            <?php if ($COPYRIGHT) {
+		                            ?>
+		                            <tr>
+			                            <td colspan="2">
+				                            <h2><?php echo $translate->_("copyright_title"); ?></h2>
+			                            </td>
+		                            </tr>
+		                            <tr>
+			                            <td colspan="2">
+			                            	<table class="table table-striped-rev table-bordered no-thead">
+			                            		<colgroup>
+				                                    <col style="width: 5%" />
+				                                    <col style="width: auto" />
+				                                </colgroup>
+			                            		<tbody>
+				                            		<tr>
+							                            <td colspan="2" style="padding:15px;">
+							                                <?php echo $copyright_settings["copyright-uploads"]; ?>
+							                            </td>
+						                        	</tr>
+						                        	<tr>
+						                        		<td class="center">
+								                            <input type="checkbox" value="1" id="accept_copyright" onchange="acceptButton(this)" />
+						                        		</td>
+						                        		<td>
+						                        			<label for="accept_copyright" class="form-nrequired"><?php echo $translate->_("copyright_accept_label"); ?>
+						                        		</td>
+						                        	</tr>
+					                        	</tbody>
+				                        	</table>
+			                            </td>
+		                            </tr>
+	                            <?php
+	                            } ?>
+	                            <tr>
+									<td colspan="2" style="padding-top: 1px; text-align: right">
+										<div id="display-upload-button">
+											<input type="submit" class="btn btn-primary" id="upload-button" value="Upload" <?php echo ($COPYRIGHT ? " disabled=\"disabled\"" : "");?> />
+										</div>
+									</td>
+								</tr>
+	                        </tfoot>
+							<tbody>
+								<tr>
+									<td colspan="2">
+										<div id="photo_list">
+										<?php
+											foreach ($photo_uploads as $tmp_photo_id => $photo_upload) {
+												if ($photo_upload["success"]) {
 													?>
-												</tbody>
-												</table>
-											</div>
-											<?php
-										}
-									}
-								?>
-								</div>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3"><h2>Time Release Options</h2></td>
-						</tr>
-						<?php
-                        echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0));
+													<div id="photo_<?php echo $tmp_photo_id; ?>" class="photo-upload">
+														<table>
+															<colgroup>
+																	<col style="width: 20%" />
+																	<col style="width: 80%" />
+															</colgroup>
+															<tr>
+																<td colspan="2">
+																	<h2 id="photo_<?php echo $tmp_photo_id; ?>_title">Photo <?php echo ($tmp_photo_id + 1); ?></h2>
+																</td>
+															</tr>
+															<tbody>
+																<tr>
+																	<td style="vertical-align: top;">
+																		<?php echo communities_galleries_fetch_thumbnail($photo_upload["photo_id"], $photo_upload["title"]); ?>
+																	</td>
+																	<td style="vertical-align: top;">
+																		<h3><?php echo html_encode($photo_upload["title"]); ?></h3>
+																		<div>
+																			<?php echo nl2br(html_encode($photo_upload["description"])); ?>
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</div>
+													<?php
+												} else {
+													?>
+													<div id="photo_<?php echo $tmp_photo_id; ?>" class="photo-upload">
+														<table class="upload">
+															<colgroup>
+																	<col style="width: 20%" />
+																	<col style="width: 80%" />
+															</colgroup>
+															<tr>
+																<td colspan="2">
+																	<h2 id="photo_<?php echo $tmp_photo_id; ?>_title">Photo <?php echo ($tmp_photo_id + 1); ?>)</h2>
+																	<?php
+																	if ($tmp_photo_id) {
+																		?>
+																		<div style="text-align: right">(<a class="action" href="#" onclick="$('photo_<?php echo $tmp_photo_id; ?>').remove();">remove</a>)</div>
+																		<?php
+																	}
+																	?>
 
-                        ?>
-					</tbody>
-					</table>
+																</td>
+															</tr>
+															<tbody>
+																<tr>
+																	<td style="vertical-align: top">
+																		<label for="photo_file_<?php echo $tmp_photo_id; ?>" class="form-required">Select Local Photo</label>
+																	</td>
+																	<td style="vertical-align: top">
+																		<input type="file" id="photo_file_<?php echo $tmp_photo_id; ?>" name="photo_files[<?php echo $tmp_photo_id; ?>]" onchange="fetchPhotoFilename('<?php echo $tmp_photo_id; ?>')" />
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<label for="photo_title_<?php echo $tmp_photo_id; ?>" class="form-required">Photo Title</label>
+																	</td>
+																	<td>
+																		<input type="text" id="photo_title_<?php echo $tmp_photo_id; ?>" name="photo_title[<?php echo $tmp_photo_id; ?>]" value="<?php echo ((isset($photo_upload["title"])) ? html_encode($photo_upload["title"]) : ""); ?>" maxlength="64" style="width: 300px" />
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<label for="photo_description_<?php echo $tmp_photo_id; ?>" class="form-nrequired">Photo Description</label>
+																	</td>
+																	<td style="vertical-align: top">
+																		<textarea id="photo_description_<?php echo $tmp_photo_id; ?>" name="photo_description[<?php echo $tmp_photo_id; ?>]" style="width: 98%; height: 60px" cols="50" rows="5"><?php echo ((isset($photo_upload["description"])) ? html_encode($photo_upload["description"]) : ""); ?></textarea>
+																	</td>
+																</tr>
+																<?php
+																if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
+																	?>
+																	<tr>
+											                            <td colspan="2">
+											                            	<table class="table table-bordered no-thead">
+											                            		<colgroup>
+												                                    <col style="width: 5%" />
+												                                    <col style="width: auto" />
+												                                </colgroup>
+											                            		<tbody>
+														                        	<tr>
+														                        		<td class="center">
+																                            <input type="checkbox" name="enable_notifications[<?php echo $tmp_photo_id; ?>]" id="enable_notifications_<?php echo $tmp_photo_id; ?>" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>
+														                        		</td>
+														                        		<td>
+														                        			<label for="enable_notifications_<?php echo $tmp_photo_id; ?>" class="form-nrequired">Receive notifications when this users comment on this photo</label>
+														                        		</td>
+														                        	</tr>
+													                        	</tbody>
+												                        	</table>
+											                            </td>
+										                            </tr>
+																	<?php
+																}
+																?>
+															</tbody>
+														</table>
+													</div>
+													<?php
+												}
+											}
+										?>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2"><h2>Time Release Options</h2></td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<table class="date-time">
+								<?php
+		                        echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0));
+
+		                        ?>
+		                        		</table>
+		                        	</td>
+		                        </tr>
+							</tbody>
+						</table>
 					</form>
 					<div id="display-upload-status" style="display: none">
 						<div style="text-align: left; background-color: #EEEEEE; border: 1px #666666 solid; padding: 10px">

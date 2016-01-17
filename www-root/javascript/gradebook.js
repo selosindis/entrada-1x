@@ -196,12 +196,10 @@ jQuery(document).ready(function($) {
 
 	$("#fullscreen-edit").click(function(e) {
 		e.preventDefault();
-		$('#navigator-container').hide();
 	});
 
 	$('.gradebook_edit_close').live('click', function(e) {
 		e.preventDefault();
-		$('#navigator-container').show();
 		$('.gradebook_edit').jqmHide();
 	});
 

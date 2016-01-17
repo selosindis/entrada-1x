@@ -54,7 +54,7 @@ if (!defined("IN_COMMUNITIES")) {
 	$admin_url = ENTRADA_URL."/admin/communities";
 
 	$sidebar_html  = "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"off\"><a href=\"".ENTRADA_URL."/communities"."\">Student View</a></li>\n";
+	$sidebar_html .= "	<li class=\"off\"><a href=\"".ENTRADA_URL."/communities"."\">Learner View</a></li>\n";
 	if (($admin_wording) && ($admin_url)) {
 		$sidebar_html .= "<li class=\"on\"><a href=\"".$admin_url."\">".html_encode($admin_wording)."</a></li>\n";
 	}

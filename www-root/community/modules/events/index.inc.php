@@ -57,20 +57,20 @@ if (!$RECORD_ID) {
 	$display_duration = fetch_timestamps($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]);
 	
 	/**
-	 * Update requsted number of rows per page.
+	 * Update requested number of rows per page.
 	 * Valid: any integer really.
 	 */
 	if ((isset($_GET["pp"])) && ((int) trim($_GET["pp"]))) {
 		$integer = (int) trim($_GET["pp"]);
 	
-		if (($integer > 0) && ($integer <= 250)) {
+		if (($integer > 0) && ($integer <= 999)) {
 			$_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"] = $integer;
 		}
 	
 		$_SERVER["QUERY_STRING"] = replace_query(array("pp" => false));
 	} else {
 		if (!isset($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"])) {
-			$_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"] = 5;
+			$_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"] = 999;
 		}
 	}
 	
@@ -125,18 +125,19 @@ if (!$RECORD_ID) {
 	 */
 	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"] * $page_current) - $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]);
 }
+
 /**
- * Add the javascript for deleting events.
+ * Add the javascript for deleting.
  */
 if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 	?>
-	<script type="text/javascript">
+	<script>
 		function eventDelete(id) {
 			Dialog.confirm('Do you really wish to delete '+ $('event-' + id + '-title').innerHTML +' from this community?',
 				{
 					id:				'requestDialog',
 					width:			350,
-					height:			75,
+					height:			100,
 					title:			'Delete Confirmation',
 					className:		'medtech',
 					okLabel:		'Yes',
@@ -165,23 +166,27 @@ function setDateValue(field, date) {
 </script>
 <div id="module-header">
 	<?php
-	if (isset($total_pages) && $total_pages > 1) {
-		echo "<div id=\"pagination-links\">\n";
-		echo "Pages: ".$pagination->GetPageLinks();
-		echo "</div>\n";
-	}
+    if (isset($total_pages) && $total_pages > 1) {
+        echo "<div class=\"pagination pagination-right\">";
+        echo "    <ul>";
+        echo        $pagination->GetPageLinks();
+        echo "    </ul>\n";
+        echo "</div>\n";
+    }
 	?>
-	<a href="<?php echo COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss"; ?>" class="feeds rss">Subscribe to RSS</a>
-	<a href="<?php echo COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/calendar.ics"; ?>" class="feeds ics">Subscribe to Calendar</a>
+
+	<a href="<?php echo COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss:".$PRIVATE_HASH; ?>" title="Subscribe to RSS"><i class="fa fa-rss-square fa-lg fa-fw"></i></a>
+	<a href="<?php echo COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/calendar.ics:".$PRIVATE_HASH; ?>" title="Subscribe to Calendar"><i class="fa fa-calendar fa-lg fa-fw"></i></a>
+
 	<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
-		<div id="notifications-toggle" style="display: inline; padding-top: 4px;"></div>
+		<div id="notifications-toggle"></div>
 		<script type="text/javascript">
 		function promptNotifications(enabled) {
 			Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications for new events in this community?',
 				{
 					id:				'requestDialog',
 					width:			350,
-					height:			75,
+					height:			100,
 					title:			'Notification Confirmation',
 					className:		'medtech',
 					okLabel:		'Yes',
@@ -193,7 +198,7 @@ function setDateValue(field, date) {
 										new Window(	{
 														id:				'resultDialog',
 														width:			350,
-														height:			75,
+														height:			100,
 														title:			'Notification Result',
 														className:		'medtech',
 														okLabel:		'close',
@@ -227,12 +232,11 @@ function setDateValue(field, date) {
 	<?php
 	if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "add")) {
 		?>
-		<div style="float: right">
+		<div class="pull-right">
 			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Event</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add" class="btn btn-success">Add Event</a></li>
 			</ul>
 		</div>
-		<div style="clear: both"></div>
 		<?php
 	}
 	if ($RECORD_ID) {
@@ -278,18 +282,15 @@ function setDateValue(field, date) {
 				 * If there is time release properties, display them to the browsing users.
 				 */
 				if (($release_date = (int) $result["release_date"]) && ($release_date > time())) {
-					$NOTICE++;
-					$NOTICESTR[] = "This discussion post will not be accessible to others until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.";
+					add_notice("This event post will not be accessible to others until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.");
 				} elseif ($release_until = (int) $result["release_until"]) {
 					if ($release_until > time()) {
-						$NOTICE++;
-						$NOTICESTR[] = "This event will be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.";
+						add_notice("This event will be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.");
 					} else {
 						/**
 						 * Only administrators or people who wrote the post will get this.
 						 */
-						$NOTICE++;
-						$NOTICESTR[] = "This event was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong> by others.";
+						add_notice("This event was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong> by others.");
 					}
 				}
 	
@@ -297,45 +298,50 @@ function setDateValue(field, date) {
 					echo display_notice();
 				}
 
-				$RECORD_AUTHOR = $result["proxy_id"];
 				echo "<div id=\"event-".(int) $result["cevent_id"]."\" class=\"event calendar\">\n";
 				echo "	<a name=\"event-".(int) $result["cevent_id"]."\"></a>\n";
-				echo "<h2 id=\"event-".(int) $result["cevent_id"]."-title\">".html_encode($result["event_title"])."</h2>\n";
-				echo "<div class=\"tagline\">\n";
-				echo "	Released ".date("F dS, Y", $result["release_date"])." by <strong>".html_encode($result["fullname"])."</strong>";
-				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cevent_id"]."\">edit</a>)" : "");
-				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:eventDelete('".$result["cevent_id"]."')\">delete</a>)" : "");
-				echo "</div>\n";
-				echo "<br />\n";
-				echo (isset($result["event_location"]) && trim($result["event_location"]) != "" ? "<span style=\"font-weight: bold;\">Location: </span>".$result["event_location"]."<br /><br />" : "");
-				echo "<span style=\"font-weight: bold;\">From: </span>".date(DEFAULT_DATE_FORMAT, $result["event_start"])."<br /><span style=\"font-weight: bold;\">To: </span>".date(DEFAULT_DATE_FORMAT, $result["event_finish"])."\n";
-				echo "<br />\n";
-				echo "<h3>Description:</h3> ".strip_tags($result["event_description"], $ALLOWED_HTML_TAGS);
+				echo "	<h2 id=\"event-".(int) $result["cevent_id"]."-title\">".html_encode($result["event_title"])."</h2>\n";
+				echo "	<div class=\"tagline\">\n";
+				echo "		Released ".date("F dS, Y", $result["release_date"])." by <strong>".html_encode($result["fullname"])."</strong>";
+				echo 		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cevent_id"]."\">edit</a>)" : "");
+				echo 		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:eventDelete('".$result["cevent_id"]."')\">delete</a>)" : "");
+				echo "	</div>\n";
+				echo 	(isset($result["event_location"]) && trim($result["event_location"]) != "" ? "<strong>Location:</strong> ".html_encode($result["event_location"])."<br />" : "");
+				echo "	<strong>From:</strong> ".date(DEFAULT_DATE_FORMAT, $result["event_start"]) . "<br />";
+				echo "	<strong>Until:</strong> ".date(DEFAULT_DATE_FORMAT, $result["event_finish"]);
+				echo "	<p class=\"space-above\">" . strip_tags($result["event_description"], $ALLOWED_HTML_TAGS) . "</p>";
 				echo "</div>";
+
 				if ($LOGGED_IN) {
 					add_statistic("community_events", "view", "cevent_id", $result["cevent_id"]);
 				}
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "The event that you are looking for does not exist in this community.";
+			add_error("The event that you are looking for does not exist in this community.");
 
 			echo display_error();
 		}
 	} else {
 		?>
-		<table style="width: 298px; height: 23px; margin-bottom: 15px" cellspacing="0" cellpadding="0" border="0" summary="Display Duration Type">
-            <tr>
-                <td style="width: 22px; height: 23px"><?php echo "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dstamp" => ($display_duration["start"] - 2)))."\" title=\"Previous ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\"><img src=\"".ENTRADA_URL."/images/cal-back.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Previous ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\" title=\"Previous ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\" /></a>"; ?></td>
-                <td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "day") ? "<img src=\"".ENTRADA_URL."/images/cal-day-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "day"))."\"><img src=\"".ENTRADA_URL."/images/cal-day-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" /></a>"); ?></td>
-                <td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "week") ? "<img src=\"".ENTRADA_URL."/images/cal-week-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "week"))."\"><img src=\"".ENTRADA_URL."/images/cal-week-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" /></a>"); ?></td>
-                <td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "month") ? "<img src=\"".ENTRADA_URL."/images/cal-month-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "month"))."\"><img src=\"".ENTRADA_URL."/images/cal-month-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" /></a>"); ?></td>
-                <td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "year") ? "<img src=\"".ENTRADA_URL."/images/cal-year-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "year"))."\"><img src=\"".ENTRADA_URL."/images/cal-year-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" /></a>"); ?></td>
-                <td style="width: 47px; height: 23px; border-left: 1px #9D9D9D solid"><?php echo "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dstamp" => ($display_duration["end"] + 1)))."\" title=\"Following ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\"><img src=\"".ENTRADA_URL."/images/cal-next.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Following ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\" title=\"Following ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\" /></a>"; ?></td>
-                <td style="width: 33px; height: 23px; text-align: right"><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?<?php echo replace_query(array("dstamp" => time())); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-home.gif" width="23" height="23" alt="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]; ?>." title="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]; ?>." border="0" /></a></td>
-                <td style="width: 33px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)" style="cursor: pointer" id="calendar-holder" /></td>
-            </tr>
-		</table>
+		<div class="calendar-nav">
+			<div class="btn-group">
+				<?php echo "<a class=\"btn\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dstamp" => ($display_duration["start"] - 2)))."\" title=\"Previous ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\"><i class=\"icon-chevron-left\" style=\"margin-top:3px;\"></i></a>"; ?>
+				<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "day") ? "<a class=\"btn btn-primary\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "day"))."\">Day</a>" : "<a class=\"btn\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "day"))."\">Day</a>"); ?>
+				<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "week") ? "<a class=\"btn btn-primary\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "week"))."\">Week</a>" : "<a class=\"btn\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "week"))."\">Week</a>"); ?>
+				<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "month") ? "<a class=\"btn btn-primary\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "month"))."\">Month</a>" : "<a class=\"btn\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "month"))."\">Month</a>"); ?>
+				<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "year") ? "<a class=\"btn btn-primary\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "year"))."\">Year</a>" : "<a class=\"btn\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "year"))."\">Year</a>"); ?>
+				<?php echo "<a class=\"btn\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dstamp" => ($display_duration["end"] + 1)))."\" title=\"Following ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\"><i class=\"icon-chevron-right\" style=\"margin-top:3px;\"></i></a>"; ?>
+			</div>
+
+			<a class="btn btn-primary" title="Reset to display current calendar" href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?<?php echo replace_query(array("dstamp" => time())); ?>">
+				<i class="icon-refresh icon-white"></i>
+			</a>
+
+			<a class="btn btn-primary" title="Show Calendar" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)" style="cursor: pointer" id="calendar-holder">
+				<i class="icon-calendar icon-white"></i>
+			</a>
+		</div>
+
 		<?php
 		if ($COMMUNITY_ADMIN && ($PAGE_OPTIONS["moderate_posts"] == 1)) {
 			$query		= "	SELECT COUNT(`cevent_id`)
@@ -368,15 +374,15 @@ function setDateValue(field, date) {
 						AND a.`cpage_id` = ".$db->qstr($PAGE_ID)."
 						ORDER BY a.`event_start` ASC
 						LIMIT ".$limit_parameter.", ".$_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"];
-		$results	= $db->GetAll($query);
+		$results = $db->GetAll($query);
 		if ($results) {
-			$last_date 		= 0;
-			$total_events	= @count($results);
+			$last_date = 0;
+			$total_events = count($results);
 			
-			echo "<table class=\"calendar\" style=\"width: 99%\">\n";
+			echo "<table class=\"calendar\" style=\"width: 100%\">\n";
 			echo "<colgroup>\n";
-			echo "	<col style=\"width: 30%\" />\n";
-			echo "	<col style=\"width: 70%\" />\n"; 
+			echo "	<col style=\"width: 15%\" />\n";
+			echo "	<col style=\"width: 85%\" />\n";
 			echo "</colgroup>\n";
 			echo "<tbody>\n";
 			
@@ -384,27 +390,34 @@ function setDateValue(field, date) {
 				if (($last_date < strtotime("00:00:00", $result["event_start"])) || ($last_date > strtotime("23:59:59", $result["event_start"]))) {
 					$last_date = $result["event_start"];
 					echo "<tr>\n";
-					echo "	<td colspan=\"2\" style=\"border: none\"><h3 style=\"border: none\">".date("l F dS Y", $result["event_start"])."</h3></td>\n";
+					echo "	<td colspan=\"2\"><h3>".date("l, F dS, Y", $result["event_start"])."</h3></td>\n";
 					echo "</tr>\n";
 				}
+
 				echo "<tr>\n";
-				echo "	<td style=\"font-family: monospace\">\n";
-					if (strtotime("00:00:00", $result["event_start"]) != strtotime("00:00:00", $result["event_finish"])) {
-						echo date(DEFAULT_DATE_FORMAT, $result["event_start"])."<br />";
-						echo date(DEFAULT_DATE_FORMAT, $result["event_finish"]);
-					} else {
-						echo date("H:i", $result["event_start"])." - ".date("H:i", $result["event_finish"]);
-					}
-					if (isset($result["event_location"]) && trim($result["event_location"]) != "") {
-						echo "\n<br /><br />Location: ".$result["event_location"];
-					}
-				$RECORD_AUTHOR = $result["proxy_id"];
+				echo "	<td style=\"vertical-align: top;\">\n";
+
+				if (strtotime("00:00:00", $result["event_start"]) != strtotime("00:00:00", $result["event_finish"])) {
+					echo date(DEFAULT_DATE_FORMAT, $result["event_start"])."<br />";
+					echo date(DEFAULT_DATE_FORMAT, $result["event_finish"]);
+				} else {
+					echo date("H:i", $result["event_start"])." - ".date("H:i", $result["event_finish"]);
+				}
 				echo "	</td>\n";
-				echo "	<td style=\"padding-bottom: 15px\">\n";
+				echo "	<td>\n";
 				echo "		<a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$PAGE_URL."?id=".$result["cevent_id"]."\" id=\"event-".$result["cevent_id"]."-title\">".html_encode($result["event_title"])."</a>\n";
-				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cevent_id"]."\">edit</a>)" : "");
-				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:eventDelete('".$result["cevent_id"]."')\">delete</a>)" : "");
-				echo "		<div class=\"content-small\">".limit_chars(strip_tags(str_replace("<br />", " ", $result["event_description"])), 150)."</div>";
+
+				echo "		<div class=\"tagline\">";
+				if (isset($result["event_location"]) && trim($result["event_location"]) != "") {
+					echo "Location: " . $result["event_location"];
+				}
+				echo 		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cevent_id"]."\">edit</a>)" : "");
+				echo 		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:eventDelete('".$result["cevent_id"]."')\">delete</a>)" : "");
+				echo "		</div>";
+
+				echo "		<div>".limit_chars(strip_tags(str_replace("<br />", " ", $result["event_description"])), 150)."</div>";
+
+				echo "		<hr />";
 				echo "	</td>\n";
 				echo "</tr>\n";
 			}

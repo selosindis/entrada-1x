@@ -370,7 +370,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                     $quiz_authors = Models_Quiz_Contact::fetchAllRecords($RECORD_ID);
                                     if ($quiz_authors) {
 										foreach ($quiz_authors as $quiz_author) {
-                                            $author = User::get($quiz_author->getProxyID());
+                                            $author = User::fetchRowByID($quiz_author->getProxyID());
                                             if ($author->getID()) {
                                                 $q_a[] = "<a href=\"mailto:".html_encode($author->getEmail())."\">".html_encode($author->getFullname(false))."</a>";
                                             }

@@ -43,6 +43,15 @@ if (!defined("IN_EVALUATIONS")) {
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();
 		if ($module_file) {
+            ?>
+            <style media="print">
+                @-moz-document url-prefix() {
+                    * {
+                        overflow: hidden !important;
+                    }
+                }
+            </style>
+            <?php
 			require_once($module_file);
 		}
 	} else {

@@ -15,6 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * This report provides the ability to see all the procedures that a student who
+ * belongs to the active course has completed.  The procedures are based on the 
+ * objectives found under Report Card Objectives for the active course.
+ *
  * @author Organisation: Queen's University
  * @author Unit: MEdTech
  * @author Developer: Don Zuiker <don.zuiker@queensu.ca>

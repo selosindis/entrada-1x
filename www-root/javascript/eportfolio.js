@@ -9,7 +9,7 @@ jQuery(function($) {
 	getFolder(pfolder_id);
 	
 	$("#create-artifact").on("click", function () {
-		$(".modal-header h3").html("Create Artifact");
+		$(".modal-header h3").html("Create Artifact in " + $("#current-folder").html());
 		$("#save-button").html("Save Artifact").attr("data-type", "artifact");
 		artifactForm();
 	});
@@ -332,6 +332,7 @@ function getFolder (pfolder_id) {
 		success: function (data) {
 			var jsonResponse = JSON.parse(data);
 			if (jsonResponse.status === "success") {
+                jQuery("#current-folder").html(jsonResponse.data.title);
 				getFolderArtifacts(pfolder_id);
 			} else {
 				display_error(jsonResponse.data, "#msgs", "append");

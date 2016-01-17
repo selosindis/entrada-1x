@@ -198,13 +198,12 @@ if ($RECORD_ID) {
 						<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Upload Revised File">
 						<colgroup>
-							<col style="width: 3%" />
 							<col style="width: 20%" />
-							<col style="width: 77%" />
+							<col style="width: 80%" />
 						</colgroup>
 						<tfoot>
 							<tr>
-								<td colspan="3" style="padding-top: 15px; text-align: right">
+								<td colspan="2" style="padding-top: 15px; text-align: right">
 									<div id="display-upload-button">
 										<input type="button" class="btn btn-primary" value="Upload" onclick="uploadFile()" />
 									</div>
@@ -213,14 +212,18 @@ if ($RECORD_ID) {
 						</tfoot>
 						<tbody>
 							<tr>
-								<td colspan="3"><h2>File Details <small><?php echo ((isset($PROCESSED["file_title"])) ? html_encode($PROCESSED["file_title"]) : ""); ?></small></h2></td>
+								<td colspan="2">
+									<h2>File Details <small><?php echo ((isset($PROCESSED["file_title"])) ? html_encode($PROCESSED["file_title"]) : ""); ?></small></h2>
+								</td>
 							</tr>
 							<tr>
-								<td colspan="2" style="vertical-align: top"><label for="uploaded_file" class="form-nrequired">New File Version</label></td>
+								<td style="vertical-align: top">
+									<label for="uploaded_file" class="form-nrequired">New File Version</label>
+								</td>
 								<td style="vertical-align: top">
 									<input type="file" id="uploaded_file" name="uploaded_file" />
-									<div class="content-small" style="margin-top: 5px">
-									<strong>Notice:</strong> You may upload files under <?php echo readable_size($VALID_MAX_FILESIZE); ?>.
+									<div class="content-small">
+										<strong>Notice:</strong> You may upload files under <?php echo readable_size($VALID_MAX_FILESIZE); ?>.
 									</div>
 								</td>
 							</tr>

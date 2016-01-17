@@ -54,7 +54,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 		return;
 	}
     
-	$student = User::get($OBSERVERSHIP->getStudentID());
+	$student = User::fetchRowByID($OBSERVERSHIP->getStudentID());
 
 	$BREADCRUMB = array();
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users", "title" => "Manage Users");

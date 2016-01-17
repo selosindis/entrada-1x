@@ -22,9 +22,9 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read", false)) {
@@ -35,11 +35,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
     ?>
-	<h1>Manage Curriculum Types</h1>
+	<h1>Curriculum Layout</h1>
 
     <div class="row-fluid">
         <span class="pull-right">
-            <a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/settings/manage/curriculumtypes?section=add&amp;org=<?php echo $ORGANISATION_ID;?>"><i class="icon-plus-sign icon-white"></i> Add New Curriculum Type</a>
+            <a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/settings/manage/curriculumtypes?section=add&amp;org=<?php echo $ORGANISATION_ID;?>"><i class="icon-plus-sign icon-white"></i> Add Layout</a>
         </span>
     </div>
     <br />
@@ -55,24 +55,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	if ($results) {
         ?>
         <form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/curriculumtypes?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
-            <table class="table table-striped" summary="Curriculum Types">
+            <table class="table table-striped" summary="Curriculum Layout">
                 <colgroup>
                     <col style="width: 3%" />
                     <col style="width: 97%" />
                 </colgroup>
-                <thead>
-                    <tr>
-                        <th>&nbsp;</td>
-                        <th>Curriculum Type</td>
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                        <td colspan="2">
-                            <input type="submit" class="btn btn-danger" value="Delete Selected" />
-                        </td>
-                    </tr>
-                </tfoot>
                 <tbody>
                     <?php
                     foreach ($results as $result) {
@@ -84,10 +71,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                     ?>
                 </tbody>
             </table>
+            <input type="submit" class="btn btn-danger" value="Delete Selected" />
         </form>
         <?php
 	} else {
-		add_notice("There are currently no Curriculum Types.");
+		add_notice("There are currently no Curriculum Layout.");
 		echo display_notice();
 	}
 }

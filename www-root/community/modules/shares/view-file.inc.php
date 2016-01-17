@@ -19,22 +19,21 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_SHARES"))) {
 }
 
 if ($RECORD_ID) {
-	$query			= "
-					SELECT a.*, b.`folder_title`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `uploader_fullname`, c.`username` AS `uploader_username`
-					FROM `community_share_files` AS a
-					LEFT JOIN `community_shares` AS b
-					ON a.`cshare_id` = b.`cshare_id`
-					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-					ON a.`proxy_id` = c.`id`
-					WHERE a.`proxy_id` = c.`id`
-					AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-					AND a.`csfile_id` = ".$db->qstr($RECORD_ID)."
-					AND b.`cpage_id` = ".$db->qstr($PAGE_ID)."
-					AND a.`file_active` = '1'
-					AND b.`folder_active` = '1'";
-	$file_record	= $db->GetRow($query);
+	$query = "SELECT a.*, b.`folder_title`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `uploader_fullname`, c.`username` AS `uploader_username`
+                FROM `community_share_files` AS a
+                LEFT JOIN `community_shares` AS b
+                ON a.`cshare_id` = b.`cshare_id`
+                LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+                ON a.`proxy_id` = c.`id`
+                WHERE a.`proxy_id` = c.`id`
+                AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+                AND a.`csfile_id` = ".$db->qstr($RECORD_ID)."
+                AND b.`cpage_id` = ".$db->qstr($PAGE_ID)."
+                AND a.`file_active` = '1'
+                AND b.`folder_active` = '1'";
+	$file_record = $db->GetRow($query);
 	if ($file_record) {
-		if ((isset($DOWNLOAD)) && ($DOWNLOAD)) {
+		if (isset($DOWNLOAD) && $DOWNLOAD) {
 			/**
 			 * Check for valid permissions before checking if the file really exists.
 			 */
@@ -83,19 +82,18 @@ if ($RECORD_ID) {
 					}
 				}
 
-				if (($file_version) && (is_array($file_version))) {
-					if ((@file_exists($download_file = COMMUNITY_STORAGE_DOCUMENTS."/".$file_version["csfversion_id"])) && (@is_readable($download_file))) {
+				if ($file_version && is_array($file_version)) {
+					if (@file_exists($download_file = COMMUNITY_STORAGE_DOCUMENTS."/".$file_version["csfversion_id"]) && @is_readable($download_file)) {
 						/**
-						 * This must be done twice in order to close both of the open buffers.
+						 * Clear open buffers
 						 */
-						@ob_end_clean();
-						@ob_end_clean();
-						
+						ob_clear_open_buffers();
+
 						/**
 						 * Determine method that the file should be accessed (downloaded or viewed)
 						 * and send the proper headers to the client.
 						 */
-						switch($file_record["access_method"]) {
+						switch ($file_record["access_method"]) {
 							case 1 :
 								header("Pragma: public");
 								header("Expires: 0");
@@ -122,25 +120,24 @@ if ($RECORD_ID) {
 						if ($LOGGED_IN) {
 							add_statistic("community:".$COMMUNITY_ID.":shares", "file_download", "csfile_id", $RECORD_ID);
 						}
+
 						echo @file_get_contents($download_file, FILE_BINARY);
 						exit;
 					}
 				}
-				
 			}
 
-			if ((!$ERROR) || (!$NOTICE)) {
-				$ERROR++;
-				$ERRORSTR[] = "<strong>Unable to download the selected file.</strong><br /><br />The file you have selected cannot be downloaded at this time, ".(($LOGGED_IN) ? "please try again later." : "Please log in to continue.");
+			if (!has_error() || !has_notice()) {
+				add_error("<strong>Unable to download the selected file.</strong><br /><br />The file you have selected cannot be downloaded at this time. ".(($LOGGED_IN) ? "Please try again later." : "Please log in to continue."));
 			}
 
-			if ($NOTICE) {
+			if (has_notice()) {
 				echo display_notice();
 			}
-			if ($ERROR) {
+
+			if (has_error()) {
 				echo display_error();
 			}
-
 		} else {
 			if (shares_file_module_access($RECORD_ID, "view-file")) {
 
@@ -154,7 +151,7 @@ if ($RECORD_ID) {
 
 				$community_shares_select = community_shares_in_select($file_record["cshare_id"]);
 				?>
-				<script type="text/javascript">
+				<script>
 				function commentDelete(id) {
 					Dialog.confirm('Do you really wish to deactivate this comment on the '+ $('file-<?php echo $RECORD_ID; ?>-title').innerHTML +' file?<br /><br />If you confirm this action, you will be deactivating this comment.',
 						{
@@ -174,143 +171,98 @@ if ($RECORD_ID) {
 						}
 					);
 				}
-
-				<?php if ($community_shares_select != "") { ?>
-				function fileMove(id) {
-					Dialog.confirm('Do you really wish to move the '+ $('file-' + id + '-title').innerHTML +' file?<br /><br />If you confirm this action, you will be moving the file and all comments to the selected folder.<br /><br /><?php echo $community_shares_select; ?>',
-						{
-							id:				'requestDialog',
-							width:			350,
-							height:			205,
-							title:			'Delete Confirmation',
-							className:		'medtech',
-							okLabel:		'Yes',
-							cancelLabel:	'No',
-							closable:		'true',
-							buttonClass:	'btn',
-							ok:				function(win) {
-												window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=move-file&id='+id+'&share_id='+$F('share_id');
-												return true;
-											}
-						}
-					);
-				}
-				<?php 
+				<?php
+				if ($community_shares_select != "") {
+                    ?>
+                    function fileMove(id) {
+                        Dialog.confirm('Do you really wish to move the '+ $('file-' + id + '-title').innerHTML +' file?<br /><br />If you confirm this action, you will be moving the file and all comments to the selected folder.<br /><br /><?php echo $community_shares_select; ?>',
+                            {
+                                id:				'requestDialog',
+                                width:			350,
+                                height:			205,
+                                title:			'Delete Confirmation',
+                                className:		'medtech',
+                                okLabel:		'Yes',
+                                cancelLabel:	'No',
+                                closable:		'true',
+                                buttonClass:	'btn',
+                                ok:				function(win) {
+                                                    window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=move-file&id='+id+'&share_id='+$F('share_id');
+                                                    return true;
+                                                }
+                            }
+                        );
+                    }
+                    <?php
 				}
 				if (shares_file_module_access($RECORD_ID, "delete-revision")) {
 					?>
-	
-					function revisionDelete(id) {
-						Dialog.confirm('Do you really wish to deactivate the '+ $('file-version-' + id + '-title').innerHTML +' revision?<br /><br />If you confirm this action, you will no longer be able to download this version of the file.',
-							{
-								id:				'requestDialog',
-								width:			350,
-								height:			125,
-								title:			'Delete Confirmation',
-								className:		'medtech',
-								okLabel:		'Yes',
-								cancelLabel:	'No',
-								closable:		'true',
-								buttonClass:	'btn',
-								ok:				function(win) {
-													window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-revision&id='+id;
-													return true;
-												}
-							}
-						);
-					}
-					<?php
-				}
-					?>
-					</script>
-					<?php
+                    function revisionDelete(id) {
+                        Dialog.confirm('Do you really wish to deactivate the '+ $('file-version-' + id + '-title').innerHTML +' revision?<br /><br />If you confirm this action, you will no longer be able to download this version of the file.',
+                            {
+                                id:				'requestDialog',
+                                width:			350,
+                                height:			125,
+                                title:			'Delete Confirmation',
+                                className:		'medtech',
+                                okLabel:		'Yes',
+                                cancelLabel:	'No',
+                                closable:		'true',
+                                buttonClass:	'btn',
+                                ok:				function(win) {
+                                                    window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-revision&id='+id;
+                                                    return true;
+                                                }
+                            }
+                        );
+                    }
+                    <?php
+                }
+                ?>
+                </script>
+                <?php
 				/**
 				 * If there is time release properties, display them to the browsing users.
 				 */
 				if (($release_date = (int) $file_record["release_date"]) && ($release_date > time())) {
-					$NOTICE++;
-					$NOTICESTR[] = "This file will not be accessible to others until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.";
+					add_notice("This file will not be accessible to others until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.");
 				} elseif ($release_until = (int) $file_record["release_until"]) {
 					if ($release_until > time()) {
-						$NOTICE++;
-						$NOTICESTR[] = "This file will be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.";
+						add_notice("This file will be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.");
 					} else {
 						/**
 						 * Only administrators or people who wrote the post will get this.
 						 */
-						$NOTICE++;
-						$NOTICESTR[] = "This file was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong> by others.";
+						add_notice("This file was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong> by others.");
 					}
 				}
 
-				if ($NOTICE) {
-					echo display_notice();
-				}
-				if ($NAVIGATION) {
-					echo "	<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
-					echo "	<tbody>\n";
-					echo "		<tr>\n";
-					echo "			<td style=\"text-align: left\">\n".(((int) $NAVIGATION["back"]) ? "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".(int) $NAVIGATION["back"]."\">&laquo; Previous File</a>" : "&nbsp;")."</td>";
-					echo "			<td style=\"text-align: right\">\n".(((int) $NAVIGATION["next"]) ? "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".(int) $NAVIGATION["next"]."\">Next File &raquo;" : "&nbsp;")."</td>";
-					echo "		</tr>\n";
-					echo "	</tbody>\n";
-					echo "	</table>\n";
-				}
-				?>
+                if ($NAVIGATION && (int) $NAVIGATION["back"]) {
+                    $url_back = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-file&amp;id=" . (int) $NAVIGATION["back"];
+
+                    echo "<a class=\"btn pull-left\" href=\"" . $url_back . "\"><i class=\"icon-chevron-left\"></i></a>";
+                }
+
+                if ($NAVIGATION && (int) $NAVIGATION["next"]) {
+                    $url_next = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-file&amp;id=" . (int) $NAVIGATION["next"];
+
+                    echo "<a class=\"btn pull-right\" href=\"" . $url_next . "\"><i class=\"icon-chevron-right\"></i></a>";
+                }
+                ?>
+
+                <div class="clearfix"></div>
+
 				<a name="top"></a>
 				<h1 id="file-<?php echo $RECORD_ID; ?>-title"><?php echo html_encode($file_record["file_title"]); ?></h1>
-				<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
-					<div id="notifications-toggle" style="height: 2em;"></div>
-					<script type="text/javascript">
-					function promptNotifications(enabled) {
-						Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications for new comments and revisions for this file?',
-							{
-								id:				'requestDialog',
-								width:			350,
-								height:			75,
-								title:			'Notification Confirmation',
-								className:		'medtech',
-								okLabel:		'Yes',
-								cancelLabel:	'No',
-								closable:		'true',
-								buttonClass:	'btn',
-								destroyOnClose:	true,
-								ok:				function(win) {
-													new Window(	{
-																	id:				'resultDialog',
-																	width:			350,
-																	height:			75,
-																	title:			'Notification Result',
-																	className:		'medtech',
-																	okLabel:		'close',
-																	buttonClass:	'btn',
-																	resizable:		false,
-																	draggable:		false,
-																	minimizable:	false,
-																	maximizable:	false,
-																	recenterAuto:	true,
-																	destroyOnClose:	true,
-																	url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID; ?>&type=file-notify&action=edit&active='+(enabled == 1 ? '0' : '1'),
-																	onClose:			function () {
-																						new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID; ?>&type=file-notify&action=view');
-																					}
-																}
-													).showCenter();
-													return true;
-												}
-							}
-						);
-					}
-					
-					</script>
-					<?php
-					$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID."&type=file-notify&action=view')";
-				}
+				<?php
+                if (has_notice()) {
+                    echo display_notice();
+                }
 				?>
-				<div>
+				<p>
 					<?php echo html_encode($file_record["file_description"]); ?>
-				</div>
-				<div id="file-<?php echo $RECORD_ID; ?>" style="padding-top: 15px; clear: both">
+				</p>
+				<div id="file-<?php echo $RECORD_ID; ?>">
 					<?php
 					$query		= "
 								SELECT a.*,  CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `uploader`, b.`username` AS `uploader_username`
@@ -325,14 +277,14 @@ if ($RECORD_ID) {
 					$results	= $db->GetAll($query);
 					if ($results) {
 						$total_releases	= @count($results);
-						echo "<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
+						echo "<table class=\"table table-bordered no-thead\">\n";
 						echo "<colgroup>\n";
-						echo "	<col style=\"width: 8%\" />\n";
-						echo "	<col style=\"width: 92%\" />\n";
+						echo "	<col style=\"width: 5%\" />\n";
+						echo "	<col style=\"width: 95%\" />\n";
 						echo "</colgroup>\n";
 						echo "<tbody>\n";
 						echo "	<tr>\n";
-						echo "		<td style=\"vertical-align: top\"><a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".$RECORD_ID."&amp;download=latest\"><img src=\"".COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE."/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
+						echo "		<td style=\"vertical-align: middle\"><a class=\"btn btn-primary\" style=\"height:20px;\" title=\"Save Latest Version\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".$RECORD_ID."&amp;download=latest\"><i class=\"icon-download icon-white\" style=\"margin-top:3px;\"></i></a></td>";
 						echo "		<td style=\"vertical-align: top\">\n";
 						echo "			<div id=\"file-download-latest\">\n";
 						echo "				<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".$RECORD_ID."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";
@@ -348,31 +300,31 @@ if ($RECORD_ID) {
 						echo "		</td>\n";
 						echo "	</tr>\n";
 						if ($total_releases > 1) {
-							echo "<tr>\n";
-							echo "	<td>&nbsp;</td>\n";
-							echo "	<td style=\"padding-top: 15px\">\n";
-							echo "		<h2>Older Versions</h2>\n";
-							echo "		<div id=\"file-download-releases\">\n";
-							echo "			<ul>\n";
+							echo "<table class=\"table table-striped table-bordered\">\n";
+							echo "<thead>\n";
+							echo "	<tr>\n";
+							echo "		<td style=\"border-left: none\">\n";
+							echo "			Older Versions\n";
+							echo "		</td>\n";
+							echo "	</tr>\n";
+							echo "</thead>\n";
 							foreach($results as $progress => $result) {
 								if ((int) $progress > 0) { // Because I don't want to display the first file again.
-									echo "		<li>\n";
+									echo "<tr>\n";
+									echo "		<td>\n";
 									echo "			<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".$RECORD_ID."&amp;download=".$result["file_version"]."\" style=\"vertical-align: middle\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "")."><span id=\"file-version-".$result["csfversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
 									echo 			((shares_file_version_module_access($result["csfversion_id"], "delete-revision")) ? " (<a class=\"action\" href=\"javascript:revisionDelete('".$result["csfversion_id"]."')\">delete</a>)" : "");
 									echo "			<div class=\"content-small\">\n";
 									echo "			Uploaded ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by <a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["uploader_username"])."\" style=\"font-size: 10px; font-weight: normal\">".html_encode($result["uploader"])."</a>.\n";
 									echo "			</div>\n";
-									echo "		</li>";
+									echo "		</td>";
+									echo "</tr>\n";
 								}
 							}
-							echo "			</ul>\n";
-							echo "		</div>\n";
-							echo "	</td>\n";
-							echo "</tr>\n";
+							echo "</table>\n";
 						}
 						echo "</tbody>\n";
 						echo "</table>\n";
-						echo "<br /><br />";
 					}
 					$query		= "
 								SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `commenter_fullname`, b.`username` AS `commenter_username`
@@ -390,22 +342,20 @@ if ($RECORD_ID) {
 					if ($results) {
 						if (($ADD_REVISION) || ($ADD_COMMENT) || ($MOVE_FILE)) {
 							?>
-							<ul class="page-action">
+							<ul class="page-action pull-right space-above">
 								<?php if ($ADD_COMMENT) : ?>
-								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add File Comment</a></li>
+								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Add File Comment</a></li>
 								<?php endif; ?>
 								<?php if ($ADD_REVISION) : ?>
-								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Upload Revised File</a></li>
-								<?php endif; ?>
-								<?php if (($MOVE_FILE) && ($community_shares_select != "")) : ?>
-								<li><a href="javascript:fileMove(<?php echo $RECORD_ID; ?>)">Move File</a></li>
+								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Upload Revised File</a></li>
 								<?php endif; ?>
 							</ul>
+                            <div class="clearfix"></div>
 							<?php
 						}
 						?>
-						<h2 style="margin-bottom: 0px">File Comments</h2>
-						<table class="discussions posts" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+						<h2>File Comments</h2>
+						<table class="table" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 						<colgroup>
 							<col style="width: 30%" />
 							<col style="width: 70%" />
@@ -453,18 +403,16 @@ if ($RECORD_ID) {
 					}
 					if (($ADD_REVISION) || ($ADD_COMMENT) || ($MOVE_FILE)) {
 						?>
-						<ul class="page-action">
+						<ul class="page-action pull-right space-above">
 							<?php if ($ADD_COMMENT) : ?>
-							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add File Comment</a></li>
+							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Add File Comment</a></li>
 							<?php endif; ?>
 							<?php if ($ADD_REVISION) : ?>
-							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Upload Revised File</a></li>
+							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Upload Revised File</a></li>
 							<?php endif; ?>
-							<?php if ($MOVE_FILE) : ?>
-							<li><a href="javascript:fileMove(<?php echo $RECORD_ID; ?>)" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Move File</a></li>
-							<?php endif; ?>
-							<li class="top"><a href="#top">Top Of Page</a></li>
+							<li><a class="btn btn-success" href="#top"><i class="icon-chevron-up icon-white"></i></a></li>
 						</ul>
+                        <div class="clearfix"></div>
 						<?php
 					}
 					?>

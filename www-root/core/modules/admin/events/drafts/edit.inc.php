@@ -312,6 +312,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 <?php
                 $count_modified = 0;
                 if (!empty($draft_events)) {
+                    $total_events = count($draft_events);
+
+                    if ($total_events == 1) {
+                        add_generic("There is currently <strong>" . $total_events . " Learning Event</strong> in this draft.");
+                    } else {
+                        add_generic("There are currently <strong>" . $total_events . " Learning Events</strong> in this draft.");
+                    }
+
+                    echo display_generic();
                     ?>
                     <form name="frmSelect" id="draft_events_form" action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&mode=draft&draft_id=<?php echo $draft_id; ?>" method="post">
                         <table class="table table-striped table-bordered" id="draftEvents" cellspacing="0" cellpadding="1" summary="List of Events" style="margin-bottom:5px;">

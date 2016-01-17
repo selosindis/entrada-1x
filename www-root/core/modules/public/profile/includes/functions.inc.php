@@ -210,7 +210,7 @@ class MSPRPublicController {
 		$inputs = filter_input_array(INPUT_POST,$params);
 		extract($inputs);
 		
-		$user = User::get($user_id);
+		$user = User::fetchRowByID($user_id);
 		
 		if ($user && $research_citations && is_array($research_citations)) {
 			ResearchCitations::setSequence($user,$research_citations);

@@ -20,7 +20,7 @@ class EventContacts extends Users {
 		$contacts = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$contact = User::get($result['proxy_id']);
+				$contact = User::fetchRowByID($result['proxy_id']);
 				
 				if ($contact) {
 					$contacts[] = $contact;

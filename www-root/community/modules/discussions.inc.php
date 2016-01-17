@@ -127,19 +127,19 @@ function discussions_module_access($cdiscussion_id = 0, $section = "") {
 						 */
 					} else {
 						$NOTICE++;
-						$NOTICESTR[]	= "This discussion forum was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.<br /><br />Please contact your community administrators for further assistance.";
+						$NOTICESTR[]	= "This discussion forum was only accessible until ".date(DEFAULT_DATE_FORMAT, $release_until).".<br /><br />Please contact your community administrators for further assistance.";
 
 						$allow_to_load	= false;
 					}
 				} else {
 					$NOTICE++;
-					$NOTICESTR[]	= "This discussion forum will not be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.<br /><br />Please check back at this time, thank-you.";
+					$NOTICESTR[]	= "This discussion forum will not be accessible until ".date(DEFAULT_DATE_FORMAT, $release_date).".<br /><br />Please check back at this time, thank-you.";
 
 					$allow_to_load	= false;
 				}
 			} else {
 				$NOTICE++;
-				$NOTICESTR[]	= "This discussion forum was deactivated <strong>".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</strong> by <strong>".html_encode(get_account_data("firstlast", $result["updated_by"]))."</strong>.<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
+				$NOTICESTR[]	= "This discussion forum was deactivated ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".html_encode(get_account_data("firstlast", $result["updated_by"])).".<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
 
 				$allow_to_load	= false;
 			}
@@ -203,20 +203,20 @@ function discussion_topic_module_access($cdtopic_id = 0, $section = "") {
 							 */
 						} else {
 							$NOTICE++;
-							$NOTICESTR[]	= "This discussion post was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.<br /><br />Please contact your community administrators for further assistance.";
+							$NOTICESTR[]	= "This discussion post was only accessible until ".date(DEFAULT_DATE_FORMAT, $release_until).".<br /><br />Please contact your community administrators for further assistance.";
 
 							$allow_to_load	= false;
 						}
 					} else {
 						$NOTICE++;
-						$NOTICESTR[]	= "This discussion post will not be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.<br /><br />Please check back at this time, thank-you.";
+						$NOTICESTR[]	= "This discussion post will not be accessible until ".date(DEFAULT_DATE_FORMAT, $release_date).".<br /><br />Please check back at this time, thank-you.";
 
 						$allow_to_load	= false;
 					}
 				}
 			} else {
 				$NOTICE++;
-				$NOTICESTR[]	= "This discussion post was deactivated <strong>".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</strong> by <strong>".html_encode(get_account_data("firstlast", $result["updated_by"]))."</strong>.<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
+				$NOTICESTR[]	= "This discussion post was deactivated ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".html_encode(get_account_data("firstlast", $result["updated_by"])).".<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
 
 				$allow_to_load	= false;
 			}
@@ -236,8 +236,9 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, $SECTION)) {
 		/**
 		 * Add the RSS feed version of the page to the <head></head> tags.
 		 */
-		$HEAD[] = "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"%TITLE% ".$MENU_TITLE." RSS 2.0\" href=\"".COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss20".(($RECORD_ID) ? "?id=".$RECORD_ID : "")."\" />";
-		$HEAD[] = "<link rel=\"alternate\" type=\"text/xml\" title=\"%TITLE% ".$MENU_TITLE." RSS 0.91\" href=\"".COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss".(($RECORD_ID) ? "?id=".$RECORD_ID : "")."\" />";
+		$PRIVATE_HASH = (isset($_SESSION["details"]["private_hash"]) ? "private-".html_encode($_SESSION["details"]["private_hash"]) : "");
+		$HEAD[] = "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"%TITLE% ".$MENU_TITLE." RSS 2.0\" href=\"".COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss20:".$PRIVATE_HASH.(($RECORD_ID) ? "?id=".$RECORD_ID : "")."\" />";
+		$HEAD[] = "<link rel=\"alternate\" type=\"text/xml\" title=\"%TITLE% ".$MENU_TITLE." RSS 0.91\" href=\"".COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss:".$PRIVATE_HASH.(($RECORD_ID) ? "?id=".$RECORD_ID : "")."\" />";
 
 		require_once($section_to_load);
 	} else {

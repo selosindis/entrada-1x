@@ -108,10 +108,18 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                             if ($a) {
                                 $ldap_sync_date = $a->getLdapSyncDate();
                                 if ($ldap_sync_date) {
-                                    echo json_encode(array("status" => "success", "data" => array("ldap_sync_date" => "Successfully synchronized enrolment <strong>" . date("Y-m-d H:i", $ldap_sync_date). "</strong>")));
+                                    if ($period && $period->getFinishDate() > time()) {
+                                        echo json_encode(array("status" => "success", "data" => array("ldap_sync_date" => "Successfully synchronized enrolment <strong>" . date("Y-m-d H:i", $ldap_sync_date). "</strong>")));
+                                    } else {
+                                        echo json_encode(array("status" => "success", "data" => array("ldap_sync_date" => "Enrolment period has ended and is no longer being synchronized.", "expired_cperiod" => true)));
+                                    }
                                 } else {
                                     if ($period) {
-                                        echo json_encode(array("status" => "success", "data" => array("ldap_sync_date" => "Enrolment will be synchronized on <strong>" . date("Y-m-d", strtotime("-2 weeks", $period->getStartDate()). "</strong>."))));
+                                        if ($period->getFinishDate() > time()) {
+                                            echo json_encode(array("status" => "success", "data" => array("ldap_sync_date" => "Enrolment will be synchronized on <strong>" . date("Y-m-d", strtotime("-2 weeks", $period->getStartDate()). "</strong>."))));
+                                        } else {
+                                            echo json_encode(array("status" => "success", "data" => array("ldap_sync_date" => "Enrolment period has ended and is no longer being synchronized.", "expired_cperiod" => true)));
+                                        }
                                     } else {
                                         echo json_encode(array("status" => "error", "data" => array("Invalid curriculum period id provided.")));
                                     }

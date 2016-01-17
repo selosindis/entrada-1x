@@ -23,7 +23,7 @@
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_DESCRIPTORS"))) {
     exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
     header("Location: ".ENTRADA_URL);
     exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read", false)) {
@@ -58,28 +58,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_DESCRIPTORS"))) {
             );
         });
     </script>";
-
-    echo "<h1>Manage Evaluation Response Descriptors</h1>";
     ?>
-    <?php if ($ENTRADA_ACL->amIAllowed("configuration", "create", false)) { ?>
-        <div class="row-fluid space-below">
-            <a href="<?php echo ENTRADA_URL."/admin/settings/manage/descriptors?org=".$ORGANISATION_ID; ?>&section=add" class="btn btn-success pull-right"><i class="icon-plus-sign icon-white"></i> Add Descriptor</a>
-        </div>
-    <?php } ?>
+    <h1>Evaluation Response Descriptors</h1>
+
+    <div class="row-fluid">
+        <span class="pull-right">
+            <a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/settings/manage/descriptors?section=add&amp;org=<?php echo $ORGANISATION_ID; ?>"><i class="icon-plus-sign icon-white"></i> Add Descriptor</a>
+        </span>
+    </div>
+    <br />
+
     <form action="<?php echo ENTRADA_URL."/admin/settings/manage/descriptors?org=".$ORGANISATION_ID; ?>&section=delete" method="POST">
-        <table id="descriptors" class="table table-striped table-bordered">
+        <table id="descriptors" class="table table-striped">
             <thead>
-            <tr>
-                <th width="5%"></th>
-                <th>Descriptor</th>
-            </tr>
+                <tr>
+                    <th width="3%"></th>
+                    <th>Response Descriptor</th>
+                </tr>
             </thead>
             <tbody>
             </tbody>
         </table>
-        <?php if ($ENTRADA_ACL->amIAllowed("configuration", "delete", false)) { ?>
-            <input type="submit" value="Delete" class="btn" />
-        <?php } ?>
+        <br />
+        <input type="submit" value="Delete Selected" class="btn btn-danger" />
     </form>
 <?php
 

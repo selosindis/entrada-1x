@@ -22,9 +22,9 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQRESOURCES"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_MEDBIQRESOURCES")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "update",false)) {
@@ -105,16 +105,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQRESOURCES"))) {
 					if (!$ERROR) {				
 						$url = ENTRADA_URL . "/admin/settings/manage/medbiqresources?org=".$ORGANISATION_ID;
 						$SUCCESS++;
-						$SUCCESSSTR[]  = "You have successfully edited <strong>".html_decode($PROCESSED["resource"])."</strong> in the system.<br /><br />You will now be redirected to the Medbiquitos Resources index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						$SUCCESSSTR[]  = "You have successfully edited <strong>".html_decode($PROCESSED["resource"])."</strong> in the system.<br /><br />You will now be redirected to the Medbiquitous Resources index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000);";
 	
-						application_log("success", "Edited Medbiquitos Resource [".$resource_id."] in the system.");			
+						application_log("success", "Edited Medbiquitous Resource [".$resource_id."] in the system.");
 					}
 				} else {				
 					$ERROR++;
-					$ERRORSTR[] = "There was a problem inserting this Medbiquitos Resource into the system. The system administrator was informed of this error; please try again later.";
+					$ERRORSTR[] = "There was a problem inserting this Medbiquitous Resource into the system. The system administrator was informed of this error; please try again later.";
 
-					application_log("error", "There was an error inserting an Medbiquitos Resource. Database said: ".$db->ErrorMsg());
+					application_log("error", "There was an error inserting an Medbiquitous Resource. Database said: ".$db->ErrorMsg());
 				}
 			}
 

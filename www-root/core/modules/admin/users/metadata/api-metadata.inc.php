@@ -200,7 +200,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$proxy_id = filter_input(INPUT_POST, "proxy_id", FILTER_SANITIZE_NUMBER_INT );
 				$type = MetaDataType::get($cat_id);
 				if ($type) {
-					$user = User::get($proxy_id);
+					$user = User::fetchRowByID($proxy_id);
 					$org_id = $user->getOrganisationId();
 					$group = $user->getGroup();
 					$role = $user->getRole();

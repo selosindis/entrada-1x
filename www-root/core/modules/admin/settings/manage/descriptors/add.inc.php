@@ -23,7 +23,7 @@
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_DESCRIPTORS"))) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 		header("Location: ".ENTRADA_URL);
 		exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "create", false)) {
@@ -37,9 +37,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_DESCRIPTORS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/descriptors?section=add&org=".$ORGANISATION_ID, "title" => "Add Evaluation Response Descriptors");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/descriptors?section=add&org=".$ORGANISATION_ID, "title" => "Add Descriptor");
 	
-	echo "<h1>Add Evaluation Response Descriptor</h1>";
+	echo "<h1>Add Response Descriptor</h1>";
 	
 	define("ADD_DESCRIPTOR", true);
 	require_once("form.inc.php");

@@ -280,14 +280,14 @@ if (!defined("IN_PROFILE")) {
 			$departments[$department["department_id"]] = $department["department_title"];
 		}
 
-		$custom_fields = fetch_department_fields();
+		$custom_fields = fetch_department_fields($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation());
 
 		?>
 		<script type="text/javascript">
 		function provStateFunction(country_id) {
 			var url='<?php echo webservice_url("province"); ?>';
 			<?php
-				if ($PROCESSED["province"] || $PROCESSED["province_id"]) {
+				if ((isset($PROCESSED["province"]) && $PROCESSED["province"]) || (isset($PROCESSED["province_id"]) && $PROCESSED["province_id"])) {
 					$source_arr = $PROCESSED;
 				} else {
 					$source_arr = $user_data;
@@ -697,11 +697,11 @@ if (!defined("IN_PROFILE")) {
                     ?>
                     <div class="control-group">
                         <label class="control-label">Google Account:<br /><a href="http://webmail.<?php echo $GOOGLE_APPS["domain"]; ?>" target="_blank">visit <?php echo html_encode($GOOGLE_APPS["domain"]); ?> webmail</a></label>
-                        <div class="controls">
+                        <div class="span5" id="google-account-details">
                             <?php
                             if (($user_data["google_id"] == "") || ($user_data["google_id"] == "opt-out") || ($user_data["google_id"] == "opt-in") || ($_SESSION["details"]["google_id"] == "opt-in")) {
                                 ?>
-                                Your <?php echo $GOOGLE_APPS["domain"]; ?> account is <strong>not active</strong>. ( <a href="javascript: create_google_account()" class="action">create my account</a> )
+                                Your <?php echo $GOOGLE_APPS["domain"]; ?> account is <strong>not active</strong>. <br /> ( <a href="javascript: create_google_account()" class="action">create my account</a> )
                                 <script type="text/javascript">
                                 function create_google_account() {
                                     $('google-account-details').update('<img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif\" width=\"16\" height=\"16\" alt=\"Please wait\" border=\"0\" style=\"margin-right: 2px; vertical-align: middle\" /> <span class=\"content-small\">Please wait while your account is created ...</span>');
@@ -1027,7 +1027,7 @@ if (!defined("IN_PROFILE")) {
 			</div>
 		</div>
 		<?php
-		if (((bool) $GOOGLE_APPS["active"]) && $user_data["google_id"] && !in_array($user_data["google_id"], array("opt-out", "opt-in"))) {
+		if (((bool) $GOOGLE_APPS["active"]) && $user_data["google_id"]) {
 			?>
 			<div id="reset-google-password-box" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 				<div class="modal-header">

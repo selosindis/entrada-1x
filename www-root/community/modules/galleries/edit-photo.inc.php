@@ -266,99 +266,121 @@ if ($RECORD_ID) {
 						}
 						?>
 						<form id="upload-photo-form" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=edit-photo&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>">
-						<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit Photo">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 20%" />
-							<col style="width: 77%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="3" style="padding-top: 15px; text-align: right">
-									<div id="display-upload-button">
-										<input type="button" class="btn btn-primary" value="Save" onclick="uploadPhoto()" />
-									</div>
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td colspan="3"><h2>Current Photo</h2></td>
-							</tr>
-							<tr>
-								<td colspan="3" style="text-align: center">
-									<?php
-									if ((@file_exists(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID)) && (@is_readable(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID))) {
-										$photo_url	= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&amp;id=".$RECORD_ID."&amp;render=image";
-										list($width, $height) = @getimagesize(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID);
-									} else {
-										$photo_url	= COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE."/images/galleries-no-photo.gif";
-										$width		= 150;
-										$height		= 150;
-									}
+							<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
+							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit Photo">
+								<colgroup>
+									<col style="width: 20%" />
+									<col style="width: 80%" />
+								</colgroup>
+								<tfoot>
+									<tr>
+										<td colspan="2" style="padding-top: 15px; text-align: right">
+											<div id="display-upload-button">
+												<input type="button" class="btn btn-primary" value="Save" onclick="uploadPhoto()" />
+											</div>
+										</td>
+									</tr>
+								</tfoot>
+								<tbody>
+									<tr>
+										<td colspan="2"><h2>Current Photo</h2></td>
+									</tr>
+									<tr>
+										<td colspan="2" style="text-align: center">
+											<?php
+											if ((@file_exists(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID)) && (@is_readable(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID))) {
+												$photo_url	= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&amp;id=".$RECORD_ID."&amp;render=image";
+												list($width, $height) = @getimagesize(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID);
+											} else {
+												$photo_url	= COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE."/images/galleries-no-photo.gif";
+												$width		= 150;
+												$height		= 150;
+											}
+											?>
+											<img src="<?php echo $photo_url; ?>" width="<?php echo (int) $width; ?>" height="<?php echo (int) $height; ?>" alt="<?php echo html_encode($photo_record["photo_title"]); ?>" title="<?php echo html_encode($photo_record["photo_title"]); ?>" />
+										</td>
+									</tr>
+									<tr>
+										<td colspan="2">
+											<h2>Photo Details</h2>
+										</td>
+									</tr>
+									<tr>
+										<td style="vertical-align: top">
+											<label for="photo_file" class="form-nrequired">Replacement Photo</label>
+										</td>
+										<td style="vertical-align: top">
+											<input type="file" id="photo_file" name="photo_file" onchange="fetchPhotoFilename()" />
+											<div class="content-small">
+												<strong>Notice:</strong> You may upload JPEG, GIF or PNG images under <?php echo readable_size($VALID_MAX_FILESIZE); ?> only and any image larger than <?php echo $VALID_MAX_DIMENSIONS["photo"]; ?>px (width or height) will be automatically resized.
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label for="photo_title" class="form-required">Photo Title</label>
+										</td>
+										<td>
+											<input type="text" id="photo_title" name="photo_title" value="<?php echo ((isset($PROCESSED["photo_title"])) ? html_encode($PROCESSED["photo_title"]) : ""); ?>" maxlength="64" style="width: 300px" />
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label for="photo_description" class="form-nrequired">Photo Description</label>
+										</td>
+										<td>
+											<textarea id="photo_description" name="photo_description" style="width: 98%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["photo_description"])) ? html_encode($PROCESSED["photo_description"]) : ""); ?></textarea>
+										</td>
+									</tr>
+									<?php if ((bool) $COMMUNITY_ADMIN) : ?>
+									<?php endif; 
+									if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
+										?>
+										<tr>
+				                            <td colspan="2">
+				                            	<table class="table table-bordered no-thead">
+				                            		<colgroup>
+					                                    <col style="width: 5%" />
+					                                    <col style="width: auto" />
+					                                </colgroup>
+				                            		<tbody>
+				                            			<tr>
+							                        		<td class="center">
+									                            <input type="checkbox" id="gallery_cgphoto_id" name="gallery_cgphoto_id" value="1" <?php echo (((int) $photo_record["gallery_cgphoto_id"] == (int) $RECORD_ID) ? "checked=\"checked\"" : ""); ?> />
+							                        		</td>
+							                        		<td>
+							                        			<label for="gallery_cgphoto_id" class="form-nrequired">Make this photo the &quot;<?php echo html_encode($photo_record["gallery_title"]); ?>&quot; gallery thumbnail.</label>
+							                        		</td>
+							                        	</tr>
+							                        	<tr>
+							                        		<td class="center">
+									                            <input type="checkbox" name="enable_notifications" id="enable_notifications" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>
+							                        		</td>
+							                        		<td>
+							                        			<label for="enable_notifications" class="form-nrequired">Receive notifications when this users comment on this photo</label>
+							                        		</td>
+							                        	</tr>
+						                        	</tbody>
+					                        	</table>
+				                            </td>
+			                            </tr>
+										<?php
+									}	
 									?>
-									<img src="<?php echo $photo_url; ?>" width="<?php echo (int) $width; ?>" height="<?php echo (int) $height; ?>" alt="<?php echo html_encode($photo_record["photo_title"]); ?>" title="<?php echo html_encode($photo_record["photo_title"]); ?>" />
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td colspan="3"><h2>Photo Details</h2></td>
-							</tr>
-							<tr>
-								<td colspan="2" style="vertical-align: top"><label for="photo_file" class="form-nrequired">Replacement Photo</label></td>
-								<td style="vertical-align: top">
-									<input type="file" id="photo_file" name="photo_file" onchange="fetchPhotoFilename()" />
-									<div class="content-small" style="margin-top: 5px">
-									<strong>Notice:</strong> You may upload JPEG, GIF or PNG images under <?php echo readable_size($VALID_MAX_FILESIZE); ?> only and any image larger than <?php echo $VALID_MAX_DIMENSIONS["photo"]; ?>px (width or height) will be automatically resized.
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td colspan="2"><label for="photo_title" class="form-required">Photo Title</label></td>
-								<td><input type="text" id="photo_title" name="photo_title" value="<?php echo ((isset($PROCESSED["photo_title"])) ? html_encode($PROCESSED["photo_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
-							</tr>
-							<tr>
-								<td colspan="2" style="vertical-align: top"><label for="photo_description" class="form-nrequired">Photo Description</label></td>
-								<td style="vertical-align: top">
-									<textarea id="photo_description" name="photo_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["photo_description"])) ? html_encode($PROCESSED["photo_description"]) : ""); ?></textarea>
-								</td>
-							</tr>
-							<?php if ((bool) $COMMUNITY_ADMIN) : ?>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-								<td><input type="checkbox" id="gallery_cgphoto_id" name="gallery_cgphoto_id" value="1"<?php echo (((int) $photo_record["gallery_cgphoto_id"] == (int) $RECORD_ID) ? " checked=\"checked\"" : ""); ?>" style="vertical-align: middle" /> <label for="gallery_cgphoto_id" class="form-nrequired" style="vertical-align: middle">Make this photo the &quot;<?php echo html_encode($photo_record["gallery_title"]); ?>&quot; gallery thumbnail.</label></td>
-							</tr>
-							<?php endif; 
-							if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
-								?>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-									<td>
-										<input type="checkbox" style="vertical-align: middle" name="enable_notifications" id="enable_notifications" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>
-										<label for="enable_notifications" class="form-nrequired" style="vertical-align: middle">Receive notifications when this users comment on this photo</label>
-									</td>
-								</tr>
-								<?php
-							}	
-							?>
-							<tr>
-								<td colspan="3"><h2>Time Release Options</h2></td>
-							</tr>
-							<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-						</tbody>
-						</table>
+									<tr>
+										<td colspan="2">
+											<h2>Time Release Options</h2>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="2">
+											<table class="date-time">
+												<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+											</table>
+										</td>
+									</tr>
+								</tbody>
+							</table>
 						</form>
 						<div id="display-upload-status" style="display: none">
 							<div style="text-align: left; background-color: #EEEEEE; border: 1px #666666 solid; padding: 10px">

@@ -343,3 +343,17 @@ input.numeric {
 .clear_both {
     clear:both;
 }
+
+div.hero-unit.tight {
+    padding: 24px;
+    margin-bottom: 10px;
+}
+
+div.hero-unit.tight h1 {
+    font-size: 33px;
+    margin-bottom: 20px;
+}
+
+div.hero-unit.tight p {
+    margin-bottom: 20px;
+}

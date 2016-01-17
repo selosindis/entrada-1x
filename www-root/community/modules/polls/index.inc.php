@@ -47,18 +47,16 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 }
 ?>
 <div id="module-header">
-</div>
-
-<div style="padding-top: 10px; clear: both">
-	<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
-		<div id="notifications-toggle" style="position: absolute; padding-top: 4px;"></div>
+	<?php 
+	if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
+		<div id="notifications-toggle"></div>
 		<script type="text/javascript">
 		function promptNotifications(enabled) {
 			Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications for new polls on this page?',
 				{
 					id:				'requestDialog',
 					width:			350,
-					height:			75,
+					height:			100,
 					title:			'Notification Confirmation',
 					className:		'medtech',
 					okLabel:		'Yes',
@@ -70,7 +68,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 										new Window(	{
 														id:				'resultDialog',
 														width:			350,
-														height:			75,
+														height:			100,
 														title:			'Notification Result',
 														className:		'medtech',
 														okLabel:		'close',
@@ -101,8 +99,8 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Poll</a></li>
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&term=vote" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Vote</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll" class="btn btn-success">Add Poll</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&term=vote" class="btn btn-success">Add Vote</a></li>
 			</ul>
 		</div>
 		<div style="clear: both"></div>
@@ -121,7 +119,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 	$results	= $db->GetAll($query);
 	if ($results) {
 		?>
-		<table class="discussions" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+		<table class="table table-striped table-bordered">
 		<colgroup>
 			<col style="width: 50%" />
 			<col style="width: 10%" />
@@ -131,9 +129,9 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 		<thead>
 			<tr>
 				<td>Title</td>
-				<td style="border-left: none">Voters</td>
-				<td style="border-left: none">Votes</td>
-				<td style="border-left: none">Available Until</td>
+				<td>Voters</td>
+				<td>Votes</td>
+				<td>Available Until</td>
 			</tr>
 		</thead>
 		<tbody>

@@ -31,7 +31,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		exit;
 } else {
 
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE, "title" => "View " . $module_title);
+	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE, "title" => "View " . $translate->_("courses"));
 
 	/**
 	 * Check for groups which have access to the administrative side of this module
@@ -58,7 +58,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		}
 
 		$sidebar_html  = "<ul class=\"menu\">\n";
-		$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("id" => $COURSE_ID, "action" => false)) : "")."\">Student View</a></li>\n";
+		$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("id" => $COURSE_ID, "action" => false)) : "")."\">Learner View</a></li>\n";
 		if (($admin_wording) && ($admin_url)) {
 			$sidebar_html .= "<li class=\"off\"><a href=\"".$admin_url."\">".html_encode($admin_wording)."</a></li>\n";
 		}
@@ -139,9 +139,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				?>
 				<div class="no-printing text-right" >
 					<form class="form-horizontal">
-					<label for="course-quick-select" class="content-small"><?php echo $module_singular_name; ?> Quick Select:</label>
+					<label for="course-quick-select" class="content-small"><?php echo $translate->_("course"); ?> Quick Select:</label>
 					<select id="course-quick-select" name="course-quick-select" onchange="window.location='<?php echo ENTRADA_URL; ?>/courses?id='+this.options[this.selectedIndex].value">
-					<option value="">-- Select a <?php echo $module_singular_name; ?> --</option>
+					<option value="">-- Select a <?php echo $translate->_("course"); ?> --</option>
 					<?php
 					foreach ($COURSE_LIST as $key => $course_name) {
 						echo "<option value=\"".$key."\"".(($key == $COURSE_ID) ? " selected=\"selected\"" : "").">".$course_name."</option>\n";
@@ -181,7 +181,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				</div>
 
 				<a name="course-details-section"></a>
-				<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
+				<h2 title="Course Details Section"><?php echo $translate->_("course"); ?> Details</h2>
 				<div id="course-details-section">
 					<?php
 					if ($course_url = clean_input($course_details["course_url"], array("notags", "nows"))) { ?>
@@ -197,7 +197,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					} ?>
 
 					<div class="control-group">
-						<label for="course_directors" class="form-nrequired control-label"><strong><?php echo $module_singular_name;?> Directors</strong></label>
+						<label for="course_directors" class="form-nrequired control-label"><strong><?php echo $translate->_("course_directors"); ?></strong></label>
 						<div class="controls">
 						<?php
 							$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
@@ -221,7 +221,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</div>
 
 					<div class="control-group">
-						<label for="curriculum_coordinators" class="form-nrequired control-label"><strong>Curriculum Coordinators</strong></label>
+						<label for="curriculum_coordinators" class="form-nrequired control-label"><strong><?php echo $translate->_("curriculum_coordinators"); ?></strong></label>
 						<div class="controls">
 							<?php
 								$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
@@ -247,7 +247,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<?php
 					if((int) $course_details["pcoord_id"]) { ?>
 						<div class="control-group">
-							<label for="program_coordinator" class="form-nrequired control-label"><strong>Program Coordinator</strong></label>
+							<label for="program_coordinator" class="form-nrequired control-label"><strong><?php echo $translate->_("program_coordinator"); ?></strong></label>
 							<div class="controls">
 								<a href="mailto:<?php echo get_account_data("email", $course_details["pcoord_id"]);?>"><?php echo get_account_data("fullname", $course_details["pcoord_id"]);?></a>
 							</div>
@@ -257,7 +257,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 					if((int) $course_details["evalrep_id"]) { ?>
 						<div class="control-group">
-							<label for="eval_rep" class="form-nrequired control-label"><strong>Evaluation Rep</strong></label>
+							<label for="eval_rep" class="form-nrequired control-label"><strong><?php echo $translate->_("evaluation_rep"); ?></strong></label>
 							<div class="controls">
 								<a href="mailto:<?php echo get_account_data("email", $course_details["evalrep_id"]);?>"><?php echo get_account_data("fullname", $course_details["evalrep_id"]);?></a>
 							</div>
@@ -267,7 +267,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 					if((int) $course_details["studrep_id"]) { ?>
 						<div class="control-group">
-							<label for="stud_rep" class="form-nrequired control-label"><strong>Student Rep</strong></label>
+							<label for="stud_rep" class="form-nrequired control-label"><strong><?php echo $translate->_("student_rep"); ?></strong></label>
 							<div class="controls">
 								<a href="mailto:<?php echo get_account_data("email", $course_details["studrep_id"]);?>"><?php echo get_account_data("fullname", $course_details["studrep_id"]);?></a>
 							</div>
@@ -275,18 +275,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<?php
 					}
 
-					if (clean_input($course_details["course_description"], array("notags", "nows")) != "") { ?>
+					if (clean_input($course_details["course_description"], array("allowedtags", "nows")) != "") { ?>
 						<div class="control-group">
 							<label for="course_description" class="form-nrequired control-label">&nbsp;</label>
 							<div class="controls">
-								<h3><?php echo $module_singular_name . " Description"; ?></h3>
+								<h3><?php echo $translate->_("course") . " Description"; ?></h3>
 								<?php echo trim(strip_selected_tags($course_details["course_description"], array("font"))); ?>
 							</div>
 						</div>
 					<?php
 					}
 
-					if (clean_input($course_details["course_message"], array("notags", "nows")) != "") { ?>
+					if (clean_input($course_details["course_message"], array("allowedtags", "nows")) != "") { ?>
 						<div class="control-group">
 							<label for="director_message" class="form-nrequired control-label">&nbsp;</label>
 							<div class="controls">
@@ -327,15 +327,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</script>
 
 					<a name="course-objectives-section"></a>
-					<h2 title="Course Objectives Section"><?php echo  $module_singular_name ;?> Objectives</h2>
+					<h2 title="Course Objectives Section"><?php echo $translate->_("course"); ?> Objectives</h2>
 					<div id="course-objectives-section">
 					<?php
-					if (clean_input($course_details["course_objectives"], array("notags", "nows"))) {
+					if (clean_input($course_details["course_objectives"], array("allowedtags", "nows"))) {
 						$course_objectives_section = true;
 						echo trim(strip_selected_tags($course_details["course_objectives"], array("font")));
-					} ?>
-
-
+					}
+                    ?>
 					<h3>Curriculum Objectives</h3>
 					<p>The learner will be able to:</p>
 					<div id="objectives_list">
@@ -391,7 +390,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                 <?php
 				} ?>
 				<a name="course-resources-section"></a>
-				<h2 title="Course Resources Section"><?php echo $module_singular_name; ?> Resources</h2>
+				<h2 title="Course Resources Section"><?php echo $translate->_("course"); ?> Resources</h2>
 				<div id="course-resources-section">
 					<?php
 					$query = "	SELECT `course_files`.*, MAX(`statistics`.`timestamp`) AS `last_visited`
@@ -468,7 +467,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<?php
 							}
 
-							if (clean_input($result["file_notes"], array("notags", "nows")) != "") {
+							if (clean_input($result["file_notes"], array("allowedtags", "nows")) != "") {
 								echo "<div class=\"clearfix\">".trim(strip_selected_tags($result["file_notes"], array("font")))."</div>";
 							} ?>
 
@@ -551,7 +550,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<?php
 							}
 
-							if (clean_input($result["link_notes"], array("notags", "nows")) != "") {
+							if (clean_input($result["link_notes"], array("allowedtags", "nows")) != "") {
 									echo "<div class=\"clearfix\">".trim(strip_selected_tags($result["link_notes"], array("font")))."</div>";
 							} ?>
 									</div>
@@ -677,7 +676,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                             <?php
                                             }
 
-                                            if (clean_input($result["link_notes"], array("notags", "nows")) != "") {
+                                            if (clean_input($result["link_notes"], array("allowedtags", "nows")) != "") {
                                                 echo "<div class=\"clearfix\">".trim(strip_selected_tags($result["link_notes"], array("font")))."</div>";
                                             } ?>
                                         </div>
@@ -709,13 +708,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
 				if ($course_details_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" title=\"Course Details\">" . $module_singular_name . " Details</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" title=\"Course Details\">" . $translate->_("course") . " Details</a></li>\n";
 				}
 				if ($course_objectives_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" title=\"Course Objectives\">" . $module_singular_name . " Objectives</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" title=\"Course Objectives\">" . $translate->_("course") . " Objectives</a></li>\n";
 				}
 				if ($course_resources_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" title=\"Course Resources\">" . $module_singular_name . " Resources</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" title=\"Course Resources\">" . $translate->_("course") . " Resources</a></li>\n";
 				}
 				$sidebar_html .= "</ul>\n";
 
@@ -734,8 +733,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		$sidebar_html .= "<span style=\"float: left; padding-top: 7px;\"><a href=\"".ENTRADA_RELATIVE."/curriculum/search\" style=\"font-size: 11px\">Advanced Search</a></span>\n";
 		$sidebar_html .= "<span style=\"float: right; padding-top: 4px;\"><input type=\"submit\" class=\"btn btn-primary\" value=\"Search\" /></span>\n";
 		$sidebar_html .= "</form></div>\n";
-		$sidebar_html .= "<br /><br /><hr style=\"clear: both;\"/>\n";
-		$sidebar_html .= "<a href=\"".ENTRADA_RELATIVE."/courses/objectives\">View <strong>Curriculum Map</strong></a>\n";
 
 		new_sidebar_item("Our Curriculum", $sidebar_html, "curriculum-search-bar", "open");
 		if ($COURSE_LIST) {
@@ -745,16 +742,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<?php $query	= "SELECT * FROM `curriculum_lu_types` WHERE `curriculum_type_active` = '1' ORDER BY `curriculum_type_order` ASC";
 			$terms	= $db->GetAll($query);
 				if ($terms) {
-					echo "<h2>". $module_singular_name . " Listing</h2>\n";
+					echo "<h2>". $translate->_("course") . " Listing</h2>\n";
 			}
 			?>
 			</div>
 			<form class="pull-right form-horizontal">
 				<div class="control-group">
-					<label for="course-quick-select" class="control-label content-small"><?php echo $module_singular_name; ?> Quick Select:</label>
+					<label for="course-quick-select" class="control-label content-small"><?php echo $translate->_("course"); ?> Quick Select:</label>
 					<div class="controls">
 					<select id="course-quick-select" name="course-quick-select" onchange="window.location='<?php echo ENTRADA_URL; ?>/courses?org=<?php echo $ORGANISATION_ID;?>&id='+this.options[this.selectedIndex].value">
-					<option value="">-- Select a <?php echo $module_singular_name; ?> --</option>
+					<option value="">-- Select a <?php echo $translate->_("course"); ?> --</option>
 					<?php
 					foreach ($COURSE_LIST as $course_id => $course_name) {
 						echo "<option value=\"".$course_id."\">".$course_name."</option>\n";
@@ -785,8 +782,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									WHERE a.`course_id` = ".$db->qstr($course["course_id"]);
 						$course_community = $db->GetOne($query);
 
-						if ($course_community) {
-							$syllabi = glob(ENTRADA_ABSOLUTE."/core/storage/syllabi/".$course["course_code"]."-syllabus-" . ($year != 0 ? $year : date("Y", time())). "*");
+						$course_code = strtoupper(clean_input($course_community, "alphanumeric"));
+						
+						$syllabus = Models_Syllabus::fetchRowByCourseID($course["course_id"], $active = 1);
+						if ($course_community && $syllabus->getActive()) {
+							
+							$syllabi = glob(SYLLABUS_STORAGE."/".$course_code."*-syllabus-" . ($year != 0 ? $year : date("Y", time())). "*");
+                            
+                            if (!$syllabi) {
+                                $syllabi = glob(SYLLABUS_STORAGE."/".$course["course_code"]."*-syllabus-" . ($year != 0 ? $year : date("Y", time())). "*");
+                            }
+                            
+							$prefix = substr($syllabi[0], strrpos($syllabi[0], "/") + 1);
+							$prefix = substr($prefix, 0, strpos($prefix, "-"));
+
 							if ($syllabi) {
 								$syllabus_month = 0;
 								foreach ($syllabi as $syllabus) {
@@ -798,14 +807,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 							}
 
-							$file_realpath = ENTRADA_ABSOLUTE."/core/storage/syllabi/".$course["course_code"]."-syllabus-". ($year != 0 ? $year : date("Y", time())) . "-".$syllabus_month.".pdf";
+							$file_realpath = SYLLABUS_STORAGE."/".$prefix."-syllabus-". ($year != 0 ? $year : date("Y", time())) . "-".$syllabus_month.".pdf";
 							if (file_exists($file_realpath)) {
 								$syllabi[$course["course_code"]] = array(
-									"url" => ENTRADA_URL."/community".$course_community."?id=".$course["course_id"]."&method=serve-syllabus&course_code=".$course["course_code"]."&month=".$syllabus_month
+									"url" => ENTRADA_URL."/community".$course_community."?id=".$course["course_id"]."&method=serve-syllabus&course_code=".$course_code."&month=".$syllabus_month
 								);
 							}
 						}
-						echo "<li><a href=\"".ENTRADA_URL."/courses?id=".$course["course_id"]."\">".html_encode($course["course_code"].": ".$course["course_name"])."</a>".(isset($syllabi[$course["course_code"]]) ? " <a href=\"".$syllabi[$course["course_code"]]["url"]."\" title=\"Download Syllabus\"><i class=\"icon-file\"></i></a>" : "")."</li>\n";
+						echo "<li><a href=\"".ENTRADA_URL."/courses?id=".$course["course_id"]."\">".html_encode($course["course_code"]." - ".$course["course_name"])."</a>".(isset($syllabi[$course["course_code"]]) ? " <a href=\"".$syllabi[$course["course_code"]]["url"]."\" title=\"Download Syllabus\"><i class=\"icon-file\"></i></a>" : "")."</li>\n";
 					}
 					echo "	</ul>\n";
 					echo "</li>\n";

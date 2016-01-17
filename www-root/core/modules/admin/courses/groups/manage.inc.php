@@ -346,40 +346,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				<form action="<?php echo ENTRADA_URL."/admin/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "")."?".replace_query(array("section" => "manage", "type" => "add", "step" => 2)); ?>" method="post">
 					<table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
 						<colgroup>
-							<col style="width: 45%" />
-							<col style="width: 10%" />
+							<col style="width: 55%" />
 							<col style="width: 45%" />
 						</colgroup>
 						<tfoot>
 							<tr>
-								<td colspan="3" style="padding-top: 15px; text-align: right">
+								<td colspan="2" style="padding-top: 15px; text-align: right">
 									<input type="submit" class="btn btn-primary" value="Proceed" style="vertical-align: middle" />
 								</td>
 							</tr>
 						</tfoot>
 						<tbody>
 							<tr>
-								<td colspan="3" style="vertical-align: top">
+								<td colspan="2" style="vertical-align: top">
 									If you would like to add users that already exist in the system to this group yourself, you can do so by clicking the checkbox beside their name from the list below.
 									Once you have reviewed the list at the bottom and are ready, click the <strong>Proceed</strong> button at the bottom to complete the process.
 								</td>
 							</tr>
 							<tr>
-								<td colspan="2" />
+                                <td />
 								<td>
 									<div id="group_name_title"></div>
 								</td>
 							</tr>			
 							<tr>
-								<td colspan="2" style="vertical-align: top">
+								<td style="vertical-align: top">
 									<div class="member-add-type" id="existing-member-add-type">
 									<?php
 										$nmembers_results	= false;			
 										$course_audience = $course_details["permission"] == "closed"?true:false;
 										if ($course_audience) {
-											$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+											$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, b.`organisation_id`, b.`group`, b.`role`
 																FROM `".AUTH_DATABASE."`.`user_data` AS a
-																LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+																JOIN `".AUTH_DATABASE."`.`user_access` AS b
 																ON a.`id` = b.`user_id`
 																JOIN `course_audience` AS c
 																ON c.`course_id` = ".$db->qstr($COURSE_ID)."
@@ -390,13 +389,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 																WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 																AND b.`account_active` = 'true'
 																AND b.`group` = 'student'
+																AND b.`organisation_id` = ".$db->qstr($course_details["organisation_id"])."
 																AND c.`audience_active` = 1
 																AND d.`start_date` <= ".$db->qstr(time())."
 																AND d.`finish_date` >= ".$db->qstr(time())."
 																
 																UNION
 																
-																SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+																SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, b.`organisation_id`, b.`group`, b.`role`
 																FROM `".AUTH_DATABASE."`.`user_data` AS a
 																JOIN `".AUTH_DATABASE."`.`user_access` AS b
 																ON a.`id` = b.`user_id`
@@ -413,6 +413,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 																WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 																AND b.`account_active` = 'true'
 																AND b.`group` = 'student'
+																AND b.`organisation_id` = ".$db->qstr($course_details["organisation_id"])."
 																AND c.`audience_active` = 1
 																AND d.`group_active` = 1
 																AND (d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0 OR d.`start_date` IS NULL)
@@ -423,12 +424,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										} else {
 											$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
 																FROM `".AUTH_DATABASE."`.`user_data` AS a
-																LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+																JOIN `".AUTH_DATABASE."`.`user_access` AS b
 																ON a.`id` = b.`user_id`
 																WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 																AND b.`account_active` = 'true'
 																AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 																AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+																AND b.`organisation_id` = ".$db->qstr($course_details["organisation_id"])."
 																GROUP BY a.`id`
 																ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 										}

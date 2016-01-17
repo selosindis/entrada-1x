@@ -22,12 +22,12 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "create",false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "create", false)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -51,7 +51,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$PROCESSED["curriculum_type_name"] = $type_title;
 			} else {
 				$ERROR++;
-				$ERRORSTR[] = "The <strong>Curriculum Type Name</strong> is a required field.";
+				$ERRORSTR[] = "The <strong>Curriculum Layout Name</strong> is a required field.";
 			}
 
 			/**
@@ -167,16 +167,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 					$url = ENTRADA_URL . "/admin/settings/manage/curriculumtypes?org=".$ORGANISATION_ID;
 					$SUCCESS++;
-					$SUCCESSSTR[] = "You have successfully updated <strong>".html_encode($PROCESSED["curriculum_type_name"])."</strong> to the system.<br /><br />You will now be redirected to the Curriculum Types index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+					$SUCCESSSTR[] = "You have successfully updated <strong>".html_encode($PROCESSED["curriculum_type_name"])."</strong> to the system.<br /><br />You will now be redirected to the Curriculum Layout index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 					$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 					application_log("success", "New Hot Topic [".$TOPIC_ID."] added to the system.");
 
 
 				} else {
 					$ERROR++;
-					$ERRORSTR[] = "There was a problem updating this Curriculum Type into the system. The system administrator was informed of this error; please try again later.";
+					$ERRORSTR[] = "There was a problem updating this Curriculum Layout into the system. The system administrator was informed of this error; please try again later.";
 
-					application_log("error", "There was an error inserting a Curriculum Type. Database said: ".$db->ErrorMsg());
+					application_log("error", "There was an error inserting a Curriculum Layout. Database said: ".$db->ErrorMsg());
 				}
 			}
 
@@ -250,14 +250,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			</colgroup>
 			<thead>
 				<tr>
-					<td colspan="2"><h1>Edit Curriculum Type</h1></td>
+					<td colspan="2"><h1>Edit Curriculum Layout</h1></td>
 				</tr>
 			</thead>
 			<tfoot>
 				<tr>
 					<td colspan="2" style="padding-top: 15px;">
+						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/curriculumtypes?org=<?php echo $ORGANISATION_ID;?>'" />
+
 						<div class="pull-right">
-							<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/curriculumtypes?org=<?php echo $ORGANISATION_ID;?>'" />
 							<input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
 						</div>
 					</td>
@@ -265,45 +266,45 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			</tfoot>
 			<tbody>
 				<tr>
-					<td><label for="curriculum_type_name" class="form-required">Curriculum Type Name:</label></td>
-					<td><input type="text" id="curriculum_type_name" name="curriculum_type_name" value="<?php echo ((isset($PROCESSED["curriculum_type_name"])) ? html_encode($PROCESSED["curriculum_type_name"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
+					<td><label for="curriculum_type_name" class="form-required">Title</label></td>
+					<td><input type="text" id="curriculum_type_name" name="curriculum_type_name" value="<?php echo ((isset($PROCESSED["curriculum_type_name"])) ? html_encode($PROCESSED["curriculum_type_name"]) : ""); ?>" maxlength="60" class="span11" /></td>
 				</tr>
 				<tr>
-					<td style="vertical-align: top;"><label for="curriculum_type_description" class="form-nrequired">Curriculum Type Description:</label></td>
+					<td style="vertical-align: top;"><label for="curriculum_type_description" class="form-nrequired">Description</label></td>
 					<td>
-						<textarea id="curriculum_type_description" name="curriculum_type_description" style="width: 98%; height: 50px" rows="20" cols="70"><?php echo ((isset($PROCESSED["curriculum_type_description"])) ? html_encode($PROCESSED["curriculum_type_description"]) : ""); ?></textarea>
+						<textarea id="curriculum_type_description" name="curriculum_type_description" class="span11 expandable"><?php echo ((isset($PROCESSED["curriculum_type_description"])) ? html_encode($PROCESSED["curriculum_type_description"]) : ""); ?></textarea>
 					</td>
 				</tr>
 				<tr>
-					<td style="vertical-align: top;"><label for="curriculum_level" class="form-required">Curriculum Level:</label></td>
+					<td><label for="curriculum_level" class="form-required">Curriculum Level</label></td>
 					<td>
-						<select id="curriculum_level_id" name="curriculum_level_id" style="width: 250px">
-						<?php
-						$query = "	SELECT a.*
-									FROM `" . DATABASE_NAME . "`.`curriculum_lu_levels`  AS a,
-									`" . DATABASE_NAME . "`.`curriculum_level_organisation`  AS b
-									WHERE a.`curriculum_level_id` = b.`curriculum_level_id`
-									AND b.`org_id` = " . $PROCESSED["org_id"] . "
-								    ORDER BY a.`curriculum_level` ASC";
-						$results = $db->GetAll($query);
-						if ($results) {
-                            ?>
-							<option value="0">Choose a Curriculum Level</option>
-						    <?php
-							foreach ($results as $result) {
-						        ?>
-							    <option value="<?php echo $result["curriculum_level_id"]; ?>" <?php echo ($result["curriculum_level_id"] == $PROCESSED["curriculum_level_id"]) ? "selected=\"selected\"" : ""; ?>>
-							    <?php echo $result["curriculum_level"]; ?>
-							    </option>
-						        <?php
+						<select id="curriculum_level_id" name="curriculum_level_id" class="span5">
+							<?php
+							$query = "	SELECT a.*
+										FROM `" . DATABASE_NAME . "`.`curriculum_lu_levels`  AS a,
+										`" . DATABASE_NAME . "`.`curriculum_level_organisation`  AS b
+										WHERE a.`curriculum_level_id` = b.`curriculum_level_id`
+										AND b.`org_id` = " . $PROCESSED["org_id"] . "
+										ORDER BY a.`curriculum_level` ASC";
+							$results = $db->GetAll($query);
+							if ($results) {
+								?>
+								<option value="0">Choose a Curriculum Level</option>
+								<?php
+								foreach ($results as $result) {
+									?>
+									<option value="<?php echo $result["curriculum_level_id"]; ?>" <?php echo ($result["curriculum_level_id"] == $PROCESSED["curriculum_level_id"]) ? "selected=\"selected\"" : ""; ?>>
+										<?php echo $result["curriculum_level"]; ?>
+									</option>
+								<?php
+								}
+							} else {
+								?>
+								<option value="0">No curriculum levels exist for this organisation.</option>
+							<?php
 							}
-						} else {
-                            ?>
-							<option value="0">No Curriculum Levels Exist for this Organisation</option>
-						    <?php
-                        }
-						?>
-					    </select>
+							?>
+						</select>
 					</td>
 				</tr>
 				<tr>
@@ -311,7 +312,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				</tr>
 				<tr>
 					<td colspan="2">
-                        <h2>Curriculum Type Periods</h2>
+                        <h2>Curriculum Periods</h2>
                         <div class="row-fluid">
                             <span class="pull-right">
                                 <a class="btn btn-small btn-success" href="#" id="add_period"><i class="icon-plus-sign icon-white"></i> Add Curriculum Period</a>
@@ -319,7 +320,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                         </div>
                         <br />
 						<div id="curriculum_periods_table">
-							<table class="table table-striped" summary="Curriculum Type Periods">
+							<table class="table table-striped" summary="Curriculum Periods">
 								<thead>
 									<tr>
 										<th>&nbsp;</th>
@@ -376,7 +377,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						</div>
 						<div id="no_period_msg">
 							<?php
-							add_notice("There are no active periods for this curriculum type.");
+							add_notice("There are no active periods for this Curriculum Layout.");
 							echo display_notice();
 							?>
 						</div>

@@ -1,89 +1,95 @@
 <!doctype html>
-<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
-<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
-<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
-<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
-<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
-<head>
-	<meta charset="{$site_default_charset}">
-	 <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
-       Remove this if you use the .htaccess  -->
-	  <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> // Remove the comment for this line if you don't care too much about validation -->
+	<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+	<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+	<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+	<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+	<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+	<head>
+		<meta charset="{$site_default_charset}">
 
-	<title>{$page_title}</title>
-	<meta name="description" content="{$page_description}" />
-	<meta name="keywords" content="{$page_keywords}" />
+		<title>{$page_title}</title>
+		<meta name="description" content="{$page_description}" />
+		<meta name="keywords" content="{$page_keywords}" />
 
-	<meta name="robots" content="index, follow" />
+		<meta name="robots" content="index, follow" />
 
-    <link href="{$sys_website_url}/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />
-	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery.min.js"></script>
-	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery-ui.min.js"></script>
-    <script type="text/javascript">var COMMUNITY_ID = "{$community_id}";</script>
-	<script type="text/javascript">jQuery.noConflict();</script>
+        <link rel="stylesheet" href="{$protocol}://fonts.googleapis.com/css?family=Roboto:400,400italic,700,700italic,300,300italic">
+		<link rel="stylesheet" href="{$sys_website_relative}/css/font-awesome/css/font-awesome.min.css">
 
-    <script src="{$template_relative}/js/script.js"></script>
-	<script src="{$template_relative}/js/libs/modernizr-1.7.min.js"></script>
-	{$page_head}
-	<link rel="stylesheet" href="{$template_relative}/css/ie.css">
-	<link rel="stylesheet" href="{$template_relative}/css/stylesheet.css">
-	<link rel="stylesheet" href="{$template_relative}/css/screen.css">
+	    <link rel="stylesheet" href="{$sys_website_relative}/css/jquery/jquery-ui.css">
+        <link rel="stylesheet" href="{$template_relative}/css/bootstrap.min.css">
+        <link rel="stylesheet" href="{$template_relative}/css/stylesheet.css">
+
+		<script src="{$sys_website_relative}/javascript/jquery/jquery.min.js"></script>
+		<script src="{$sys_website_relative}/javascript/jquery/jquery-ui.min.js"></script>
+
+	    <script>var COMMUNITY_ID = "{$community_id}";</script>
+		<script>jQuery.noConflict();</script>
+
+        <script src="{$template_relative}/js/bootstrap.min.js"></script>
+        <script src="{$template_relative}/js/modernizr-1.7.min.js"></script>
+        <script src="{$template_relative}/js/common.js"></script>
+
+		{$page_head}
 	</head>
-
 	<body>
-		{$sys_system_navigator}
-	  <div class="container">
-    <header class="page-header">
-		<div class="span-24 page-header-title">
-			<hgroup class="span-16">
-				<h3 class="module-name" >{$site_community_title}</h3>
-			</hgroup>
-		</div> <!-- ./end page-header-title -->
-		{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
-		<nav class="breadcrumb span-24">
-		{$site_breadcrumb_trail}
-		</nav>
-    </header>
-    <div id="main" role="main" class="span-24">
-		<p class="span-24 toggle"><a href="#" class="toggle-panel"></a></p>
-		{if $show_tertiary_sideblock}
-		<aside class="span-5 left-nav">
-			{include file="sidebar-blocks/tertiary_block.tpl"}
-		</aside>
-		{/if}
-		<section class="span-18 left-space content">
-			{$page_content}
-		</section>
-		<aside class="span-5 last right-nav collapsed">
-            {if $is_logged_in && $user_is_admin}
-                {include file="sidebar-blocks/admin_block.tpl"}
-            {/if}
-            {include file="sidebar-blocks/entrada_block.tpl"}
-            {if $is_logged_in && $user_is_member}
-                {include file="sidebar-blocks/community_block.tpl"}
-            {/if}
-            {if $allow_membership}
-                {include file="sidebar-blocks/community_join_block.tpl"}
-            {/if}
-		</aside>
-		{if $is_sequential_nav}
-			<section style="text-align:right;" class="span-23">
-				{if $next_page_url != "#" && $previous_page_url != "#"}
-					<p><a href="{$previous_page_url}"><< Previous</a> | <a href="{$next_page_url}">Next >></a></p>
-				{elseif $next_page_url != "#" && $previous_page_url == "#"}
-					<p> <a href="{$next_page_url}"> Next >></a></p>
-				{elseif $next_page_url == "#" && $previous_page_url != "#"}
-					<p> <a href="{$previous_page_url}"><< Previous</a> </p>
-				{else $next_page_url == "#" && $previous_page_url == "#"}
-					<p> </p>
-				{/if}
-			</section>
-		{/if}
-    </div>
-    <footer class="span-24">
-		<p>{$copyright_string}</p>
-    </footer>
-  </div> <!--! end of #container -->
+		<div class="container">
+		    <header class="span12 page-header">
+				<div class="page-header-title span10">
+					<h3 class="module-name" >{$site_community_title}</h3>
+				</div>
+		    </header>
+
+		    {include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
+
+			<nav class="breadcrumb span12">
+			    {$site_breadcrumb_trail}
+				<div id="community-nav-collapse">
+	                <a id="community-nav-collapse-toggle" href="#"><span class="menu-icon" id="community-nav-menu-icon" title="Administrative Navigation"></span></a>
+	            </div>
+			</nav>
+		    <div id="main" role="main">
+				<div class="row clearfix">
+					{if $show_tertiary_sideblock}
+						<aside class="span3 pull-left">
+							{include file="sidebar-blocks/tertiary_block.tpl"}
+						</aside>
+						<section class="span6 sideblock-content pull-left">
+							<section>
+								{$page_content}
+							</section>
+                            {if $is_sequential_nav}
+                                {include file="sequential_nav.tpl"}
+                            {/if}
+						</section>
+					{else}
+						<section class="span9 content pull-left">
+							<section>
+								{$page_content}
+							</section>
+                            {if $is_sequential_nav}
+                                {include file="sequential_nav.tpl"}
+                            {/if}
+						</section>
+					{/if}
+					<aside id="right-community-nav" class="span3 right-community-nav-expanded pull-right">
+						{if $is_logged_in && $user_is_admin}
+							{include file="sidebar-blocks/admin_block.tpl"}
+						{/if}
+						{include file="sidebar-blocks/entrada_block.tpl"}
+						{if $is_logged_in && $user_is_member}
+							{include file="sidebar-blocks/community_block.tpl"}
+						{/if}
+		                {if $allow_membership}
+		                    {include file="sidebar-blocks/community_join_block.tpl"}
+		                {/if}
+					</aside>
+				</div>
+		    </div>
+		    <footer class="span12">
+				<p>{$copyright_string}</p>
+		    </footer>
+	  	</div>
         {if !$development_mode && $google_analytics_code}
             <script type="text/javascript">
                 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");

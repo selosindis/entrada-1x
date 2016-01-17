@@ -3,7 +3,7 @@ var loaded = [];
 var loading_objectives = false;
 var linked_objective_id = 0;
 jQuery(document).ready(function(){	
-	jQuery("#child-objectives-section").on("click", ".objective-link-control", function(e) {
+	jQuery("#curriculum-tags-section").on("click", ".objective-link-control", function(e) {
 		linked_objective_id = jQuery(this).attr("data-id");
 		var objective_id = jQuery(this).attr("data-id");
 		var linked_objective_list = jQuery(document.createElement("ul"));
@@ -21,7 +21,7 @@ jQuery(document).ready(function(){
 		var modal = jQuery("#objective-link-modal");
 		modal.append(modal_data);
 		modal.dialog({
-			title: "Link Objective",
+			title: "Link Curriculum Tag",
 			modal: true,
 			draggable: false,
 			resizable: false,
@@ -229,7 +229,7 @@ jQuery(document).ready(function(){
 		modal_container.load(SITE_URL + "/admin/settings/manage/objectives?org="+org_id+"&section=edit&id=" + objective_id + "&mode=ajax");
 		
 		modal_container.dialog({
-			title: "Edit Objective",
+			title: "Edit Tag",
 			modal: true,
 			draggable: false,
 			resizable: false,
@@ -241,13 +241,13 @@ jQuery(document).ready(function(){
 					jQuery(this).dialog( "close" );
 				},
 				Save : function() {
-					var url = modal_container.children("form").attr("action");
+					var url = modal_container.find("form").attr("action");
 					var closeable = true;
 					jQuery.ajax({
 						url: url,
 						type: "POST",
 						async: false,
-						data: modal_container.children("form").serialize(),
+						data: modal_container.find("form").serialize(),
 						success: function(data) {
 							var jsonData = JSON.parse(data);
 							
@@ -255,10 +255,10 @@ jQuery(document).ready(function(){
 								
 								var order = jsonData.updates.objective_order;
 								var objective_parent = jsonData.updates.objective_parent;
-								
+								var data_title = ((jsonData.updates.objective_code && jsonData.updates.objective_code.length > 0) ? jsonData.updates.objective_code + ': ' : '') + jsonData.updates.objective_name;
 								var list_item = jQuery("#objective_"+objective_id);
 								
-								jQuery("#objective_title_"+jsonData.updates.objective_id).html(jsonData.updates.objective_name);
+								jQuery("#objective_title_"+jsonData.updates.objective_id).html(data_title);
 								jQuery("#description_"+jsonData.updates.objective_id).html(jsonData.updates.objective_description);
 								
 								jQuery("#objective_"+objective_id).remove();
@@ -291,10 +291,11 @@ jQuery(document).ready(function(){
 		var parent_id = jQuery(this).attr("data-id");
 		var modal_container = jQuery(document.createElement("div"));
 		var url = SITE_URL + "/admin/settings/manage/objectives?org="+org_id+"&section=add&mode=ajax&parent_id="+parent_id;
+
 		modal_container.load(url);
 		
 		modal_container.dialog({
-			title: "Add New Objective",
+			title: "Add Curriculum Tag",
 			modal: true,
 			draggable: false,
 			resizable: false,
@@ -306,12 +307,13 @@ jQuery(document).ready(function(){
 					jQuery(this).dialog( "close" );
 				},
 				Add : function() {
-					var url = modal_container.children("form").attr("action");
+					var url = modal_container.find("form").attr("action");
+
 					jQuery.ajax({
 						url: url,
 						type: "POST",
 						async: false,
-						data: modal_container.children("form").serialize(),
+						data: modal_container.find("form").serialize(),
 						success: function(data) {
 
 							var jsonData = JSON.parse(data);
@@ -319,17 +321,17 @@ jQuery(document).ready(function(){
 							if (jsonData.status == "success") {
 							
                                 var order = jsonData.updates.objective_order;
-								
 								var objective_parent = jsonData.updates.objective_parent;
+								var data_title = ((jsonData.updates.objective_code && jsonData.updates.objective_code.length > 0) ? jsonData.updates.objective_code + ': ' : '') + jsonData.updates.objective_name;
 								var list_item = jQuery(document.createElement("li"));
 								list_item.addClass("objective-container")
                                     .attr("id", "objective_"+jsonData.updates.objective_id)
                                     .attr("data-id", jsonData.updates.objective_id)
                                     .attr("data-code", jsonData.updates.objective_code)
                                     .attr("data-name", jsonData.updates.objective_name)
-                                    .attr("data-title", jsonData.updates.objective_code+': '+jsonData.updates.objective_name)
+                                    .attr("data-title", data_title)
                                     .attr("data-desc", jsonData.updates.objective_description)
-                                    .append(jQuery(document.createElement("div")).attr("id", "objective_title_"+jsonData.updates.objective_id).attr("data-title", jsonData.updates.objective_name).attr("data-id", jsonData.updates.objective_id).addClass("objective-title").html(jsonData.updates.objective_code+': '+jsonData.updates.objective_name))
+                                    .append(jQuery(document.createElement("div")).attr("id", "objective_title_"+jsonData.updates.objective_id).attr("data-title", jsonData.updates.objective_name).attr("data-id", jsonData.updates.objective_id).addClass("objective-title").html(data_title))
                                     .append(jQuery(document.createElement("div")).addClass("objective-controls"))
                                     .append(jQuery(document.createElement("div")).attr("id", "description_"+jsonData.updates.objective_id).addClass("objective-description").addClass("content-small").html(jsonData.updates.objective_description))
                                     .append(
@@ -339,7 +341,8 @@ jQuery(document).ready(function(){
                                     );
                                 list_item.children(".objective-controls").append(jQuery(document.createElement("i")).addClass("objective-edit-control").addClass("icon-edit").attr("data-id", jsonData.updates.objective_id))
                                      .append(jQuery(document.createElement("i")).addClass("objective-add-control").addClass("icon-plus-sign").attr("data-id", jsonData.updates.objective_id))
-                                     .append(jQuery(document.createElement("i")).addClass("objective-delete-control").addClass("icon-minus-sign").attr("data-id", jsonData.updates.objective_id));
+                                     .append(jQuery(document.createElement("i")).addClass("objective-delete-control").addClass("icon-minus-sign").attr("data-id", jsonData.updates.objective_id))
+                                     .append(jQuery(document.createElement("i")).addClass("objective-link-control").addClass("icon-link").attr("data-id", jsonData.updates.objective_id));
 
                                 if (jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).children().length != order) {
                                     jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent + " li").eq(order).before(list_item)
@@ -367,7 +370,7 @@ jQuery(document).ready(function(){
 		modal_container.load(url);
 		
 		modal_container.dialog({
-			title: "Delete Objective",
+			title: "Delete Curriculum Tag",
 			modal: true,
 			draggable: false,
 			resizable: false,
@@ -380,10 +383,10 @@ jQuery(document).ready(function(){
 				},
 				Delete : function() {
 					jQuery.ajax({
-						url: modal_container.children("form").attr("action"),
+						url: modal_container.find("form").attr("action"),
 						type: "POST",
 						async: false,
-						data: modal_container.children("form").serialize(),
+						data: modal_container.find("form").serialize(),
 						success: function(data) {
 							var jsonData = JSON.parse(data);
 							if (jsonData.status != "error") {
@@ -418,34 +421,28 @@ function buildDOM(children,id){
 	}
 	for(i = 0;i<children.length;i++){
 		//Javascript to create DOM elements from JSON response
+		var data_title = ((children[i].objective_code && children[i].objective_code.length > 0) ? children[i].objective_code + ': ' : '') + children[i].objective_name;
+
 		container = jQuery(document.createElement('li'))
 					.attr('class','objective-container draggable')
 					.attr('data-id',children[i].objective_id)
 					.attr('data-code',children[i].objective_code)
 					.attr('data-name',children[i].objective_name)
+					.attr("data-title", data_title)
 					.attr('data-description',children[i].objective_description)					
 					.attr('id','objective_'+children[i].objective_id);
-		if(children[i].objective_code){
-			title_text = children[i].objective_code+': '+children[i].objective_name
-		}else{
-			title_text = children[i].objective_name;
-		}
+
 		title = 	jQuery(document.createElement('div'))
 					.attr('class','objective-title')
 					.attr('id','objective_title_'+children[i].objective_id)
 					.attr('data-id',children[i].objective_id)
-					.attr('data-title',title_text)
-					.html(title_text);
+					.attr('data-title',data_title)
+					.html(data_title);
 
 		controls = 	jQuery(document.createElement('div'))
 					.attr('class','objective-controls');
 						
-		//this will need to change at some point
-		// c_control = jQuery(document.createElement('i'))
-		// 			.attr('class','objective-collapse-control')
-		// 			.attr('data-id',children[i].objective_id)
-		// 			.html('Collapse');
-		if(EDITABLE == true){						
+		if(EDITABLE == true){
 			e_control = jQuery(document.createElement('i'))
 						.attr('class','objective-edit-control icon-edit')
 						.attr('data-id',children[i].objective_id);
@@ -497,9 +494,6 @@ function buildDOM(children,id){
 							.append(controls)
 							.append(description)
 							.append(child_container);
-		// jQuery(container).draggable({
-		// 						revert:true
-		// 					});
 		jQuery('#objective_list_'+id).append(container);
 	}	
 

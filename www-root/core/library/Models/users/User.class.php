@@ -162,6 +162,7 @@ class User {
 	 */
 	public function setAllOrganisations($value) {
 		$this->all_organisations = $value;
+        ksort($this->all_organisations);
 	}
 
 	/**
@@ -648,7 +649,6 @@ class User {
 		$this->access_id = $value; // Set Access ID
 
         $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $value;
-
 		// Get all of the users orgs
 		$query = "SELECT b.`organisation_id`, b.`organisation_title`
 					  FROM `" . AUTH_DATABASE . "`.`user_access` a
@@ -729,7 +729,8 @@ class User {
                             WHERE a.`id` = ?
                             AND b.`account_active` = 'true'
                             AND (b.`access_starts` = '0' OR b.`access_starts` < ?)
-                            AND (b.`access_expires` = '0' OR b.`access_expires` >= ?)";
+                            AND (b.`access_expires` = '0' OR b.`access_expires` >= ?)
+                            ORDER BY b.`id`";
                 $result = $db->GetRow($query, array(AUTH_APP_ID, $proxy_id, time(), time()));
                 if ($result) {
                     $user = self::fromArray($result, $user);
@@ -761,6 +762,20 @@ class User {
                         $mask_available = $db->GetRow($query, array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"], time(), time(), AUTH_APP_ID, $user->getID(), time(), time()));
                         if ($mask_available) {
                             $user->setAccessId($mask_available["id"]);
+                        } else {
+                            $query = "SELECT a.`group`, a.`role`, a.`id`
+                                FROM `" . AUTH_DATABASE . "`.`user_access` AS a
+                                WHERE a.`user_id` = " . $db->qstr($user->getID()) . "
+                                AND a.`organisation_id` = " . $db->qstr($user->getActiveOrganisation()) . "
+                                AND a.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+                                AND a.`account_active` = 'true'
+                                AND (a.`access_starts` = '0' OR a.`access_starts` < ".$db->qstr(time()).")
+                                AND (a.`access_expires` = '0' OR a.`access_expires` >= ".$db->qstr(time()).")
+                                ORDER BY a.`id` ASC";
+                            $result = $db->GetRow($query);
+                            if ($result) {
+                                $user->setAccessId($result["id"]);
+                            }
                         }
                     }
                 } else {
@@ -1116,4 +1131,39 @@ class User {
 
 		return $return;
 	}
+
+
+    public static function fetchRowByID($proxy_id, $organisation_id = null, $auth_app_id = null) {
+        global $db;
+
+        $user = false;
+
+        $query = "  SELECT a.*, b.`group`, b.`role`, b.`organisation_id`, b.`id` AS `access_id`
+                    FROM `" . AUTH_DATABASE . "`.`user_data` AS a
+                    JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
+                    ON a.`id` = b.`user_id`
+                    WHERE a.`id` = ?
+					AND b.`account_active` = 'true'
+					AND (b.`access_starts` = '0' OR b.`access_starts` < ?)
+					AND (b.`access_expires` = '0' OR b.`access_expires` >= ?)"
+            .(isset($organisation_id) && $organisation_id ? " AND b.`organisation_id` = ?" : "")
+            .(isset($auth_app_id) && $auth_app_id ? " AND b.`app_id` = ?" : "");
+
+        $constraints = array($proxy_id, time(), time(), AUTH_APP_ID);
+        if (isset($organisation_id) && $organisation_id) {
+            $constraints[] = $organisation_id;
+        }
+        if (isset($auth_app_id) && $auth_app_id) {
+            $constraints[] = $auth_app_id;
+        }
+
+        $result = $db->GetRow($query, $constraints);
+
+        if ($result) {
+            $user = new User();
+            $user = self::fromArray($result, $user);
+        }
+
+        return $user;
+    }
 }

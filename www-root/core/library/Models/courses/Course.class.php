@@ -131,7 +131,7 @@ class Course {
 	 *@return User
 	 */
 	public function getDirector(){
-		return User::get($this->director_id);
+		return User::fetchRowByID($this->director_id);
 	}
 	
 	/**
@@ -139,7 +139,7 @@ class Course {
 	 *@return User
 	 */
 	public function getPCoordinator() {
-		return User::get($this->pcoord_id);
+		return User::fetchRowByID($this->pcoord_id);
 	}
 	
 	/**
@@ -147,7 +147,7 @@ class Course {
 	 *@return User
 	 */
 	public function getEvalRep() {
-		return User::get($this->evalrep_id);
+		return User::fetchRowByID($this->evalrep_id);
 	}
 	
 	/**
@@ -155,7 +155,7 @@ class Course {
 	 *@return User
 	 */
 	public function getStudentRep() {
-		return User::get($this->studrep_id);
+		return User::fetchRowByID($this->studrep_id);
 	}
 	
 	/**
@@ -190,7 +190,7 @@ class Course {
 	}
 	
 	public function getCurriculumType() {
-		//TODO add curriculum type	
+		//TODO add Curriculum Layout	
 	}
 	
 	public function getObjectives() {
@@ -265,7 +265,7 @@ class Course {
 	 * Returns value of unit_formative_assessment field
 	 * @return string
 	 */
-	public function getUnitFormativeAsessment() {
+	public function getUnitFormativeAssessment() {
 		return $this->unit_formative_assessment;
 	}
 	
@@ -363,7 +363,7 @@ class Course {
 		if (is_array($results)) {
 			foreach ($results as $result) {
 				$u = new User;
-				$c[$result["contact_type"]][$result["proxy_id"]] = $u->get($result["proxy_id"]);
+				$c[$result["contact_type"]][$result["proxy_id"]] = $u->fetchRowByID($result["proxy_id"]);
 			}
 			return $c;
 		} else {

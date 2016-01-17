@@ -326,10 +326,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
+
 						if ($_POST["community_template"] && $tmp_input = clean_input($_POST["community_template"], array("trim", "striptags"))) {
 							$PROCESSED["community_template"] = $tmp_input;
 						}
-
+						
 						if ($db->AutoExecute("communities", $PROCESSED, "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID))) {
                             
                             $query = "SELECT `community_type_options` FROM `org_community_types`
@@ -1354,7 +1355,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 										}
 									</script>
 
-									If you no longer wish to maintain this community or it is no longer being used, you can deactivate the community using the button below. If you have any questions before deactivating, please use the Page Feedback icon to the left of the page to contact the MEdTech Unit.
+									If you no longer wish to maintain this community or it is no longer being used, you can deactivate the community using the button below. If you have any questions before deactivating, please use the Page Feedback icon to the left of the page to ask us.
 									<div class="display-notice" style="margin-top: 15px; line-height: 175%">
 										<strong>Please note</strong> that once you deactivate this community all of the content (photos, calendar, etc) within the community will no longer be accessible to you or any other members of the community. Deactivating this community will also deactivate any Sub-Communities / Groups that have been created under this community.
 									</div>

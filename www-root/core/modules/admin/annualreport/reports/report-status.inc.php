@@ -150,7 +150,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			
 			switch($PROCESSED["report_completed"]) {
 				case "Pending":
-					$query = 	"SELECT `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`, `ar_profile`.`profile_id`, `ar_profile`.`proxy_id`
+					$query = 	"SELECT distinct `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`, `ar_profile`.`profile_id`, `ar_profile`.`proxy_id`
 								FROM `".DATABASE_NAME."`.`ar_profile`, `".AUTH_DATABASE."`.`user_data`, `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
 								WHERE `year_reported` = ".$db->qstr($PROCESSED["year_reported"]).$type_where."
 								AND `report_completed` = \"no\"
@@ -161,7 +161,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					break;
 				case "Completed":
 				default:
-					$query = 	"SELECT `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`, `ar_profile`.`profile_id`, `ar_profile`.`proxy_id`
+					$query = 	"SELECT distinct `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`, `ar_profile`.`profile_id`, `ar_profile`.`proxy_id`
 								FROM `".DATABASE_NAME."`.`ar_profile`, `".AUTH_DATABASE."`.`user_data`, `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
 								WHERE `year_reported` = ".$db->qstr($PROCESSED["year_reported"]).$type_where."
 								AND `report_completed` = \"yes\" 

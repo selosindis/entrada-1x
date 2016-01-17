@@ -19,6 +19,8 @@
  *
 */
 
+ini_set('auto_detect_line_endings', true);
+
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	exit;
 } else if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -30,7 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	require_once(ENTRADA_ABSOLUTE."/core/library/Models/events/drafts/CsvImporter.class.php");
+	
 
     echo "<h1>Draft Event Import</h1>";
 

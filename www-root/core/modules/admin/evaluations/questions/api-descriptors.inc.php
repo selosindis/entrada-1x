@@ -65,7 +65,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
         ?>
         <div class="pull-right cursor-pointer close" style="margin-top: -15px;" onclick="modalDescriptorDialog.close()">&times;</div>
         <div class="row-fluid">
-            <span class="span1 offset1">&nbsp;</span
+            <span class="span1 offset1">&nbsp;</span>
             <span class="span10">
                 <strong>
                     Descriptors
@@ -79,7 +79,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                 <div class="row-fluid">
                     <span class="span1 offset1">
                         <input type="radio" id="response_descriptor_id_<?php echo $descriptor->getID(); ?>" name="response_descriptor_id" value="<?php echo $descriptor->getID(); ?>" onclick="jQuery('#response_descriptor_<?php echo $RESPONSE_NUMBER; ?>').val(<?php echo $descriptor->getID(); ?>)"<?php echo ($erdescriptor_id == $descriptor->getID() ? " checked=\"checked\"" : ""); ?> />
-                    </span
+                    </span>
                     <span class="span10">
                         <label for="response_descriptor_id_<?php echo $descriptor->getID(); ?>">
                             <?php

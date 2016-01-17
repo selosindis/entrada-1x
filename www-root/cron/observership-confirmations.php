@@ -62,15 +62,15 @@ function sendNotification($result) {
 	
 	if ($preceptor_email) {
 
-		$ENTRADA_USER = User::get($result["student_id"]);
+		$student_user = User::fetchRowByID($result["student_id"]);
 		
 		$message	= $preceptor_name.",\n\n";
 		$message   .= "You have been indicated as the preceptor on an Observership:\n".
 					  "======================================================\n".
 
 					  "Submitted at: ".date("Y-m-d H:i", time())."\n".
-					  "Submitted by: ".$ENTRADA_USER->getFullname(false)."\n".
-					  "E-Mail Address: ".$ENTRADA_USER->getEmail()."\n".
+					  "Submitted by: ".$student_user->getFullname(false)."\n".
+					  "E-Mail Address: ".$student_user->getEmail()."\n".
 
 					  "Observership details:\n".
 					  "---------------------\n".

@@ -298,9 +298,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 $attached_quiz = new Models_Quiz_Attached($PROCESSED);
                                 
 								if ($attached_quiz->insert()) {
-									add_success("You have successfully attached <strong>".html_encode($quiz_record["quiz_title"])."</strong> as <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to <strong>".html_encode($selected_learning_events[$PROCESSED["event_id"]]["event_title"])."</strong>.");
+                                    $event_resource_entity = new Models_Event_Resource_Entity(
+                                        array(
+                                            "event_id" => $event_id,
+                                            "entity_type" => 8,
+                                            "entity_value" => $attached_quiz->getAquizID(),
+                                            "release_date" => 0,
+                                            "release_until" => 0,
+                                            "updated_date" => time(),
+                                            "updated_by" => $ENTRADA_USER->getID(),
+                                            "active" => 1
+                                        )
+                                    );
 
-									application_log("success", "Quiz [".$RECORD_ID."] was successfully attached to Event [".$PROCESSED["event_id"]."].");
+                                    if (!$event_resource_entity->insert()) {
+                                        $ERROR++;
+                                        $ERRORSTR[] = "There was an error while trying to save the selected <strong>Event File</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+                                        application_log("error", "Unable to insert a new event_file record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
+                                    }
+
+                                    add_success("You have successfully attached <strong>".html_encode($quiz_record["quiz_title"])."</strong> as <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to <strong>".html_encode($selected_learning_events[$PROCESSED["event_id"]]["event_title"])."</strong>.");
+
+                                    application_log("success", "Quiz [".$RECORD_ID."] was successfully attached to Event [".$PROCESSED["event_id"]."].");
 
 								} else {
 									add_error("There was a problem attaching this quiz to <strong>".html_encode($selected_learning_events[$PROCESSED["event_id"]]["event_title"])."</strong>. The system administrator was informed of this error; please try again later.");

@@ -204,11 +204,14 @@ if ($LOGGED_IN && $ENTRADA_USER) {
  */
 $smarty = new Smarty();
 
-$template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
+$template_dir = COMMUNITY_ABSOLUTE . "/templates/" . $COMMUNITY_TEMPLATE;
+
 $smarty->template_dir = $template_dir;
 $smarty->compile_dir = CACHE_DIRECTORY;
 $smarty->compile_id = md5($template_dir);
 $smarty->cache_dir = CACHE_DIRECTORY;
+
+$smarty->registerPlugin("block", "translate", array($translate, "smarty"), false);
 
 $is_sequential_nav = false;
 
@@ -755,26 +758,41 @@ if ($COMMUNITY_URL) {
 						$result = $db->GetRow($query);
 
 						if ($result) {
-							if (trim($result["page_title"]) != "") {
-								echo "<h1>".html_encode($result["page_title"])."</h1>";
-							}
-
 							if (!empty($result["page_content"])) {
 								$lti_settings = json_decode($result["page_content"]);
 
+                                $lti_role = "Learner";
+
+                                if ($LOGGED_IN) {
+                                    $lti_user_id = $ENTRADA_USER->getUsername(); // @todo This could be either getId(), getUsername(), or getNumber().
+
+                                    if ($COMMUNITY_ADMIN) {
+                                        $lti_role = "Instructor";
+                                    }
+
+                                    $lti_name_family = $ENTRADA_USER->getLastname();
+                                    $lti_name_given = $ENTRADA_USER->getFirstname();
+                                    $lti_email = $ENTRADA_USER->getEmail();
+                                } else {
+                                    $lti_user_id = 0;
+                                    $lti_name_family = "User";
+                                    $lti_name_given = "Anonymous";
+                                    $lti_email = $AGENT_CONTACTS["administrator"]["email"];
+                                }
+
 								$parameters = array(
 					                "resource_link_id" => $PAGE_ID,
-					                "resource_link_title" => html_encode($result["page_title"]),
+					                "resource_link_title" => $result["page_title"],
 					                "resource_link_description" => "",
-					                "user_id" => $ENTRADA_USER->getId(),
-					                "roles" => "Learner",
-					                "lis_person_name_full" => $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname(),
-					                "lis_person_name_family" => $ENTRADA_USER->getLastname(),
-					                "lis_person_name_given" => $ENTRADA_USER->getFirstname(),
-					                "lis_person_contact_email_primary" => $ENTRADA_USER->getEmail(),
-					                "context_id" => $PAGE_ID,
-					                "context_title" => html_encode($result["page_title"]),
-					                "context_label" => "",
+                                    "user_id" => $lti_user_id,
+					                "roles" => $lti_role,
+					                "lis_person_name_full" => $lti_name_given . " " . $lti_name_family,
+					                "lis_person_name_family" => $lti_name_family,
+					                "lis_person_name_given" => $lti_name_given,
+					                "lis_person_contact_email_primary" => $lti_email,
+					                "context_id" => strtoupper($community_details["community_shortname"]),
+					                "context_title" => $community_details["community_title"],
+					                "context_label" => strtoupper($community_details["community_shortname"]),
 					                "tool_consumer_info_product_family_code" => APPLICATION_NAME,
 					                "tool_consumer_info_version" => APPLICATION_VERSION,
 					                "tool_consumer_instance_guid" => ENTRADA_URL,
@@ -851,12 +869,14 @@ if ($COMMUNITY_URL) {
 					$query	= "SELECT `cpage_id`, `page_title`, `page_content` FROM `community_pages` WHERE `page_url` = ".(isset($PAGE_URL) && $PAGE_URL ? $db->qstr($PAGE_URL) : "''")." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
 					$result	= $db->GetRow($query);
 					if ($result) {
+						$page_text .= "<a id=\"community-edit-button\" href=\"". COMMUNITY_URL.$COMMUNITY_URL .":pages?action=edit&amp;page=". $result["cpage_id"] ."\" class=\"btn btn-primary pull-right\">Edit Page</a>\n";
+
 						if (trim($result["page_title"]) != "") {
-							$page_text .= "<h1>".html_encode($result["page_title"]).(($LOGGED_IN) && ($COMMUNITY_ADMIN) ? "<a id=\"community-edit-button\" href=\"". COMMUNITY_URL.$COMMUNITY_URL .":pages?action=edit&step=1&page=". $result["cpage_id"] ."\" class=\"edit-community-page-btn pull-right\">Edit Page</a>" : "")."</h1>";
+							$page_text .= "<h1>".html_encode($result["page_title"])."</h1>";
 						}
 
 						if (trim($result["page_content"]) != "") {
-							$page_text .= $result["page_content"]."\n<br /><br />\n";
+							$page_text .= "<p>".trim($result["page_content"])."</p>\n";
 						}
 					}
 
@@ -914,9 +934,11 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);
 				$smarty->assign("sys_community_relative", COMMUNITY_RELATIVE);
 
-				$smarty->assign("sys_system_navigator", load_system_navigator());
+				$smarty->assign("sys_system_navigator", ""); // DEPRECATED
 				$smarty->assign("sys_profile_url", ENTRADA_URL."/profile");
 				$smarty->assign("sys_website_url", ENTRADA_URL);
+				$smarty->assign("sys_website_relative", ENTRADA_RELATIVE);
+				$smarty->assign("entrada_template_relative", $ENTRADA_TEMPLATE->relative());
 
 				$smarty->assign("site_template", $COMMUNITY_TEMPLATE);
 				$smarty->assign("site_theme", ((isset($community_details["community_theme"])) ? $community_details["community_theme"] : ""));
@@ -975,10 +997,14 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("site_primary_navigation", $COMMUNITY_PAGES["navigation"]);
 				$show_tertiary_sideblock = false;
 				foreach ($COMMUNITY_PAGES["navigation"] as $top_level_page) {
-					if (count($top_level_page["link_children"]) > 0) {
+					if (isset($top_level_page["link_children"]) && is_array($top_level_page["link_children"]) && (count($top_level_page["link_children"]) > 0)) {
 						foreach ($top_level_page["link_children"] as $child_page) {
-							if (($child_page["link_selected"] || $child_page["child_selected"]) && count($child_page["link_children"])) {
-								$show_tertiary_sideblock = true;
+							$child_selected = communities_navigation_find_selected($child_page);
+							if ($child_selected !== null) {
+								if (isset($child_selected["link_children"]) && is_array($child_selected["link_children"]) && (count($child_selected["link_children"]) > 0)) {
+									$show_tertiary_sideblock = true;
+									break;
+								}
 							}
 						}
 					}

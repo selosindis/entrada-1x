@@ -45,6 +45,61 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	if (isset($_GET["ids"]) && $PROXY_ID = clean_input($_GET["ids"], "int")) {
 		$student_name	= get_account_data("firstlast", $PROXY_ID);
 		
+        if ($PROXY_ID && $ENTRADA_USER->getActiveGroup() != "student") {
+			$sidebar_html = "";
+			$query = "SELECT a.*, b.`rotation_title` FROM `".CLERKSHIP_DATABASE."`.`logbook_deficiency_plans` AS a
+						JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS b
+						ON a.`rotation_id` = b.`rotation_id`
+						WHERE a.`proxy_id` = ".$db->qstr($PROXY_ID);
+			$deficiency_plans = $db->GetAll($query);
+			if ($deficiency_plans) {
+				$plans_accepted = false;
+				$plans_pending = false;
+				$plans_rejected = false;
+				
+				foreach ($deficiency_plans as $plan) {
+					if ($plan["clerk_accepted"] && $plan["administrator_accepted"]) {
+						$plans_accepted = true;
+					} elseif ($plan["clerk_accepted"]) {
+						$plans_pending = true;
+					} elseif ($plan["administrator_comments"]) {
+						$plans_rejected = true;
+					}
+				}
+				if ($plans_accepted) {
+					$sidebar_html .= "<center>Accepted Plans:</center>\n";
+					$sidebar_html .= "<ul class=\"menu\">";
+					foreach ($deficiency_plans as $plan) {
+						if ($plan["clerk_accepted"] && $plan["administrator_accepted"]) {
+							$sidebar_html .= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$plan["rotation_id"]."&id=".$PROXY_ID."\"><strong>".$plan["rotation_title"]."</strong></a></li>\n";
+						}
+					}
+					$sidebar_html .= "</ul>";
+				}
+				if ($plans_pending) {
+					$sidebar_html .= "<center>Plans Pending Approval:</center>\n";
+					$sidebar_html .= "<ul class=\"menu\">";
+					foreach ($deficiency_plans as $plan) {
+						if ($plan["clerk_accepted"] && !$plan["administrator_accepted"]) {
+							$sidebar_html .= "	<li><a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$plan["rotation_id"]."&id=".$PROXY_ID."\"><strong>".$plan["rotation_title"]."</strong></a></li>\n";
+						}
+					}
+					$sidebar_html .= "</ul>";
+				}
+				if ($plans_rejected) {
+					$sidebar_html .= "<center>Rejected Plans:</center>\n";
+					$sidebar_html .= "<ul class=\"menu\">";
+					foreach ($deficiency_plans as $plan) {
+						if ($plan["administrator_comments"] && !$plan["clerk_accepted"]) {
+							$sidebar_html .= "	<li class=\"incorrect\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$plan["rotation_id"]."&id=".$PROXY_ID."\"><strong>".$plan["rotation_title"]."</strong></a></li>\n";
+						}
+					}
+					$sidebar_html .= "</ul>";
+				}
+				new_sidebar_item("Deficiency Plans", $sidebar_html, "page-clerkship", "open");
+			}
+		}
+        
 		/**
 		 * Process local page actions.
 		 */
@@ -217,38 +272,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			</div>
             <?php
 
-            $accessible_rotation_ids = clerkship_rotations_access();
-            if (is_array($accessible_rotation_ids) && count($accessible_rotation_ids)) {
-                $query = "	SELECT ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]." AS `sort_by`, a.`lentry_id`, d.`rotation_id`, a.`entry_active`
-                            FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` AS a 
-                            LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS b
-                            ON a.`llocation_id` = b.`llocation_id`
-                            LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_sites` AS c
-                            ON a.`lsite_id` = c.`lsite_id`
-                            LEFT JOIN `".CLERKSHIP_DATABASE."`.`events` AS d
-                            ON a.`rotation_id` = d.`event_id`
-                            LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS e
-                            ON d.`rotation_id` = e.`rotation_id`
-                            WHERE a.`proxy_id` = ".$db->qstr($PROXY_ID)."
-                            ORDER BY ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]." ASC";
-                $results = $db->GetAll($query);
-                if ($results) {
-                    $rotation_ids = Array();
-                    foreach ($results as $result) {
-                        if (array_search($result["rotation_id"], $rotation_ids) === false) {
-                            $rotation_ids[] = $result["rotation_id"];
-                        }
-                    }
-                }
-                ?>
-                <div class="tab-page">
-                    <h3 class="tab">Logged Encounters</h3>
-                    <?php
-
-                    if (isset($_GET["ids"]) && ((int)$_GET["ids"])) {
-                        $PROXY_ID = $_GET["ids"];
-                    }
-
                     if(isset($_GET["sb"])) {
                         if(in_array(trim($_GET["sb"]), array("rotation" , "location", "site", "patient", "date", "age"))) {
                             if (trim($_GET["sb"]) == "rotation") {
@@ -284,6 +307,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                         $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["value"] = "e.`rotation_title`";
                         $_GET["sb"] = "rotation";
                     }
+
+            $accessible_rotation_ids = clerkship_rotations_access();
+            if (is_array($accessible_rotation_ids) && count($accessible_rotation_ids)) {
+                $query = "	SELECT ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["value"]." AS `sort_by`, a.`lentry_id`, d.`rotation_id`, a.`entry_active`
+                            FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` AS a 
+                            LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS b
+                            ON a.`llocation_id` = b.`llocation_id`
+                            LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_sites` AS c
+                            ON a.`lsite_id` = c.`lsite_id`
+                            LEFT JOIN `".CLERKSHIP_DATABASE."`.`events` AS d
+                            ON a.`rotation_id` = d.`event_id`
+                            LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS e
+                            ON d.`rotation_id` = e.`rotation_id`
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_agerange` AS f
+							ON a.`agerange_id` = f.`agerange_id`
+                            WHERE a.`proxy_id` = ".$db->qstr($PROXY_ID)."
+                            ORDER BY ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]." ASC";
+                $results = $db->GetAll($query);
+                if ($results) {
+                    $rotation_ids = Array();
+                    foreach ($results as $result) {
+                        if (array_search($result["rotation_id"], $rotation_ids) === false) {
+                            $rotation_ids[] = $result["rotation_id"];
+                        }
+                    }
+                }
+                ?>
+                <div class="tab-page">
+                    <h3 class="tab">Logged Encounters</h3>
+                    <?php
 
                     $clerk_name = $db->GetOne("	SELECT CONCAT_WS(' ', `firstname`, `lastname`) as `fullname` 
                                                 FROM `".AUTH_DATABASE."`.`user_data`
@@ -329,12 +382,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                 View Encounters By: 
                             </label>
                             <span class="span9">
-                                <select name="view-type" id="view-type" onchange="window.location = '<?php echo ENTRADA_URL."/clerkship?".replace_query(array("sb" => false)); ?>&sb='+this.options[this.selectedIndex].value;">
+                                <select name="view-type" id="view-type" onchange="window.location = '<?php echo ENTRADA_URL."/clerkship/clerk?".replace_query(array("sb" => false)); ?>&sb='+this.options[this.selectedIndex].value;">
                                     <option value="rotation"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "e.`rotation_title`" ? " selected=\"selected\"" : "")?>>Rotation</option>
                                     <option value="date"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "a.`encounter_date`" ? " selected=\"selected\"" : "")?>>Encounter Date</option>
                                     <option value="location"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "b.`location`" ? " selected=\"selected\"" : "")?>>Setting</option>
                                     <option value="site"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "c.`site_name`" ? " selected=\"selected\"" : "")?>>Institution</option>
-                                    <option value="patient"<?php echo (isset($_GET["sb"]) && $_GET["sb"] == "patient" ? " selected=\"selected\"" : "")?>>Patient</option>
+                                    <option value="patient"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "a.`patient_info`" ? " selected=\"selected\"" : "")?>>Patient</option>
+                                    <option value="age"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "f.`agerange_id`" ? " selected=\"selected\"" : "")?>>Patient Age</option>
                                 </select>
                             </span>
                         </div>
@@ -368,7 +422,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                         <li id="entry-line-<?php echo $result["lentry_id"]; ?>" class="logbook-entry<?php echo (!$result["entry_active"] ? " flagged" : ""); ?>">
                                             <a id="entry-<?php echo $result["lentry_id"]; ?>" onclick="loadEntry(<?php echo $result["lentry_id"]; ?>)" class="logbook-entry">
                                                 <?php
-                                                if (in_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"], Array("b.`location`", "c.`site_name`", "a.`patient_info`", "e.`rotation_title`"))) {
+                                                if (in_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"], Array("b.`location`", "c.`site_name`", "a.`patient_info`", "e.`rotation_title`", "f.`agerange_id`"))) {
                                                     echo ($result["sort_by"] ? $result["sort_by"] : "No ".ucfirst($_GET["sb"])." Set");
                                                 } elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "a.`encounter_date`") {
                                                     echo date(DEFAULT_DATE_FORMAT, $result["sort_by"]);

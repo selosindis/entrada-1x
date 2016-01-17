@@ -70,7 +70,7 @@ class Models_Syllabus {
 			$where[] = "`active` = ".$db->qstr($active);
 		}
 		
-		$query = "	SELECT a.*, b.`course_name`, b.`course_code`
+		$query = "	SELECT a.*, b.`course_name`, b.`course_code`, c.`start_date` AS `syllabus_start`, c.`finish_date` AS `syllabus_finish`
 					FROM `course_syllabi` AS a
 					JOIN `courses` AS b
 					ON a.`course_id` = b.`course_id`
@@ -113,16 +113,17 @@ class Models_Syllabus {
 		
 		$syllabus = new self();
 		
-		$query = "	SELECT a.*, b.`course_name`, b.`course_code`
+		$query = "	SELECT a.*, b.`course_name`, b.`course_code`, c.`start_date` AS `syllabus_start`, c.`finish_date` AS `syllabus_finish`
 					FROM `course_syllabi` AS a
 					JOIN `courses` AS b
 					ON a.`course_id` = b.`course_id`
 					JOIN `curriculum_periods` AS c
 					ON b.`curriculum_type_id` = c.`curriculum_type_id`
 					AND c.`active` = 1
-					WHERE a.`course_id` = ?".
+					WHERE a.`course_id` = ? 
+					AND UNIX_TIMESTAMP(NOW()) BETWEEN c.`start_date` AND c.`finish_date` ".
 					(!is_null($active) ? "AND a.`active` = ?" : "")."
-                    GROUP BY a.`syllabus_id`";
+                    ORDER BY c.`start_date` DESC";
 		$course_details = $db->GetRow($query, array($course_id, $active));
 		if ($course_details) {
 			$syllabus->fromArray($course_details);
@@ -130,6 +131,29 @@ class Models_Syllabus {
 		
 		return $syllabus;
 	}
+
+    public static function fetchSyllibiRowByCourseIDActive($course_id, $active = 1) {
+        global $db;
+
+        $syllabus = new self();
+
+        $query = "	SELECT a.*, b.`course_name`, b.`course_code`, c.`start_date` AS `syllabus_start`, c.`finish_date` AS `syllabus_finish`
+					FROM `course_syllabi` AS a
+					JOIN `courses` AS b
+					ON a.`course_id` = b.`course_id`
+					JOIN `curriculum_periods` AS c
+					ON b.`curriculum_type_id` = c.`curriculum_type_id`
+					AND c.`active` = 1
+					WHERE a.`course_id` = ?
+					AND a.`active` = ?
+					ORDER BY c.`start_date`, a.`syllabus_id` DESC";
+        $course_details = $db->GetRow($query, array($course_id, $active));
+        if ($course_details) {
+            $syllabus->fromArray($course_details);
+        }
+
+        return $syllabus;
+    }
 	
 	public function insert() {
 		global $db;

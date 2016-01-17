@@ -24,10 +24,10 @@
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "create",false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "create", false)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/medbiqassessment?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add Medbiquitous Assessment Method");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/medbiqassessment?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add Method");
 	
 	// Error Checking
 	switch ($STEP) {
@@ -95,7 +95,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 					if (!$ERROR) {
 						$url = ENTRADA_URL . "/admin/settings/manage/medbiqassessment?org=".$ORGANISATION_ID;
 						$SUCCESS++;
-						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["assessment_method"])."</strong> to the system.<br /><br />You will now be redirected to the Medbiquitos Assessment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["assessment_method"])."</strong> to the system.<br /><br />You will now be redirected to the Medbiquitous Assessment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 						
 						application_log("success", "New Medbiquitous Assessment Method [".$PROCESSED["assessment_method"]."] added to the system.");
@@ -141,21 +141,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 			}
 			?>
             <h1>Add Medbiquitous Assessment Method</h1>
+
 			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/medbiqassessment"."?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post" class="form-horizontal">
                 <div class="control-group">
-                    <label for="assessment_method" class="form-required control-label">Medbiquitous Assessment Method:</label>
+                    <label for="assessment_method" class="form-required control-label">Assessment Method</label>
                     <div class="controls">
-                        <input type="text" class="input-xlarge" id="assessment_method" name="assessment_method" value="<?php echo ((isset($PROCESSED["assessment_method"])) ? html_encode($PROCESSED["assessment_method"]) : ""); ?>" maxlength="60" />
+                        <input type="text" id="assessment_method" name="assessment_method" value="<?php echo ((isset($PROCESSED["assessment_method"])) ? html_encode($PROCESSED["assessment_method"]) : ""); ?>" class="span11" />
                     </div>
                 </div>
                 <div class="control-group">
-                    <label for="assessment_method_description" class="form-nrequired control-label">Description:</label>
+                    <label for="assessment_method_description" class="form-nrequired control-label">Description</label>
                     <div class="controls">
-                        <textarea id="assessment_method_description" name="assessment_method_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["assessment_method_description"])) ? html_encode($PROCESSED["assessment_method_description"]) : ""); ?></textarea>
+                        <textarea id="assessment_method_description" name="assessment_method_description" class="span11 expandable"><?php echo ((isset($PROCESSED["assessment_method_description"])) ? html_encode($PROCESSED["assessment_method_description"]) : ""); ?></textarea>
                     </div>
                 </div>
                 <div class="control-group">
-                    <label for="assessment_method" class="form-nrequired control-label">Mapped Assessment Types:</label>
+                    <label for="assessment_method" class="form-nrequired control-label">Mapped Assessment Types</label>
                     <div class="controls">
                     <?php
                     $title_list = array();

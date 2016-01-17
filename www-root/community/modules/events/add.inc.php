@@ -165,80 +165,102 @@ switch ($STEP) {
 		}
 		?>
 		<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add&amp;step=2" method="post">
-		<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Event">
-		<colgroup>
-			<col style="width: 3%" />
-			<col style="width: 20%" />
-			<col style="width: 77%" />
-		</colgroup>
-		<tfoot>
-			<tr>
-				<td colspan="3" style="padding-top: 15px; text-align: right">
-                    <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save");?>" />
-				</td>
-			</tr>
-		</tfoot>
-		<tbody>
-			<tr>
-				<td colspan="3"><h2>Event Details</h2></td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="event_title" class="form-required">Event Title</label></td>
-				<td><input type="text" id="event_title" name="event_title" value="<?php echo ((isset($PROCESSED["event_title"])) ? html_encode($PROCESSED["event_title"]) : ""); ?>" maxlength="128" style="width: 96%; float: left;" /></td>
-			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="event_location" class="form-nrequired">Event Location</label></td>
-				<td><input type="text" id="event_location" name="event_location" value="<?php echo ((isset($PROCESSED["event_location"])) ? html_encode($PROCESSED["event_location"]) : ""); ?>" maxlength="128" style="width: 170px" /> <span class="content-small">(<strong>e.g.</strong> Bracken Library, Room 102)</span></td>
-			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<?php 
-				echo generate_calendars("event", "", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0), true, true, ((isset($PROCESSED["event_finish"])) ? $PROCESSED["event_finish"] : 0)); 
-			?>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td colspan="2"><label for="event_description" class="form-nrequired">Event Details / Description</label></td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td colspan="2">
-					<textarea id="event_description" name="event_description" style="width: 98%; height: 200px" cols="70" rows="10"><?php echo ((isset($PROCESSED["event_description"])) ? html_encode($PROCESSED["event_description"]) : ""); ?></textarea>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<?php 
-			if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-				?>
-				<tr>
-					<td><input type="checkbox" name="notify_members" id="notify_members" /></td>
-					<td colspan="2"><label for="notify_members" class="form-nrequired">Notify Community Members of Event</label></td>
-				</tr>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<?php 
-			}
-			?>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td colspan="3"><h2>Time Release Options</h2></td>
-			</tr>
-			<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-		</tbody>
-		</table>
+			<table summary="Add Event">
+				<colgroup>
+					<col style="width: 20%" />
+					<col style="width: 80%" />
+				</colgroup>
+				<tfoot>
+					<tr>
+						<td colspan="2" style="padding-top: 15px; text-align: right">
+		                    <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save");?>" />
+						</td>
+					</tr>
+				</tfoot>
+				<tbody>
+					<tr>
+						<td colspan="2">
+							<h2>Event Details</h2>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="event_title" class="form-required">Event Title</label>
+						</td>
+						<td>
+							<input type="text" id="event_title" name="event_title" value="<?php echo ((isset($PROCESSED["event_title"])) ? html_encode($PROCESSED["event_title"]) : ""); ?>" maxlength="128" style="width: 300px; float: left;" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="event_location" class="form-nrequired">Event Location</label>
+						</td>
+						<td>
+							<input type="text" id="event_location" name="event_location" value="<?php echo ((isset($PROCESSED["event_location"])) ? html_encode($PROCESSED["event_location"]) : ""); ?>" maxlength="128" style="width: 300px" />
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							<table class="date-time">
+								<?php 
+									echo generate_calendars("event", "", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0), true, true, ((isset($PROCESSED["event_finish"])) ? $PROCESSED["event_finish"] : 0)); 
+								?>
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">&nbsp;</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							<label for="event_description" class="form-nrequired">Event Details / Description</label>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							<textarea id="event_description" name="event_description" style="width: 98%; height: 200px" cols="70" rows="10"><?php echo ((isset($PROCESSED["event_description"])) ? html_encode($PROCESSED["event_description"]) : ""); ?></textarea>
+						</td>
+					</tr>
+					<?php 
+					if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
+						?>
+						<tr>
+							<td colspan="2">
+								<table class="table table-bordered no-thead space-above">
+									<colgroup>
+										<col style="width: 5%" />
+										<col style="width: auto" />
+									</colgroup>
+									<tbody>
+										<tr>
+											<td class="center">
+												<input type="checkbox" name="notify_members" id="notify_members" />
+											</td>
+											<td>
+												<label for="notify_members" class="form-nrequired">Notify Community Members of Event</label>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+						</tr>
+						<?php 
+					}
+					?>
+					<tr>
+						<td colspan="2">
+							<h2>Time Release Options</h2>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							<table class="date-time">
+								<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+							</table>
+						</td>
+					</tr>
+				</tbody>
+			</table>
 		</form>
 		<?php
 	break;

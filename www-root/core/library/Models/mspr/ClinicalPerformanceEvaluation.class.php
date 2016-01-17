@@ -16,7 +16,7 @@ class ClinicalPerformanceEvaluation implements Editable {
 	private $user_id;
 	
 	public function getUser() {
-		return User::get($this->user_id);
+		return User::fetchRowByID($this->user_id);
 	}
 	
 	public function getComment() {

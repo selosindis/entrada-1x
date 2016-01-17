@@ -144,7 +144,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						/**
 						 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
 						 */
-						$start_date = validate_calendars("event", true, false);
+						$start_date = Entrada_Utilities::validate_calendars("event", true, false);
 						if ((isset($start_date["start"])) && ((int) $start_date["start"])) {
 							$PROCESSED["event_start"] = (int) $start_date["start"];
 						}
@@ -318,7 +318,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
 						 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
 						 */
-						$viewable_date = validate_calendars("viewable", false, false);
+						$viewable_date = Entrada_Utilities::validate_calendars("viewable", false, false);
 						if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 							$PROCESSED["release_date"] = (int) $viewable_date["start"];
 						} else {
@@ -615,6 +615,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         if (in_array("event_location", $_POST["update_recurring_fields"])) {
                                             $PROCESSED_RECURRING_EVENT["event_location"] = $PROCESSED["event_location"];
                                         }
+                                        
+                                        if (in_array("audience_visible", $_POST["update_recurring_fields"])) {
+                                            $PROCESSED_RECURRING_EVENT["audience_visible"] = $PROCESSED["audience_visible"];
+                                        }                                        
+                                        if (in_array("time_release", $_POST["update_recurring_fields"])) {
+                                            $PROCESSED_RECURRING_EVENT["release_date"] = $PROCESSED["release_date"];
+                                            $PROCESSED_RECURRING_EVENT["release_until"] = $PROCESSED["release_until"];
+                                        }
 
                                         foreach ($updating_recurring_events as $order => $recurring_event) {
                                             $recurring_where_query  = "WHERE `event_id` = ".$db->qstr($recurring_event["event_id"]);
@@ -622,6 +630,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             if (in_array("event_types", $_POST["update_recurring_fields"])) {
                                                 $query = "DELETE FROM `".$tables["event_types"]."` ".$recurring_where_query;
                                                 if ($db->Execute($query)) {
+                                                    $event_duration = 0;
                                                     foreach($PROCESSED["event_types"] as $event_type) {
                                                         $eventtype_data = array("event_id" => $recurring_event["event_id"], "eventtype_id" => $event_type[0], "duration" => $event_type[1]);
                                                         if ($is_draft) {
@@ -632,7 +641,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                                             application_log("error", "Unable to insert a new event_eventtype record while adding a new event. Database said: ".$db->ErrorMsg());
                                                         }
+                                                        $event_duration = $event_duration + $event_type[1];
                                                     }
+
+                                                    //update event with new duration of $event_duration
+                                                    $PROCESSED_RECURRING_EVENT['event_duration'] = $event_duration;
+                                                    //updates event finish time based on the event duration time.
+                                                    $PROCESSED_RECURRING_EVENT["event_finish"] = $recurring_event["event_start"] + $event_duration * 60;
                                                 } else {
                                                     add_error("There was an error while trying to update the selected <strong>Event Types</strong> for one of the selected recurring events.<br /><br />The system administrator was informed of this error; please try again later.");
 
@@ -770,7 +785,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 }
                                             }
 
-                                            if (!has_error() && @array_intersect($_POST["update_recurring_fields"], array("event_title", "event_location", "course"))) {
+                                            if (!has_error() && @array_intersect($_POST["update_recurring_fields"], array("event_title", "event_location", "course", "time_release", "event_types"))) {
                                                 if (!$db->AutoExecute("`events`", $PROCESSED_RECURRING_EVENT, "UPDATE", "`event_id` = ".$db->qstr($recurring_event["event_id"]))) {
                                                     add_error("There was an error while trying to save changes to the selected <strong>Recurring Event</strong>.<br /><br />The system administrator was informed of this error; please try again later.");
 
@@ -1059,11 +1074,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<input type="text" id="event_title" name="event_title" value="<?php echo html_encode($PROCESSED["event_title"]); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
 							</div>
 						</div>
-						<div class="control-group">
-							<table>
-								<?php echo generate_calendars("event", "Event Date & Time", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
-							</table>
-						</div>
+
+						<?php echo Entrada_Utilities::generate_calendars("event", "Event Date & Time", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
+
 						<div class="control-group">
 							<label for="event_location" class="control-label form-nrequired">Event Location:</label>
 							<div class="controls">
@@ -1234,11 +1247,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<?php } ?>
 						</div>
 						<h2>Time Release Options</h2>
-						<div class="control-group">
-							<table>
-								<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-							</table>
-						</div>
+
+						<?php echo Entrada_Utilities::generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+
 						<div class="control-group">
                             <a class="btn" href="<?php echo ENTRADA_RELATIVE; ?>/admin/events<?php echo (($is_draft) ? "/drafts?section=edit&draft_id=".$event_info["draft_id"] : "" ); ?>">Cancel</a>
                             <div class="pull-right">
@@ -1267,12 +1278,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             $sidebar_html = "<div class=\"content-small\">Please select which fields (if any) you would like to apply to related recurring events: </div>\n";
                             $sidebar_html .= "<div class=\"pad-left\">\n";
                             $sidebar_html .= "  <ul class=\"menu none\">\n";
-                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"course\" id=\"cascade_course\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_course\">Course</label></li>\n";
-                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_title\" id=\"cascade_event_title\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_title\">Event Title</label></li>\n";
-                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_location\" id=\"cascade_event_location\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_location\">Event Location</label></li>\n";
-                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_types\" id=\"cascade_event_types\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_types\">Event Types</label></li>\n";
-                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"associated_faculty\" id=\"cascade_associated_faculty\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_associated_faculty\">Associated Faculty</label></li>\n";
-                            $sidebar_html .= "      <li><input type=\"checkbox\" value=\"associated_learners\" id=\"cascade_associated_learners\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_associated_learners\">Associated Learners</label></li>\n";
+                            $sidebar_html .= "      <li><label for=\"cascade_course\" class=\"checkbox\"><input type=\"checkbox\" value=\"course\" id=\"cascade_course\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Course</label></li>\n";
+                            $sidebar_html .= "      <li><label for=\"cascade_event_title\" class=\"checkbox\"><input type=\"checkbox\" value=\"event_title\" id=\"cascade_event_title\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Title</label></li>\n";
+                            $sidebar_html .= "      <li><label for=\"cascade_event_location\" class=\"checkbox\"><input type=\"checkbox\" value=\"event_location\" id=\"cascade_event_location\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Location</label></li>\n";
+                            $sidebar_html .= "      <li><label for=\"cascade_event_types\" class=\"checkbox\"><input type=\"checkbox\" value=\"event_types\" id=\"cascade_event_types\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Types</label></li>\n";
+                            $sidebar_html .= "      <li><label for=\"cascade_associated_faculty\" class=\"checkbox\"><input type=\"checkbox\" value=\"associated_faculty\" id=\"cascade_associated_faculty\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Associated Faculty</label></li>\n";
+                            $sidebar_html .= "      <li><label for=\"cascade_audience_visible\" class=\"checkbox\"><input type=\"checkbox\" value=\"audience_visible\" id=\"cascade_audience_visible\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Audience Display</label></li>\n";
+                            $sidebar_html .= "      <li><label for=\"cascade_associated_learners\" class=\"checkbox\"><input type=\"checkbox\" value=\"associated_learners\" id=\"cascade_associated_learners\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Associated Learners</label></li>\n";
+                            $sidebar_html .= "      <li><label for=\"cascade_time_release\" class=\"checkbox\"><input type=\"checkbox\" value=\"time_release\" id=\"cascade_time_release\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Time Release</label></li>\n";
                             $sidebar_html .= "  </ul>\n";
                             $sidebar_html .= "</div>\n";
                             $sidebar_html .= "<div><strong><a href=\"#recurringEvents\" data-toggle=\"modal\" data-target=\"#recurringEvents\"><i class=\"icon-edit\"></i> <span id=\"recurring_events_count\">".(isset($_POST["recurring_event_ids"]) && @count($_POST["recurring_event_ids"]) ? @count($_POST["recurring_event_ids"]) : @count($recurring_events))."</span> Recurring Events Selected</a></strong></div>";
@@ -1310,7 +1323,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                 function toggleRecurringEventField(checked, fieldname) {
                                     if (checked && jQuery('#update_' + fieldname).length < 1) {
-                                        jQuery('#editEventForm').append('<input type="hidden" name="update_recurring_fields[]" value="'+fieldname+'" id="update_"'+fieldname+' />');
+                                        jQuery('#editEventForm').append('<input type="hidden" name="update_recurring_fields[]" value="'+fieldname+'" id="update_'+fieldname+'" />');
                                     } else if (!checked && jQuery('#update_' + fieldname).length >= 1) {
                                         jQuery('#update_' + fieldname).remove();
                                     }

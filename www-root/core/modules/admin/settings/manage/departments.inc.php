@@ -24,9 +24,9 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "update",false)) {
@@ -53,7 +53,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		$PREFERENCES = preferences_load($MODULE);
 
 
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/deparments?org=".$ORGANISATION['organisation_id'], "title" => "Manage Department");
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/deparments?org=".$ORGANISATION['organisation_id'], "title" => "Departments");
 
 		$module_file = $router->getRoute();
 		if ($module_file) {

@@ -29,7 +29,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		ob_clear_open_buffers();
 		$PROXY_ID = $ENTRADA_USER->getID();
 		require_once("Models/users/User.class.php");
-		$user = User::get($PROXY_ID);
+		$user = User::fetchRowByID($PROXY_ID);
 		if (isset($_POST['showAll'])) {
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["showAll"] = ($_POST['showAll'] == "showAll");
 		}

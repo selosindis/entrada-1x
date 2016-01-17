@@ -63,7 +63,7 @@ class MetaDataValue {
 	 * @return User
 	 */
 	public function getUser() {
-		return User::get($this->proxy_id);
+		return User::fetchRowByID($this->proxy_id);
 	}
 	
 	/**

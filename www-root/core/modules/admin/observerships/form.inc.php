@@ -47,7 +47,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("ADMIN_OBSERVERSHIP_FORM"))) {
 		echo $val1==$val2?' checked="checked"':'';
 	}
 
-	$user = User::get($student_id);
+	$user = User::fetchRowByID($student_id);
 
 	?>
 	<h1>
@@ -171,7 +171,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("ADMIN_OBSERVERSHIP_FORM"))) {
 					<td>
 						<select id="activity_type" name="activity_type" data-init="<?php echo $OBSERVERSHIP->getActivityType();?>">
 							<option value="observership">Observership</option>
-							<option value="ipobservership">IP Observership (2 are required)</option>
+							<option value="ipobservership">IP Observership</option>
 						</select>
 					</td>
 				</tr>
@@ -192,6 +192,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("ADMIN_OBSERVERSHIP_FORM"))) {
 						<select name="clinical_discipline" id="clinical_discipline" data-init="<?php echo $OBSERVERSHIP->getClinicalDiscipline();?>">
 						  <option value="">-- Select discipline --</option>
 						  <option value="Adolescent Medicine">Adolescent Medicine</option>
+						  <option value="Aerospace Medicine">Aerospace Medicine</option>
 						  <option value="Allergy and Immunology">Allergy and Immunology</option>
 						  <option value="Anatomical Pathology">Anatomical Pathology</option><option value="Anesthesiology">Anesthesiology</option>
 						  <option value="Cardiac Surgery">Cardiac Surgery</option>
@@ -245,12 +246,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("ADMIN_OBSERVERSHIP_FORM"))) {
 						  <option value="Palliative Medicine">Palliative Medicine</option>
 						  <option value="Pediatric Cardiology">Pediatric Cardiology</option>
 						  <option value="Pediatric Emergency Medicine">Pediatric Emergency Medicine</option>
+						  <option value="Pediatric Endocrinology">Pediatric Endocrinology</option>
                           <option value="Pediatric Gastroenterology">Pediatric Gastroenterology</option>
 						  <option value="Pediatric General Surgery">Pediatric General Surgery</option>
 						  <option value="Pediatric Hemotology/Oncology">Pediatric Hemotology/Oncology</option>
 						  <option value="Pediatric Neurology">Pediatric Neurology</option>
 						  <option value="Pediatric Ophthalmology">Pediatric Ophthalmology</option>
 						  <option value="Pediatric Radiology">Pediatric Radiology</option>
+                          <option value="Pediatric Respirology">Pediatric Respirology</option>
 						  <option value="Physical Medicine and Rehabilitation">Physical Medicine and Rehabilitation</option>
 						  <option value="Plastic Surgery">Plastic Surgery</option>
 						  <option value="Psychiatry">Psychiatry</option>

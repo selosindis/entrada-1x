@@ -44,11 +44,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
         courses_subnavigation($course->toArray(), "enrolment");
         $curriculum_periods = Models_CurriculumPeriod::fetchRowByCurriculumTypeIDCourseID($course->getCurriculumTypeID(), $course->getID());
         if ($curriculum_periods) {
-            if (isset($_GET["cperiod_id"]) && $temp = clean_input($_GET["cperiod_id"], array("trim", "int"))) {
-                $cperiod_id = $temp;				
+	        if (isset($_GET["cperiod_id"]) && $temp = clean_input($_GET["cperiod_id"], array("trim", "int"))) {
+                $cperiod_id = $temp;
+	            $course_audience = $course->getMembers($cperiod_id);
+	        } else {
+	            $cperiod_id = false;
             }
 
-            $course_audience = $course->getMembers($cperiod_id);
+	        $course_audience = $course->getMembers($cperiod_id);
 
             if (isset($_GET["download"]) && $type = clean_input($_GET["download"], array("trim", "striptags"))) {
                 switch($type){
@@ -62,13 +65,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                                     foreach ($audience_type_members as $group_name => $audience) {
                                         foreach ($audience as $audience_member) {
                                             $num_members++;
-                                            $output .= $group_name.",".$audience_member->getFullname(false).",".$audience_member->getNumber().",". $audience_member->getEmail() . "\n";
+                                            $output .= $group_name.",".$audience_member->getLastname(false).",".$audience_member->getFirstname(false).",".$audience_member->getNumber().",". $audience_member->getEmail() . "\n";
                                         }
                                     }
                                 } else if ($audience_type == "individuals") {
                                     foreach ($audience_type_members as $audience_member) {
                                         $num_members++;
-                                        $output .= "Individual Enrolment,".$audience_member->getFullname(false).",".$audience_member->getNumber().",". $audience_member->getEmail() . "\n";
+                                        $output .= "Individual Learner,".$audience_member->getLastname(false).",".$audience_member->getFirstname(false).",".$audience_member->getNumber().",". $audience_member->getEmail() . "\n";
                                     }
                                 }
                             }
@@ -97,8 +100,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                     var done_interval = 600;
                     var course_id = "<?php echo $course->getID(); ?>";
                     var enrolment_view = "<?php echo (isset($PREFERENCES["enrolment_view"]) ? $PREFERENCES["enrolment_view"] : "table"); ?>";
+                    var site_url = "<?php echo ENTRADA_URL; ?>";
 
                     getSyncDate(course_id);
+                    
+                    $("#enrolment-search-form").on("submit", function (e) {
+                        e.preventDefault();
+                    });
+                    
+                    $("#enrolment-options").on("click", "#download-csv", function () {
+                        $(this).attr("href", site_url + "/admin/courses/enrolment?id=" + course_id + "&download=csv&cperiod_id=" + $("#cperiod_select").val());
+                    });
 
                     $(".view-toggle[data-view='"+ enrolment_view +"']").addClass("active");
                     $(".enrolment-loading").removeClass("hide");
@@ -122,7 +134,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                         getEnrolments(course_id, enrolment_view);
                     });
                     
-                    $("#sync-enrolment").on("click", {course_id: course_id, enrolment_view: enrolment_view}, ldapSync);
+                    $("#enrolment-options").on("click", "#sync-enrolment", function (e) {
+                        e.preventDefault();
+                        ldapSync(course_id, enrolment_view);
+                    });
+                    
 
                     $(".view-toggle").on("click", function (e) {
                         e.preventDefault();
@@ -174,31 +190,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                         if (audience_type == "groups") {
                             jQuery.each(audience_type_members, function (group_name, audience) {
                                 var group_heading = document.createElement("h2");
+                                var group_count_span = document.createElement("span");
                                 var group_div = document.createElement("div");
+                                var audience_count = 0;
 
                                 jQuery(group_div).addClass("row space-below medium").attr({id: group_name.split(' ').join('-').toLowerCase() + "-section"});
                                 jQuery(group_heading).text(group_name).attr({title: group_name + " Section"}).addClass("collapsable").html();
                                 jQuery("#enrolment-container").append(group_heading);
-
+                                
                                 jQuery.each(audience, function (audience, audience_member) {
                                     var media_div = buildGrid(audience_member);
+                                    audience_count ++;
                                     jQuery(group_div).append(media_div);
                                     jQuery("#enrolment-container").append(group_div);
                                 });
+                                
+                                jQuery(group_count_span).addClass("muted").append(audience_count + (audience_count > 1 ? " learners" : " learner")).css("font-size", "12px").css("display", "inline-block").css("margin-left", "10px");
+                                jQuery(group_heading).append(group_count_span);
                             });
                         } else if (audience_type == "individuals") {
                             var group_heading = document.createElement("h2");
+                            var group_count_span = document.createElement("span");
                             var group_div = document.createElement("div");
+                            var audience_count = 0;
 
                             jQuery(group_div).addClass("row space-below medium");
-                            jQuery(group_heading).text("Individual Enrolments");
+                            jQuery(group_heading).text("Individual Learners");
                             jQuery("#enrolment-container").append(group_heading);
 
                             jQuery.each(audience_type_members, function (audience_type_members, audience_member) {
                                 var media_div = buildGrid(audience_member);
+                                audience_count ++;
                                 jQuery(group_div).append(media_div);
                                 jQuery("#enrolment-container").append(group_div);
                             });
+                            
+                            jQuery(group_count_span).addClass("muted").append(audience_count + (audience_count > 1 ? " learners" : " learner")).css("font-size", "12px").css("display", "inline-block").css("margin-left", "10px");
+                            jQuery(group_heading).append(group_count_span);
                         }
                     });
                 }
@@ -208,7 +236,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                         if (audience_type == "groups") {
                             jQuery.each(audience_type_members, function (group_name, audience) {
                                 var group_heading = document.createElement("h2");
+                                var group_count_span = document.createElement("span");
                                 var group_div = document.createElement("div");
+                                var audience_count = 0;
 
                                 jQuery(group_div).addClass("row space-below medium").attr({id: group_name});
                                 jQuery(group_heading).text(group_name).html();
@@ -216,51 +246,64 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 
                                 var table = document.createElement("table");
                                 var table_head = document.createElement("thead");
-                                var name_heading = document.createElement("th");
+                                var first_name_heading = document.createElement("th");
+                                var last_name_heading = document.createElement("th");
                                 var email_heading = document.createElement("th");
                                 var number_heading = document.createElement("th");
 
-                                jQuery(name_heading).text("Student Name");
+                                jQuery(first_name_heading).text("First Name");
+                                jQuery(last_name_heading).text("Last Name");
                                 jQuery(email_heading).text("Student Email");
                                 jQuery(number_heading).text("Student Number");
 
-                                jQuery(table_head).append(name_heading).append(email_heading).append(number_heading);
+                                jQuery(table_head).append(last_name_heading).append(first_name_heading).append(email_heading).append(number_heading);
                                 jQuery(table).addClass("table table-striped table-bordered").append(table_head);
 
 
                                 jQuery.each(audience, function (audience, audience_member) {
                                     var row = buildTable(audience_member);
+                                    audience_count ++;
                                     jQuery(table).append(row);
                                     jQuery("#enrolment-container").append(table);
                                 });
+                                
+                                jQuery(group_count_span).addClass("muted").append(audience_count + (audience_count > 1 ? " learners" : " learner")).css("font-size", "12px").css("display", "inline-block").css("margin-left", "10px");
+                                jQuery(group_heading).append(group_count_span);
                             });
                         } else if (audience_type == "individuals") {
                             var group_heading = document.createElement("h2");
+                            var group_count_span = document.createElement("span");
                             var group_div = document.createElement("div");
+                            var audience_count = 0;
 
                             jQuery(group_div).addClass("row space-below medium");
-                            jQuery(group_heading).text("Individual Enrolments");
+                            jQuery(group_heading).text("Individual Learners");
                             jQuery("#enrolment-container").append(group_heading);
 
                             var table = document.createElement("table");
                             var table_head = document.createElement("thead");
-                            var name_heading = document.createElement("th");
+                            var first_name_heading = document.createElement("th");
+                            var last_name_heading = document.createElement("th");
                             var email_heading = document.createElement("th");
                             var number_heading = document.createElement("th");
 
-                            jQuery(name_heading).text("Student Name");
+                            jQuery(first_name_heading).text("First Name");
+                            jQuery(last_name_heading).text("Last Name");
                             jQuery(email_heading).text("Student Email");
                             jQuery(number_heading).text("Student Number");
 
-                            jQuery(table_head).append(name_heading).append(email_heading).append(number_heading);
+                            jQuery(table_head).append(last_name_heading).append(first_name_heading).append(email_heading).append(number_heading);
                             jQuery(table).addClass("table table-striped table-bordered").append(table_head);
 
                             jQuery.each(audience_type_members, function (audience_type_members, audience_member) {
                                 var row = buildTable(audience_member);
+                                audience_count ++;
                                 jQuery(table).append(row);
                                 jQuery("#enrolment-container").append(table);
-
                             });
+                            
+                            jQuery(group_count_span).addClass("muted").append(audience_count + (audience_count > 1 ? " learners" : " learner")).css("font-size", "12px").css("display", "inline-block").css("margin-left", "10px");
+                            jQuery(group_heading).append(group_count_span);
                         }
                     });
                 }
@@ -277,7 +320,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                     jQuery(media_div).addClass("media course-members-media-list");
                     jQuery(media_body).addClass("media-body");
                     jQuery(media_heading).addClass("media-heading");
-                    jQuery(media_heading_a).addClass("print-black").text(audience_member.firstname + " " + audience_member.lastname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
+                    jQuery(media_heading_a).addClass("print-black").text(audience_member.lastname + " " + audience_member.firstname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
                     jQuery(media_heading_small).addClass("pull-right print-black").text(audience_member.number).html();
                     jQuery(media_p_email_a).addClass("print-black").text(audience_member.email).attr({href: "mailto:" + audience_member.email}).html();
 
@@ -291,21 +334,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 
                 function buildTable (audience_member) {
                     var row = document.createElement("tr");
-                    var name_cell = document.createElement("td");
+                    var first_name_cell = document.createElement("td");
+                    var last_name_cell = document.createElement("td");
                     var email_cell = document.createElement("td");
                     var number_cell = document.createElement("td");
-                    var name_a = document.createElement("a");
+                    var first_name_a = document.createElement("a");
+                    var last_name_a = document.createElement("a");
                     var email_a = document.createElement("a");
                     var number_a = document.createElement("a");
 
-                    jQuery(name_a).text(audience_member.firstname + " " + audience_member.lastname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
+                    jQuery(first_name_a).text(audience_member.firstname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
+                    jQuery(last_name_a).text(audience_member.lastname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
                     jQuery(email_a).text(audience_member.email).attr({href: "mailto:" + audience_member.email}).html();
                     jQuery(number_a).text(audience_member.number).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
 
-                    jQuery(name_cell).append(name_a);
+                    jQuery(first_name_cell).append(first_name_a);
+                    jQuery(last_name_cell).append(last_name_a);
                     jQuery(email_cell).append(email_a);
                     jQuery(number_cell).append(number_a);
-                    jQuery(row).append(name_cell).append(email_cell).append(number_cell);
+                    jQuery(row).append(last_name_cell).append(first_name_cell).append(email_cell).append(number_cell);
 
                     return row;
                 }
@@ -320,21 +367,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                         success: function(data) {
                             var jsonResponse = JSON.parse(data);
                             if (jsonResponse.status == "success") {
-                                jQuery("#sync-date").html(jsonResponse.data.ldap_sync_date);
+                                if (jQuery("#sync-date").length) {
+
+                                    jQuery("#sync-date").html(jsonResponse.data.ldap_sync_date);
+                                    if (jsonResponse.data.hasOwnProperty("expired_cperiod")) {
+                                        var download_csv_a = document.createElement("a");
+                                        var download_csv_i = document.createElement("i");
+                                        
+                                        jQuery("#download-csv").remove();
+                                        jQuery(download_csv_i).addClass("icon-file");
+                                        jQuery(download_csv_a).attr({id: "download-csv", href: "#"}).addClass("btn course-enrolment-button").html(" Download Enrolment as CSV").prepend(download_csv_i);
+                                        jQuery("#sync-enrolment").remove();
+                                        jQuery("#enrolment-options").prepend(download_csv_a);
+                                    } else {
+                                        jQuery("#download-csv").remove();
+                                        jQuery("#sync-enrolment").remove();
+                                        
+                                        var sync_enrolment_a = document.createElement("a");
+                                        var enrolment_sync_i = document.createElement("i");
+                                        var enrolment_sync_span = document.createElement("span");
+                                        
+                                        jQuery(enrolment_sync_i).attr({id: "sync-icon"}).addClass("icon-refresh");
+                                        jQuery(enrolment_sync_span).attr({id: "sync-button-text"}).html("Synchronize Enrolment");
+                                        jQuery(sync_enrolment_a).attr({id: "sync-enrolment", href: "#"}).append(enrolment_sync_i).append(enrolment_sync_span).addClass("btn course-enrolment-button");
+                                        jQuery("#enrolment-options").prepend(sync_enrolment_a);
+                                        
+                                        var download_csv_a = document.createElement("a");
+                                        var download_csv_li = document.createElement("li");
+                                        var download_csv_i = document.createElement("i");
+                                        
+                                        jQuery(download_csv_i).addClass("icon-file");
+                                        jQuery(download_csv_a).attr({id: "download-csv", href: "#"}).html(" Download Enrolment as CSV").prepend(download_csv_i);
+                                        jQuery(download_csv_li).append(download_csv_a)
+                                        jQuery("#secondary-enrolment-options").prepend(download_csv_li);
+                                    }
+                                }
                             }
                         }
                     });
                 }
                 
-                function ldapSync (e) {
-                    jQuery("#sync-enrolment").off("click", ldapSync);
-                    jQuery("#enrolment-search").val("");
-                    e.preventDefault();
-                    
+                function ldapSync (course_id, enrolment_view) {
                     var cperiod_id = jQuery("#cperiod_select").val();
-                    var course_id = e.data.course_id;
-                    var enrolment_view = jQuery(".view-toggle.active").attr("data-view");
-
+                    
+                    jQuery("#enrolment-search").val("");
                     jQuery("#sync-button-text").text("Synchronizing Enrolment");
                     jQuery("#sync-icon").removeClass("icon-refresh").addClass("icon-loading");
                     jQuery("#sync-enrolment").addClass("disabled");
@@ -349,9 +425,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                             var jsonResponse = JSON.parse(data);
                             if (jsonResponse.status == "success") {
                                 getEnrolments(course_id, enrolment_view);
-
-                                jQuery("#sync-date").html(jsonResponse.data.sync_date);
-                                jQuery("#sync-enrolment").removeClass("disabled");
+                                
+                                if (jQuery("#sync-date").length) {
+                                    jQuery("#sync-date").html(jsonResponse.data.sync_date);
+                                }
+                                
                                 jQuery("#sync-button-text").text("Synchronize Enrolment");
                                 jQuery("#sync-icon").removeClass("icon-loading").addClass("icon-refresh");
                             } else {
@@ -361,7 +439,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                                 jQuery("#sync-icon").removeClass("icon-loading").addClass("icon-refresh");
                                 jQuery(".enrolment-loading").addClass("hide");
                             }
-                            jQuery("#sync-enrolment").on("click", {course_id: course_id, enrolment_view: enrolment_view}, ldapSync);
                         }
                     });
                 }
@@ -401,33 +478,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                 <div class="span12">
                     <div class="span5">
                         <div class="row-fluid no-printing">
-                            <form>
+                            <form id="enrolment-search-form">
                                 <div class="control-group">
                                     <div class="controls">
                                         <input style="margin-bottom:0px" type="text" id="enrolment-search" placeholder="Search Enrolment" />
                                     </div>
+                                    <p class="muted">Search by <strong>Name</strong>, <strong>Email</strong> or <strong>Student Number</strong></p>
                                 </div>
                             </form>
                         </div>
                     </div>
                     <div class="span7">
                         <div class="pull-right">
-                            <div class="btn-group">
-                                <a class="btn course-enrolment-button" id="sync-enrolment" href="#"><i class="icon-refresh" id="sync-icon"></i> <span id="sync-button-text">Synchronize Enrolment</span></a>
-                                <button class="btn dropdown-toggle course-enrolment-dropdown" data-toggle="dropdown">
-                                    <span class="caret"></span>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="<?php echo ENTRADA_URL;?>/admin/courses/enrolment?id=<?php echo html_encode($course->getID());?>&amp;cperiod_id=<?php echo $cperiod_id ?>&amp;download=csv"><i class="icon-file"></i> Download Enrolment as CSV</a></li>
-                                    <li><a href="#" id="print"><i class="icon-print"></i> Print Enrolment</a></li>
-                                </ul>
+                            <div id="enrolment-options" class="btn-group">
+                                <?php
+                                if ((int) $course->getSyncLdap()) { ?>
+                                    <button class="btn dropdown-toggle course-enrolment-dropdown" data-toggle="dropdown">
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul id="secondary-enrolment-options" class="dropdown-menu">
+                                        <li><a href="#" id="print"><i class="icon-print"></i> Print Enrolment</a></li>
+                                    </ul>
+                                <?php    
+                                } else { ?>
+                                    <a id="download-csv" class="btn course-enrolment-button" href="#"><i class="icon-file"></i> Download Enrolment as CSV</a>
+                                    <button class="btn dropdown-toggle course-enrolment-dropdown" data-toggle="dropdown">
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul id="secondary-enrolment-options" class="dropdown-menu">
+                                        <li><a href="#" id="print"><i class="icon-print"></i> Print Enrolment</a></li>
+                                    </ul>
+                                <?php    
+                                }
+                                ?>
                             </div>
                             <div class="btn-group" data-toggle="buttons-radio">
                                 <a href="#" title="Toggle table view" data-view="table" class="btn course-enrolment-button view-toggle"><i class=" icon-align-justify"></i></a>
                                 <a href="#" title="Toggle grid view" data-view="grid" class="btn course-enrolment-button view-toggle"><i class="icon-th-large"></i></a>
                             </div>
                         </div>
-                        <p class="text-success pull-right" id="sync-date"></p>
+                        <?php
+                        if ((int) $course->getSyncLdap()) { ?>
+                            <p class="text-success pull-right" id="sync-date"></p>
+                        <?php 
+                        } ?>
                     </div>                
                 </div>
             </div>

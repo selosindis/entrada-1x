@@ -153,44 +153,56 @@ if ($RECORD_ID) {
 				}
 				?>
 				<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=edit&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post">
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit Announcement">
-				<colgroup>
-					<col style="width: 3%" />
-					<col style="width: 20%" />
-					<col style="width: 77%" />
-				</colgroup>
-				<tfoot>
-					<tr>
-						<td colspan="3" style="padding-top: 15px; text-align: right">
-                            <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                     
-						</td>
-					</tr>
-				</tfoot>
-				<tbody>
-					<tr>
-						<td colspan="3"><h2>Announcement Details</h2></td>
-					</tr>
-					<tr>
-						<td colspan="2"><label for="announcement_title" class="form-required">Announcement Title</label></td>
-						<td style="text-align: right"><input type="text" id="announcement_title" name="announcement_title" value="<?php echo ((isset($PROCESSED["announcement_title"])) ? html_encode($PROCESSED["announcement_title"]) : ""); ?>" maxlength="128" style="width:96%; float: left;" /></td>
-					</tr>
-					<tr>
-						<td colspan="3"><label for="announcement_description" class="form-required">Announcement Body</label></td>
-					</tr>
-					<tr>
-						<td colspan="3">
-							<textarea id="announcement_description" name="announcement_description" style="width: 98%; height: 200px" cols="70" rows="10"><?php echo ((isset($PROCESSED["announcement_description"])) ? html_encode($PROCESSED["announcement_description"]) : ""); ?></textarea>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td colspan="3"><h2>Time Release Options</h2></td>
-					</tr>
-					<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-				</tbody>
-				</table>
+					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit Announcement">
+						<colgroup>
+							<col style="width: 20%" />
+							<col style="width: 80%" />
+						</colgroup>
+						<tfoot>
+							<tr>
+								<td colspan="2" style="padding-top: 15px; text-align: right">
+		                            <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                     
+								</td>
+							</tr>
+						</tfoot>
+						<tbody>
+							<tr>
+								<td colspan="2">
+									<h2>Announcement Details</h2>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label for="announcement_title" class="form-required">Announcement Title</label>
+								</td>
+								<td>
+									<input type="text" id="announcement_title" name="announcement_title" value="<?php echo ((isset($PROCESSED["announcement_title"])) ? html_encode($PROCESSED["announcement_title"]) : ""); ?>" maxlength="128" style="width:300px; float: left;" />
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">
+									<label for="announcement_description" class="form-required">Announcement Body</label>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">
+									<textarea id="announcement_description" name="announcement_description" style="width: 98%; height: 200px" cols="70" rows="10"><?php echo ((isset($PROCESSED["announcement_description"])) ? html_encode($PROCESSED["announcement_description"]) : ""); ?></textarea>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">
+									<h2>Time Release Options</h2>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">
+									<table class="date-time">
+										<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</form>
 				<?php
 			break;

@@ -84,7 +84,7 @@ padding:2px;
 }
 
 .calendar-day-events {
-height:78px;
+min-height:78px;
 margin:0;
 padding:0;
 }

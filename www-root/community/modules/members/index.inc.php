@@ -157,9 +157,11 @@ if ($community_record) {
 	<div id="module-header">
 		<?php
 		if ($TOTAL_PAGES > 1) {
-			echo "<div id=\"pagination-links\">\n";
-	        echo "Pages: ".$pagination->GetPageLinks();
-	        echo "</div>\n";
+            echo "<div class=\"pagination pagination-right\">";
+            echo "    <ul>";
+            echo        $pagination->GetPageLinks();
+            echo "    </ul>\n";
+            echo "</div>\n";
 		}
 		?>
 	</div>
@@ -188,7 +190,7 @@ if ($community_record) {
 		if ($results) {
 			$column	= 0;
 			?>
-			<table class="memberList" cellspacing="0" summary="List of Users">
+			<table class="table table-striped table-bordered" summary="List of Users">
 			<colgroup>
 				<col class="status" />
 				<col class="fullname" />
@@ -197,10 +199,10 @@ if ($community_record) {
 			</colgroup>
 			<thead>
 				<tr>
-					<td class="status" id="status"></td>
+					<td class="status" id="status">Status</td>
 					<td class="fullname<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "fullname") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"]) : ""); ?>" style="border-left: 0px;"><?php echo community_order_link("fullname", "Full Name"); ?></td>
 					<td class="membership<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "membership") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"]) : ""); ?>" style="border-left: 0px;"><?php echo community_order_link("membership", "Role"); ?></td>
-					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"]) : ""); ?>" id="colDate"><?php echo community_order_link("date", "Date Joined"); ?></td>
+					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"]) : ""); ?>" style="border-left: 0px;" id="colDate"><?php echo community_order_link("date", "Date Joined"); ?></td>
 				</tr>
 			</thead>
 			<tbody>

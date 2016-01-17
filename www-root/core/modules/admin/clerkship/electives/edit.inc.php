@@ -210,6 +210,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					 */
 					if ((isset($_POST["preceptor_first_name"])) && ($preceptor_first_name = clean_input($_POST["preceptor_first_name"], array("notags", "trim")))) {
 						$PROCESSED["preceptor_first_name"] = $preceptor_first_name;
+					} else {
+						$PROCESSED["preceptor_first_name"] = "";
 					}
 
 					/**
@@ -387,6 +389,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							$ELECTIVE = $PROCESSED;
 
 							if ($db->AutoExecute(CLERKSHIP_DATABASE.".electives", $ELECTIVE, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
+                                add_statistic("clerkship_electives", "edit", "event_id", $EVENT_ID, $ENTRADA_USER->getID());
 								// Only send out the notifications if they admin wants them sent.
 								if(isset($PROCESSED["notification_send"])) {
 									$mail = new Zend_Mail("iso-8859-1");
@@ -671,6 +674,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								var days = 27;
 								var weekText = ' weeks';
 								break;
+							case '5':
+								var days = 34;
+								var weekText = ' weeks';
+								break;
 							default:
 								var days = 13;
 								var weekText = ' weeks';
@@ -699,6 +706,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								break;
 							case '4':
 								var days = 27;
+								var weekText = ' weeks';
+								break;
+							case '5':
+								var days = 34;
 								var weekText = ' weeks';
 								break;
 							default:
@@ -814,6 +825,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					<tr>
 						<td colspan="3"><h2>Elective Details</h2></td>
 					</tr>
+                        <?php
+                        $query = "SELECT * FROM `statistics`
+                                        WHERE `module` = 'clerkship_electives'
+                                        AND `action_field` = 'event_id'
+                                        AND `action_value` = ".$db->qstr($EVENT_ID)."
+                                        ORDER BY `timestamp` ASC";
+                        $statistics = $db->GetAll($query);
+                        if ($statistics) {
+                            ?>
+                            <tr>
+                                <td colspan="3" style="border-top: 1px solid #E3E3E3;"><h3>Modification History</h3></td>
+                            </tr>
+                            <?php
+                            foreach ($statistics as $statistic) {
+                                echo "<tr>\n";
+                                echo "  <td>&nbsp;</td>\n";
+                                echo "  <td>".($statistic["action"] == "create" ? "Created " : "Edited ")." by</td>";
+                                echo "  <td> ".get_account_data("wholename", $statistic["proxy_id"]). " on " .(date(DEFAULT_DATE_FORMAT, $statistic["timestamp"]))."</td>";
+                                echo "</tr>\n";
+                            }
+                            ?>
+                            <tr>
+                                <td colspan="3" class="border-bottom">&nbsp;</td>
+                            </tr>
+                            <?php
+                        }
+                        ?>
 					<tr>
 						<td></td>
 						<td valign="top"><label for="geo_location" class="form-required">Geographic Location</label></td>
@@ -935,7 +973,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<?php
 							$duration = ceil((isset($PROCESSED["event_finish"]) && $PROCESSED["event_finish"] && isset($PROCESSED["event_start"]) && $PROCESSED["event_start"] ? (($PROCESSED["event_finish"] - $PROCESSED["event_start"]) / 604800) : 0));
 							echo "<select id=\"event_finish\" name=\"event_finish_name\" style=\"width: 10%\" onchange=\"changeDurationMessage();\">\n";
-							for($i=1; $i<=4; $i++)  {
+							for($i=1; $i<=5; $i++)  {
 								echo "<option value=\"".$i."\"".(($i == $duration) ? " selected=\"selected\"" : "").">".$i."</option>\n";
 							}
 							echo "</select>\n<div id=\"auto_end_date\" class=\"content-small\" style=\"display: none\"></div>";
@@ -1222,6 +1260,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								$ERRORSTR[] = "The <strong>Rotation ID</strong> field is required if this event is to be a part of a Core Rotation.";
 							}
 
+							if ((isset($_POST["rotation_id"])) && ($rotation_id = (int) $_POST["rotation_id"])) {
+								$query = "SELECT `rotation_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` WHERE `rotation_id` = ".$db->qstr($rotation_id);
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$PROCESSED["rotation_id"] = (int) $result["rotation_id"];
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "We were unable to locate the rotation title you've selected.";
+								}
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "The <strong>Rotation ID</strong> field is required if this event is to be a part of a Core Rotation.";
+							}
+
 							$event_dates = validate_calendars("event", true, true);
 							if ((isset($event_dates["start"])) && ((int) $event_dates["start"])) {
 								$PROCESSED["event_start"] = (int) $event_dates["start"];
@@ -1361,7 +1413,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								<select id="region_id" name="region_id" style="width: 75%" onchange="checkForNewRegion()">
 								<option value="">-- Select Region --</option>
 								<?php
-								$region_query	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`regions` WHERE `is_core` = '1' ORDER BY `region_name` ASC";
+								$region_query	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`regions`
+                                                    WHERE `is_core` = 1
+                                                    AND `region_active` = 1
+								                    ORDER BY `region_name` ASC";
 								$region_results	= $db->GetAll($region_query);
 								if($region_results) {
 									foreach($region_results as $region_result) {

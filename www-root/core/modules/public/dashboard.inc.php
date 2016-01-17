@@ -830,7 +830,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			}
 			?>
 			<div style="text-align: right; margin-top: 5px">
-				<a href="<?php echo str_ireplace(array("https://", "http://"), "webcal://", ENTRADA_URL); ?>/calendars<?php echo ((isset($_SESSION["details"]["private_hash"])) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : ""); ?>/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
+				<a href="<?php echo ENTRADA_URL; ?>/calendars<?php echo ((isset($_SESSION["details"]["private_hash"])) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : ""); ?>/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
 			</div>
 			<?php
 		break;

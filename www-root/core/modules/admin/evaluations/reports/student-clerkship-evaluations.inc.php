@@ -473,7 +473,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                 AND f.`group_id` != 0
                                 AND f.`group_id` IN (".$PROCESSED["cohorts_string"]."))
                         )
-                        GROUP BY a.`event_title`, a.`region_id`
+                        GROUP BY a.`event_title`, a.`region_id`, a.`rotation_id`
                         ORDER BY b.`rotation_id`, a.`event_title`";
             $temp_services = $db->GetAll($query);
             $services = array();

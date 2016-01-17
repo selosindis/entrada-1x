@@ -42,10 +42,7 @@ if(!defined("PARENT_INCLUDED")) {
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/chosen.jquery.min.js\"></script>\n";
     $HEAD[]	= "<link rel=\"stylesheet\" type=\"text/css\"  href=\"".ENTRADA_RELATIVE."/css/jquery/chosen.css\" />\n";
 
-	$module_title = $translate->_("courses");
-	$module_singular_name = $translate->_("course");
-
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE, "title" => $module_title);
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE, "title" => $translate->_("courses"));
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
@@ -84,7 +81,7 @@ if(!defined("PARENT_INCLUDED")) {
 			}
 
 			$sidebar_html  = "<ul class=\"menu\">\n";
-			$sidebar_html .= "	<li class=\"off\"><a href=\"".ENTRADA_URL."/courses".(($COURSE_ID) ? "?".replace_query(array("id" => $COURSE_ID, "action" => false, "section" => false)) : "")."\">Student View</a></li>\n";
+			$sidebar_html .= "	<li class=\"off\"><a href=\"".ENTRADA_URL."/courses".(($COURSE_ID) ? "?".replace_query(array("id" => $COURSE_ID, "action" => false, "section" => false)) : "")."\">Learner View</a></li>\n";
 			if($admin_wording) {
 				$sidebar_html .= "<li class=\"on\"><a href=\"".ENTRADA_URL."/admin/courses".(($COURSE_ID) ? "?".replace_query(array("id" => $COURSE_ID, "action" => "edit")) : "")."\">".html_encode($admin_wording)."</a></li>\n";
 			}

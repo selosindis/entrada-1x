@@ -20,6 +20,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  */
+
 class Entrada_Settings extends Entrada_Base {
 
     protected $setting_id,

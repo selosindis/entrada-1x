@@ -71,8 +71,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							WHERE a.`assessment_id` IN (".implode(",", $ASSESSMENT_IDS).")
 							AND a.`active` = '1'
                             AND a.`course_id` = ".$db->qstr($COURSE_ID)."
-                            AND (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).")
-                            AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")
                             ORDER BY a.`order`";
 			} else {
 				$query = "	SELECT a.*,b.`id` as `marking_scheme_id`, b.`handler`
@@ -82,8 +80,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							WHERE a.`cohort` = ".$db->qstr($COHORT)."
 							AND a.`active` = '1'
                             AND a.`course_id` = ".$db->qstr($COURSE_ID)."
-                            AND (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).")
-                            AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")
                             ORDER BY a.`order`";
 			}
 			$assessments = $db->GetAll($query);
@@ -115,7 +111,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				} else {					
 					$cquery = "SELECT DISTINCT(`cohort`) FROM `assessments`
                                 WHERE `assessment_id` IN (".implode(",", $ASSESSMENT_IDS).")
-                                AND a.`active` = '1'";
+                                AND `active` = '1'";
 					$cohorts = $db->GetAll($cquery);
 					if ($cohorts) {
 						foreach($cohorts as $cohort){

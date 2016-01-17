@@ -51,7 +51,7 @@ if(!defined("PARENT_INCLUDED")) {
 	$ASSESSMENT_TYPES = array("Formative", "Summative");
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook", "title" => "Gradebooks");
-	$module_singular_name = $translate->_("course");
+
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
 

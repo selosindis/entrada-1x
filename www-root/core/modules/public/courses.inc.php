@@ -35,15 +35,12 @@ if (!defined("PARENT_INCLUDED")) {
 
 define("IN_COURSES", true);
 
-$module_title = $translate->_("courses");
-$module_singular_name = $translate->_("course");
-
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => $module_title);
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => $translate->_("courses"));
 
 if (($router) && ($router->initRoute())) {
-	$COURSE_ID			= 0;
-	//$ORGANISATION_ID	= $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"];
+	$COURSE_ID = 0;
 	$ORGANISATION_ID = false;
+
 	if ((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
 		$COURSE_ID = (int) trim($_GET["id"]);
 	}

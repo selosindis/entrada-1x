@@ -64,30 +64,30 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		</li>
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=faculty-search">Search for Specific Faculty Member</a><br />
-			A report indicating an individual faculty Member's annual report completiong status for a given period.
+			A report indicating an individual faculty Member's annual report completion status for a given period.
 		</li>
 	</ol>
 	<h2 style="color: #669900">Education Reports</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=ug-teaching">Undergraduate Teaching</a><br />
-			A break down of undergraduate medical teaching per department per facutly member.
+			A break down of undergraduate medical teaching per department per faculty member.
 		</li>
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=ug-nonmedical-teaching">Undergraduate Non-Medical Teaching</a><br />
-			A break down of undergraduate nonmedical teaching per department per facutly member.
+			A break down of undergraduate non-medical teaching per department per faculty member.
 		</li>
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=pg-teaching">Graduate Teaching</a><br />
-			A break down of graduate teaching per department per facutly member.
+			A break down of graduate teaching per department per faculty member.
 		</li>
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=ug-supervision">Undergraduate Supervision</a><br />
-			A report outlining undergraduate supervision in a department per facutly member.
+			A report outlining undergraduate supervision in a department per faculty member.
 		</li>
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=pg-supervision">Graduate Supervision</a><br />
-			A report outlining graduate supervision in a department per facutly member.
+			A report outlining graduate supervision in a department per faculty member.
 		</li>
 	</ol>
 	<h2 style="color: #669900">Research Reports</h2>

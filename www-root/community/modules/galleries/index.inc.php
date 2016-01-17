@@ -30,7 +30,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-gallery")) {
 				{
 					id:				'requestDialog',
 					width:			350,
-					height:			125,
+					height:			200,
 					title:			'Delete Confirmation',
 					className:		'medtech',
 					okLabel:		'Yes',
@@ -49,21 +49,21 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-gallery")) {
 }
 ?>
 <div id="module-header">
+	<div class="pull-right">
+		<?php
+		if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "add-gallery")) {
+			?>
+			<ul class="page-action">
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-gallery" class="btn btn-success">Add Photo Gallery</a></li>
+			</ul>
+			<?php
+		}
+		?>
+	</div>
 </div>
 
 <div style="padding-top: 10px; clear: both">
 	<?php
-	if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "add-gallery")) {
-		?>
-		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-gallery" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Photo Gallery</a></li>
-			</ul>
-		</div>
-		<div style="clear: both"></div>
-		<?php
-	}
-	
 	$query		= "	SELECT a.*
 					FROM `community_galleries` AS a
 					WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
@@ -77,7 +77,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-gallery")) {
 		$total_galleries	= @count($results);
 		$column				= 0;
 		?>
-		<table style="width: 100%" cellspacing="2" cellpadding="4" border="0" summary="Listing of Photo Galleries">
+		<table summary="Listing of Photo Galleries">
 		<colgroup>
 			<col style="width: 33%" />
 			<col style="width: 34%" />
@@ -93,7 +93,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-gallery")) {
 					$accessible = false;
 				}
 
-				echo "<td".((!$accessible) ? " class=\"na\"" : "")." style=\"vertical-align: top; text-align: center\">";
+				echo "<td".((!$accessible) ? " class=\"na\"" : "")." style=\"text-align: center\">";
 				echo "	<h2 id=\"gallery-".$result["cgallery_id"]."-title\" class=\"gallery-heading\"><a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-gallery&amp;id=".$result["cgallery_id"]."\">".html_encode(limit_chars($result["gallery_title"], 26))."</a></h2>\n";
 				echo "	<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-gallery&amp;id=".$result["cgallery_id"]."\">".communities_galleries_fetch_thumbnail($result["gallery_cgphoto_id"])."</a>";
 				echo "	<div style=\"margin-top: 5px\">\n";
@@ -106,8 +106,9 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-gallery")) {
 					echo "<td colspan=\"".(3 - $column)."\">&nbsp;</td>\n";
 				} elseif ($column == 3) {
 					$column = 0;
-					echo "</tr>\n";
 					echo "<tr>\n";
+					echo "	<td colspan=\"2\">&nbsp;</td>\n";
+					echo "</tr>\n";
 				}
 			}
 			?>

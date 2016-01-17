@@ -30,14 +30,14 @@ if (isset($_POST["cid"]) && $_SESSION["isAuthorized"]) {
 					WHERE `category_id` = ".$db->qstr($category_id);
 		$category = $db->GetRow($query);
 		if ($category) {
-			if ($category["category_parent"] != CLERKSHIP_TOP_CATEGORY_ID) {
+			if ($category["category_parent"] != 0) {
 				$parent_id 								= $category["category_parent"];
 				$category_selected_reverse[1]["id"]		= 0;
 				$category_selected_reverse[1]["parent"]	= $category_id;
 				$category_selected_reverse[2]["id"]		= $category_id;
 				$category_selected_reverse[2]["parent"]	= $category["category_parent"];
 				$count = 2;
-				while ($parent_id != CLERKSHIP_TOP_CATEGORY_ID) {
+				while ($parent_id != 0) {
 					$count++;
 					$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
 								WHERE `category_id` = ".$db->qstr($parent_id);
@@ -55,7 +55,7 @@ if (isset($_POST["cid"]) && $_SESSION["isAuthorized"]) {
 			} else {
 					$category_selected[1]["id"]		= $category_id;
 					$category_selected[2]["id"]		= 0;
-					$category_selected[1]["parent"]	= CLERKSHIP_TOP_CATEGORY_ID;
+					$category_selected[1]["parent"]	= 0;
 					$category_selected[2]["parent"]	= $category_id;
 					$count = 2;
 			}
@@ -63,14 +63,15 @@ if (isset($_POST["cid"]) && $_SESSION["isAuthorized"]) {
 		}
 	} else {
 		$category_selected[1]["id"]		= 0;
-		$category_selected[1]["parent"]	= CLERKSHIP_TOP_CATEGORY_ID;
+		$category_selected[1]["parent"]	= 0;
 		$count = 1;
 	}
 	$margin = 0;
 	for ($level = 1; $level <= $count; $level++) {
-		if ($category_selected[$level]["parent"]) {
+		if (isset($category_selected[$level]["parent"])) {
 			$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
-						WHERE `category_parent` = ".$db->qstr($category_selected[$level]["parent"]);
+						WHERE `category_parent` = ".$db->qstr($category_selected[$level]["parent"])."
+						AND `category_status` != 'trash'";
 			$results = $db->GetAll($query);
 			if ($results) {
 				echo "<div style=\"padding: 0px; margin-left: ".$margin."px;\">\n";

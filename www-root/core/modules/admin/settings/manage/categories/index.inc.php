@@ -27,10 +27,10 @@
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 		header("Location: ".ENTRADA_URL);
 		exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('categories', 'update', false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("categories", "update", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -41,12 +41,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/sortable_tree.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-
-	echo "<h1>Manage Clerkship Categories</h1>";
+	?>
+	<h1>Clinical Rotation Categories</h1>
+	<?php
 	if ($ENTRADA_ACL->amIAllowed("categories", "create", false)) {
 		?>
-        <a href="<?php echo ENTRADA_URL."/admin/settings/manage/categories?section=add&amp;step=1&org=".$ORGANISATION_ID; ?>" class="btn btn-primary pull-right" style="margin-bottom: 15px">Add New Category</a>
-        <div class="clearfix"></div>
+		<div class="row-fluid">
+			<span class="pull-right">
+				<a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/settings/manage/categories?section=add&amp;org=<?php echo $ORGANISATION_ID;?>"><i class="icon-plus-sign icon-white"></i> Add Category</a>
+			</span>
+		</div>
+		<br />
 		<?php
 	}
 
@@ -55,27 +60,32 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 				AND `category_status` != 'trash'
 				AND (`organisation_id` = ".$db->qstr($ORGANISATION_ID)." OR `organisation_id` IS NULL)
 				ORDER BY `category_order` ASC";
-	$result = $db->GetAll($query);
-	if ($result) {
+	$results = $db->GetAll($query);
+	if ($results) {
 		?>
 		<form action="<?php echo ENTRADA_URL."/admin/settings/manage/categories?".replace_query(array("section" => "delete", "step" => 1)); ?>" method="post">
-			<table class="tableList" cellspacing="0" summary="List of Categories">
-				<thead>
+			<table class="table table-striped" summary="Clinical Rotation Categories">
+				<colgroup>
+					<col style="width: 3%" />
+					<col style="width: 97%" />
+				</colgroup>
+				<tfoot>
 					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="title">Clerkship School Categories</td>
+						<td>&nbsp;</td>
+						<td><input type="submit" class="btn btn-danger" value="Delete Selected" /></td>
 					</tr>
-				</thead>
+				</tfoot>
+				<tbody>
+					<?php
+					foreach ($results as $result) {
+						echo "<tr>";
+						echo "	<td><input type=\"checkbox\" name=\"delete[".$result["category_id"]."][category_id]\" value=\"".$result["category_id"]."\"/></td>";
+						echo"	<td><a href=\"".ENTRADA_URL."/admin/settings/manage/categories?section=edit&amp;org=".$ORGANISATION_ID."&amp;id=".$result["category_id"]."\">".$result["category_name"]."</a></td>";
+						echo "</tr>";
+					}
+					?>
+				</tbody>
 			</table>
-			<ul class="categories-list">
-			<?php
-			foreach ($result as $category) {
-				echo "<li><div class=\"category-container\"><span class=\"delete\" style=\"width:27px;display:inline-block;\"><input type=\"checkbox\" id=\"delete_".$category["category_id"]."\" name=\"delete[".$category["category_id"]."][category_id]\" value=\"".$category["category_id"]."\" onclick=\"$$('#".$category["category_id"]."-children input[type=checkbox]').each(function(e){e.checked = $('delete_".$category["category_id"]."').checked; if (e.checked) e.disable(); else e.enable();});\"/></span>\n";
-				echo "<a href=\"" . ENTRADA_URL . "/admin/settings/manage/categories?" . replace_query(array("section" => "edit", "id" => $category["category_id"])) . "\">".$category["category_name"]."</a></div></li>";
-			}
-			?>
-			</ul>
-			<input type="submit" class="btn btn-danger" value="Delete Selected" />
 		</form>
 		<?php
 	} else {

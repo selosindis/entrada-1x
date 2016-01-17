@@ -148,7 +148,7 @@ if (!defined("IN_REGIONALED")) {
 						</form>
 						<?php
 					} else {
-						application_log("notice", "The regional education accomodation request removal page was accessed without providing any valid event_ids to remove.");
+						application_log("notice", "The regional education accommodation request removal page was accessed without providing any valid event_ids to remove.");
 
 						header("Location: ".ENTRADA_URL."/admin/regionaled");
 						exit;
@@ -156,13 +156,13 @@ if (!defined("IN_REGIONALED")) {
 				break;
 			}
 		} else {
-			application_log("notice", "The regional education accomodation request removal page was accessed without providing any valid event_ids to remove.");
+			application_log("notice", "The regional education accommodation request removal page was accessed without providing any valid event_ids to remove.");
 
 			header("Location: ".ENTRADA_URL."/admin/regionaled");
 			exit;
 		}
 	} else {
-		application_log("notice", "The regional education accomodation request removal page was accessed without providing any event_ids to remove.");
+		application_log("notice", "The regional education accommodation request removal page was accessed without providing any event_ids to remove.");
 
 		header("Location: ".ENTRADA_URL."/admin/regionaled");
 		exit;

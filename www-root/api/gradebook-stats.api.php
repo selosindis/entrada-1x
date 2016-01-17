@@ -66,7 +66,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                 echo json_encode(array("status" => "success", "data" => array("This assessessment has not been viewed")));
             }            
         } else {
-            add_error("Your MEdTech account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.");
+            add_error("Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact us for assistance.");
 
             echo json_encode(array("status" => "error", "data" => $ERRORSTR));
 

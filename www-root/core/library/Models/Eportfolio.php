@@ -195,7 +195,7 @@ class Models_Eportfolio {
 			$g_members = array();
 			$i = 0;
 			foreach ($results as $result) {
-				$user = User::get($result["proxy_id"]);
+				$user = User::fetchRowByID($result["proxy_id"]);
 				if ($user) {
 					$g_members[$i]["proxy_id"] = $user->getID();
 					$g_members[$i]["firstname"] = $user->getFirstname();
@@ -234,7 +234,7 @@ class Models_Eportfolio {
 	}
 	
 	public function getUpdatedBy() {
-		$user = User::get($this->updated_by);
+		$user = User::fetchRowByID($this->updated_by);
 		return $user;
 	}
 	

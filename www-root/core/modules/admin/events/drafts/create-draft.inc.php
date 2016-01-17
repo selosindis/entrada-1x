@@ -78,7 +78,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			 * Non-required field "draft_start_date" / Draft Start (validated through validate_calendars function).
 			 * Non-required field "draft_finish_date" / Draft Finish (validated through validate_calendars function).
 			 */
-			$draft_date = validate_calendars("copy", true, true, false);
+			$draft_date = Entrada_Utilities::validate_calendars("copy", true, true, false);
 			if ((isset($draft_date["start"])) && ((int) $draft_date["start"])) {
 				$PROCESSED["draft_start_date"] = (int) $draft_date["start"];
 			} else {
@@ -94,7 +94,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			/**
 			 * Required field "new_start" / Event Date & Time Start (validated through validate_calendars function).
 			 */
-			$start_date = validate_calendars("new", true, false, false);
+			$start_date = Entrada_Utilities::validate_calendars("new", true, false, false);
 			if ((isset($start_date["start"])) && ((int) $start_date["start"])) {
 				$PROCESSED["new_start_day"] = (int) $start_date["start"];
 			}
@@ -376,18 +376,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             </div>
                         </div>
 
-                        <div class="control-group">
-                            <table>
-                                <?php echo generate_calendars("copy", "", true, true, ((isset($PROCESSED["draft_start_date"])) ? $PROCESSED["draft_start_date"] : strtotime("September 1st, ".(date("o") - 1))), true, true, ((isset($PROCESSED["draft_finish_date"])) ? $PROCESSED["draft_finish_date"] : time()), false); ?>
-                            </table>
-                        </div>
+                        <?php echo Entrada_Utilities::generate_calendars("copy", "", true, true, ((isset($PROCESSED["draft_start_date"])) ? $PROCESSED["draft_start_date"] : strtotime("September 1st, ".(date("o") - 1))), true, true, ((isset($PROCESSED["draft_finish_date"])) ? $PROCESSED["draft_finish_date"] : time()), false); ?>
 
-                        <div class="control-group">
-                            <table>
-                                <?php echo generate_calendars("new", "New Start Date", true, true, ((isset($PROCESSED["new_start_day"])) ? $PROCESSED["new_start_day"] : ((isset($PROCESSED["draft_start_date"])) ? strtotime("+1 Year", $PROCESSED["draft_start_date"]) : strtotime("September 1st, ".(date("o"))))), false, false, 0, false, false, ""); ?>
-                            </table>
-                        </div>
-
+                        <?php echo Entrada_Utilities::generate_calendars("new", "New Start Date", true, true, ((isset($PROCESSED["new_start_day"])) ? $PROCESSED["new_start_day"] : ((isset($PROCESSED["draft_start_date"])) ? strtotime("+1 Year", $PROCESSED["draft_start_date"]) : strtotime("September 1st, ".(date("o"))))), false, false, 0, false, false, ""); ?>
                     </div>
 
                     <a href="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts" class="btn">Cancel</a>

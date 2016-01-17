@@ -157,7 +157,6 @@ padding:10px;
   text-align:right;
 }
 .create-comm-container{
-  padding:20px 0;
   margin-bottom:20px;
   border-bottom:1px dotted #CCC;
 }
@@ -165,7 +164,7 @@ padding:10px;
   padding-left:20px;
 }
 .inner-comm-body {
-  padding-left:40px;
+  padding-left:30px;
   border-left:1px dotted #CCC;
 }
 .community-body > .span4 {

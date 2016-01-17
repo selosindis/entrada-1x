@@ -110,25 +110,33 @@ function updateTime(type) {
 }
 
 function dateLock(field) {
-	if($(field) && $(field).checked == true) {
-		$(field+'_text').className	= 'form-required';
-		$(field+'_date').disabled	= false;
-		if($(field+'_hour') != null) {
-			$(field+'_hour').disabled = false;
-		}
-		if($(field+'_min') != null) {
-			$(field+'_min').disabled = false;
-		}
-	} else {
-		$(field+'_text').className	= 'form-nrequired';
-		$(field+'_date').disabled	= true;
-		if($(field+'_hour') != null) {
-			$(field+'_hour').disabled = true;
-		}
-		if($(field+'_min') != null) {
-			$(field+'_min').disabled = true;
+
+	if($(field)) {
+		$(field + '_text').removeClassName('form-nrequired');
+		$(field + '_text').removeClassName('form-required');
+
+		if ($(field).checked == true) {
+			$(field + '_text').addClassName('form-required');
+			$(field + '_date').disabled = false;
+
+			if ($(field + '_hour') != null) {
+				$(field + '_hour').disabled = false;
+			}
+			if ($(field + '_min') != null) {
+				$(field + '_min').disabled = false;
+			}
+		} else {
+			$(field + '_text').addClassName('form-nrequired');
+			$(field + '_date').disabled = true;
+			if ($(field + '_hour') != null) {
+				$(field + '_hour').disabled = true;
+			}
+			if ($(field + '_min') != null) {
+				$(field + '_min').disabled = true;
+			}
 		}
 	}
+
 	return;
 }
 
@@ -914,4 +922,11 @@ function add_timer (count, msg, affix) {
             }
         });
     }
+}
+
+function sidebarBegone() {
+    jQuery(function($) {
+        $("#sidebar").hide();
+        $("#content").removeClass("span9").addClass("span12").css("margin-left", "0");
+    });
 }

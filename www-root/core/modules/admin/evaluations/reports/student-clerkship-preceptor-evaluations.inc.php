@@ -388,8 +388,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                     echo "  <span class=\"span7 offset1 space-above medium question-content\">".$report_question["question_text"]."</span>\n";
                     echo "</div>\n";
                     echo "  <div class=\"row-fluid border-bottom space-below question-content\">\n";
-                    echo "      <span class=\"span5\"><strong>Response</strong></span>\n";
-                    echo "      <span class=\"span2\"><strong>Range</strong></span>\n";
+                    echo "      <span class=\"span7\"><strong>Response</strong></span>\n";
                     echo "      <span class=\"span2\"><strong>Percent</strong></span>\n";
                     echo "      <span class=\"span2 offset1\"><strong>Selections</strong></span>\n";
                     echo "  </div>\n";
@@ -491,7 +490,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                 AND f.`group_id` != 0
                                 AND f.`group_id` IN (".$PROCESSED["cohorts_string"]."))
                         )
-                        GROUP BY a.`event_title`, a.`region_id`
+                        GROUP BY a.`event_title`, a.`region_id`, a.`rotation_id`
                         ORDER BY b.`rotation_id`, a.`event_title`";
             $temp_services = $db->GetAll($query);
             $services = array();

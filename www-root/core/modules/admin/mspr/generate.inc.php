@@ -41,7 +41,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 		require_once("Models/mspr/MSPRs.class.php");
 		switch($mode) {
 			case "user_mode":
-				$user = User::get($user_id);
+				$user = User::fetchRowByID($user_id);
 				$mspr = MSPR::get($user);
 				$name = $user->getFirstname() . " " . $user->getLastname();
 				
@@ -58,7 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 				$timestamp = time();
 				foreach ($user_ids as $user_id) {
 					
-					$user = User::get($user_id);
+					$user = User::fetchRowByID($user_id);
 					$mspr = MSPR::get($user);
 					$name = $user->getFirstname() . " " . $user->getLastname();
 										

@@ -22,12 +22,12 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQRESOURCES"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_MEDBIQRESOURCES")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "create",false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "create", false)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQRESOURCES"))) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/medbiqresources?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add Medbiquitous Resource");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/medbiqresources?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add Resource");
 	
 	// Error Checking
 	switch ($STEP) {
@@ -95,7 +95,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQRESOURCES"))) {
 					if (!$ERROR) {
 						$url = ENTRADA_URL . "/admin/settings/manage/medbiqresources?org=".$ORGANISATION_ID;
 						$SUCCESS++;
-						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["resource"])."</strong> to the system.<br /><br />You will now be redirected to the Medbiquitos Resources index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["resource"])."</strong> to the system.<br /><br />You will now be redirected to the Medbiquitous Resources index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 						
 						application_log("success", "New Medbiquitous Resource [".$PROCESSED["resource"]."] added to the system.");

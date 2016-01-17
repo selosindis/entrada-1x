@@ -359,18 +359,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<select id="llocation_id" name="llocation_id" style="width: 100%">
 						<option value="0">-- Select Setting --</option>
 						<?php
-						$query	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories` 
-									WHERE `category_type` = ".$db->qstr($CLERKSHIP_CATEGORY_TYPE_ID)." 
-									AND `category_name` = ".$db->qstr("Class of ".$_SESSION["details"]["grad_year"]);
-						$result	= $db->GetRow($query);
-						if ($result) {
-							$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_locations`";
+                            $query	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types`";
+                            $location_types	= $db->GetAll($query);
+                            if ($location_types) {
+                                foreach ($location_types as $location_type) {
+                                    echo "<optgroup label=\"".html_encode($location_type["location_type"])."\">\n";
+                                    $query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS a
+                                                            JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS b
+                                                            ON a.`llocation_id` = b.`llocation_id`
+                                                            WHERE b.`lltype_id` = ".$db->qstr($location_type["lltype_id"]);
 							$results	= $db->GetAll($query);
 							if ($results) {
 								foreach ($results as $result) {
 									echo "<option value=\"".(int) $result["llocation_id"]."\"".(isset($PROCESSED["llocation_id"]) && $PROCESSED["llocation_id"] == (int)$result["llocation_id"] ? " selected=\"selected\"" : "").">".$result["location"]."</option>\n";
 								}
 							}
+                                    echo "</optgroup>\n";
+                                }
 						}
 						?>
 						</select>

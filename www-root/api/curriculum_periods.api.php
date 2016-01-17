@@ -11,13 +11,19 @@
  */
 require_once("init.inc.php");
 
-if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"]) && $ENTRADA_ACL->amIAllowed(new CourseResource(null, $ENTRADA_USER->getActiveOrganisation()), "create")) {	
-	if (isset($_GET["key"]) && $tmp_input = clean_input($_GET["key"], array("int"))) {
-		$key = $tmp_input;
-	} else {
-		$key = 0;
-	}
-	
+if (isset($_GET["course_code"]) && $tmp_input = clean_input($_GET["course_code"], array("int"))) {
+    $course_code = $tmp_input;
+} else {
+    $course_code = null;
+}
+
+if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"]) && $ENTRADA_ACL->amIAllowed(new CourseResource($course_code, $ENTRADA_USER->getActiveOrganisation()), "create")) {	
+    if (isset($_GET["key"]) && $tmp_input = clean_input($_GET["key"], array("int"))) {
+        $key = $tmp_input;
+    } else {
+        $key = 0;
+    }
+    
 	if ($key) {
 		$query = "SELECT * FROM `curriculum_periods` WHERE `cperiod_id` = ".$db->qstr($key);
 		$period_data = $db->GetRow($query);

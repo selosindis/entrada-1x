@@ -1730,8 +1730,7 @@ class CommunityOwnerAssertion extends CommunityAssertion {
 	 */
 	public function _checkCommunity ($user_id, $community_id) {
 		global $db;
-		$query	= "
-				SELECT `proxy_id` FROM `community_members`
+		$query	= "SELECT `proxy_id` FROM `community_members`
 				WHERE `community_id` = ".$db->qstr($community_id)."
 				AND `proxy_id` = ".$db->qstr($user_id)."
 				AND `member_active` = '1'
@@ -1762,8 +1761,7 @@ class CommunityMemberAssertion extends CommunityAssertion {
 	 */
 	public function _checkCommunity($user_id, $community_id) {
 		global $db, $ENTRADA_USER;
-		$query	= "
-				SELECT `proxy_id` FROM `community_members`
+		$query	= "SELECT `proxy_id` FROM `community_members`
 				WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
 				AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
@@ -2060,8 +2058,6 @@ class QuizOwnerAssertion implements Zend_Acl_Assert_Interface {
 	}
 }
 
-
-
 /**
  * Base class for smart Entrada resource objects. Used for dummy checks and non assertion checks.
  *
@@ -2247,7 +2243,6 @@ class AssignmentResource extends GradebookResource {
 		return "assignment".($this->specific ? $this->assignment_id : "");
 	}
 }
-
 
 /**
  * Creates a photo resource.

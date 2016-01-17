@@ -9,15 +9,15 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
-*/
+ */
 
 /*
  * Push user to setup if the config file doesn't exist, and the
  * setup file does.
  */
 if (!@file_exists("core/config/config.inc.php") && @file_exists("setup/index.php")) {
-	header("Location: setup/index.php");
-	exit;
+    header("Location: setup/index.php");
+    exit;
 }
 
 $config = new Zend_Config(require "config/config.inc.php");
@@ -91,10 +91,7 @@ define("ACADEMIC_YEAR_START_DATE", "September 1");								// The start month and
 define("CLERKSHIP_DATABASE", $config->database->clerkship_database);			// The name of the database that stores the clerkship schedule information.
 define("CLERKSHIP_SITE_TYPE", 1);												// The value this application will use for site types in the clerkship logbook module. This will be removed/replaced by functional logic to decide which site type to use in the future - for now, leave this as 1.
 define("CLERKSHIP_EMAIL_NOTIFICATIONS", true);									// Whether email notifications will be sent out to the Program Coordinator of the Rotation's related course
-define("CLERKSHIP_LOTTERY_START", strtotime("March 1st, 2012"));
-define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2012"));
-define("CLERKSHIP_LOTTERY_MAX", 8);
-define("CLERKSHIP_FIRST_CLASS", 2011);
+define("CLERKSHIP_FIRST_CLASS", 2012);
 define("ONE_WEEK", 604800);
 define("CLERKSHIP_SIX_WEEKS_PAST", 4);
 define("CLERKSHIP_ROTATION_ENDED", 3);
@@ -102,7 +99,6 @@ define("CLERKSHIP_ONE_WEEK_PRIOR", 2);
 define("CLERKSHIP_ROTATION_PERIOD", 1);
 define("CLERKSHIP_EVALUATION_TIMEOUT", ONE_WEEK);
 define("CLERKSHIP_EVALUATION_LOCKOUT", 0);
-define("CLERKSHIP_TOP_CATEGORY_ID", 1);
 define("CLERKSHIP_SETTINGS_REQUIREMENTS", false);
 
 
@@ -122,7 +118,7 @@ $CLERKSHIP_FIELD_STATUS["cancelled"] = array("name" => "Cancelled", "visible" =>
 /**
  * The Course Report tab requires the event type ids that are to be reported on.
  * Patient Contact Session is eventtype_id 4.
-*/
+ */
 $COURSE_REPORT_EVENT_TYPES = array(4);
 
 
@@ -161,8 +157,8 @@ define("AUTH_CAS_COOKIE", "isCasOn");											// The name of the CAS cookie.
 define("AUTH_CAS_SESSION", "phpCAS");											// The session key set by phpCAS.
 define("AUTH_CAS_ID", "peopleid");												// The session key that holds the employee / student number.
 
-define("PASSWORD_RESET_URL", ENTRADA_URL."/password-reset.php");				// The URL that users are directed to if they have forgotten their password.
-define("PASSWORD_CHANGE_URL", ENTRADA_URL."/password-change.php");				// The URL that users are directed to if they wish to change their password.
+define("PASSWORD_RESET_URL", ENTRADA_URL."/password_reset");		    		// The URL that users are directed to if they have forgotten their password.
+define("PASSWORD_CHANGE_URL", "");	                                			// DEPRECATED: The URL that users are directed to if they wish to change their password.
 
 define("DATABASE_SESSIONS", false);
 define("SESSION_DATABASE_TYPE",	DATABASE_TYPE);									// Database Connection Type
@@ -171,7 +167,7 @@ define("SESSION_DATABASE_NAME",	AUTH_DATABASE);									// The name of the datab
 define("SESSION_DATABASE_USER",	DATABASE_USER);									// A username that can access this database.
 define("SESSION_DATABASE_PASS",	DATABASE_PASS);									// The password for the username to connect to the database.
 
-define("SESSION_NAME", "entrada");
+define("SESSION_NAME", "entrada-me");
 define("SESSION_EXPIRES", 3600);
 
 define("DEFAULT_TEMPLATE", "default");											// This is the system template that will be loaded. System templates include language files, custom images, visual layouts, etc.
@@ -200,11 +196,6 @@ define("GOOGLE_ANALYTICS_CODE",	"");											// If you would like Google Analy
 define("GOOGLE_MAPS_API", "http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=XXXXXXXXXXX");
 
 /**
- * Used to cap the number of rotations which are allowed in the system.
- */
-define("MAX_ROTATION", 10);
-
-/**
  * Defines whether the system should allow communities to have mailing lists created for them,
  * and what type of mailing lists will be used (currently google is the only choice.)
  *
@@ -223,7 +214,7 @@ $GOOGLE_APPS["groups"] = array();
 $GOOGLE_APPS["admin_username"] = "";
 $GOOGLE_APPS["admin_password"] = "";
 $GOOGLE_APPS["domain"] = "";
-$GOOGLE_APPS["quota"] = "7 GB";
+$GOOGLE_APPS["quota"] = "25 GB";
 $GOOGLE_APPS["new_account_subject"]	= "Activation Required: New %GOOGLE_APPS_DOMAIN% Account";
 $GOOGLE_APPS["new_account_msg"] = <<<GOOGLENOTIFICATION
 Dear %FIRSTNAME% %LASTNAME%,
@@ -268,6 +259,26 @@ Sincerely,
 GOOGLENOTIFICATION;
 
 /**
+ * Google Client Libraries / Google v3 REST API Credentials
+ *
+ * Gives us "Service Account" level access to Google's family of REST API's.
+ * Entrada is considered the Service Account and we use these creds to
+ * authenticate our app with the API via OAuth 2.0 and receive an access token which
+ * is needed to access any auth-required API resources. The Client ID, the Service
+ * Account Name and the private key are all generated in the Developer Console
+ * (console.developers.google.com).
+ *
+ * client_id 				ID of our Service Account.
+ * service_account_name 	Email address associated with our Service Account.
+ * key_file_location 		Location of the PKCS #12-formatted private key file. *** DO NOT STORE IN THE WEBROOT ***
+ */
+
+$GOOGLE_V3_REST_API = array();
+$GOOGLE_V3_REST_API["client_id"] 		    = "";
+$GOOGLE_V3_REST_API["service_account_name"] = "";
+$GOOGLE_V3_REST_API["key_file_location"]    = "";
+
+/**
  * Weather Information provided by weather.com's XOAP service.
  * Register at: http://www.weather.com/services/xmloap.html
  *
@@ -304,18 +315,20 @@ define("STORAGE_USER_PHOTOS", $config->entrada_storage . "/user-photos");		// Fu
 define("FILE_STORAGE_PATH", $config->entrada_storage . "/event-files");			// Full directory path where off-line files are stored without trailing slash.
 define("MSPR_STORAGE",$config->entrada_storage . "/msprs");						//Full directory path where student Medical School Performance Reports should be sotred
 define("SEARCH_INDEX_PATH",$config->entrada_storage . "/search-indexes");		//Full directory path where student Medical School Performance Reports should be sotred
+define("SYLLABUS_STORAGE", $config->entrada_storage . "/syllabi");			// Full directory path where syllabi are stored without trailing slash.
 define("EPORTFOLIO_STORAGE_PATH", $config->entrada_storage . "/eportfolio");	// Full directory path where eportfolio files should be sotred 
+define("LOR_STORAGE_PATH", $config->entrada_storage . "/lor");                                // Full directory path where learning object repository files are stored without trailing slash.
 
 define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and parametres to sendmail.
 
 define("DEBUG_MODE", true);														// Some places have extra debug code to show sample output. Set this to true if you want to see it.
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
-define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.6.0"); 										// The current filesystem version of Entrada.
+define("APPLICATION_NAME", "Entrada ME Open Edition");							// The name of this application in your school (i.e. MedCentral, Osler, etc.)
+define("APPLICATION_VERSION", "1.6.1"); 										// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
-$DEFAULT_META["title"] = "Entrada: An eLearning Ecosystem";
+$DEFAULT_META["title"] = "Entrada ME Open Edition: An eLearning Ecosystem";
 $DEFAULT_META["keywords"] = "";
 $DEFAULT_META["description"] = "";
 
@@ -463,16 +476,11 @@ Once your password has been set you can log into %application_name% by visiting 
 
 Username: %username%
 
-If you require any assistance with this system, please do not hesitate to contact us:
-
-Central Education Office
-E-Mail: undergrad@yourschool.ca
-Telephone: +1 (613) 533-6000 x2494
+If you require any assistance with this system, please do not hesitate to contact us.
 
 Sincerely,
 
-Central Education Office
-undergrad@yourschool.ca
+%application_name% Team
 USERNOTIFICATION;
 
 /**
@@ -484,7 +492,7 @@ USERNOTIFICATION;
 $DEFAULT_EDIT_USER_NOTIFICATION = <<<USERNOTIFICATION
 Dear %firstname% %lastname%,
 
-Your account has been updated in %application_name%, our web-based integrated teaching and learning system.
+Your account has been updated in %application_name% our web-based integrated teaching and learning system.
 
 Before logging in, you may need to reset your password. You can do this by clicking the following link:
 
@@ -496,16 +504,11 @@ You can log into %application_name% by visiting the following link:
 
 Username: %username%
 
-If you require any assistance with this system, please do not hesitate to contact us:
-
-Central Education Office
-E-Mail: undergrad@yourschool.ca
-Telephone: +1 (613) 533-6000 x2494
+If you require any assistance with this system, please do not hesitate to contact us.
 
 Sincerely,
 
-Central Education Office
-undergrad@yourschool.ca
+%application_name% Team
 USERNOTIFICATION;
 
 /**
@@ -527,7 +530,7 @@ Once your password has been set you can log into the %community_name% community 
 
 Username: %username%
 
-If you require any assistance with this system, please do not hesitate to contact us:
+If you require any assistance with this system, please do not hesitate to contact us.
 
 Sincerely,
 
@@ -542,87 +545,92 @@ USERNOTIFICATION;
  * the public ones, which needs to be changed.
  */
 $MODULES = array();
+$MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read");
+$MODULES["assessments"] = array("title" => "Assessment & Evaluation", "resource" => "assessments", "permission" => "update");
 $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");
 $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
-$MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
-$MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
-$MODULES["communities"] = array("title" => "Manage Communities", "resource" => "communityadmin", "permission" => "read");
 $MODULES["groups"] = array("title" => "Manage Cohorts", "resource" => "group", "permission" => "update");
+$MODULES["communities"] = array("title" => "Manage Communities", "resource" => "communityadmin", "permission" => "read");
+$MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
+$MODULES["eportfolio"] = array("title" => "Manage ePortfolios", "resource" => "eportfolio", "permission" => "update");
+$MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
-$MODULES["eportfolio"] = array("title" => "Manage ePortfolios", "resource" => "eportfolio", "permission" => "update");
 $MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "read");
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
 $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
 $MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "regionaled", "permission" => "update");
+$MODULES["rotationschedule"] = array("title" => "Rotation Schedule", "resource" => "rotationschedule", "permission" => "update");
 $MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
 $MODULES["settings"] = array("title" => "System Settings", "resource" => "configuration", "permission" => "update");
-$MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read");
 
-/*	Registered Groups, Roles and Start Files for Administrative modules.
-	Example usage:
-	$ADMINISTRATION[GROUP][ROLE] = array(
-									"start_file" => "module",
-									"registered" => array("courses", "events", "users")
-									);
-*/
+/**
+ * Registered Groups, Roles and Start Files for Administrative modules.
+ *
+ * Example usage:
+ * $ADMINISTRATION[GROUP][ROLE] = array(
+ *     "start_file" => "module",
+ *     "registered" => array("courses", "events", "users")
+ * );
+ */
 $ADMINISTRATION = array();
+
 $ADMINISTRATION["medtech"]["admin"]	= array(
-										"start_file" => "notices",
-										"registered" => array("courses", "events", "notices", "clerkship", "quizzes", "reports", "users"),
-										"assistant_support"	=> true
-										);
+    "start_file" => "notices",
+    "registered" => array("courses", "events", "notices", "clerkship", "quizzes", "reports", "users"),
+    "assistant_support"	=> true
+);
 
 $ADMINISTRATION["faculty"]["director"] = array(
-											"start_file" => "events",
-											"registered" => array("courses", "events", "notices", "quizzes"),
-											"assistant_support" => true
-											);
+    "start_file" => "events",
+    "registered" => array("courses", "events", "notices", "quizzes"),
+    "assistant_support" => true
+);
 
 $ADMINISTRATION["faculty"]["clerkship"] = array(
-											"start_file" => "notices",
-											"registered" => array("courses", "events", "notices", "clerkship", "quizzes"),
-											"assistant_support" => true
-											);
+    "start_file" => "notices",
+    "registered" => array("courses", "events", "notices", "clerkship", "quizzes"),
+    "assistant_support" => true
+);
 
 $ADMINISTRATION["faculty"]["admin"] = array(
-										"start_file" => "notices",
-										"registered" => array("courses", "events", "notices", "quizzes", "reports"),
-										"assistant_support" => true
-										);
+    "start_file" => "notices",
+    "registered" => array("courses", "events", "notices", "quizzes", "reports"),
+    "assistant_support" => true
+);
 
 $ADMINISTRATION["faculty"]["lecturer"] = array(
-											"start_file" => "events",
-											"registered" => array("events", "quizzes"),
-											"assistant_support" => true
-											);
+    "start_file" => "events",
+    "registered" => array("events", "quizzes"),
+    "assistant_support" => true
+);
 
 $ADMINISTRATION["resident"]["lecturer"]	= array(
-											"start_file" => "events",
-											"registered" => array("events", "quizzes"),
-											"assistant_support"	=> false
-											);
+    "start_file" => "events",
+    "registered" => array("events", "quizzes"),
+    "assistant_support"	=> false
+);
 
 $ADMINISTRATION["staff"]["admin"] = array(
-										"start_file" => "notices",
-										"registered" => array("courses", "events", "notices", "clerkship", "quizzes", "reports", "users"),
-										"assistant_support"	=> true
-										);
+    "start_file" => "notices",
+    "registered" => array("courses", "events", "notices", "clerkship", "quizzes", "reports", "users"),
+    "assistant_support"	=> true
+);
 
 $ADMINISTRATION["staff"]["pcoordinator"] = array(
-											"start_file" => "notices",
-											"registered" => array("courses", "events", "notices", "quizzes"),
-											"assistant_support"	=> true
-											);
+    "start_file" => "notices",
+    "registered" => array("courses", "events", "notices", "quizzes"),
+    "assistant_support"	=> true
+);
 
 $ADMINISTRATION["staff"]["staff"] = array(
-										"start_file" => "dashboard",
-										"registered" => array("dashboard", "quizzes"),
-										"assistant_support"	=> false
-										);
+    "start_file" => "dashboard",
+    "registered" => array("dashboard", "quizzes"),
+    "assistant_support"	=> false
+);
 
 /**
  * These are the avialable character sets in both PHP and their cooresponding MySQL names and collation.
@@ -651,6 +659,22 @@ $AR_CUR_YEAR = (date("Y") - ((date("n") < 5) ? 1 : 0));
 $AR_NEXT_YEAR = (int) $AR_CUR_YEAR + 1;
 $AR_PAST_YEARS = 1985;
 $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
+
+/**
+ * Values used in the Clerkship lottery and schedule generation process
+ */
+define("CLERKSHIP_LOTTERY_RELEASE", strtotime("08:00:00 March 17th, 2014"));
+define("CLERKSHIP_LOTTERY_MAX", 6);
+define("CLERKSHIP_LOTTERY_START", strtotime("08:00:00 March 3rd, 2014"));
+define("CLERKSHIP_LOTTERY_FINISH", strtotime("21:59:59 March 9th, 2014"));
+define("CLERKSHIP_SCHEDULE_RELEASE", strtotime("15:00:00 April 4th, 2014"));
+define("CLERKSHIP_SWAP_START", strtotime("March 30th, 2012"));
+define("CLERKSHIP_SWAP_DEADLINE", strtotime("July 16th, 2012"));
+
+/**
+ * Used to cap the number of Clerkship rotations which are allowed in the system.
+ */
+define("MAX_ROTATION", 10);
 
 /**
  * Defines for MSPR

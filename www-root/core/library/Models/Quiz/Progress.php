@@ -85,6 +85,31 @@ class Models_Quiz_Progress extends Models_Base {
         return $output;
     }
     
+    public static function fetchAllByAquizIDProxyID($aquiz_id = null, $proxy_id = null) {
+        global $db;
+        $progress_records = false;
+        
+        $query = "	SELECT *
+                    FROM `quiz_progress`
+                    WHERE `aquiz_id` = ?
+                    AND `proxy_id` = ?";
+        
+        $results = $db->GetAll($query, array($aquiz_id, $proxy_id));
+        if ($results) {
+            foreach ($results as $result) {
+                $progress_records[] = new self($result);
+            }
+        }
+        
+        return $progress_records;
+    }
+    
+    public static function getDistinctAttempts ($aquiz_id) {
+        global $db;
+        $completed_attempts = $db->GetOne("SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($aquiz_id));
+        return $completed_attempts;
+    }
+    
     public function getQprogressID() {
         return $this->qprogress_id;
     }
@@ -111,6 +136,10 @@ class Models_Quiz_Progress extends Models_Base {
 
     public function getProgressValue() {
         return $this->progress_value;
+    }
+    
+    public function setProgressValue($value) {
+        $this->progress_value = $value;
     }
 
     public function getQuizScore() {

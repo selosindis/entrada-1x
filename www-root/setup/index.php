@@ -227,7 +227,8 @@ switch ($STEP) {
                 !@is_writable($entrada_storage."/eportfolio") ||
 				!@is_writable($entrada_storage."/event-files") ||
 				!@is_writable($entrada_storage."/logs") ||
-				!@is_writable($entrada_storage."/user-photos")) {
+				!@is_writable($entrada_storage."/user-photos") ||
+                !@is_writable($entrada_storage."/lor")) {
 
 				$ERROR++;
 				$i = count($ERROR);
@@ -242,6 +243,7 @@ switch ($STEP) {
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/event-files<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/logs<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/user-photos<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/lor<br />\n";
 				$ERRORSTR[$i] .= "</div>\n";
 			}
 		} elseif (!@is_dir($entrada_storage)) {
@@ -387,7 +389,6 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 	<title>Entrada: Setup</title>
 	<link href="../templates/default/css/bootstrap.css" rel="stylesheet" type="text/css" media="all" />
     <link href="../templates/default/css/style.css" rel="stylesheet" type="text/css" media="all" />
-
 	<script type="text/javascript" src="../javascript/scriptaculous/prototype.js"></script>
 	<script type="text/javascript" src="../javascript/scriptaculous/scriptaculous.js"></script>
 	<script type="text/javascript" src="../javascript/jquery/jquery.min.js"></script>
@@ -454,7 +455,6 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 			-moz-opacity:0.85;
 			z-index:10000;
 		}
-
 		.alert {
 			margin-top: 20px;
 		}

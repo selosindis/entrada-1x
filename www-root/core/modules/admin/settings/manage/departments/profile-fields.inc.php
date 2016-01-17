@@ -23,9 +23,9 @@
  * @copyright Copyright 2012 Queen's University. All Rights Reserved.
  *
  */
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: " . ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "create", false)) {

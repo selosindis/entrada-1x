@@ -30,12 +30,17 @@
  * Register the Zend autoloader so we use any part of Zend Framework without
  * the need to require the specific Zend Framework files.
  */
-require_once "Zend/Loader/Autoloader.php";
+require_once("Zend/Loader/Autoloader.php");
 $loader = Zend_Loader_Autoloader::getInstance();
 $loader->registerNamespace('Entrada_');
 $loader->registerNamespace('Models_');
 
 require_once("config/settings.inc.php");
+
+//if the google api code is included, add google's autoloader also
+if (file_exists(ENTRADA_ABSOLUTE.'/core/library/Google/autoload.php')) {
+    require_once 'Google/autoload.php';
+}
 
 header("X-Frame-Options: SAMEORIGIN");
 
@@ -92,6 +97,7 @@ if ($ENTRADA_USER) {
     if (isset($_GET["organisation_id"]) && clean_input($_GET["organisation_id"], "int") && isset($_GET["ua_id"]) && clean_input($_GET["ua_id"], "int")) {
         $organisation_id = clean_input($_GET["organisation_id"], "int");
         $user_access_id = clean_input($_GET["ua_id"], "int");
+        application_log("success", "User [".$ENTRADA_USER->getId()."] loaded organisation [".$organisation_id."] and access_id [".$user_access_id."] successfully.");
     } else {
         $organisation_id = 0;
         $user_access_id = 0;
@@ -107,9 +113,18 @@ if ($ENTRADA_USER) {
  * Setup Zend_Translate for language file support.
  */
 if ($ENTRADA_CACHE) {
-    Zend_Translate::setCache($ENTRADA_CACHE);
+    Entrada_Translate::setCache($ENTRADA_CACHE);
 }
-$translate = new Zend_Translate("array", ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
+
+$translate = new Entrada_Translate(
+    array (
+        "adapter" => "array",
+        "content" => ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_TEMPLATE->activeTemplate() . "/languages",
+        "locale" => "auto",
+        "scan" => Entrada_Translate::LOCALE_FILENAME,
+        "disableNotices" => (DEVELOPMENT_MODE ? false : true),
+    )
+);
 
 $ADODB_CACHE_DIR = CACHE_DIRECTORY;
 $time_start = getmicrotime();

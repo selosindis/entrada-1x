@@ -94,7 +94,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			// Error Checking
 			switch ($STEP) {
 				case 2 :
-
 					if (isset($_POST["custom"]) && $_POST["custom"]) {
 						/*
 						* Fetch the custom fields
@@ -232,7 +231,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					 * Required field "access_starts" / Access Start (validated through validate_calendars function).
 					 * Non-required field "access_finish" / Access Finish (validated through validate_calendars function).
 					 */
-					$access_date = validate_calendars("access", true, false);
+					$access_date = Entrada_Utilities::validate_calendars("access", true, false);
 					if ((isset($access_date["start"])) && ((int) $access_date["start"])) {
 						$PROCESSED_ACCESS["access_starts"] = (int) $access_date["start"];
 					}
@@ -421,9 +420,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$PROCESSED["notes"] = "";
 					}
 
-					if (!$ERROR && $ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), "update")) {
+					if (!$ERROR) {
 						$PROCESSED["email_updated"] = time();
-						if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "id = ".$db->qstr($PROXY_ID))) {
+						if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_data`", $PROCESSED, "UPDATE", "id = ".$db->qstr($PROXY_ID))) {
 							$query = "SELECT * FROM " . AUTH_DATABASE . ".`user_access`
 									  WHERE `user_id` = " . $db->qstr($PROXY_ID) . "
 									  AND `app_id` = " . $db->qstr(AUTH_APP_ID);
@@ -447,10 +446,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                             $current_role = $current_group_role[$current_access_id]['role'];
                             $current_group = $current_group_role[$current_access_id]['group'];
 
+                            if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
+                                $query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
+											FROM `" . AUTH_DATABASE . "`.`organisations` o";
+                            } else {
+                                $query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
+											FROM `".AUTH_DATABASE."`.`user_access` ua
+											JOIN `" . AUTH_DATABASE . "`.`organisations` o
+											ON ua.`organisation_id` = o.`organisation_id`
+											WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId()). "
+											AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
+                            }
+                            $temp_all_orgs = $db->GetAll($query);
+                            $org_ids = "";
+                            foreach ($temp_all_orgs as $temp_org) {
+                                if ($ENTRADA_ACL->amIAllowed(new UserResource(null, $temp_org["organisation_id"]), "update")) {
+                                    $org_ids .= ($org_ids ? ", " : "").$db->qstr($temp_org["organisation_id"]);
+                                }
+                            }
+
 							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_access`
 									  WHERE `user_id` = ".$db->qstr($PROXY_ID) . "
-									  AND `app_id` = " . $db->qstr(AUTH_APP_ID);
+									  AND `app_id` = " . $db->qstr(AUTH_APP_ID)."
+									  AND `organisation_id` IN (".$org_ids.")";
 							if ($db->Execute($query)) {
+                                $ENTRADA_CACHE->remove("user_".AUTH_APP_ID."_".$PROXY_ID);
+                                $ENTRADA_CACHE->remove("acl_"  . AUTH_APP_ID . "_" . $PROXY_ID);
 								if (is_array($permissions)){
 									$index = 0;
 									$clinical_set = false;
@@ -458,7 +479,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										if (!$perm["org_id"]) {
 											$ERROR++;
 											$ERRORSTR[] = "Please assign an organisation for all permissions.";
-										} elseif (!$perm["group_id"]) {
+										} elseif (!$ENTRADA_ACL->amIAllowed(new UserResource(null, $perm["org_id"]), "update")) {
+                                            $ERROR++;
+                                            $ERRORSTR[] = "You do not have permission to give the user permissions within the selected organisation. Please try again with a different organisation.";
+
+                                            application_log("error", "Unable to create new user account because this user didn't have permissions to create with the selected organisation ID. This should only happen if the request is tampered with.");
+                                        } elseif (!$perm["group_id"]) {
 											$ERROR++;
 											$ERRORSTR[] = "Please assign a group for all permissions.";
 										} elseif (!$perm["role_id"]) {
@@ -749,23 +775,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 
 					if ($SUCCESS) {
-						$query = "SELECT *
-								  FROM `" . AUTH_DATABASE . "`.`user_access` a
-								  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
-								  AND a.`organisation_id` = " . $db->qstr($_SESSION["tmp"]["current_org"]) . "
-								  AND a.`group` = " . $db->qstr($_SESSION["tmp"]["current_group"]) . "
-								  AND a.`role` = " . $db->qstr($_SESSION["tmp"]["current_role"]);
-
-						$result = $db->getRow($query);
-						if ($result) {
-							$ENTRADA_USER->setAccessId($result["id"]);
-							$_SESSION["permissions"] = permissions_load();
-						}
-
-						unset($ENTRADA_ACL);
-						$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
-						$ENTRADA_CACHE->remove("acl_".$ENTRADA_USER->getID());
-						$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getID());
 						echo display_success();
 					}
 				break;
@@ -863,7 +872,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						</div>
                         <!--- End control-group ---->
 
+				        <hr />
+
 						<h2>Account Options</h2>
+
 						<div class="control-group">
 							<label class="control-label form-required" for="account_active">Account Status:</label>
 							<div class="controls">
@@ -875,13 +887,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						</div>
                         <!--- End control-group ---->
 
-                        <div class="control-group">
-							<table>
-								<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED_ACCESS["access_starts"])) ? $PROCESSED_ACCESS["access_starts"] : time()), true, false, ((isset($PROCESSED_ACCESS["access_expires"])) ? $PROCESSED_ACCESS["access_expires"] : 0)); ?>
-							</table>
-						</div>
+						<?php echo Entrada_Utilities::generate_calendars("access", "Access", true, true, ((isset($PROCESSED_ACCESS["access_starts"])) ? $PROCESSED_ACCESS["access_starts"] : time()), true, false, ((isset($PROCESSED_ACCESS["access_expires"])) ? $PROCESSED_ACCESS["access_expires"] : 0)); ?>
+
+						<hr />
 
 						<h2>Personal Information</h2>
+
 						<div class="control-group">
 							<label class="control-label form-nrequired" for="prefix">Prefix:</label>
 							<div class="controls">
@@ -1032,6 +1043,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						</div>
                         <!--- End control-group ---->
 
+				        <hr />
+
 						<h2>Permissions</h2>
 						<?php
 						if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
@@ -1045,7 +1058,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId()). "
 											AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
 						}
-						$all_orgs = $db->GetAll($query);
+						$temp_all_orgs = $db->GetAll($query);
+                        foreach ($temp_all_orgs as $temp_org) {
+                            if ($ENTRADA_ACL->amIAllowed(new UserResource(null, $temp_org["organisation_id"]), "update")) {
+                                $all_orgs[] = $temp_org;
+                            }
+                        }
 						if ($all_orgs) {
                             ?>
                             <div class="row-fluid">
@@ -1220,17 +1238,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                             <?php
                         }
                         ?>
-						<h2>Notification Options</h2>
-						<div class="row-fluid">
-							<input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"])) ? " checked=\"checked\"" : ""); ?> onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" />
-							<label for="send_notification" class="form-nrequired">Send this new user a password reset e-mail after updating their profile.</label>
+						<hr />
 
-							<div id="send_notification_msg" style="display: none;">
-								<label for="notification_message" class="form-required">Notification Message</label>
-								<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_EDIT_USER_NOTIFICATION); ?></textarea>
-								<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
-							</div>
-						</div>
+						<h2>Notification Options</h2>
+						
+				        <label class="checkbox">
+							<input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (isset($_POST["send_notification"]) && (int) $_POST["send_notification"] ? " checked=\"checked\"" : ""); ?> onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /> Send this user the following password reset e-mail after saving.
+						</label>
+						<div id="send_notification_msg" style="display: block">
+							<div class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</div>
+							<textarea id="notification_message" name="notification_message" style="width: 98%; min-height: 250px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_EDIT_USER_NOTIFICATION); ?></textarea>
+	    	   			</div>
+
 						<?php
 						if ($custom_fields) {
 							$pub_types = array (
@@ -1344,9 +1363,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						}
 						?>
 
-						<br />
+
+						<hr />
+
 						<div class="pull-left"><input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>/admin/users/manage?id=<?php echo $PROXY_ID; ?>'" /></div>
 						<div class="pull-right"><input type="submit" class="btn btn-primary" value="Save" /></div>
+
 						<input type="hidden" id="permissions" name="permissions" value="0" />
 					</form>
 			<div style="display: none;" id="entry_grad_year_container">

@@ -27,7 +27,7 @@ if (!defined("IN_PROFILE")) {
 	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 
 	$PROXY_ID                   = $ENTRADA_USER->getID();
-	$user                       = User::get($PROXY_ID);
+	$user                       = User::fetchRowByID($PROXY_ID);
 	$PAGE_META["title"]			= "MSPR";
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";

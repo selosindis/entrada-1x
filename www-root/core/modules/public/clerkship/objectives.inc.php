@@ -32,29 +32,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 }
 $BREADCRUMB[]	= array("url" => "", "title" => "Clinical Presentations List");
 
+
+if (!$grad_year = get_account_data("grad_year", $ENTRADA_USER->getID())) {
+    if (!isset($_GET["grad_year"]) || !($grad_year = (int)$_GET["grad_year"])) {
+        $grad_year = fetch_first_year() - 2;
+    }
+}
 if ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") {
 	$sidebar_html  = "<div>View required clinical presentations and tasks for:</div>\n";
 	$sidebar_html  .= "<ul class=\"menu\">\n";
 	if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
 		foreach ($SYSTEM_GROUPS["student"] as $class) {
 			if ($class >= (date("Y") - 1) && $class <= (date("Y") + 2)) {
-				$sidebar_html .= "	<li><a href=\"".ENTRADA_URL."/clerkship/objectives?grad_year=".$class."\"><strong>Class of ".$class."</strong></a></li>\n";
+                $sidebar_html .= "	<li".($grad_year == $class ? " class=\"on\"" : "")."><a href=\"".ENTRADA_URL."/clerkship/objectives?grad_year=".$class."\"><strong>Class of ".$class."</strong></a></li>\n";
 			}
 		}
 	}
 	$sidebar_html .= "</ul>\n";
 	new_sidebar_item("Logging Requirements", $sidebar_html, "page-clerkship", "open");
 }
-
-if (!$grad_year = get_account_data("grad_year", $ENTRADA_USER->getID())) {
-	if (!isset($_GET["grad_year"]) || !($grad_year = (int)$_GET["grad_year"])) {
-		$grad_year = fetch_first_year() - 2;
-	}
-}
-
+echo "<h1>Class of ".$grad_year."</h1>\n";
 if (isset($_GET["rotation"]) && (clean_input($_GET["rotation"], "int"))) {
 	$rotation = clean_input($_GET["rotation"], "int");
-	$query = "	SELECT a.* 
+    $query = "	SELECT a.*, b.`rotation_id`
 				FROM `global_lu_objectives` AS a
 				JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS b
 				ON a.`objective_id` = b.`objective_id`
@@ -78,11 +78,7 @@ $objectives = $db->GetAll($query);
 if ($objectives) {
 	echo "<h1>Clinical Presentations:</h1>";
 	echo "<ul style=\"list-style=\"none\">\n";
-	if ($rotation) {
-		echo "<h2>".$db->GetOne("SELECT `rotation_title` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` WHERE `rotation_id` = ".$db->qstr($rotation))."</h2>";
-	} else {
 		$last = 0;
-	}
 	foreach ($objectives as $objective) {
 		if (isset($objective["rotation_id"]) && $objective["rotation_id"] != $last) {
 			$last = $objective["rotation_id"];
@@ -113,6 +109,7 @@ if ($objectives) {
 				JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
 				ON a.`lprocedure_id` = b.`lprocedure_id`
 				WHERE b.`grad_year_min` <= ".$db->qstr($grad_year)."
+				".($rotation ? "AND b.`rotation_id` = ".$db->qstr($rotation) : "")."
 				AND (b.`grad_year_max` = 0 OR b.`grad_year_max` >= ".$db->qstr($grad_year).")
 				AND b.`rotation_id` != 11
 				ORDER BY b.`rotation_id` ASC, a.`lprocedure_id` ASC";
@@ -121,11 +118,7 @@ if ($objectives) {
 		echo "<br/><br/>\n";
 		echo "<h1>Clinical Tasks:</h1>\n";
 		echo "<ul style=\"list-style=\"none\">\n";
-		if ($rotation) {
-			echo "<h2>".$db->GetOne("SELECT `rotation_title` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` WHERE `rotation_id` = ".$db->qstr($rotation))."</h2>";
-		} else {
 			$last = 0;
-		}
 		foreach ($procedures as $procedure) {
 			if (isset($procedure["rotation_id"]) && $procedure["rotation_id"] != $last) {
 				$last = $procedure["rotation_id"];

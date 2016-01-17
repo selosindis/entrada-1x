@@ -22,12 +22,12 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "create",false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "create", false)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -136,38 +136,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						
 			?>
 			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/hottopics"."?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
-			<colgroup>
-				<col style="width: 30%" />
-				<col style="width: 70%" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td colspan="2"><h1>Add Hot Topic</h1></td>
-				</tr>
-			</thead>
-			<tfoot>
-				<tr>
-					<td colspan="2" style="padding-top: 15px; text-align: right">
-						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/hottopics?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td><label for="topic_name" class="form-required">Hot Topic Name:</label></td>
-					<td><input type="text" id="topic_name" name="topic_name" value="<?php echo ((isset($PROCESSED["topic_name"])) ? html_encode($PROCESSED["topic_name"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
-				</tr>
-				<tr>
-					<td style="vertical-align: top;"><label for="topic_description" class="form-nrequired">Hot Topic Description: </label></td>
-					<td>
-						<textarea id="topic_description" name="topic_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
-					</td>
-				</tr>
-
-			</tbody>
-			</table>
+				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Hot Topic">
+					<colgroup>
+						<col style="width: 25%" />
+						<col style="width: 75%" />
+					</colgroup>
+					<thead>
+						<tr>
+							<td colspan="2"><h1>Add Hot Topic</h1></td>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr>
+							<td colspan="2" style="padding-top: 15px">
+								<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/hottopics?org=<?php echo $ORGANISATION_ID;?>'" />
+								<div class="pull-right">
+									<input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
+								</div>
+							</td>
+						</tr>
+					</tfoot>
+					<tbody>
+						<tr>
+							<td><label for="topic_name" class="form-required">Hot Topic Name</label></td>
+							<td><input type="text" id="topic_name" name="topic_name" value="<?php echo ((isset($PROCESSED["topic_name"])) ? html_encode($PROCESSED["topic_name"]) : ""); ?>" maxlength="60" class="span11" /></td>
+						</tr>
+						<tr>
+							<td style="vertical-align: top;"><label for="topic_description" class="form-nrequired">Hot Topic Description</label></td>
+							<td>
+								<textarea id="topic_description" name="topic_description" class="span11 expandable"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 			</form>
 			<?php
 		break;

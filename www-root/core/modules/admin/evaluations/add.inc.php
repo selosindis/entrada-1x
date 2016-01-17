@@ -182,6 +182,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$PROCESSED["show_comments"] = false;
 			}
 
+            /**
+             * Non-required field "identify_comments" / Identify Comments
+             */
+            if (isset($_POST["identify_comments"]) && ($_POST["identify_comments"])) {
+                $PROCESSED["identify_comments"] = true;
+            } else {
+                $PROCESSED["identify_comments"] = false;
+            }
+
 			/**
 			 * Required field "min_submittable" / Min Submittable
 			 */

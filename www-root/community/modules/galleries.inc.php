@@ -23,7 +23,7 @@ define("IN_GALLERIES", true);
 communities_build_parent_breadcrumbs();
 $BREADCRUMB[]			= array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL, "title" => $MENU_TITLE);
 $VALID_MIME_TYPES		= array("image/pjpeg" => "jpg", "image/jpeg" => "jpg", "image/jpg" => "jpg", "image/gif" => "gif", "image/png" => "png");
-$VALID_MAX_FILESIZE		= 2097512; // 2MB
+$VALID_MAX_FILESIZE		= MAX_UPLOAD_FILESIZE;
 $VALID_MAX_DIMENSIONS	= array("photo" => 500, "thumb" => 150);
 $RENDER					= false;
 
@@ -131,19 +131,19 @@ function galleries_module_access($cgallery_id = 0, $section = "") {
 						 */
 					} else {
 						$NOTICE++;
-						$NOTICESTR[]	= "This photo gallery was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.<br /><br />Please contact your community administrators for further assistance.";
+						$NOTICESTR[]	= "This photo gallery was only accessible until ".date(DEFAULT_DATE_FORMAT, $release_until).".<br /><br />Please contact your community administrators for further assistance.";
 
 						$allow_to_load	= false;
 					}
 				} else {
 					$NOTICE++;
-					$NOTICESTR[]	= "This photo gallery will not be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.<br /><br />Please check back at this time, thank-you.";
+					$NOTICESTR[]	= "This photo gallery will not be accessible until ".date(DEFAULT_DATE_FORMAT, $release_date).".<br /><br />Please check back at this time, thank-you.";
 
 					$allow_to_load	= false;
 				}
 			} else {
 				$NOTICE++;
-				$NOTICESTR[]	= "This photo gallery was deactivated <strong>".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</strong> by <strong>".html_encode(get_account_data("firstlast", $result["updated_by"]))."</strong>.<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
+				$NOTICESTR[]	= "This photo gallery was deactivated ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".html_encode(get_account_data("firstlast", $result["updated_by"])).".<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
 
 				$allow_to_load	= false;
 			}
@@ -207,20 +207,20 @@ function galleries_photo_module_access($cgphoto_id = 0, $section = "") {
 							 */
 						} else {
 							$NOTICE++;
-							$NOTICESTR[]	= "This photo was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.<br /><br />Please contact your community administrators for further assistance.";
+							$NOTICESTR[]	= "This photo was only accessible until ".date(DEFAULT_DATE_FORMAT, $release_until).".<br /><br />Please contact your community administrators for further assistance.";
 
 							$allow_to_load	= false;
 						}
 					} else {
 						$NOTICE++;
-						$NOTICESTR[]	= "This photo will not be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.<br /><br />Please check back at this time, thank-you.";
+						$NOTICESTR[]	= "This photo will not be accessible until ".date(DEFAULT_DATE_FORMAT, $release_date).".<br /><br />Please check back at this time, thank-you.";
 
 						$allow_to_load	= false;
 					}
 				}
 			} else {
 				$NOTICE++;
-				$NOTICESTR[]	= "This photo was deactivated <strong>".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</strong> by <strong>".html_encode(get_account_data("firstlast", $result["updated_by"]))."</strong>.<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
+				$NOTICESTR[]	= "This photo was deactivated ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".html_encode(get_account_data("firstlast", $result["updated_by"])).".<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
 
 				$allow_to_load	= false;
 			}
@@ -279,7 +279,7 @@ function galleries_comment_module_access($cgcomment_id = 0, $section = "") {
 				 */
 			} else {
 				$NOTICE++;
-				$NOTICESTR[]	= "This comment was deactivated <strong>".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</strong> by <strong>".html_encode(get_account_data("firstlast", $result["updated_by"]))."</strong>.<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
+				$NOTICESTR[]	= "This comment was deactivated ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".html_encode(get_account_data("firstlast", $result["updated_by"])).".<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
 
 				$allow_to_load	= false;
 			}

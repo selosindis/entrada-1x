@@ -3,6 +3,8 @@
     <template lang="en">
         <subject>%UC_CONTENT_TYPE_NAME% [%CONTENT_TITLE%] Requires Attention</subject>
         <body>
+Dear %EVALUATOR_FULLNAME%,
+
 A %CONTENT_TYPE_NAME% is overdue completion and requires your attention. 
 
 Evaluation of your preceptors provides valuable feedback about your clinical placement, to ensure that we continue to provide a quality educational experience and identify opportunities for improvement. All preceptor evaluations are confidential. Only pooled evaluation data for the entire class is provided to the preceptors upon class graduation in the spring. Preceptors appreciate feedback about their roles as educators and mentors.
@@ -23,7 +25,7 @@ Description: %CONTENT_BODY%
 The %CONTENT_TYPE_SHORTNAME% can be found here: 
 %URL%
 
-Access to this evaluation will be closed as of %CONTENT_LOCKOUT%.
+%LOCKOUT_STRING%
 
 Please complete all remaining required attempts as soon as possible.
 

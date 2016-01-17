@@ -25,7 +25,7 @@ ob_clear_open_buffers();
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_DESCRIPTORS"))) {
     exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
     exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read", false)) {
     application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");

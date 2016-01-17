@@ -73,8 +73,8 @@ if ($COMMUNITY_ADMIN) {
     ?>
     <div style="float: right; margin-bottom: 5px">
         <ul class="page-action">
-            <li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Create New Quiz</a></li>
-            <li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?type=community_page&action=add&id=<?php echo $PAGE_ID; ?>')" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Attach Existing Quiz</a></li>
+            <li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add" class="btn btn-success">Create New Quiz</a></li>
+            <li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?type=community_page&action=add&id=<?php echo $PAGE_ID; ?>')" class="btn btn-success">Attach Existing Quiz</a></li>
         </ul>
     </div>
     <div class="clear"></div>
@@ -97,11 +97,11 @@ if ($COMMUNITY_ADMIN) {
 				ORDER BY a.`required` DESC, a.`quiz_title` ASC, a.`release_until` ASC";
 	$quizzes = $db->GetAll($query);
 	if ($quizzes) {
-        echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Attached Quizzes\">\n";
+        echo "<table class=\"table table-striped table-bordered\" summary=\"List of Attached Quizzes\">\n";
         echo "  <colgroup>\n";
-        echo "		<col class=\"modified\" />\n";
-        echo "		<col class=\"title\" />\n";
-        echo "		<col class=\"date\" />\n";
+        echo "		<col class=\"modified\" style=\"max-width:20%\"/>\n";
+        echo "		<col class=\"title\"/>\n";
+        echo "		<col class=\"date\" style=\"width:20%\"/>\n";
         echo "	</colgroup>\n";
         echo "	<thead>\n";
         echo "		<tr>\n";
@@ -146,10 +146,10 @@ if ($COMMUNITY_ADMIN) {
 			echo "		<td class=\"modified\" style=\"vertical-align: top\">".(isset($quiz_record["last_visited"]) && ((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
 			echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
 			if ($COMMUNITY_ADMIN && $_SESSION["details"]["group"] != "student") {
-				echo "	    <a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($quiz_record["quiz_title"])."\" title=\"View results of ".html_encode($quiz_record["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
+				echo "	    <a class=\"btn btn-primary\" style=\"height: 20px;\" title=\"View results\" href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\"><i class=\"icon-eye-open icon-white\" style=\"margin-top: 3px;\"></i></a>\n";
 			}
 			if ($COMMUNITY_ADMIN && $_SESSION["details"]["group"] != "student") {
-				echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&type=community_page&id=".$PAGE_ID."&qid=".$quiz_record["aquiz_id"]."')\" title=\"Click to edit ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold; cursor: pointer;\">".html_encode($quiz_record["quiz_title"])."</a>";
+				echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&type=community_page&id=".$PAGE_ID."&qid=".$quiz_record["aquiz_id"]."')\" title=\"Click to edit ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold; cursor: pointer; margin-left: 5px;\">".html_encode($quiz_record["quiz_title"])."</a>";
 			} else {
 				if ($allow_attempt) {
 					echo "	<a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?section=attempt&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";

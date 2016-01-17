@@ -113,10 +113,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 						{ 'mDataProp': 'modified', 'bSortable': false },
 						{ 'mDataProp': 'display_until' },
 						{ 'mDataProp': 'notice_author' },
-						{ 'mDataProp': 'notice_summary' },
+						{ 'mDataProp': 'notice_summary' }
 					],
 					'aoColumnDefs': [ {
-						'aTargets': [0,1,2,3,],
+						'aTargets': [0,1,2,3],
 						'fnCreatedCell': function (nTd, sData, oData, iRow, iCol) {
 							if (iCol == 0) {
 								jQuery(nTd).addClass('modified')
@@ -124,7 +124,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 								jQuery(nTd).addClass('until')
 							} else if ( iCol == 2 ) {
 								jQuery(nTd).addClass('author')
-							} else if ( iCol == 4 ) {
+							} else if ( iCol == 3 ) {
 								jQuery(nTd).addClass('summary')
 							}
 						}
@@ -135,7 +135,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 						return nRow;
 					},
 					'oLanguage': {
-						'sEmptyTable': 'There are currently notices in the system.',
+						'sEmptyTable': 'There are currently no notices in the system.',
 						'sZeroRecords': 'No notices found.'
 					},
                     'aaSorting': [[ 1, 'desc' ]]

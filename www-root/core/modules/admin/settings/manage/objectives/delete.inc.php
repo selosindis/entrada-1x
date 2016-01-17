@@ -24,22 +24,20 @@
  *
 */
 
-if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 	exit;
-} elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->amIAllowed('objective', 'delete', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/settings/".$MODULE."\\'', 15000)";
+} elseif (!$ENTRADA_ACL->amIAllowed("objective", "delete", false)) {
+	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/settings/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	
 	if (isset($_GET["objective_id"]) && ($id = clean_input($_GET["objective_id"], array("notags", "trim")))) {
 		$OBJECTIVE_ID = $id;
 	}
@@ -49,11 +47,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	}
 	
 	if ($MODE == "ajax" && $OBJECTIVE_ID) {
-		
 		ob_clear_open_buffers();
 		
 		switch($STEP) {
-			case "2" :
+			case 2 :
 				if ($_POST["confirm"] == "on") {
 					$query = "	SELECT a.*, GROUP_CONCAT(b.`organisation_id`) AS `organisations` FROM `global_lu_objectives` AS a
 								LEFT JOIN `objective_organisation` AS b
@@ -106,7 +103,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						<p>You are about to delete the objective <strong><?php echo $objective["objective_name"]; ?></strong>. Please click the <strong>delete</strong> button below to remove it from the system.</p>
 						<p><strong>Please note:</strong> Any children of this objective will be removed as well.</p>
 					</div>
-					<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("step" => "2")); ?>" method="post">
+					<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("step" => "2")); ?>" method="post">
 						<input type="checkbox" name="confirm" /> Please check this box to confirm you wish to remove the objective and its children.
 					</form>
 					<?php
@@ -118,184 +115,139 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		}
 		
 		exit;
-	}
-	
-	$objective_ids	= array();
-	
-	$BREADCRUMB[]	= array("url" => "", "title" => "Delete Objectives");
+	} else {
+		$BREADCRUMB[] = array("url" => "", "title" => "Deactivate Curriculum Tag Set");
 
-	echo "<h1>Delete Objectives</h1>\n";
+		$redirect_url = ENTRADA_URL . "/admin/settings/manage/objectives?org=".$ORGANISATION_ID;
 
-	// Error Checking
-	switch($STEP) {
-		case 2 :
-		case 1 :
-		default :
-			if (isset($_POST["delete"]) && count($_POST["delete"]) && ($tmp_input = $_POST["delete"])) {
-				$objective_ids_string = "";
-				foreach ($tmp_input as $objective) {
-					if ((int)$objective["objective_id"]) {
-						$objective["objective_id"] = clean_input($objective["objective_id"], "int");
-					}
-					$query	= "SELECT a.* FROM `global_lu_objectives` AS a
+		echo "<h1>Deactivate Curriculum Tag Sets</h1>\n";
+
+		$objectives = array();
+		$objective_ids = array();
+
+		if (isset($_POST["deactivate"]) && is_array($_POST["deactivate"]) && count($_POST["deactivate"])) {
+			foreach ($_POST["deactivate"] as $objective_id) {
+				$objective_id = (int) $objective_id;
+				if ($objective_id) {
+					$objective_ids[] = $objective_id;
+				}
+			}
+		}
+
+		if ($objective_ids) {
+			$query = "SELECT a.*
+								FROM `global_lu_objectives` AS a
 								JOIN `objective_organisation` AS b
 								ON a.`objective_id` = b.`objective_id`
-								WHERE a.`objective_id` = ".$db->qstr($objective["objective_id"])."
-								AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-								AND a.`objective_active` = '1'";
-					$result	= $db->GetRow($query);
-					if ($result) {
-						if (((int)$result["objective_active"]) == 0) {
-							$ERROR++;
-							$ERRORSTR[] = "The objective [".html_encode($result["objective_name"])."] you have tried to delete does not exist.";
-						} else {
-							$objectives[]	= array("objective_id" => $objective["objective_id"],
-													"objective_children_target" => ($objective["move"] ? $objective["objective_parent"] : false),
-													"objective_order" => $result["objective_order"],
-													"objective_parent" => $result["objective_parent"]);
-							$objective_ids_string .= ($objective_ids_string ? ",".$objective["objective_id"] : $objective["objective_id"]);
-						}
-					}
-				}
-			}
-			if (!count($objectives)) {
-				header("Location: ".ENTRADA_URL."/admin/settings/manage/objectives");
-				exit;
-			}
-		break;
-	}
-	
-	// Display Page
-	switch($STEP) {
-		case 2 :
-			$success_count = 0;
-			$moved_count = 0;
-			$deleted_count = 0;
-			foreach ($objectives as $objective) {
-				if (objectives_delete_for_org($ORGANISATION_ID,$objective["objective_id"], $objective["objective_children_target"])) {
-					$query				= "	SELECT `objective_id`, `objective_order` 
-											FROM `global_lu_objectives` 
-											WHERE `objective_parent` = ".$db->qstr($objective["objective_parent"])." 
-											AND `objective_active` = '1'
-											AND `objective_order` > ".$db->qstr($objective["objective_order"]);
-					$moving_siblings	= $db->GetAll($query);
-					if ($moving_siblings) {
-						foreach($moving_siblings as $moving_sibling) {
-							$query = "	UPDATE `global_lu_objectives` 
-										SET `objective_order` = ".$db->qstr($moving_sibling["objective_order"] - 1)." 
-										WHERE `objective_id` = ".$db->qstr($moving_sibling["objective_id"])."
-										AND `objective_active` = '1'";
-							$db->Execute($query);
-						}
-					}
-					if ($objective["objective_children_target"] !== false) {
-						$query				= "	SELECT `objective_id`, `objective_name` 
-												FROM `global_lu_objectives` 
-												WHERE `objective_parent` = ".$db->qstr($objective["objective_id"])."
-												AND `objective_active` = '1'";
-						$moving_children	= $db->GetAll($query);
-						if ($moving_children) {
-							$query = "	SELECT MAX(`objective_order`)
-										FROM `global_lu_objectives`
-										WHERE `objective_active` = '1'
-										GROUP BY `objective_parent`
-										HAVING `objective_parent` = ".$db->qstr($objective["objective_children_target"]);
-							$count = $db->GetOne($query);
-							if (!$count) {
-								$count = 0;
-							}
-							$moved = true;
-							foreach($moving_children as $moving_child) {
-								$count++;
-								$query = "	UPDATE `global_lu_objectives` 
-											SET `objective_order` = ".$db->qstr($count).", 
-											`objective_parent` = ".$db->qstr($objective["objective_children_target"])." 
-											WHERE `objective_id` = ".$db->qstr($moving_child["objective_id"])."
-											AND `objective_active` = '1'";
-								if (!$db->Execute($query)) {
-									$moved = false;
-									$ERROR++;
-									$ERRORSTR[] = "There was a problem trying to place the child Objective [".html_encode($moving_children["objective_name"])."] under another parent.";
-									application_log("error", "There was an issue while trying to move an objective [".$moving_child["objective_id"]."] under a new parent. Database said: ".$db->ErrorMsg());
-								} else {
-									$moved_count++;
-								}
-							}
-						}
-					}
-					$success_count++;
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "A problem occurred while attempting to delete a selected Objective [".html_encode($moving_children["objective_name"])."].";
-					application_log("error", "There was an issue while trying to move an objective [".$moving_child["objective_id"]."] under a new parent. Database said: ".$db->ErrorMsg());
-				}
-			}
-			if ($ERROR) {
-				echo display_error();
-			}
-			if ($NOTICE) {
-				echo display_notice();
-			}
-			if ($success_count) {
-				$url = ENTRADA_URL."/admin/settings/manage/objectives?org=".$ORGANISATION_ID;
-				$SUCCESS++;
-				$SUCCESSSTR[] = "You have successfully deactivated ".$success_count." objectives from the system.".($moved_count && $deleted_count ? " <br /><br />Additionally, ".$moved_count." of these objectives' children were placed under a new parent and ".$deleted_count." of the objectives' children were deactivated along with their parent objective." : ($moved_count && !$deleted_count ? " <br /><br />Additionally, ".$moved_count." of these objectives' children were placed under a new parent." : ($deleted_count ? " <br /><br />Additionally, ".$deleted_count." of these objectives' children were deactivated along with under a new parent." : "")))."<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-				$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-				
-				application_log("success", "Objectives successfully deactivated in the system.");
-			}
-			if ($SUCCESS) {
-				echo display_success();
-			}
-		break;
-		case 1 :
-		default :
-			if ($ERROR) {
-				echo display_error();
+								WHERE a.`objective_parent` = '0'
+								AND a.`objective_active` = '1'
+								AND a.`objective_id` IN ('" . implode("', '", $objective_ids) . "')
+								AND b.`organisation_id` = " . $db->qstr($ORGANISATION_ID) . "
+								ORDER BY a.`objective_order` ASC";
+			$objectives = $db->GetAll($query);
+			if ($objectives) {
+				$total_objectives = count($objectives);
 			} else {
-				echo display_notice(array("Please review the following objective or objectives to ensure that you wish to permanently delete them."));
-				$HEAD[]	= "	<script type=\"text/javascript\">
-								function selectObjective(parent_id, objective_id, excluded_objectives) {
-									new Ajax.Updater('selectParent'+objective_id+'Field', '".ENTRADA_URL."/api/objectives-list.api.php', {parameters: {'pid': parent_id, 'id': objective_id, 'excluded': excluded_objectives}});
-									return;
-								}
-								function selectOrder(parent_id, objective_id) {
-									return;
-								}
-							</script>";
-				?>
-				<form action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("action" => "delete", "step" => 2)); ?>" method="post">
-				<table class="tableList" cellspacing="0" summary="List of objectives to be removed">
-				<colgroup>
-					<col class="modified" />
-					<col class="title" />
-				</colgroup>
-				<thead>
-					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="title">Objectives</td>
-					</tr>
-				</thead>
-				<tfoot>
-					<tr>
-						<td>&nbsp;</td>
-						<td style="padding-top: 10px">
-							<input type="submit" class="btn btn-danger" value="Delete Selected" />
-						</td>
-					</tr>
-				</tfoot>
-				<tbody>
-				<?php
-				foreach ($objectives as $objective) {
-					echo objectives_intable($ORGANISATION_ID, $objective["objective_id"], 0, $objective_ids_string);
-				}
-				?>
-				</tbody>
-				</table>
-				</form>
-				<?php
+				$total_objectives = 0;
 			}
-		break;
+		}
+
+		if (!$total_objectives) {
+			header("Location: " . ENTRADA_URL . "/admin/settings/manage/objectives");
+			exit;
+		}
+
+		// Error Checking
+		switch ($STEP) {
+			case 2 :
+				if (isset($_POST["confirmed"]) && $_POST["confirmed"] == 1) {
+					$deactiviated = array();
+					$failed = array();
+
+					foreach ($objectives as $objective) {
+						if ($db->AutoExecute("global_lu_objectives", array("objective_active" => 0), "UPDATE", "objective_id = ".(int) $objective["objective_id"])) {
+							$deactiviated[] = html_encode($objective["objective_name"]);
+
+							application_log("success", "Deactivated global_lu_objectives.objective_id [" . $objective["objective_id"] . "].");
+						} else {
+							$failed[] = html_encode($objective["objective_name"]);
+
+							application_log("error", "Unable to deactivate global_lu_objectives.objective_id [" . $objective["objective_id"] . "]. Database said: ".$db->ErrorMsg());
+						}
+					}
+
+
+					$total_deactivated = count($deactiviated);
+					$total_failed = count($failed);
+
+					if ($total_deactivated) {
+						add_success("You have successfully deactivated <strong>" . $total_deactivated . "</strong> curriculum tag set" . ($total_deactivated != 1 ? "s" : "") . ".<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . $redirect_url . "\" style=\"font-weight: bold\">click here</a> to continue.");
+					} else {
+						add_error("We were unable to deactivate  <strong>" . $total_failed . "</strong> requested curriculum tag set" . ($total_failed != 1 ? "s" : "") . ". We will be looking into this issue shortly, and we apologize for any inconvenience.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . $redirect_url . "\" style=\"font-weight: bold\">click here</a> to continue.");
+					}
+				}
+			break;
+			case 1 :
+			default :
+				continue;
+			break;
+		}
+
+		// Display Page
+		switch ($STEP) {
+			case 2 :
+				$ONLOAD[] = "setTimeout('window.location=\\'".$redirect_url."\\'', 5000)";
+
+				if (has_error()) {
+					echo display_error();
+				}
+
+				if (has_notice()) {
+					echo display_notice();
+				}
+
+				if (has_success()) {
+					echo display_success();
+				}
+			break;
+			case 1 :
+			default :
+				if (has_error()) {
+					echo display_error();
+				} else {
+					if (count($objectives) != 1) {
+						add_notice("Please review the following <strong>curriculum tag sets</strong> to ensure that you wish to <strong>deactivate them</strong>.");
+					} else {
+						add_notice("Please review the following <strong>curriculum tag set</strong> to ensure that you wish to <strong>deactivate it</strong>.");
+					}
+
+					echo display_notice();
+
+					?>
+					<form action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives?section=delete&amp;org=".$ORGANISATION_ID; ?>&amp;step=2" method="post">
+						<input type="hidden" name="confirmed" value="1" />
+
+						<table class="table table-striped" summary="Curriculum Tag Sets For Deactivation">
+							<colgroup>
+								<col style="width: 3%" />
+								<col style="width: 97%" />
+							</colgroup>
+							<tbody>
+							<?php
+							foreach ($objectives as $result) {
+								echo "<tr>";
+								echo "	<td><input type=\"checkbox\" name=\"deactivate[]\" value=\"".$result["objective_id"]."\" checked=\"checked\" /></td>";
+								echo"	<td><a href=\"".ENTRADA_URL."/admin/settings/manage/objectives?section=edit&amp;org=$ORGANISATION_ID&amp;id=".$result["objective_id"]."\">" . html_encode($result["objective_name"]) . "</a></td>";
+								echo "</tr>";
+							}
+							?>
+							</tbody>
+						</table>
+						<input type="submit" class="btn btn-danger" value="Deactivate Selected" />
+					</form>
+					<?php
+				}
+			break;
+		}
 	}
 }
-?>

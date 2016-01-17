@@ -38,6 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
+        $selected_audience_name = false;
 		/**
 		 * Handles the AJAX re-ordering of assessments.
 		 */
@@ -131,16 +132,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			 */
 			if (isset($_GET["cohort"]) && ((int)$_GET["cohort"])) {
 				$selected_cohort = (int) $_GET["cohort"];
-			} elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"]) {
+			} elseif (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"]) {
                 $selected_cohort = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"];
             }
 			
 			if (isset($_GET["course_list"]) && ((int)$_GET["course_list"])) {
 				$selected_classlist = (int) $_GET["course_list"];
-			} elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"]) {
+			} elseif (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"]) {
                 $selected_classlist = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"];
             }
-			if ($selected_cohort) {
+			if (isset($selected_cohort) && $selected_cohort) {
 				$query	= "	SELECT COUNT(*) AS `total_rows` 
 							FROM `assessments` a
 							JOIN `groups` AS b
@@ -154,7 +155,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND a.`active` = '1'";
 				$result	= $db->GetRow($query);
 			} 
-			if ($result) {
+			if (isset($result) && $result) {
 				$total_rows	= $result["total_rows"];
 
 				if ($total_rows <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
@@ -216,7 +217,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					$selected_cohort = $output_cohort["group_id"];
 					?>
 					<h2 class="pull-left"><?php echo $course_list["group_name"];?></h2>				
-		<?php
+		            <?php
 				} else {
 					$output_cohort = false;
 					$classlist_found = false;
@@ -248,8 +249,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                 <option value="<?php echo $course_list["group_id"];?>" <?php echo (($course_list["group_id"] == $selected_classlist) ? "selected=\"selected\"" : "");?>>
                                                     <?php echo $course_list["group_name"];?>
                                                 </option>
-                                            <?php
-                                            } ?>
+                                                <?php
+                                                $selected_audience_name = $course_list["group_name"];
+                                            }
+                                            ?>
                                         </select>
                                     </div>
                                 </div>
@@ -300,12 +303,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 <div class="controls">
                                     <select id="cohort-quick-select" name="cohort-quick-select" onchange="window.location='<?php echo ENTRADA_URL;?>/admin/gradebook?section=view&id=<?php echo $COURSE_ID;?>&cohort='+this.options[this.selectedIndex].value">
                                         <?php
-                                        foreach ($cohorts as $key => $cohort) { ?>
+                                        foreach ($cohorts as $key => $cohort) {
+                                            ?>
                                             <option value="<?php echo $cohort["group_id"];?>" <?php echo (($cohort["group_id"] == $selected_cohort) ? "selected=\"selected\"" : "");?>>
                                                 <?php echo $cohort["group_name"];?>
                                             </option>
-                                        <?php
-                                        } ?>
+                                            <?php
+                                            if ($cohort["group_id"] == $selected_cohort) {
+                                                $selected_audience_name = $cohort["group_name"];
+                                            }
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                             </div>
@@ -437,6 +445,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             jQuery('#assessment_list tbody').sortable('destroy');
                             jQuery('#delete, #export').show();
                         });
+
+                        jQuery('#copyAssessments').on("submit", function () {
+                            jQuery('input.delete:checked').each(function () {
+                                jQuery('#copy_assessment_ids').append(jQuery('<input type="hidden" name="assessment_ids[]" id="copy_assessment_' + jQuery(this).val() + '" value="' + jQuery(this).val() + '" />'));
+                            });
+                        });
+
+                        jQuery('#copy-assessments-confirmation-box').modal({show: false});
+
+                        jQuery('#copy-assessments-confirmation-box').on("shown", function () {
+                            if (jQuery('input.delete:checked').length < 1) {
+                                jQuery('#copy-assessments-confirmation-box .modal-notice').show();
+                                jQuery('#copy-assessments-confirmation-box .modal-content').hide();
+                                jQuery('#copy-assessments-confirmation-box .submit-button').attr("disabled", "disabled");
+                            } else {
+                                jQuery('#copy-assessments-confirmation-box .modal-notice').hide();
+                                jQuery('#copy-assessments-confirmation-box .modal-content').show();
+                                jQuery('#copy-assessments-confirmation-box .submit-button').removeAttr("disabled");
+                            }
+                        });
+
+                        jQuery('#assessments-control-copy').on('click', function () {
+                            jQuery('#copy-assessments-confirmation-box').modal('show');
+                        });
                     });                   
                     var ajax_url = '';
                     var modalDialog;
@@ -481,6 +513,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<tr>
 							<td style="padding-top: 10px; border-bottom:0;" colspan="2">
 								<input type="submit" class="btn btn-danger" id="delete" value="Delete Selected" />								
+								<a class="btn" role="button" id="assessments-control-copy"><i class="icon-share"></i> Copy Selected</a>
 								<input type="button" class="btn" id="reorder" value="Reorder" />
 								<input type="button" class="btn btn-primary" id="saveorder" value="Save Order" />
 							</td>
@@ -631,8 +664,105 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					</tbody>
 				</table>
                 <?php
+                if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
+                    echo "</form>";
+                }
                 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
                 ?>
+                <form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("section" => "copy")); ?>" method="post" id="copyAssessments" class="form-horizontal">
+                <div class="modal hide" id="copy-assessments-confirmation-box" style="width: 500px;">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Copy <strong>Assessments</strong> Confirmation</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="body" style="height: auto;">
+                            <div class="row-fluid modal-notice" style="display: none;">
+                                <?php
+                                echo display_notice("Please ensure you select at least one assessment to copy forward.");
+                                ?>
+                            </div>
+                            <div class="row-fluid modal-content">
+                                <div id="copy-assessments-message-holder" class="display-generic">If you would like to create new assessments based on the selected assessments, select a valid target audience and press <strong>Copy Assessments</strong>.</div>
+                                <div class="span12 clearfix">
+                                    <div id="copy_assessment_ids"></div>
+                                    <?php
+                                    if ($selected_audience_name) {
+                                        ?>
+                                        <div class="control-group">
+                                            <label for="cohort-quick-select" class="control-label content-small">
+                                                Current Target Audience:
+                                            </label>
+                                            <div class="controls pad-above-small">
+                                                <?php echo html_encode($selected_audience_name); ?>
+                                            </div>
+                                        </div>
+                                    <?php
+                                    }
+                                    ?>
+                                    <div class="control-group">
+                                        <label for="cohort-quick-select" class="control-label content-small">
+                                            New Target Audience:
+                                        </label>
+                                        <div class="controls">
+
+                                            <?php
+                                            $query = "SELECT *
+                                                        FROM `groups`
+                                                        WHERE `group_type` = 'course_list'
+                                                        AND `group_value` = ".$db->qstr($COURSE_ID)."
+                                                        AND `group_active` = '1'
+                                                        ORDER BY `group_name`";
+                                            $course_lists = $db->GetAll($query);
+                                            if($course_lists) {
+                                                if (count($course_lists) == 1) {
+                                                    ?>
+                                                    <span class="pad-above-small"><?php echo $course_details["course_code"];?> Course List</span>
+                                                    <input id="course_list" class="course-list" name="course_list" type="hidden" value="<?php echo $course_lists[0]["group_id"]; ?>">
+                                                    <?php
+                                                } else {
+                                                    ?>
+                                                    <select id="course-list-select" name="course_list">
+                                                        <?php
+                                                        foreach ($course_lists as $key => $course_list) { ?>
+                                                            <option value="<?php echo $course_list["group_id"];?>" <?php echo (($course_list["group_id"] == $selected_classlist) ? "selected=\"selected\"" : "");?>>
+                                                                <?php echo html_encode($course_list["group_name"]);?>
+                                                            </option>
+                                                        <?php
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                    <?php
+                                                }
+                                            } else {
+                                                ?>
+                                                <select id="cohort-select" name="cohort">
+                                                    <?php
+                                                    $active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
+                                                    foreach ($active_cohorts as $cohort) {
+                                                        ?>
+                                                        <option value="<?php echo $cohort["group_id"];?>" <?php echo (($cohort["group_id"] == $selected_cohort) ? "selected=\"selected\"" : "");?>>
+                                                            <?php echo html_encode($cohort["group_name"]);?>
+                                                        </option>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                </select>
+                                                <?php
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="button" class="btn close-button" data-dismiss="modal" aria-hidden="true" value="Cancel" style="float: left; margin: 8px 0px 4px 10px" />
+                        <input type="submit" class="btn btn-primary submit-button" value="Copy Assessments" style="float: right; margin: 8px 10px 4px 0px" />
+                    </div>
+                </div>
+                </form>
                 <script type="text/javascript">
                     jQuery(function($) {
                         var gradebook_views_table = $("#gradebook-views").DataTable({
@@ -683,10 +813,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     </div>
                 </div>
 				<div class="gradebook_edit" style="display: none;"></div>
-				<?php
-				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-					echo "</form>";
-				}
+                <?php
 			} else {
 				// No assessments in this course.
 				?>

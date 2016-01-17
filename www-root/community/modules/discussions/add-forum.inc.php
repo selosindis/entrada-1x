@@ -38,7 +38,7 @@ switch($STEP) {
 			$PROCESSED["forum_title"] = $title;
 		} else {
 			$ERROR++;
-			$ERRORSTR[] = "The <strong>Forum Title</strong> field is required.";
+			$ERRORSTR[] = "The Forum Title</strong> field is required.";
 		}
 
 		/**
@@ -131,7 +131,7 @@ switch($STEP) {
 			$PROCESSED["release_date"]	= (int) $release_dates["start"];
 		} else {
 			$ERROR++;
-			$ERRORSTR[] = "The <strong>Release Start</strong> field is required.";
+			$ERRORSTR[] = "The Release Start</strong> field is required.";
 		}
 		if ((isset($release_dates["finish"])) && ((int) $release_dates["finish"])) {
 			$PROCESSED["release_until"]	= (int) $release_dates["finish"];
@@ -153,7 +153,7 @@ switch($STEP) {
 					$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 					$SUCCESS++;
-					$SUCCESSSTR[]	= "You have successfully added a new discussion forum to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+					$SUCCESSSTR[]	= "You have successfully added a new discussion forum to the community.<br /><br />You will now be redirected to the index; this will happen automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 					add_statistic("community:".$COMMUNITY_ID.":discussions", "forum_add", "cdiscussion_id", $FORUM_ID);
 					communities_log_history($COMMUNITY_ID, $PAGE_ID, $FORUM_ID, "community_history_add_forum", 1);
@@ -198,39 +198,46 @@ switch($STEP) {
 		}
 		?>
 		<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-forum&amp;step=2" method="post">
-		<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Discussion Forum">
+		<table summary="Add Discussion Forum">
 		<colgroup>
-			<col style="width: 3%" />
 			<col style="width: 20%" />
-			<col style="width: 77%" />
+			<col style="width: 80%" />
 		</colgroup>
 		<tfoot>
 			<tr>
-				<td colspan="3" style="padding-top: 15px; text-align: right">
+				<td colspan="2" style="padding-top: 15px; text-align: right">
                     <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />               
 				</td>
 			</tr>
 		</tfoot>
 		<tbody>
 			<tr>
-				<td colspan="3"><h2>Forum Details</h2></td>
-			</tr>
-			<tr>
-				<td colspan="2"><label for="forum_title" class="form-required">Forum Title</label></td>
-				<td style="text-align: right"><input type="text" id="forum_title" name="forum_title" value="<?php echo ((isset($PROCESSED["forum_title"])) ? html_encode($PROCESSED["forum_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
-			</tr>
-			<tr>
-				<td colspan="2" style="vertical-align: top !important"><label for="forum_description" class="form-nrequired">Forum Description</label></td>
-				<td style="text-align: right; vertical-align: top">
-					<textarea id="forum_description" name="forum_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["forum_description"])) ? html_encode($PROCESSED["forum_description"]) : ""); ?></textarea>
+				<td colspan="2">
+					<h2>Forum Details</h2>
 				</td>
 			</tr>
 			<tr>
-				<td colspan="3"><h2>Forum Permissions</h2></td>
+				<td>
+					<label for="forum_title" class="form-required">Forum Title</label>
+				</td>
+				<td>
+					<input type="text" id="forum_title" name="forum_title" value="<?php echo ((isset($PROCESSED["forum_title"])) ? html_encode($PROCESSED["forum_title"]) : ""); ?>" maxlength="64" style="width: 300px" />
+				</td>
 			</tr>
 			<tr>
-				<td colspan="3">
-					<table class="permissions" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+				<td>
+					<label for="forum_description" class="form-nrequired">Forum Description</label>
+				</td>
+				<td>
+					<textarea id="forum_description" name="forum_description" style="width: 98%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["forum_description"])) ? html_encode($PROCESSED["forum_description"]) : ""); ?></textarea>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2"><h2>Forum Permissions</h2></td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<table class="table table-striped table-bordered">
 					<colgroup>
 						<col style="width: 40%" />
 						<col style="width: 20%" />
@@ -240,38 +247,70 @@ switch($STEP) {
 					<thead>
 						<tr>
 							<td>Group</td>
-							<td style="border-left: none">View Forum</td>
-							<td style="border-left: none">Write New Posts</td>
-							<td style="border-left: none">Reply To Posts</td>
+							<td>View Forum</td>
+							<td>Write New Posts</td>
+							<td>Reply To Posts</td>
 						</tr>
 					</thead>
 					<tbody>
 						<tr>
-							<td class="left"><strong>Community Administrators</strong></td>
-							<td class="on"><input type="checkbox" id="allow_admin_read" name="allow_admin_read" value="1" checked="checked" onclick="this.checked = true" /></td>
-							<td><input type="checkbox" id="allow_admin_post" name="allow_admin_post" value="1" checked="checked" onclick="this.checked = true" /></td>
-							<td class="on"><input type="checkbox" id="allow_admin_reply" name="allow_admin_reply" value="1" checked="checked" onclick="this.checked = true" /></td>
+							<td>
+								Community Administrators</strong>
+							</td>
+							<td class="on">
+								<input type="checkbox" id="allow_admin_read" name="allow_admin_read" value="1" checked="checked" onclick="this.checked = true" />
+							</td>
+							<td>
+								<input type="checkbox" id="allow_admin_post" name="allow_admin_post" value="1" checked="checked" onclick="this.checked = true" />
+							</td>
+							<td class="on">
+								<input type="checkbox" id="allow_admin_reply" name="allow_admin_reply" value="1" checked="checked" onclick="this.checked = true" />
+							</td>
 						</tr>
 						<tr>
-							<td class="left"><strong>Community Members</strong></td>
-							<td class="on"><input type="checkbox" id="allow_member_read" name="allow_member_read" value="1"<?php echo (((!isset($PROCESSED["allow_member_read"])) || ((isset($PROCESSED["allow_member_read"])) && ($PROCESSED["allow_member_read"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-							<td><input type="checkbox" id="allow_member_post" name="allow_member_post" value="1"<?php echo (((!isset($PROCESSED["allow_member_post"])) || ((isset($PROCESSED["allow_member_post"])) && ($PROCESSED["allow_member_post"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-							<td class="on"><input type="checkbox" id="allow_member_reply" name="allow_member_reply" value="1"<?php echo (((!isset($PROCESSED["allow_member_reply"])) || ((isset($PROCESSED["allow_member_reply"])) && ($PROCESSED["allow_member_reply"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
+							<td>
+								Community Members</strong>
+							</td>
+							<td class="on">
+								<input type="checkbox" id="allow_member_read" name="allow_member_read" value="1"<?php echo (((!isset($PROCESSED["allow_member_read"])) || ((isset($PROCESSED["allow_member_read"])) && ($PROCESSED["allow_member_read"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+							</td>
+							<td>
+								<input type="checkbox" id="allow_member_post" name="allow_member_post" value="1"<?php echo (((!isset($PROCESSED["allow_member_post"])) || ((isset($PROCESSED["allow_member_post"])) && ($PROCESSED["allow_member_post"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+							</td>
+							<td class="on">
+								<input type="checkbox" id="allow_member_reply" name="allow_member_reply" value="1"<?php echo (((!isset($PROCESSED["allow_member_reply"])) || ((isset($PROCESSED["allow_member_reply"])) && ($PROCESSED["allow_member_reply"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+							</td>
 						</tr>
 						<?php if (!(int) $community_details["community_registration"]) :  ?>
 						<tr>
-							<td class="left"><strong>Browsing Non-Members</strong></td>
-							<td class="on"><input type="checkbox" id="allow_troll_read" name="allow_troll_read" value="1"<?php echo (((!isset($PROCESSED["allow_troll_read"])) || ((isset($PROCESSED["allow_troll_read"])) && ($PROCESSED["allow_troll_read"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-							<td><input type="checkbox" id="allow_troll_post" name="allow_troll_post" value="1"<?php echo (((isset($PROCESSED["allow_troll_post"])) && ($PROCESSED["allow_troll_post"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-							<td class="on"><input type="checkbox" id="allow_troll_reply" name="allow_troll_reply" value="1"<?php echo (((isset($PROCESSED["allow_troll_reply"])) && ($PROCESSED["allow_troll_reply"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
+							<td>
+								Browsing Non-Members</strong>
+							</td>
+							<td class="on">
+								<input type="checkbox" id="allow_troll_read" name="allow_troll_read" value="1"<?php echo (((!isset($PROCESSED["allow_troll_read"])) || ((isset($PROCESSED["allow_troll_read"])) && ($PROCESSED["allow_troll_read"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+							</td>
+							<td>
+								<input type="checkbox" id="allow_troll_post" name="allow_troll_post" value="1"<?php echo (((isset($PROCESSED["allow_troll_post"])) && ($PROCESSED["allow_troll_post"] == 1)) ? " checked=\"checked\"" : ""); ?> />
+							</td>
+							<td class="on">
+								<input type="checkbox" id="allow_troll_reply" name="allow_troll_reply" value="1"<?php echo (((isset($PROCESSED["allow_troll_reply"])) && ($PROCESSED["allow_troll_reply"] == 1)) ? " checked=\"checked\"" : ""); ?> />
+							</td>
 						</tr>
 						<?php endif; ?>
 						<?php if (!(int) $community_details["community_protected"]) :  ?>
 						<tr>
-							<td class="left"><strong>Non-Authenticated / Public Users</strong></td>
-							<td class="on"><input type="checkbox" id="allow_public_read" name="allow_public_read" value="1"<?php echo (((isset($PROCESSED["allow_public_read"])) && ($PROCESSED["allow_public_read"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-							<td><input type="checkbox" id="allow_public_post" name="allow_public_post" value="0" onclick="noPublic(this)" /></td>
-							<td class="on"><input type="checkbox" id="allow_public_reply" name="allow_public_reply" value="0" onclick="noPublic(this)" /></td>
+							<td>
+								Non-Authenticated / Public Users</strong>
+							</td>
+							<td class="on">
+								<input type="checkbox" id="allow_public_read" name="allow_public_read" value="1"<?php echo (((isset($PROCESSED["allow_public_read"])) && ($PROCESSED["allow_public_read"] == 1)) ? " checked=\"checked\"" : ""); ?> />
+							</td>
+							<td>
+								<input type="checkbox" id="allow_public_post" name="allow_public_post" value="0" onclick="noPublic(this)" />
+							</td>
+							<td class="on">
+								<input type="checkbox" id="allow_public_reply" name="allow_public_reply" value="0" onclick="noPublic(this)" />
+							</td>
 						</tr>
 						<?php endif; ?>
 					</tbody>
@@ -279,9 +318,17 @@ switch($STEP) {
 				</td>
 			</tr>
 			<tr>
-				<td colspan="3"><h2>Time Release Options</h2></td>
+				<td colspan="2">
+					<h2>Time Release Options</h2>
+				</td>
 			</tr>
-			<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+			<tr>
+				<td colspan="2">
+					<table class="date-time">
+						<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+					</table>
+				</td>
+			</tr>
 		</tbody>
 		</table>
 		</form>

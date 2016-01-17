@@ -26,7 +26,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	
 	require_once("Models/mspr/MSPRs.class.php");
 	$PROXY_ID					= $user_record["id"];
-	$user = User::get($user_record["id"]);
+	$user = User::fetchRowByID($user_record["id"]);
 	
 	$PAGE_META["title"]			= "MSPR Revisions";
 	$PAGE_META["description"]	= "";

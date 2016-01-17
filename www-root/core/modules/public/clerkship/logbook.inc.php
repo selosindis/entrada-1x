@@ -42,6 +42,61 @@ if (!defined("IN_CLERKSHIP")) {
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/clerkship/logbook".($USER_ID ? "?id=".$USER_ID : ""), "title" => "Logbook");
 
+	if ($USER_ID && $ENTRADA_USER->getActiveGroup() != "student") {
+		$sidebar_html = "";
+		$query = "SELECT a.*, b.`rotation_title` FROM `".CLERKSHIP_DATABASE."`.`logbook_deficiency_plans` AS a
+					JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS b
+					ON a.`rotation_id` = b.`rotation_id`
+					WHERE a.`proxy_id` = ".$db->qstr($USER_ID);
+		$deficiency_plans = $db->GetAll($query);
+		if ($deficiency_plans) {
+			$plans_accepted = false;
+			$plans_pending = false;
+			$plans_rejected = false;
+			
+			foreach ($deficiency_plans as $plan) {
+				if ($plan["clerk_accepted"] && $plan["administrator_accepted"]) {
+					$plans_accepted = true;
+				} elseif ($plan["clerk_accepted"]) {
+					$plans_pending = true;
+				} elseif ($plan["administrator_comments"]) {
+					$plans_rejected = true;
+				}
+			}
+			if ($plans_accepted) {
+				$sidebar_html .= "<center>Accepted Plans:</center>\n";
+				$sidebar_html .= "<ul class=\"menu\">";
+				foreach ($deficiency_plans as $plan) {
+					if ($plan["clerk_accepted"] && $plan["administrator_accepted"]) {
+						$sidebar_html .= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$plan["rotation_id"]."&id=".$USER_ID."\"><strong>".$plan["rotation_title"]."</strong></a></li>\n";
+					}
+				}
+				$sidebar_html .= "</ul>";
+			}
+			if ($plans_pending) {
+				$sidebar_html .= "<center>Plans Pending Approval:</center>\n";
+				$sidebar_html .= "<ul class=\"menu\">";
+				foreach ($deficiency_plans as $plan) {
+					if ($plan["clerk_accepted"] && !$plan["administrator_accepted"]) {
+						$sidebar_html .= "	<li><a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$plan["rotation_id"]."&id=".$USER_ID."\"><strong>".$plan["rotation_title"]."</strong></a></li>\n";
+					}
+				}
+				$sidebar_html .= "</ul>";
+			}
+			if ($plans_rejected) {
+				$sidebar_html .= "<center>Rejected Plans:</center>\n";
+				$sidebar_html .= "<ul class=\"menu\">";
+				foreach ($deficiency_plans as $plan) {
+					if ($plan["administrator_comments"] && !$plan["clerk_accepted"]) {
+						$sidebar_html .= "	<li class=\"incorrect\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$plan["rotation_id"]."&id=".$USER_ID."\"><strong>".$plan["rotation_title"]."</strong></a></li>\n";
+					}
+				}
+				$sidebar_html .= "</ul>";
+			}
+			new_sidebar_item("Deficiency Plans", $sidebar_html, "page-clerkship", "open");
+		}
+	}
+    
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();
 		if ($module_file) {

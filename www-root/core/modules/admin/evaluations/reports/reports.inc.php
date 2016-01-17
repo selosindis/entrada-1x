@@ -65,7 +65,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			echo display_error();
 		}
 	}
-	
+
+    $toggle_comments = false;
+    $toggle_names = false;
+
 	/**
 	 * Produce a report for each evaluation
 	 */
@@ -93,10 +96,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			case "Teacher" :
 				$type = $db->GetRow("	SELECT CONCAT(`lastname`,', ',`firstname`) `name`, `id` `code` FROM `".AUTH_DATABASE."`.`user_data`
 							WHERE `id` = ".$db->qstr($report["target"]));
-				$title = ($STUDENTS?"Students ":"")."Teacher Evaluation ";
+				$title = ($STUDENTS ? "Students ":"")."Teacher Evaluation ";
+                $toggle_names = true;
 			break;
 			default:
-				$title = ($STUDENTS?"Students ":"")."Evaluation ";
+				$title = ($STUDENTS ? "Students ":"")."Evaluation ";
 			break;
 		}
 
@@ -109,7 +113,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						<col style=\"width: 28%\" />
 					</colgroup>";
 		echo 	"	<tr><td colspan=\"4\"><h2>$title - $report[evaluation_title]</h2></td></tr>\n";
-		echo	"	<tr><td colspan=\"2\"><h2 style=\"border:none; margin:0 0 0 0\">$type[name]</h2></td>";
+        echo	"	<tr><td colspan=\"2\"><h2 style=\"border:none; margin:0 0 0 0\"><span class=\"names\">".$type["name"]."</span><span class=\"name_holders\" style=\"display: none; color: black;\">".str_repeat("&block;", strlen($type["name"]))."</span></h2></td>";
 		if ($report["type"] == "Course") {
 			echo "<td><h3>Course code:</h3></td><td>[$type[code]]</td></tr>";
 		} else {
@@ -211,7 +215,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			$results	= $db->GetAll($query);
 			if ($results) {
 				echo "<tr>\n";
-				echo "	<td colspan=\"4\">\n";
+                echo "	<td colspan=\"4\" class=\"numeric_results\">\n";
 				echo "		<table width=\"80%\" class=\"evaluation-statistics\" summary=\"Question Statistics\">";
 				echo "			<tr>\n";
 				echo "				<td style=\"width: 34%\"></td>";
@@ -348,24 +352,55 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		echo "</div>";
 
 		if (count($comments)) {
-			$html = "<label for=\"toggle_comments\">Show comments:</label> <input type=\"checkbox\" id=\"toggle_comments\" value=\"1\" checked=\"checked\" />";
-			new_sidebar_item("Display Comments", $html);
-
-			?>
-			<script type="text/javascript">
-			$('toggle_comments').observe('click', function(event) {
-				if (this.checked) {
-					$$('.comments').each(function(el) {
-						$(el).show();
-					});
-				} else {
-					$$('.comments').each(function(el) {
-						$(el).hide();
-					});
-				}
-			});
-			</script>
-			<?php
+            $toggle_comments = true;
 		}
 	}
+    $sidebar_html = "";
+    if ($toggle_comments) {
+        $sidebar_html .= "<label for=\"toggle_comments\">Show comments:</label> <input type=\"checkbox\" id=\"toggle_comments\" value=\"1\" checked=\"checked\" />";
+        $sidebar_html .= "<label for=\"toggle_numeric\">Show numeric data:</label> <input type=\"checkbox\" id=\"toggle_numeric\" value=\"1\" checked=\"checked\" />";
+    }
+    if ($toggle_names) {
+        $sidebar_html .= "<label for=\"toggle_names\">Show target names:</label> <input type=\"checkbox\" id=\"toggle_names\" value=\"1\" checked=\"checked\" />";
+    }
+    if ($sidebar_html) {
+        new_sidebar_item("Display Settings", $sidebar_html);
+        ?>
+        <script type="text/javascript">
+            <?php
+            if ($toggle_comments) {
+                ?>
+                jQuery('#toggle_comments').on('click', function(event) {
+                    if (this.checked) {
+                        jQuery('.comments').show();
+                    } else {
+                        jQuery('.comments').hide();
+                    }
+                });
+                jQuery('#toggle_numeric').on('click', function(event) {
+                    if (this.checked) {
+                        jQuery('.numeric_results').show();
+                    } else {
+                        jQuery('.numeric_results').hide();
+                    }
+                });
+                <?php
+            }
+            if ($toggle_names) {
+                ?>
+                jQuery('#toggle_names').on('click', function(event) {
+                    if (this.checked) {
+                        jQuery('.names').show();
+                        jQuery('.name_holders').hide();
+                    } else {
+                        jQuery('.names').hide();
+                        jQuery('.name_holders').show();
+                    }
+                });
+                <?php
+            }
+            ?>
+        </script>
+        <?php
+    }
 }

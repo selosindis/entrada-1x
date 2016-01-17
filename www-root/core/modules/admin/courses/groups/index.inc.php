@@ -116,7 +116,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 	$course_details	= $db->GetRow($query);
 	courses_subnavigation($course_details,"groups");
 	?>
-	<h1>Manage <?php echo $module_singular_name; ?> Groups</h1>
+	<h1>Manage <?php echo $translate->_("course"); ?> Groups</h1>
 	<?php
 	/**
 	 * Update requested order to sort by.
@@ -242,38 +242,43 @@ if (!defined("IN_COURSE_GROUPS")) {
 	}
 	</style>
     <div>
-        <form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups" method="get">
+        <form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/courses/groups" method="get">
             <input type="hidden" name="id" value="<?php echo $COURSE_ID;?>"/>
             <input type="hidden" name="type" value="search" />
             <table style="width: 100%" class="border-below" cellspacing="1" cellpadding="1" border="0" summary="Search for Groups">
-            <colgroup>
-                <col style="width: 3%" />
-                <col style="width: 25%" />
-                <col style="width: 72%" />
-            </colgroup>
-            <tfoot>
-                <tr>
-                    <td colspan="3">&nbsp;</td>
-                </tr>
-                <tr>
-                    <td colspan="3" style="padding: 5px 0 20px 0; text-align: right;">
-                        <input type="button" class="btn" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses/groups?id=<?php echo $COURSE_ID ?>'"/>
-                        <input type="submit" class="btn btn-primary" value="Search" />
-                    </td>
-                </tr>
-            </tfoot>
-            <tbody>
-                <tr>
-                    <td>&nbsp;</td>
-                    <td style="vertical-align: top"><label for="q" class="form-required">Group Search:</label></td>
-                    <td>
-                        <input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" style="width: 350px" />
-                        <div class="content-small" style="margin-top: 10px">
-                            <strong>Note:</strong> You can search for Group name.
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
+				<colgroup>
+					<col style="width: 3%" />
+					<col style="width: 25%" />
+					<col style="width: 72%" />
+				</colgroup>
+				<tfoot>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td colspan="3" style="padding: 5px 0 20px 0; text-align: right;">
+							<input type="button" class="btn" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses/groups?id=<?php echo $COURSE_ID ?>'"/>
+							<input type="submit" class="btn btn-primary" value="Search" />
+						</td>
+					</tr>
+				</tfoot>
+				<tbody>
+					<tr>
+						<td>&nbsp;</td>
+						<td colspan="2">
+							<div class="control-group">
+								<label class="control-label form-required" for="q" style="text-align: left;">Group Search:</label>
+
+								<div class="controls">
+									<input type="text" id="q" name="q" class="span8" value="<?php echo html_encode($search_query); ?>"/>
+									<div class="content-small" style="margin-top: 10px">
+										<strong>Note:</strong> You can search for Group name.
+									</div>
+								</div>
+							</div>
+						</td>
+					</tr>
+				</tbody>
             </table>
         </form>
     </div>
@@ -387,7 +392,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 		?>
 		<div class="display-notice">
 			<h3>No Available Groups</h3>
-			There are currently no available small groups in the system for this <?php echo strtolower($module_singular_name); ?>. To begin click the <strong>Add Group</strong> link above.
+			There are currently no available small groups in the system for this <?php echo strtolower($translate->_("course")); ?>. To begin click the <strong>Add Group</strong> link above.
 		</div>
 		<?php
 	}

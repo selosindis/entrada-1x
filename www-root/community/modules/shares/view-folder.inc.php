@@ -120,9 +120,14 @@ if ($RECORD_ID) {
 					AND a.`file_active` = '1'
 					".((!$LOGGED_IN) ? " AND c.`allow_public_read` = '1'" : (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? " AND c.`allow_member_read` = '1'" : "") : " AND c.`allow_troll_read` = '1'"))."
 					".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "");
+            $share_files_result = $db->GetRow($query_total);
+            if ($share_files_result) {
+                $total_files = $share_files_result["total_rows"];
+            } else {
+                $total_files = 0;
+            }
             
-            $query_total    .= "
-                    UNION ALL
+            $query_total_community_links = "
                     SELECT COUNT(*) AS `total_rows`
                     FROM `community_share_links` AS a
                     LEFT JOIN `community_shares` AS c
@@ -133,16 +138,15 @@ if ($RECORD_ID) {
                     AND a.`link_active` = '1'
                     ".((!$LOGGED_IN) ? " AND c.`allow_public_read` = '1'" : (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? " AND c.`allow_member_read` = '1'" : "") : " AND c.`allow_troll_read` = '1'"))."
                     ".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "");            
-            $result    = $db->GetAll($query_total);
-            //adds the results of the file and links together
-            $rowCountTotal = '';
-            if ($result) {
-                foreach($result as $rowCount) {
-                    $rowCountTotal = $rowCountTotal + intval($rowCount["total_rows"]);
-                }
+            $share_links_result = $db->GetRow($query_total_community_links);
+            if ($share_links_result) {
+                $total_links = $share_links_result["total_rows"];
+            } else {
+                $total_links = 0;
+            }
 
-                $TOTAL_ROWS    = $rowCountTotal;
-
+            $TOTAL_ROWS = (int) ($total_files + $total_links);
+            if ($TOTAL_ROWS) {
 				if ($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]) {
 					$TOTAL_PAGES = 1;
 				} elseif (($TOTAL_ROWS % $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]) == 0) {
@@ -155,12 +159,11 @@ if ($RECORD_ID) {
 					$pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"], $TOTAL_ROWS, COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL, replace_query());
 				}
 			} else {
-				$TOTAL_ROWS		= 0;
-				$TOTAL_PAGES	= 1;
+				$TOTAL_PAGES = 1;
 			}
 
-			$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
-			$PAGE_NEXT		= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
+			$PAGE_PREVIOUS = (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
+			$PAGE_NEXT = (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
 
 			/**
 			 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
@@ -212,174 +215,197 @@ if ($RECORD_ID) {
 				}
 				<?php endif; ?>
 			</script>
-			<h1><?php echo html_encode($folder_record["folder_title"]); ?></h1>
-			<div style="margin-bottom: 15px">
-				<?php echo nl2br(html_encode($folder_record["folder_description"])); ?>
-			</div>
-			<div id="module-header">
-				<?php
-				if ($TOTAL_PAGES > 1) {
-					echo "<div id=\"pagination-links\">\n";
-					echo "Pages: ".$pagination->GetPageLinks();
-					echo "</div>\n";
-				}
-				?>
-			</div>
-			<div style="padding-top: 10px; clear: both">
-				<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
-					<div id="notifications-toggle" style="position: absolute; padding-top: 14px;"></div>
-					<script type="text/javascript">
-					function promptNotifications(enabled) {
-						Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications for new files on this page?',
-							{
-								id:				'requestDialog',
-								width:			350,
-								height:			95,
-								title:			'Notification Confirmation',
-								className:		'medtech',
-								okLabel:		'Yes',
-								cancelLabel:	'No',
-								closable:		'true',
-								buttonClass:	'btn',
-								destroyOnClose:	true,
-								ok:				function(win) {
-													new Window(	{
-																	id:				'resultDialog',
-																	width:			350,
-																	height:			75,
-																	title:			'Notification Result',
-																	className:		'medtech',
-																	okLabel:		'close',
-																	buttonClass:	'btn',
-																	resizable:		false,
-																	draggable:		false,
-																	minimizable:	false,
-																	maximizable:	false,
-																	recenterAuto:	true,
-																	destroyOnClose:	true,
-																	url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID; ?>&type=file&action=edit&active='+(enabled == 1 ? '0' : '1'),
-																	onClose:			function () {
-																						new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID; ?>&type=file&action=view');
-																					}
-																}
-													).showCenter();
-													return true;
-												}
-							}
-						);
-					}
-					
-					</script>
-					<?php
-					$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID."&type=file&action=view')";
-				}
-				if (shares_module_access($RECORD_ID, "add-file")) {
-					?>
-					<div style="float: right; padding-top: 10px;">
-						<ul class="page-action">
-							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-file&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Upload File</a></li>
-						</ul>
-					</div>
-					<div style="clear: both"></div>
-					<?php
-				}
-				
-				$query		= "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `owner`, b.`username` AS `owner_username`
-								FROM `community_share_files` AS a
-								LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-								ON a.`proxy_id` = b.`id`
-								LEFT JOIN `community_shares` AS c
-								ON a.`cshare_id` = c.`cshare_id`
-								WHERE a.`cshare_id` = ".$db->qstr($RECORD_ID)."
-								AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-								AND a.`file_active` = '1'
-								".((!$LOGGED_IN) ? " AND c.`allow_public_read` = '1'" : (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? " AND c.`allow_member_read` = '1'" : "") : " AND c.`allow_troll_read` = '1'"))."
-								".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "")."
-								ORDER BY %s
-								LIMIT %s, %s";
-				$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]);
-				$results	= $db->GetAll($query);
-				if ($results) {
-					?>
-					<table class="discussions forums" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-                    <?php if ($COMMUNITY_ADMIN) { ?>
-					<colgroup>
-                        <col style="width: 4%" />
-                        <col style="width: 52%" />
-                        <col style="width: 18%" />
-                        <col style="width: 18%" />
-                        <col style="width: 7%" />                                                
-                    </colgroup>                                            
-                    <?php } else { ?>
-                    <colgroup>
-                        <col style="width: 4%" />
-						<col style="width: 55%" />
-						<col style="width: 20%" />
-						<col style="width: 21%" />
-					</colgroup>
-                    <?php } ?>
 
-					<thead>
-						<tr>
-							<td>&nbsp;</td>
-							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "title") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none"><?php echo communities_order_link("title", "File Title"); ?></td>
-							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "owner") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none"><?php echo communities_order_link("owner", "Owner"); ?></td>
-							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "date") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none"><?php echo communities_order_link("date", "Last Updated"); ?></td>
-                            <?php
-                            if ($COMMUNITY_ADMIN) {
-                                ?>
-                                <td style="border-left: none">Views</td>
-                                <?php
+            <h1><?php echo html_encode($folder_record["folder_title"]); ?></h1>
+
+			<p><?php echo nl2br(html_encode($folder_record["folder_description"])); ?></p>
+
+            <?php
+            if (isset($TOTAL_PAGES) && $TOTAL_PAGES > 1) {
+                echo "<div class=\"pagination pagination-right\">";
+                echo "    <ul>";
+                echo        $pagination->GetPageLinks();
+                echo "    </ul>\n";
+                echo "</div>\n";
+            }
+            ?>
+
+            <div>
+                <div class="pull-left">
+                    <?php
+                    if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) {
+                        ?>
+                        <div id="notifications-toggle"></div>
+                        <script>
+                            function promptNotifications(enabled) {
+                                Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications for new files on this page?',
+                                    {
+                                        id:				'requestDialog',
+                                        width:			350,
+                                        height:			95,
+                                        title:			'Notification Confirmation',
+                                        className:		'medtech',
+                                        okLabel:		'Yes',
+                                        cancelLabel:	'No',
+                                        closable:		'true',
+                                        buttonClass:	'btn',
+                                        destroyOnClose:	true,
+                                        ok:				function(win) {
+                                            new Window(	{
+                                                    id:				'resultDialog',
+                                                    width:			350,
+                                                    height:			100,
+                                                    title:			'Notification Result',
+                                                    className:		'medtech',
+                                                    okLabel:		'close',
+                                                    buttonClass:	'btn',
+                                                    resizable:		false,
+                                                    draggable:		false,
+                                                    minimizable:	false,
+                                                    maximizable:	false,
+                                                    recenterAuto:	true,
+                                                    destroyOnClose:	true,
+                                                    url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID; ?>&type=file&action=edit&active='+(enabled == 1 ? '0' : '1'),
+                                                    onClose:			function () {
+                                                        new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID; ?>&type=file&action=view');
+                                                    }
+                                                }
+                                            ).showCenter();
+                                            return true;
+                                        }
+                                    }
+                                );
                             }
-                            ?>
-						</tr>
-					</thead>
-					<tbody>
-					<?php
-					foreach($results as $key => $result) {
-						$accessible	= true;
-						$parts		= pathinfo($result["file_title"]);
-						$ext		= (isset($parts["extension"]) && $parts["extension"] ? $parts["extension"] : "");
-                        
-                        $params = array(
-                            "action"        => "file_download",
-                            "action_field"  => "csfile_id",
-                            "action_value"  => $result["csfile_id"],
-                            "module"        => "community:" . $COMMUNITY_ID . ":shares"
-                        );
-                        $statistics = Models_Statistic::getCountByParams($params);
+                        </script>
+                        <?php
+                        $ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID."&type=file&action=view')";
+                    }
+                    ?>
+                </div>
+                <div class="pull-right">
+                    <?php
+                    if (shares_module_access($RECORD_ID, "add-file")) {
+                        ?>
+                        <ul class="page-action">
+                            <li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-file&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Upload Files</a></li>
+                        </ul>
+                        <?php
+                    }
+                    ?>
+                </div>
+            </div>
 
-						if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
-							$accessible = false;
-						}
+            <div style="padding-top: 10px; clear: both">
+                <?php
+                $query		= "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `owner`, b.`username` AS `owner_username`
+                                FROM `community_share_files` AS a
+                                LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                ON a.`proxy_id` = b.`id`
+                                LEFT JOIN `community_shares` AS c
+                                ON a.`cshare_id` = c.`cshare_id`
+                                WHERE a.`cshare_id` = ".$db->qstr($RECORD_ID)."
+                                AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+                                AND a.`file_active` = '1'
+                                ".((!$LOGGED_IN) ? " AND c.`allow_public_read` = '1'" : (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? " AND c.`allow_member_read` = '1'" : "") : " AND c.`allow_troll_read` = '1'"))."
+                                ".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "")."
+                                ORDER BY %s
+                                LIMIT %s, %s";
+                $query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]);
+                $results	= $db->GetAll($query);
+                if ($results) {
+                    ?>
+                    <table class="table table-striped table-bordered">
+                        <?php if ($COMMUNITY_ADMIN) { ?>
+                        <colgroup>
+                            <col style="width: 5%" />
+                            <col style="width: 45%" />
+                            <col style="width: 20%" />
+                            <col style="width: 20%" />
+                            <col style="width: 10%" />
+                        </colgroup>
+                        <?php } else { ?>
+                        <colgroup>
+                            <col style="width: 5%" />
+                            <col style="width: 55%" />
+                            <col style="width: 20%" />
+                            <col style="width: 20%" />
+                        </colgroup>
+                        <?php } ?>
+                        <thead>
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "title") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none">
+                                    <?php echo communities_order_link("title", "File Title"); ?>
+                                </td>
+                                <td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "owner") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none">
+                                    <?php echo communities_order_link("owner", "Owner"); ?>
+                                </td>
+                                <td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "date") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none">
+                                    <?php echo communities_order_link("date", "Last Updated"); ?>
+                                </td>
+                                <?php
+                                if ($COMMUNITY_ADMIN) {
+                                    ?>
+                                    <td>
+                                        Views
+                                    </td>
+                                    <?php
+                                }
+                                ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                        foreach($results as $key => $result) {
+                            $accessible	= true;
+                            $parts		= pathinfo($result["file_title"]);
+                            $ext		= (isset($parts["extension"]) && $parts["extension"] ? $parts["extension"] : "");
 
-						echo "<tr".((!$accessible) ? " class=\"na\"" : "").">\n";
-						echo "  <td style=\"vertical-align: top\">";
-						echo "		<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$result["csfile_id"]."&download=latest\"><img src=\"".ENTRADA_URL."/community/templates/default/images/btn_save.gif\" alt=\"Download File\" title=\"Download File\"width=\"15\" border=\"0\" /></a>";
-						echo "	</td>";
-						echo "	<td style=\"vertical-align: top\">\n";
-						echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle; margin-right: 4px\" /> <a id=\"file-".(int) $result["csfile_id"]."-title\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".$result["csfile_id"]."\" style=\"font-weight: bold; vertical-align: middle\">".limit_chars(html_encode($result["file_title"]), 50, true)."</a>\n";
-						echo "		<div class=\"content-small\" style=\"padding-left: 23px\">";
-						echo 		((shares_file_module_access($result["csfile_id"], "edit-file")) ? " <span style=\"vertical-align: middle\">(<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-file&amp;id=".$result["csfile_id"]."\">edit</a>)</span>" : "");
-						echo 		((shares_file_module_access($result["csfile_id"], "delete-file")) ? " <span style=\"vertical-align: middle\">(<a class=\"action\" href=\"javascript:fileDelete('".$result["csfile_id"]."')\">delete</a>)</span>" : "");
-						if ($community_shares_select != "") {
-							echo 	((shares_file_module_access($result["csfile_id"], "move-file")) ? " <span style=\"vertical-align: middle\">(<a class=\"action\" href=\"javascript:fileMove('".$result["csfile_id"]."')\">move</a>)</span>" : "");
-						}
-						echo "		<span style=\"vertical-align: middle\">".html_encode(limit_chars($result["file_description"], 125))."</span>";
-						echo "		</div>\n";
-						echo "	</td>\n";
-						echo "	<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["owner_username"])."\" style=\"font-size: 10px\">".html_encode($result["owner"])."</a></td>\n";
-						echo "	<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</td>\n";
-                        if ($COMMUNITY_ADMIN) {
-                            echo "	<td class=\"accesses\" style=\"text-align: center\"><a class=\"views-dialog\" href=\"#file-views\" data-action='" . $params['action'] . "' data-action_field='" . $params['action_field'] . "' data-action_value='" . $params['action_value'] . "' title=\"Click to see access log ".html_encode($statistics['views'])."\" style=\"font-weight: bold\">".html_encode($statistics['views'])."</a></td>\n";
+                            $params = array(
+                                "action"        => "file_download",
+                                "action_field"  => "csfile_id",
+                                "action_value"  => $result["csfile_id"],
+                                "module"        => "community:" . $COMMUNITY_ID . ":shares"
+                            );
+                            $statistics = Models_Statistic::getCountByParams($params);
+
+                            if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
+                                $accessible = false;
+                            }
+
+                            echo "<tr".(!$accessible ? " class=\"na\"" : "").">\n";
+                            echo "  <td>";
+                            echo "		<a class=\"btn btn-primary\" title=\"Download Latest Version\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$result["csfile_id"]."&download=latest\"><i class=\"icon-download icon-white\" style=\"margin-top:3px;\"></i></a>";
+                            echo "	</td>";
+                            echo "	<td>\n";
+                            echo "		<a id=\"file-".(int) $result["csfile_id"]."-title\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".$result["csfile_id"]."\" style=\"font-weight: bold; vertical-align: middle\">".limit_chars(html_encode($result["file_title"]), 50, true)."</a>\n";
+                            echo "		<div class=\"content-small\">";
+                                            if (shares_file_module_access($result["csfile_id"], "edit-file")) {
+                                                echo " (<a class=\"action\" href=\"" . COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=edit-file&amp;id=" . $result["csfile_id"] . "\">edit</a>)";
+                                            }
+                                            if (shares_file_module_access($result["csfile_id"], "delete-file")) {
+                                                echo " (<a class=\"action\" href=\"javascript:fileDelete('".$result["csfile_id"]."')\">delete</a>)";
+                                            }
+                                            if ($community_shares_select != "" && shares_file_module_access($result["csfile_id"], "move-file")) {
+                                                echo " (<a class=\"action\" href=\"javascript:fileMove('".$result["csfile_id"]."')\">move</a>)";
+                                            }
+                            echo "		</div>\n";
+                            echo "		<div class=\"content-small\">";
+                            echo            html_encode(limit_chars($result["file_description"], 125));
+                            echo "		</div>\n";
+                            echo "	</td>\n";
+                            echo "	<td class=\"content-small smaller\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["owner_username"])."\" class=\"content-small smaller\">".html_encode($result["owner"])."</a></td>\n";
+                            echo "	<td class=\"content-small smaller\">".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</td>\n";
+                            if ($COMMUNITY_ADMIN) {
+                                echo "	<td class=\"accesses content-small smaller center\"><a class=\"views-dialog content-small\" href=\"#file-views\" data-action='" . $params['action'] . "' data-action_field='" . $params['action_field'] . "' data-action_value='" . $params['action_value'] . "' title=\"Click to see access log ".html_encode($statistics['views'])."\">".html_encode($statistics['views'])."</a></td>\n";
+                            }
+                            echo "</tr>\n";
                         }
-						echo "</tr>\n";
-					}
-					?>
-					</tbody>
-					</table>
-                    <script type="text/javascript">
-                        jQuery(function($) {                           
+                        ?>
+                        </tbody>
+                    </table>
+                    <script>
+                        jQuery(function($) {
                             $(".views-dialog").on("click", function(e) {
                                 //updates stats in table
                                 var clicked = jQuery(this);
@@ -388,14 +414,14 @@ if ($RECORD_ID) {
                                 var action_value = clicked.data('action_value');
                                 var module = '<?php echo "community:" . $COMMUNITY_ID . ":shares";?>';
                                 var url = '<?php echo ENTRADA_URL . "/api/stats-community-file.api.php";?>'
-                                
+
                                 var dataObject = {
                                         action: action,
                                         action_field: action_field,
                                         action_value: action_value,
                                         module: module
                                         };
-                                        
+
                                 jQuery.ajax({
                                     type: "POST",
                                     url: url,
@@ -405,13 +431,13 @@ if ($RECORD_ID) {
                                         jQuery("#file-views-table").html(data['html']);
                                     }
                                 });
-                                
+
                                 switch (action_field) {
                                     case "csfile_id":
-                                    default: 
+                                    default:
                                         var title = "File Views";
                                 }
-                                
+
                                 $("#file-views").dialog({
                                     title: title,
                                     draggable: false,
@@ -431,30 +457,7 @@ if ($RECORD_ID) {
                             });
                         });
                     </script>
-                    <style type="text/css">
-                        .table {
-                            width:100%;
-                            padding:0px;
-                        }
-                        .table.table-bordered {
-                            border:1px solid grey;
-                            border-radius: 5px;
-                        }
-                        .table th:first-child, .table td:first-child {
-                            border-left:none;
-                        }
-                        .table tr th {
-                            border-top: none;
-                        }
-                        .table th, .table td {
-                            border-left:1px solid grey;
-                            border-top: 1px solid grey;
-                            padding:3px;
-                            text-align:left;
-                        }
-                    </style>
-
-                    <div id="file-views" style="display:none;">
+                    <div id="file-views" class="hide">
                         <table class="table table-bordered table-striped" id="file-views-table" cellspacing="0">
                             <thead>
                                 <tr>
@@ -464,7 +467,7 @@ if ($RECORD_ID) {
                                 </tr>
                             </thead>
                             <tbody>
-                        <?php
+                            <?php
                             $file_views = Models_Statistic::getCommunityFileViews("community:" . $COMMUNITY_ID . ":shares", $result["csfile_id"]);
                             if ($file_views) {
                                 foreach ($file_views as $file_view) {
@@ -489,7 +492,7 @@ if ($RECORD_ID) {
                         <?php
                         if ($file_views) {
                             ?>
-                            <script type="text/javascript">
+                            <script>
                                 jQuery(function($) {
                                     var file_views_table = $("#file-views-table").DataTable({
                                         "bPaginate": false,
@@ -502,16 +505,15 @@ if ($RECORD_ID) {
                         }
                         ?>
                     </div>
-					<?php
-				} else {
-					$NOTICE++;
-					$NOTICESTR[] = "<strong>No files in this shared folder.</strong><br /><br />".((shares_module_access($RECORD_ID, "add-file")) ? "If you would like to upload a new file, <a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-file&id=".$RECORD_ID."\">click here</a>." : "Please check back later.");
+                    <?php
+                } else {
+                    add_notice("<strong>No files in this shared folder.</strong><br /><br />".((shares_module_access($RECORD_ID, "add-file")) ? "If you would like to upload a new file, <a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-file&id=".$RECORD_ID."\">click here</a>." : "Please check back later."));
 
-					echo display_notice();
-				}
-				?>
-			</div>
-			<?php
+                    echo display_notice();
+                }
+                ?>
+            </div>
+            <?php
 			if ($LOGGED_IN) {
 				add_statistic("community:".$COMMUNITY_ID.":shares", "folder_view", "cshare_id", $RECORD_ID);
 			}
@@ -524,15 +526,14 @@ if ($RECORD_ID) {
 			}
 		}
 	} else {
-		application_log("error", "The provided shared folder id was invalid [".$RECORD_ID."] (View Folder).");
+        application_log("error", "The provided shared folder id was invalid [" . $RECORD_ID . "] (View Folder).");
 
-		header("Location: ".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL);
-		exit;
-	}
+        header("Location: " . COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL);
+        exit;
+    }
 } else {
 	application_log("error", "No shared folder id was provided to view. (View Folder)");
 
 	header("Location: ".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL);
 	exit;
 }
-?>

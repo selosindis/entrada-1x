@@ -184,7 +184,7 @@ class Models_Eportfolio_Entry {
 	}
 	
 	public function getFlagedBy() {
-		$flagged_by = User::get($this->flagged_by);
+		$flagged_by = User::fetchRowByID($this->flagged_by);
 		return $flagged_by;
 	}
 	
@@ -213,7 +213,7 @@ class Models_Eportfolio_Entry {
 	}
 	
 	public function getUpdatedBy() {
-		$user = User::get($this->updated_by);
+		$user = User::fetchRowByID($this->updated_by);
 		return $user;
 	}
 	

@@ -25,8 +25,10 @@ $query	= "	SELECT *
 			AND `page_active` = '1'";
 $result	= $db->GetRow($query);
 if ($result) {
+	echo "<a id=\"community-edit-button\" href=\"". COMMUNITY_URL.$COMMUNITY_URL .":pages?action=edit&amp;page=". ($result["page_url"] != "" ? $result["cpage_id"] : "home") ."\" class=\"btn btn-primary pull-right\">Edit Page</a>";
+
 	if (isset($result["page_title"]) && trim($result["page_title"]) != "") {
-		echo "<h1>".html_encode($result["page_title"]).(($COMMUNITY_ADMIN) ? "<a id=\"community-edit-button\" href=\"". COMMUNITY_URL.$COMMUNITY_URL .":pages?action=edit&step=1&page=". ($result["page_url"] != "" ? $result["cpage_id"] : "home") ."\" class=\"edit-community-page-btn pull-right\">Edit Page</a>" : "")."</h1>\n";
+		echo "<h1>".html_encode($result["page_title"])."</h1>\n";
 	}
 	
 	if ($ERROR) {
@@ -292,4 +294,3 @@ if ($result) {
 		application_log("error", "Community default content page not found [".$PAGE_URL."] in community_id [".$COMMUNITY_ID."].");
 	}
 }
-?>

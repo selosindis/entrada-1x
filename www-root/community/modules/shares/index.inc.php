@@ -48,21 +48,21 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-folder")) {
 }
 ?>
 <div id="module-header">
+	<div class="pull-right">
+		<?php
+		if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "add-folder")) {
+			?>
+			<ul class="page-action">
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-folder" class="btn btn-success">Add Shared Folder</a></li>
+			</ul>
+			<?php
+		}
+		?>
+	</div>
 </div>
 
 <div style="padding-top: 10px; clear: both">
 	<?php
-	if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "add-folder")) {
-		?>
-		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-folder" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Shared Folder</a></li>
-			</ul>
-		</div>
-		<div style="clear: both"></div>
-		<?php
-	}
-	
 	$query		= "	SELECT a.*
 					FROM `community_shares` AS a
 					WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."

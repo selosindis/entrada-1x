@@ -23,7 +23,7 @@
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_DESCRIPTORS"))) {
     exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
     header("Location: ".ENTRADA_URL);
     exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "update", false)) {
@@ -137,56 +137,54 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_DESCRIPTORS"))) {
                 echo display_notice();
             }
             ?>
-                <h2>Descriptor Details</h2>
-                <form action="<?php echo ENTRADA_URL . "/admin/settings/manage/descriptors?org=".$ORGANISATION_ID; ?>&section=<?php echo defined("EDIT_DESCRIPTOR") ? "edit&id=".$RECORD_ID : "add"; ?>&step=2" method="POST" class="form-horizontal">
-                    <div class="control-group">
-                        <label class="control-label form-required" for="descriptor">Descriptor:</label>
-                        <div class="controls">
-                            <input name="descriptor" id="descriptor" type="text" value="<?php echo (isset($descriptor) && $descriptor && $descriptor->getDescriptor() ? $descriptor->getDescriptor() : ""); ?>" />
-                        </div>
+            <form action="<?php echo ENTRADA_URL . "/admin/settings/manage/descriptors?org=".$ORGANISATION_ID; ?>&section=<?php echo defined("EDIT_DESCRIPTOR") ? "edit&id=".$RECORD_ID : "add"; ?>&step=2" method="POST" class="form-horizontal">
+                <div class="control-group">
+                    <label class="control-label form-required" for="descriptor">Descriptor</label>
+                    <div class="controls">
+                        <input name="descriptor" id="descriptor" type="text" class="span6" value="<?php echo (isset($descriptor) && $descriptor && $descriptor->getDescriptor() ? $descriptor->getDescriptor() : ""); ?>" />
                     </div>
-                    <div class="control-group">
-                        <label class="control-label form-required" for="order">Order:</label>
-                        <div class="controls">
-                            <select name="order" id="order">
-                                <option value="">-- Please select the order which this should appear in --</option>
-                                <?php
-                                $descriptors = Models_Evaluation_ResponseDescriptor::fetchAllByOrganisation($ORGANISATION_ID);
-                                if ($descriptors && @count($descriptors)) {
-                                    $max_count = count($descriptors);
-                                    $count = 0;
-                                    foreach ($descriptors as $descriptor) {
-                                        $count++;
-                                        if (!$RECORD_ID || $RECORD_ID != $descriptor->getID()) {
-                                            if ($count < $max_count) {
-                                                echo "<option value=\"".$count."\">Before ".$descriptor->getDescriptor()."</option>";
-                                            } else {
-                                                echo "<option value=\"".$count."\">Before ".$descriptor->getDescriptor()."</option>";
-                                                echo "<option value=\"".($count + 1)."\">After ".$descriptor->getDescriptor()."</option>";
-                                            }
+                </div>
+                <div class="control-group">
+                    <label class="control-label form-required" for="order">Order</label>
+                    <div class="controls">
+                        <select name="order" id="order" class="span6">
+                            <option value="">-- Please select the display order --</option>
+                            <?php
+                            $descriptors = Models_Evaluation_ResponseDescriptor::fetchAllByOrganisation($ORGANISATION_ID);
+                            if ($descriptors && @count($descriptors)) {
+                                $max_count = count($descriptors);
+                                $count = 0;
+                                foreach ($descriptors as $descriptor) {
+                                    $count++;
+                                    if (!$RECORD_ID || $RECORD_ID != $descriptor->getID()) {
+                                        if ($count < $max_count) {
+                                            echo "<option value=\"".$count."\">Before ".$descriptor->getDescriptor()."</option>";
                                         } else {
-                                            echo "<option value=\"".($count)."\" selected=\"selected\">Do not change</option>";
+                                            echo "<option value=\"".$count."\">Before ".$descriptor->getDescriptor()."</option>";
+                                            echo "<option value=\"".($count + 1)."\">After ".$descriptor->getDescriptor()."</option>";
                                         }
+                                    } else {
+                                        echo "<option value=\"".($count)."\" selected=\"selected\">Do not change</option>";
                                     }
-                                } else {
-                                    echo "<option value=\"1\">First</option>\n";
                                 }
-                                ?>
-                            </select>
-                        </div>
+                            } else {
+                                echo "<option value=\"1\">First</option>\n";
+                            }
+                            ?>
+                        </select>
                     </div>
-                    <div class="control-group">
-                        <label class="control-label form-required" for="reportable">Include in Reports:</label>
-                        <div class="controls">
-                            <input type="checkbox" value="1" name="reportable" <?php echo ($descriptor->getReportable() === NULL || $descriptor->getReportable() ? " checked=\"checked\"" : ""); ?>/>
-                        </div>
+                </div>
+                <div class="control-group">
+                    <div class="controls">
+                        <label class="checkbox"><input type="checkbox" value="1" name="reportable" <?php echo ($descriptor->getReportable() === NULL || $descriptor->getReportable() ? " checked=\"checked\"" : ""); ?> /> Include this response descriptor in reports.
                     </div>
-                    <div class="row-fluid">
-                        <a href="<?php echo ENTRADA_URL."/admin/settings/manage/descriptors?org=".$ORGANISATION_ID; ?>" class="btn">Cancel</a>
-                        <input type="submit" class="btn btn-primary pull-right" value="Save" />
-                    </div>
-                </form>
+                </div>
+                <div class="row-fluid">
+                    <a href="<?php echo ENTRADA_URL."/admin/settings/manage/descriptors?org=".$ORGANISATION_ID; ?>" class="btn">Cancel</a>
+                    <input type="submit" class="btn btn-primary pull-right" value="Save" />
+                </div>
+            </form>
             <?php
-            break;
+        break;
     }
 }

@@ -185,6 +185,48 @@ class Models_Objective {
         return false;
     }
 
+    public static function fetchObjectivesWithRelationships (&$objectives, $objective_parent, $flat = false, $objective_parents = array(), $top_parent = NULL) {
+        global $db;
+
+        $query = "SELECT a.`objective_id`, a.`objective_name` FROM `global_lu_objectives` AS a
+                    JOIN `objective_organisation` AS b
+                    ON a.`objective_id` = b.`objective_id`
+                    WHERE a.`objective_parent` = ?
+                    AND a.`objective_active` = 1
+                    ORDER BY a.`objective_order`";
+        $objective_children = $db->GetAll($query, array($objective_parent));
+        if ($objective_children) {
+            if ($objective_parent) {
+                $objective_parents[] = $objective_parent;
+            }
+            foreach ($objective_children as $objective_child) {
+                if (!$top_parent) {
+                    $temp_top_parent = $objective_child["objective_id"];
+                } else {
+                    $temp_top_parent = $top_parent;
+                }
+                if ($flat && $objectives) {
+                    $objectives[$objective_child["objective_id"]."_ID"] = array("objective_id" => $objective_child["objective_id"], "objective_name" => $objective_child["objective_name"], "objective_parents" => $objective_parents, "top_parent" => $temp_top_parent, "children" => array());
+                } else {
+                    $objectives[$objective_child["objective_id"]."_ID"] = array("objective_id" => $objective_child["objective_id"], "objective_name" => $objective_child["objective_name"], "objective_parents" => $objective_parents, "top_parent" => $temp_top_parent, "children" => array());
+                }
+                self::fetchObjectivesWithRelationships($objectives, $objective_child["objective_id"], $flat, $objective_parents, $temp_top_parent);
+                $children = array_slice($objectives, (array_search($objective_child["objective_id"]."_ID", array_keys($objectives)) + 1));
+                if (is_array($children) && count($children)) {
+                    foreach ($children as $objective) {
+                        if ($flat) {
+                            $objectives[$objective_child["objective_id"]."_ID"]["children"][] = $objective["objective_id"];
+                        } else {
+                            $objectives[$objective_child["objective_id"]."_ID"]["children"][] = $objective;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
     public static function fetchObjectivesMappedTo($objective_id = 0) {
         global $db;
 
@@ -261,6 +303,21 @@ class Models_Objective {
 		
         return $return;
     }
+    
+    public static function fetchRowByName($objective_name, $active = 1) {
+        global $db;
+
+		$return = false;
+		
+        $query = "SELECT * FROM `global_lu_objectives` WHERE `objective_name` = ? AND `objective_active` = ?";
+        $result = $db->GetRow($query, array($objective_name, $active));
+        if ($result) {
+            $objective = new self();
+            $return = $objective->fromArray($result);
+        }
+		
+        return $return;
+    }
 
     public function insert() {
 		global $db;
@@ -308,5 +365,40 @@ class Models_Objective {
         }
         return $objective_ids;
     }
-	
+	    
+    public static function getObjectiveSetDepth($objective_id, $max_depth = 0) {
+        $child_ids = self::getChildIDs($objective_id);
+        
+        if (is_array($child_ids)) {
+            foreach ($child_ids as $value) {
+                $depth = self::getObjectiveSetDepth($value) + 1;
+
+                if ($depth > $max_depth) {
+                    $max_depth = $depth;
+                }
+            }
+        }
+
+        return $max_depth;
+    }
+    
+    public static function fetchExplicitEventObjective($objective_id, $event_id) {
+        global $db;
+        $query = "SELECT c.`objective_id`, e.`objective_code`, e.`objective_name`, e.`objective_description`
+                    FROM `events` AS a
+                    JOIN `courses` AS b
+                    ON a.`course_id` = b.`course_id`
+                    JOIN `event_objectives` AS c
+                    ON a.`event_id` = c.`event_id`
+                    LEFT JOIN `course_objectives` AS d
+                    ON a.`course_id` = d.`course_id`
+                    AND c.`objective_id` = d.`objective_id`
+                    JOIN `global_lu_objectives` AS e
+                    ON c.`objective_id` = e.`objective_id`
+                    WHERE a.`event_id` = ?
+                    AND c.`objective_id` = ?
+                    AND d.`cobjective_id` IS NULL";
+        return $db->GetRow($query, array($event_id, $objective_id));
+    }
+
 }

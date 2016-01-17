@@ -79,5 +79,3 @@ class Models_Audience {
         return $this->audience_members;
     }
 }
-
-?>

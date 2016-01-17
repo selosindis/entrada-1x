@@ -18,6 +18,12 @@ if (!defined("IN_PUBLIC_ASSIGNMENTS")) {
 
 echo "<h1>Add Assignment Comment</h1>\n";
 
+if (isset($_GET["pid"]) && $tmp_input = clean_input($_GET["pid"], "int")) {
+    $USER_ID = $tmp_input;
+} else {
+    $USER_ID = $ENTRADA_USER->getActiveID();
+}
+
 if ($RECORD_ID) {
 	
 	$query			= "
@@ -51,7 +57,7 @@ if ($RECORD_ID) {
         }
         if ($allowed){//shares_module_access($file_record["cshare_id"], "add-comment")) {
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$RECORD_ID.(isset($assignment_contact)&&$assignment_contact?"&pid=".$assignment_record["proxy_id"]:""), "title" => limit_chars($assignment_record["assignment_title"], 32));
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=add-comment&assignment_id=".$RECORD_ID, "title" => "Add Comment");
+				$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=add-comment&assignment_id=".$RECORD_ID."&pid=".$USER_ID, "title" => "Add Comment");
 
             load_rte();
 
@@ -88,7 +94,7 @@ if ($RECORD_ID) {
                     }
 
                     if (!$ERROR) {
-                        $PROCESSED["proxy_to_id"]       = $ENTRADA_USER->getID();
+                        $PROCESSED["proxy_to_id"]       = $USER_ID;
                         $PROCESSED["assignment_id"]		= $RECORD_ID;
                         $PROCESSED["proxy_id"]			= $ENTRADA_USER->getID();
                         $PROCESSED["comment_active"]	= 1;
@@ -145,7 +151,7 @@ if ($RECORD_ID) {
                     echo display_notice();
                 }
                 ?>
-                <form action="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=add-comment&amp;assignment_id=".$RECORD_ID; ?>&amp;step=2" method="post">
+                <form action="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=add-comment&amp;assignment_id=".$RECORD_ID."&pid=".$USER_ID; ?>&amp;step=2" method="post">
                 <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Assignment Comment">
                 <colgroup>
                     <col style="width: 3%" />

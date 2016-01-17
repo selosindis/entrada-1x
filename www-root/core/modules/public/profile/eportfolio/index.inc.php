@@ -29,7 +29,7 @@ if (!defined("PARENT_INCLUDED")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("eportfolio", "read")) {
+} elseif (!$ENTRADA_ACL->amIAllowed("eportfolio", "read") || $ENTRADA_USER->getGroup() != "student") {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."\\'', 15000)";
 
 	$ERROR++;
@@ -39,7 +39,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eportfolio.js\"></script>";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eportfolio.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\">var ENTRADA_URL = '".ENTRADA_URL."'; var PROXY_ID = '".$ENTRADA_USER->getProxyId()."';</script>";
 	load_rte("minimal");
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/ckeditor/adapters/jquery.js\"></script>\n";
@@ -68,11 +68,12 @@ if (!defined("PARENT_INCLUDED")) {
 	$eportfolio = Models_Eportfolio::fetchRowByGroupID($ENTRADA_USER->getCohort());
 	if ($eportfolio) {
 		$folders = $eportfolio->getFolders();
+        if ($folders) {
 		?>
 		<div class="btn-group">
 			<a class="btn btn-info btn-large dropdown-toggle" data-toggle="dropdown" href="#">
-				<i class="icon-road icon-white"></i> 
-				<span id="current-folder">My ePortfolio</span>
+				<i class="icon-folder-open icon-white"></i> 
+				<span id="current-folder"><?php echo $folders[0]->getTitle(); ?></span>
 				<span class="caret"></span>
 			</a>
 			<ul class="dropdown-menu" id="folder-list">
@@ -91,7 +92,7 @@ if (!defined("PARENT_INCLUDED")) {
 				<li><a href="<?php echo ENTRADA_URL; ?>/profile/eportfolio?section=export-portfolio">Export My Portfolio</a></li>
 			</ul>
 		</div>
-		<div class="btn-group pull-right">
+        <div class="btn-group pull-right">
 			<a class="btn btn-large btn-success dropdown-toggle" data-toggle="dropdown" href="#">
 				<i class="icon-white icon-folder-open"></i> My Artifacts
 				<span class="caret"></span>
@@ -129,7 +130,10 @@ if (!defined("PARENT_INCLUDED")) {
 				<a href="#" class="btn btn-primary" id="save-button">Save changes</a>
 			</div>
 		</div>
-		<?php
+        <?php 
+        } else {
+            echo display_notice("Sorry, but your eportfolio not yet have any folders created.");
+        }
 	} else {
 		echo display_notice("Sorry, but your class does not yet have an eportfolio created. If you are receiving this message in error please use the feedback widget to contact a system administrator.");
 	}

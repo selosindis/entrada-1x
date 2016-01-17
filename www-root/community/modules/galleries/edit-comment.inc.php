@@ -132,37 +132,44 @@ if ($RECORD_ID) {
 					}
 					?>
 					<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=edit-comment&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post">
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit Photo Comment">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 20%" />
-						<col style="width: 77%" />
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="3" style="padding-top: 15px; text-align: right">
-                                <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-							<td colspan="3"><h2>Photo Comment Details</h2></td>
-						</tr>
-						<tr>
-							<td colspan="2"><label for="comment_title" class="form-nrequired">Comment Title</label></td>
-							<td style="text-align: right"><input type="text" id="comment_title" name="comment_title" value="<?php echo ((isset($PROCESSED["comment_title"])) ? html_encode($PROCESSED["comment_title"]) : ""); ?>" maxlength="128" style="width: 95%" /></td>
-						</tr>
-						<tr>
-							<td colspan="3"><label for="comment_description" class="form-required">Comment Body</label></td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								<textarea id="comment_description" name="comment_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["comment_description"])) ? html_encode($PROCESSED["comment_description"]) : ""); ?></textarea>
-							</td>
-						</tr>
-					</tbody>
-					</table>
+						<table summary="Edit Photo Comment">
+							<colgroup>
+								<col style="width: 20%" />
+								<col style="width: 80%" />
+							</colgroup>
+							<tfoot>
+								<tr>
+									<td colspan="2" style="padding-top: 15px; text-align: right">
+		                                <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
+									</td>
+								</tr>
+							</tfoot>
+							<tbody>
+								<tr>
+									<td colspan="2">
+										<h2>Photo Comment Details</h2>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<label for="comment_title" class="form-nrequired">Comment Title</label>
+									</td>
+									<td>
+										<input type="text" id="comment_title" name="comment_title" value="<?php echo ((isset($PROCESSED["comment_title"])) ? html_encode($PROCESSED["comment_title"]) : ""); ?>" maxlength="128" style="width: 300px;" />
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<label for="comment_description" class="form-required">Comment Body</label>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<textarea id="comment_description" name="comment_description" style="width: 98%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["comment_description"])) ? html_encode($PROCESSED["comment_description"]) : ""); ?></textarea>
+									</td>
+								</tr>
+							</tbody>
+						</table>
 					</form>
 					<?php
 					break;

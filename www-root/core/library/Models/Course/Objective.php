@@ -168,7 +168,7 @@ class Models_Course_Objective {
                     $value = clean_input($constraint, array("trim", "striptags"));
                 }
                 if (isset($key) && $key && isset($value) && ($value || $value === 0)) {
-                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode))." ".$key." ".(isset($method) && $method ? $method : $default_method).($method == "BETWEEN" ? " ? AND ?" : " ?");
+                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode))." ".$key." ".(isset($method) && $method ? $method : $default_method).(isset($method) && $method == "BETWEEN" ? " ? AND ?" : " ?");
                     if (is_array($value) && @count($value) == 2) {
                         $where[] = $value[0];
                         $where[] = $value[1];
@@ -213,6 +213,27 @@ class Models_Course_Objective {
     public static function fetchRowByCourseIDObjectiveID($course_id, $objective_id, $active = "1") {
         $self = new self();
         return $self->fetchRow(array("course_id" => $course_id, "objective_id" => $objective_id, "active" => $active));
+    }
+
+    public static function fetchAllByOrganisationIDCourseID($organisation_id, $course_id) {
+        global $db;
+
+        $query = "	SELECT b.*
+                    FROM `course_objectives` AS a
+                    JOIN `global_lu_objectives` AS b
+                    ON a.`objective_id` = b.`objective_id`
+                    JOIN `objective_organisation` AS c
+                    ON b.`objective_id` = c.`objective_id`
+                    WHERE a.`objective_type` = 'event'
+                    AND c.`organisation_id` = ".$db->qstr($organisation_id)."
+                    AND b.`objective_active` = '1'
+                    AND a.`active` = '1'
+                    AND a.`course_id` = ".$db->qstr($course_id)."
+                    GROUP BY b.`objective_id`
+                    ORDER BY b.`objective_order`";
+        $results = $db->GetAll($query);
+
+        return $results ? $results : false;
     }
     
     public function getCourseObjectiveID() {

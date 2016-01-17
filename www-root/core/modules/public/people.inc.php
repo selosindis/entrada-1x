@@ -65,6 +65,15 @@ if (!defined("PARENT_INCLUDED")) {
 	$plaintext_query = "";
 	$year_offset = (strtotime("July 15th, ".date("Y", time())) < time() ? 1 : 0);
 	
+	$active_tab = "";
+	if (isset($_GET["active_tab"]) && $active_tab = clean_input($_GET["active_tab"], array("trim", "url"))) {		
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["active_tab"] = $active_tab;
+	} else {
+		if (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["active_tab"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["active_tab"]) {
+			$active_tab = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["active_tab"];
+		}
+	}
+	
 	/**
 	 * Update requsted number of profiles per page.
 	 * Valid: any integer really.
@@ -530,11 +539,24 @@ if (!defined("PARENT_INCLUDED")) {
 					$('ps-basic-mode').show();
 				}
 			}
+				jQuery(document).ready(function($) {
+					$('a[data-toggle="tab"]').on('shown', function (e) {
+						//save the active tab.
+						$('input[name="active_tab"]').val($(e.target).attr('href'));
+					});
+
+					//show the active tab if it exists.  Defaults to People Search.
+					var active_tab = <?php echo "'" . $active_tab . "';\n" ; ?>
+					if (active_tab) {
+						$('a[href="' + active_tab + '"]').tab('show');
+					} 
+				});
 			</script>
 			<form id="search_form" action="<?php echo ENTRADA_URL; ?>/people" method="get">
 				<input type="hidden" name="pv" id="search_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
 				<input type="hidden" name="pp" id="search_pp" value="<?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]; ?>" />
 				<input type="hidden" name="type" value="search" />
+				<input type="hidden" name="active_tab" value="" />
 				<div class="row-fluid">
 					<div class="span2">
 						<label for="q" class="form-required">People Search:</label>
@@ -634,6 +656,7 @@ if (!defined("PARENT_INCLUDED")) {
 			<input type="hidden" name="type" value="browse-group" />
 			<input type="hidden" name="pv" id="browse-group_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
 			<input type="hidden" name="pp" id="browse-group_pp" value="<?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]; ?>" />
+			<input type="hidden" name="active_tab" value="" />
 			<div class="row-fluid">
 				<div class="span2">
 					<label for="group" class="form-required">Browse Group:</label>
@@ -665,6 +688,7 @@ if (!defined("PARENT_INCLUDED")) {
 			<input type="hidden" name="type" value="browse-dept" />
 			<input type="hidden" name="pv" id="browse-dept_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
 			<input type="hidden" name="pp" id="browse-dept_pp" value="<?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]; ?>" />
+			<input type="hidden" name="active_tab" value="" />
 			
 			<div class="row-fluid">
 				<div class="span3">

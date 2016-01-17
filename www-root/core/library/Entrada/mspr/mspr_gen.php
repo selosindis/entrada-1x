@@ -1,9 +1,9 @@
 <?php
+header("Content-type: text/html; charset=utf-8");
 require_once("Models/mspr/MSPRs.class.php");
 require_once("Entrada/mspr/functions.inc.php");
 define("MAX_RESEARCH", 6);
 define("MAX_OBSERVERSHIPS", 8);
-
 
 function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 	if (!$timestamp) {
@@ -16,7 +16,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 	$doc_date = date("F j, Y",$timestamp);
 	ob_start();
 	?>
-	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+	<!DOCTYPE html>
 	<html>
 	
 		<head>
@@ -28,6 +28,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 			<meta name="generator" content="Entrada MSPR Generator">
 			<meta name="keywords" content="Class of <?php echo $year; ?>, Undergraduate, Education, Dean's Letter, MSPR, Medical School Performance Report">
 			<meta name="subject" content="Medical School Performance Report">
+			<meta charset="utf-8">
 		</head>
 		
 		<body>
@@ -40,7 +41,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 			</table>
 			<div align="right"><b><u><?php echo $doc_date; ?></u></b></div>
 			<center><h2><u><?php echo $name; ?></u></h2></center>
-			<div><?php echo $name;?> entered the first year at Queen's University, School of Medicine in <?php echo $entry_year; ?> and is expected to graduate with the degree of Doctor of Medicine from Queen's in May of <?php echo $grad_year; ?>. The following is intended to supplement the official Queen's University Transcript.</div>
+			<div><?php echo $name;?> entered the first year in <?php echo $entry_year; ?> and is expected to graduate with the degree of Doctor of Medicine in May of <?php echo $grad_year; ?>. The following is intended to supplement the official Queen's University Transcript.</div>
 			<br><br>
 			<?php 
 			$component = $mspr["Clerkship Core Completed"];

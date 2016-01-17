@@ -23,9 +23,9 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "update",false)) {
@@ -205,7 +205,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="form-nrequired control-label">Medbiquitos Instructional Method:</label>
+                    <label class="form-nrequired control-label">Medbiquitous Instructional Method:</label>
                     <div class="controls">
                     <?php
                     $medbiq_instructional_methods = Models_MedbiqInstructionalMethod::fetchAllMedbiqInstructionalMethods();

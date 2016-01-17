@@ -1,17 +1,12 @@
 <section>
-	<h1>Entrada<span class="corner"></span></h1>
-	<ul>
-		{if $is_logged_in}
-        <li><a href="{$sys_website_url}/dashboard">Dashboard</a></li>
-        <li><a href="{$sys_website_url}/communities">Communities</a></li>
-        <li><a href="{$sys_website_url}/courses">Courses</a></li>
-        <li><a href="{$sys_website_url}/events">Learning Events</a></li>
-        <li><a href="{$sys_website_url}/search">Curriculum Search</a></li>
-        <li><a href="{$sys_website_url}/people">People Search</a></li>
-        <li><a href="{$sys_website_url}/library">Library</a></li>
-        <li><a href="{$sys_website_url}?action=logout">Log Out</a></li>
+    <div class="panel-content">
+        <h1>{$application_name}</h1>
+        {if $is_logged_in}
+            {$entrada_navigation}
         {else}
-        <li><a href="{$sys_website_url}">Log In</a></li>
+            <ul class="menu">
+                <li><a href="{$sys_website_url}">{translate}Log In{/translate}</a></li>
+            </ul>
         {/if}
-	</ul>
+    </div>
 </section>

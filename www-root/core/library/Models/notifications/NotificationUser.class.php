@@ -271,7 +271,7 @@ class NotificationUser {
 			break;
 			case "event_discussion" :
 			default :
-				$content_url = ENTRADA_URL."/events?id=".$this->getRecordID()."#event_comments";
+				$content_url = ENTRADA_URL."/events?id=".$this->getRecordID()."#event-comments-section";
 			break;
 		}
 		if ($content_url) {

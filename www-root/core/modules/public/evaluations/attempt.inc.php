@@ -675,16 +675,27 @@ if ($RECORD_ID) {
                                                     echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $evaluation_targets[0]["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
                                                     echo "</div>\n";
                                                 } elseif ($PROCESSED["target_shortname"] == "resident") {
-                                                    echo "<div id=\"encounter_select\" class=\"row-fluid\">\n";
-                                                    echo "  <label for=\"encounter\" class=\"span5\">Encounter:\n";
-                                                    echo "      <input type=\"text\" name=\"encounter\" />\n";
+                                                    echo "<div class=\"content-small row-fluid\">\n";
+                                                    echo "  <label for=\"encounter_complexity\" class=\"span7\">\n";
+                                                    echo "      Please choose the complexity of this encounter:\n";
                                                     echo "  </label>\n";
-                                                    echo "  <label for=\"complexity\" class=\"span6\">Complexity:\n";
-                                                    echo "      <select name=\"complexity\">\n";
-                                                    echo "          <option></option>\n";
+                                                    echo "  <span class=\"span5\">\n";
+                                                    echo "      <select id=\"encounter_complexity\" name=\"encounter_complexity\">\n";
+                                                    echo "          <option value=\"0\"".(!isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) || !$PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] ? " selected=\"selected\"" : "").">-- Select the encounter complexity --</option>\n";
+                                                    echo "          <option value=\"1\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] == 1 ? " selected=\"selected\"" : "").">Simple</option>\n";
+                                                    echo "          <option value=\"2\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] == 2 ? " selected=\"selected\"" : "").">Complex, but frequently encountered</option>\n";
+                                                    echo "          <option value=\"3\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] == 3 ? " selected=\"selected\"" : "").">Complex</option>\n";
                                                     echo "      </select>\n";
+                                                    echo "  </span>\n";
+                                                    echo "</div>";
+                                                    echo "<div class=\"content-small row-fluid\">\n";
+                                                    echo "  <label for=\"encounter\" class=\"span7\">\n";
+                                                    echo "      Additionally, you may indicate the name of this encounter:\n";
                                                     echo "  </label>\n";
-                                                    echo "</div>\n";
+                                                    echo "  <span class=\"span5\">\n";
+                                                    echo "      <input type=\"text\" id=\"encounter_name\" name=\"encounter_name\" style=\"margin-bottom: 0px;\" value=\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_name"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_name"] ? html_encode($PROCESSED_PATIENT_ENCOUNTER["encounter_name"]) : "")."\"/>\n";
+                                                    echo "  </span>\n";
+                                                    echo "</div>";
                                                 }
 											}
 										} elseif ($PROCESSED["target_shortname"] == "teacher") {

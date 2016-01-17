@@ -23,7 +23,7 @@
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_DESCRIPTORS"))) {
     exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
     header("Location: ".ENTRADA_URL);
     exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "delete", false)) {

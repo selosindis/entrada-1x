@@ -75,17 +75,17 @@ if ($RECORD_ID) {
 			 */
 			if (($release_date = (int) $topic_record["release_date"]) && ($release_date > time())) {
 				$NOTICE++;
-				$NOTICESTR[] = "This discussion post will not be accessible to others until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.";
+				$NOTICESTR[] = "This discussion post will not be accessible to others until ".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.";
 			} elseif ($release_until = (int) $topic_record["release_until"]) {
 				if ($release_until > time()) {
 					$NOTICE++;
-					$NOTICESTR[] = "This discussion post will be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.";
+					$NOTICESTR[] = "This discussion post will be accessible until ".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.";
 				} else {
 					/**
 					 * Only administrators or people who wrote the post will get this.
 					 */
 					$NOTICE++;
-					$NOTICESTR[] = "This discussion post was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong> by others.";
+					$NOTICESTR[] = "This discussion post was only accessible until ".date(DEFAULT_DATE_FORMAT, $release_until)."</strong> by others.";
 				}
 			}
 
@@ -94,23 +94,19 @@ if ($RECORD_ID) {
 			}
 			?>
 			<a name="top"></a>
-			<div id="post-<?php echo $RECORD_ID; ?>" style="padding-top: 10px; clear: both">
-				<table class="discussions posts" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+			<div id="post-<?php echo $RECORD_ID; ?>">
+				<h1 id="post-<?php echo $RECORD_ID; ?>-title"><?php echo html_encode($topic_record["topic_title"]); ?></h1>
+				<table class="table post">
 				<colgroup>
 					<col style="width: 30%" />
 					<col style="width: 70%" />
 				</colgroup>
-				<thead>
-					<tr>
-						<td colspan="2"><div id="post-<?php echo $RECORD_ID; ?>-title"><?php echo html_encode($topic_record["topic_title"]); ?></div></td>
-					</tr>
-				</thead>
 				<tbody>
 					<tr>
 						<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span> <?php if(defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && isset($topic_record["anonymous"]) && $topic_record["anonymous"] && !$COMMUNITY_ADMIN){?><span style="font-size: 10px">Anonymous</span><?php } else {?><a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($topic_record["poster_username"]); ?>" style="font-size: 10px"><?php echo html_encode($topic_record["poster_fullname"]); ?></a><?php } ?></td>
 						<td style="border-bottom: none">
 							<div style="float: left">
-								<span class="content-small"><strong>Posted:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $topic_record["updated_date"]); ?></span>
+								<span class="content-small">Posted:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $topic_record["updated_date"]); ?></span>
 							</div>
 							<div style="float: right">
 							<?php
@@ -143,14 +139,14 @@ if ($RECORD_ID) {
 				if ($results) {
 					if ($POST_REPLY) {
 						?>
-						<ul class="page-action">
-                            <li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=reply-post&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Reply To Post</a></li>
-						</ul>
+						<div class="page-action">
+                            <a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=reply-post&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Reply To Post</a>
+						</div>
 						<?php
 					}
 					?>
-					<h2 style="margin-bottom: 0px"><?php echo html_encode($topic_record["topic_title"]); ?> Replies</h2>
-					<table class="discussions posts" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+					<h2 style="margin-top:30px; margin-bottom: 0px">Posted Replies</h2>
+					<table class="table post">
 					<colgroup>
 						<col style="width: 30%" />
 						<col style="width: 70%" />
@@ -164,7 +160,7 @@ if ($RECORD_ID) {
 							<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span> <?php if(defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && isset($result["anonymous"]) && $result["anonymous"] && !$COMMUNITY_ADMIN){?><span style="font-size: 10px">Anonymous</span><?php } else {?><a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($result["poster_username"]); ?>" style="font-size: 10px"><?php echo html_encode($result["poster_fullname"]); ?></a><?php } ?></td>
 							<td style="border-bottom: none">
 								<div style="float: left">
-									<span class="content-small"><strong>Replied:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
+									<span class="content-small">Replied:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
 								</div>
 								<div style="float: right">
 								<?php
@@ -182,7 +178,7 @@ if ($RECORD_ID) {
 
 								if ($result["release_date"] != $result["updated_date"]) {
 									echo "<div class=\"content-small\" style=\"margin-top: 15px\">\n";
-									echo "	<strong>Last updated:</strong> ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".(($result["proxy_id"] == $result["updated_by"]) ? html_encode($result["poster_fullname"]) : html_encode(get_account_data("firstlast", $result["updated_by"]))).".";
+									echo "	Last updated:</strong> ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".(($result["proxy_id"] == $result["updated_by"]) ? html_encode($result["poster_fullname"]) : html_encode(get_account_data("firstlast", $result["updated_by"]))).".";
 									echo "</div>\n";
 								}
 							?>
@@ -197,10 +193,10 @@ if ($RECORD_ID) {
 				}
 				if ($POST_REPLY) {
 					?>
-					<ul class="page-action">
-                        <li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=reply-post&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Reply To Post</a></li>
-						<li class="top"><a href="#top">Top Of Page</a></li>
-					</ul>
+					<div class="page-action">
+                        <a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=reply-post&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Reply To Post</a>
+						<span><a href="#top" class="btn btn-success pull-right"><i class="icon-chevron-up icon-white"></i></a></span>
+					</div>
 					<?php
 				}
 				?>

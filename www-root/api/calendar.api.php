@@ -25,7 +25,7 @@
 require_once("init.inc.php");
 
 $request = explode("/", ((isset( $_GET["request"])) ? clean_input($_GET["request"], array("url", "lowercase", "nows")) : ""));
-$seleted_course = clean_input($_GET["course"], int);
+$selected_course = clean_input($_GET["course"], "int");
 $user_proxy_id = 0;
 $user_username = "";
 $user_firstname = "";
@@ -65,12 +65,12 @@ if (substr($request_filename, -4) == ".ics") {
  */
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$user_proxy_id = $ENTRADA_USER->getID();
-	$user_username = $_SESSION["details"]["username"];
-	$user_firstname = $_SESSION["details"]["firstname"];
-	$user_lastname = $_SESSION["details"]["lastname"];
-	$user_email = $_SESSION["details"]["email"];
-	$user_role = $_SESSION["details"]["role"];
-	$user_group = $_SESSION["details"]["group"];
+	$user_username = $ENTRADA_USER->getUsername();
+	$user_firstname = $ENTRADA_USER->getFirstname();
+	$user_lastname = $ENTRADA_USER->getLastname();
+	$user_email = $ENTRADA_USER->getEmail();
+	$user_role = $ENTRADA_USER->getActiveRole();
+	$user_group = $ENTRADA_USER->getActiveGroup();
 	$user_organisation_id = $ENTRADA_USER->getActiveOrganisation();
 } else {
 	/**
@@ -202,7 +202,7 @@ if ($user_proxy_id) {
                             "custom",
                             $event_start,
                             $event_finish,
-                            events_filters_faculty($seleted_course, $user_group, $user_role),
+                            (isset($selected_course) && $selected_course ? events_filters_faculty($selected_course, $user_group, $user_role) : events_filters_defaults($user_proxy_id, $user_group, $user_role,  0, 0)),
                             true,
                             1,
                             1750,
@@ -219,7 +219,7 @@ if ($user_proxy_id) {
 			"custom",
 			$event_start,
 			$event_finish,
-            events_filters_defaults($user_proxy_id, $user_group, $user_role,  0, $seleted_course),
+            events_filters_defaults($user_proxy_id, $user_group, $user_role,  0, $selected_course),
 			true,
 			1,
 			1750,

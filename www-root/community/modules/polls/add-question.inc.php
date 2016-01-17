@@ -217,15 +217,14 @@ if ($RECORD_ID) {
 			}
 			?>
 			<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-question&amp;step=2&id=".$RECORD_ID; ?>" method="post">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Question">
+			<table summary="Add Question">
 			<colgroup>
-				<col style="width: 3%" />
 				<col style="width: 20%" />
-				<col style="width: 77%" />
+				<col style="width: 80%" />
 			</colgroup>
 			<tfoot>
 				<tr>
-					<td colspan="3" style="padding-top: 15px; text-align: right;">
+					<td colspan="2" style="padding-top: 15px; text-align: right;">
 						<div style="position: relative; left: 0px; width: 100%;">
 							<div style="position: absolute; left: 5px;">
 								<span class="content-small" style="padding-right: 10px;">After Saving:</span>
@@ -242,37 +241,47 @@ if ($RECORD_ID) {
 			</tfoot>
 			<tbody>
 				<tr>
-					<td colspan="3"><h2>Question Details</h2></td>
+					<td colspan="2"><h2>Question Details</h2></td>
 				</tr>
 				<tr>
-					<td colspan="2"><label for="poll_question" class="form-required">Question</label></td>
-					<td style="text-align: right">
-						<input type="text" id="poll_question" name="poll_question" value="<?php echo ((isset($PROCESSED["poll_question"])) ? html_encode($PROCESSED["poll_question"]) : ""); ?>" style="width: 94%" />
+					<td><label for="poll_question" class="form-required">Question</label></td>
+					<td >
+						<input type="text" id="poll_question" name="poll_question" value="<?php echo ((isset($PROCESSED["poll_question"])) ? html_encode($PROCESSED["poll_question"]) : ""); ?>" style="width: 300px" />
 					</td>
 				</tr>
 				<tr>
-					<td colspan="2" style="padding: 20px 0px 20px 0px;">
+					<td>
 						<label for="multiple_responses" class="form-nrequired">Multiple Responses</label>
-						<div class="content-small">
-							Select this option to allow users to choose more than one response to this question.
-						</div>
 					</td>
-					<td style="text-align: right;">
-						<div style="width: 10%; float: left;">
-							<input type="checkbox" id="multiple_responses" name="multiple_responses" value="1" onclick="javascript: Effect.toggle($('responses_range'), 'Appear', {duration:0.3});"<?php echo (((int) $PROCESSED["maximum_responses"] > 1) ? " checked=\"checked\"" : "" ); ?>" />
-						</div>
-						<div style="width: 90%;<?php echo (((int) $PROCESSED["maximum_responses"] > 1) ? "" : " display: none;"); ?> float: left; text-align: center;" id="responses_range">
-							<input type="text" id="min_responses" name="min_responses" maxlength="2" style="width: 10%;" value="<?php echo ((int) $PROCESSED["minimum_responses"] ? (int) $PROCESSED["minimum_responses"] : 1 ); ?>"/>&nbsp; To &nbsp;<input type="text" id="max_responses" name="max_responses" maxlength="2" style="width: 10%;" value="<?php echo ((int) $PROCESSED["maximum_responses"] ? (int) $PROCESSED["maximum_responses"] : 1 ); ?>"/>&nbsp; Responses Allowed.
-						</div>
+					<td colspan="2">
+						<table class="table table-bordered no-thead" style="margin-bottom: 0;">
+							<colgroup>
+								<col style="width: 5%" />
+								<col style="width: auto" />
+							</colgroup>
+							<tr>
+								<td class="center">
+									<input type="checkbox" id="multiple_responses" name="multiple_responses" value="1" onclick="javascript: Effect.toggle($('responses_range'), 'Appear', {duration:0.3});"<?php echo (((int) $PROCESSED["maximum_responses"] > 1) ? " checked=\"checked\"" : "" ); ?> />
+								</td>
+								<td>
+									<label class="form-nrequired" style="vertical-align: middle">Select this option to allow users to choose more than one response to this question.</label>
+								</td>
+							</tr>
+						</table>
 					</td>
 				</tr>
 				<tr>
-					<td colspan="2" style="vertical-align: top">
-						<label for="poll_responses" class="form-required">Responses</label>
-						<input class="btn" type="button" value="+" onclick="addItem();" style="position: absolute;" />
+					<td style="width: 90%;<?php echo (((int) $PROCESSED["maximum_responses"] > 1) ? "" : " display: none;"); ?> float: left;" id="responses_range">
+						<input type="text" id="min_responses" name="min_responses" maxlength="2" style="width: 10%;" value="<?php echo ((int) $PROCESSED["minimum_responses"] ? (int) $PROCESSED["minimum_responses"] : 1 ); ?>"/>&nbsp; To &nbsp;<input type="text" id="max_responses" name="max_responses" maxlength="2" style="width: 10%;" value="<?php echo ((int) $PROCESSED["maximum_responses"] ? (int) $PROCESSED["maximum_responses"] : 1 ); ?>"/>&nbsp; Responses Allowed.
+					</td>
+				</tr>
+				<tr>
+					<td style="vertical-align:top;">
+						<label for="poll_responses" class="form-required" style="margin-top:10px;">Responses</label>
 				  	</td>
-					<td style="text-align: right; vertical-align: top">
-						<input type="text" style="width: 80%; margin-right: 40px;" id="rowText" name="rowText" value="" maxlength="255" onblur="addItem()" />
+					<td>
+						<input type="text" style="width: 300px;" id="rowText" name="rowText" value="" maxlength="255" />
+						<a class="btn btn-primary" style="height:20px; margin-top: -5px; margin-left: 5px;" onclick="addItem();"><i class="icon-plus icon-white" style="margin-top:3px;"></i></a>
 						<script type="text/javascript" >
 							$('rowText').observe('keypress', function(event){
 							    if(event.keyCode == Event.KEY_RETURN) {
@@ -281,13 +290,13 @@ if ($RECORD_ID) {
 							    }
 							});
 						</script>
-						<ul id="poll_responses" class="sortable-list" style="margin-top: 15px; text-align: left">
+						<ul id="poll_responses" class="sortable-list" style="margin:10px 0 0 0; text-align:left;">
 						<?php
 							if (isset($poll_responses) && count($poll_responses) != 0)
 							{
 								foreach($poll_responses as $key => $value)
 								{
-									echo "<li id=\"poll_responses_".$key."\" ><div class=\"response_".$key."\" onmouseover=\"this.morph('background: #FFFFBB;');\" onmouseout=\"this.morph('background: #FFFFFF;');\" style=\"float:left; text-align: left; width: 90%\" onclick=\"showEditor(this)\" >".$value."</div><div style=\"float:right; text-align: right; width: 10%\"><input class=\"btn\" type=\"button\" value=\"-\" onclick=\"removeItem(".$key.");\" /></div></li>";
+									echo "<li id=\"poll_responses_".$key."\"><div style=\"float:left; text-align: left; width: auto;\" >".$value."</div><div style=\"float:right; text-align: right;\"><a class=\"btn btn-danger\" style=\"height:20px;\" onclick=\"removeItem(".$key.");\"><i class=\"icon-trash icon-white\" style=\"margin-top:3px;\"></i></a></div></li>";
 								}
 								$display = "block";
 							}
@@ -298,7 +307,7 @@ if ($RECORD_ID) {
 						?>
 						</ul>
 	   					<div id="note" class="content-small" style="clear: both; padding-top: 15px;"><strong>Please Note:</strong> You can reorder responses by dragging and dropping the response.</div>
-						<input type="hidden" id="itemCount" name="itemCount" value="<?php echo (isset($poll_responses) && is_array($poll_responses) ? count($poll_responses) : "0"); ?>" />
+						<input type="hidden" id="itemCount" name="itemCount" value="<?php echo (isset($_POST['itemCount']) && $_POST['itemCount'] != "0" ? html_encode($_POST['itemCount']) : "0"); ?>" />
 						<div id="pollResponses">
 						<?php echo poll_responses_in_form($poll_responses); ?>
 						</div>

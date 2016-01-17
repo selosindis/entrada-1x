@@ -86,7 +86,8 @@ class Models_CurriculumPeriod extends Models_Base {
                     WHERE a.`curriculum_type_id` = ? 
                     AND a.`active` = ?
                     AND b.`course_id` = ?
-                    GROUP BY a.`cperiod_id`";
+                    GROUP BY a.`cperiod_id`
+                    ORDER BY a.`start_date` DESC";
         
         $results = $db->GetAll($query, array($curriciulum_type_id, $active, $course_id));
         if ($results) {

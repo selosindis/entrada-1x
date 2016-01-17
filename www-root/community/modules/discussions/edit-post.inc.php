@@ -96,7 +96,7 @@ if ($RECORD_ID) {
 							$PROCESSED["topic_title"] = $title;
 						} else {
 							$ERROR++;
-							$ERRORSTR[] = "The <strong>Post Title</strong> field is required.";
+							$ERRORSTR[] = "The Post Title</strong> field is required.";
 						}
 
 						/**
@@ -109,7 +109,7 @@ if ($RECORD_ID) {
 							$PROCESSED["topic_description"] = $description;
 						} else {
 							$ERROR++;
-							$ERRORSTR[] = "The <strong>Post Body</strong> field is required, this is the body of your post.";
+							$ERRORSTR[] = "The Post Body</strong> field is required, this is the body of your post.";
 						}
 						
 						/**
@@ -138,7 +138,7 @@ if ($RECORD_ID) {
 							$PROCESSED["release_date"]	= (int) $release_dates["start"];
 						} else {
 							$ERROR++;
-							$ERRORSTR[] = "The <strong>Release Start</strong> field is required.";
+							$ERRORSTR[] = "The Release Start</strong> field is required.";
 						}
 						if ((isset($release_dates["finish"])) && ((int) $release_dates["finish"])) {
 							$PROCESSED["release_until"]	= (int) $release_dates["finish"];
@@ -170,7 +170,7 @@ if ($RECORD_ID) {
 								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully updated your discussion post.<br /><br />You will now be redirected to this thread; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$SUCCESSSTR[]	= "You have successfully updated your discussion post.<br /><br />You will now be redirected to this thread; this will happen automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								add_statistic("community_discussions", "post_edit", "cdtopic_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_post", 0, $topic_record["cdiscussion_id"]);
 							}
@@ -214,62 +214,93 @@ if ($RECORD_ID) {
 						?>
 						<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=edit-post&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post">
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit Discussion Post">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 20%" />
-							<col style="width: 77%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="3" style="padding-top: 15px; text-align: right">
-									<input type="button" class="btn" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID; ?>'" />
-                                    <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td colspan="3"><h2>Discussion Post Details</h2></td>
-							</tr>
-							<tr>
-								<td colspan="2"><label for="topic_title" class="form-required">Post Title</label></td>
-								<td style="text-align: right"><input type="text" id="topic_title" name="topic_title" value="<?php echo ((isset($PROCESSED["topic_title"])) ? html_encode($PROCESSED["topic_title"]) : ""); ?>" maxlength="128" style="width: 95%" /></td>
-							</tr>
-							<tr>
-								<td colspan="3"><label for="topic_description" class="form-required">Post Body</label></td>
-							</tr>
-							<tr>
-								<td colspan="3">
-									<textarea id="topic_description" name="topic_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<?php if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON) { ?>
-							<tr>
-								<td><input type="checkbox" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/></td>
-								<td colspan="2"><label for="anonymous" class="form-nrequired">Hide name from non-administrator users</label></td>
-							</tr>									
-							<?php } ?>
-							<?php
-							if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
-								?>
+							<colgroup>
+								<col style="width: 20" />
+								<col style="width: 80%" />
+							</colgroup>
+							<tfoot>
 								<tr>
-									<td colspan="3">&nbsp;</td>
+									<td colspan="2" style="padding-top: 15px; text-align: right">
+										<input type="button" class="btn" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID; ?>'" />
+	                                    <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+									</td>
+								</tr>
+							</tfoot>
+							<tbody>
+								<tr>
+									<td colspan="2">
+										<h2>Discussion Post Details</h2>
+									</td>
 								</tr>
 								<tr>
-									<td><input type="checkbox" name="enable_notifications" id="enable_notifications" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/></td>
-									<td colspan="2"><label for="enable_notifications" class="form-nrequired">Receieve notifications when this users reply to this thread</label></td>
+									<td>
+										<label for="topic_title" class="form-required">Post Title</label>
+									</td>
+									<td><input type="text" id="topic_title" name="topic_title" value="<?php echo ((isset($PROCESSED["topic_title"])) ? html_encode($PROCESSED["topic_title"]) : ""); ?>" maxlength="128" style="width: 300px" />
+									</td>
 								</tr>
-								<?php
-							}
-							?>
-							<tr>
-								<td colspan="3"><h2>Time Release Options</h2></td>
-							</tr>
-							<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-						</tbody>
+								<tr>
+									<td colspan="2">
+										<label for="topic_description" class="form-required">Post Body</label>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<textarea id="topic_description" name="topic_description" style="width: 98%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
+									</td>
+								</tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <table class="table table-bordered no-thead">
+                                            <colgroup>
+                                                <col style="width: 5%" />
+                                                <col style="width: auto" />
+                                            </colgroup>
+                                            <tbody>
+                                            <?php
+                                            if (defined("COMMUNITY_DISCUSSIONS_ANON") && COMMUNITY_DISCUSSIONS_ANON) {
+                                                ?>
+                                                <tr>
+                                                    <td class="center">
+                                                        <input type="checkbox" id="anonymous" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/>
+                                                    </td>
+                                                    <td>
+                                                        <label for="anonymous" class="form-nrequired">Hide my name from other community members.</label>
+                                                    </td>
+                                                </tr>
+                                            <?php
+                                            }
+
+                                            if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
+                                                ?>
+                                                <tr>
+                                                    <td class="center">
+                                                        <input type="checkbox" id="enable_notifications" name="enable_notifications" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>
+                                                    </td>
+                                                    <td>
+                                                        <label for="enable_notifications" class="form-nrequired">Receive e-mail notification when people reply to this thread.</label>
+                                                    </td>
+                                                </tr>
+                                            <?php
+                                            }
+                                            ?>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+								<tr>
+									<td colspan="2">
+										<h2>Time Release Options</h2>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<table class="date-time">
+											<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+										</table>
+									</td>
+								</tr>
+							</tbody>
 						</table>
 						</form>
 						<?php
@@ -289,7 +320,7 @@ if ($RECORD_ID) {
 							$PROCESSED["topic_description"] = $description;
 						} else {
 							$ERROR++;
-							$ERRORSTR[] = "The <strong>Post Body</strong> field is required, this is your reply to the post.";
+							$ERRORSTR[] = "The Post Body</strong> field is required, this is your reply to the post.";
 						}
 
 						/**
@@ -330,7 +361,7 @@ if ($RECORD_ID) {
 								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully updated your discussion post reply.<br /><br />You will now be redirected to this thread; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$SUCCESSSTR[]	= "You have successfully updated your discussion post reply.<br /><br />You will now be redirected to this thread; this will happen automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								add_statistic("community:".$COMMUNITY_ID.":discussions", "post_edit", "cdtopic_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_reply", 0, $topic_record["cdtopic_parent"]);
 							}
@@ -373,44 +404,65 @@ if ($RECORD_ID) {
 						}
 						?>
 						<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=edit-post&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post">
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit Discussion Pos">
-						<tfoot>
-							<tr>
-								<td style="padding-top: 15px; text-align: right">
-									<input type="button" class="btn" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$topic_record["cdtopic_parent"]."#post-".$RECORD_ID; ?>'" />
-									<input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td><h2>Current Reply</h2></td>
-							</tr>
-							<tr>
-								<td>
-									<textarea id="topic_description" name="topic_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
-								</td>
-							</tr>
-							<?php if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON) { ?>
-							<tr>
-								<td>&nbsp;</td>
-							</tr>
-							<tr>
-								<td><input type="checkbox" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/><label for="anonymous" class="form-nrequired">Hide name from non-administrator users</label></td>
-							</tr>		
-							<?php } ?>
-							<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) { ?>
-							<tr>
-								<td>&nbsp;</td>
-							</tr>
-							<tr>
-								<td>
-									<input type="checkbox" name="enable_notifications" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>
-									<label for="enable_notifications" class="form-nrequired">Receieve notifications when this users reply to this thread</label></td>
-							</tr>
-							<?php } ?>
-						</tbody>
-						</table>
+							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit Discussion Pos">
+								<tfoot>
+									<tr>
+										<td style="padding-top: 15px; text-align: right">
+											<input type="button" class="btn" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$topic_record["cdtopic_parent"]."#post-".$RECORD_ID; ?>'" />
+											<input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+										</td>
+									</tr>
+								</tfoot>
+								<tbody>
+									<tr>
+										<td><h2>Current Reply</h2></td>
+									</tr>
+									<tr>
+										<td>
+											<textarea id="topic_description" name="topic_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<table class="table table-bordered no-thead">
+												<colgroup>
+													<col style="width: 5%" />
+													<col style="width: auto" />
+												</colgroup>
+												<tbody>
+                                                <?php
+                                                if (defined("COMMUNITY_DISCUSSIONS_ANON") && COMMUNITY_DISCUSSIONS_ANON) {
+                                                    ?>
+													<tr>
+														<td class="center">
+															<input type="checkbox" id="anonymous" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/>
+														</td>
+														<td>
+															<label for="anonymous" class="form-nrequired">Hide my name from other community members.</label>
+														</td>
+													</tr>								
+													<?php
+                                                }
+
+                                                if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
+                                                    ?>
+													<tr>
+														<td class="center">
+															<input type="checkbox" id="enable_notifications" name="enable_notifications" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>
+														</td>
+														<td>
+															<label for="enable_notifications" class="form-nrequired">Receive e-mail notification when people reply to this thread.</label>
+														</td>
+													</tr>
+													<?php
+                                                }
+                                                ?>
+												</tbody>
+											</table>
+										</td>
+									</tr>
+								</tbody>
+							</table>
 						</form>
 						<?php
 						if (discussion_topic_module_access($topic_record["cdtopic_parent"], "view-post")) {
@@ -431,8 +483,8 @@ if ($RECORD_ID) {
 							if ($result) {
 								?>
 								<br />
-								<h2>Original Post: <small><?php echo html_encode($result["topic_title"]); ?></small></h2>
-								<table class="discussions posts" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+								<h2>Original Post: <?php echo html_encode($result["topic_title"]); ?></h2>
+								<table class="table">
 								<colgroup>
 									<col style="width: 30%" />
 									<col style="width: 70%" />
@@ -441,7 +493,7 @@ if ($RECORD_ID) {
 									<td style="border-bottom: none; border-right: none"><?php echo get_online_status($result["proxy_id"], "image"); ?> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($result["poster_username"]); ?>" style="font-weight: bold; text-decoration: underline"><?php echo html_encode($result["poster_fullname"]); ?></a></td>
 									<td style="border-bottom: none">
 										<div style="float: left">
-											<span class="content-small"><strong>Posted:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
+											<span class="content-small">Posted:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
 										</div>
 									</td>
 								</tr>

@@ -1,157 +1,40 @@
-SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
-
-CREATE TABLE IF NOT EXISTS `acl_permissions` (
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `acl_permissions` (
   `permission_id` int(12) NOT NULL AUTO_INCREMENT,
   `resource_type` varchar(64) DEFAULT NULL,
   `resource_value` int(12) DEFAULT NULL,
   `entity_type` varchar(64) DEFAULT NULL,
   `entity_value` varchar(64) DEFAULT NULL,
-  `app_id` int(12) NULL DEFAULT NULL,
+  `app_id` int(12) DEFAULT NULL,
   `create` tinyint(1) DEFAULT NULL,
   `read` tinyint(1) DEFAULT NULL,
   `update` tinyint(1) DEFAULT NULL,
   `delete` tinyint(1) DEFAULT NULL,
   `assertion` varchar(50) DEFAULT NULL,
-  PRIMARY KEY  (`permission_id`),
+  PRIMARY KEY (`permission_id`),
   KEY `entity_type` (`entity_type`,`entity_value`)
+) ENGINE=MyISAM AUTO_INCREMENT=134 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+INSERT INTO `acl_permissions` VALUES (1,'community',NULL,NULL,NULL,1,1,1,NULL,NULL,'NotGuest'),(2,'course',NULL,'group','student',1,NULL,0,NULL,NULL,'CourseEnrollment'),(3,'course',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'ResourceOrganisation&NotGuest'),(4,'dashboard',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(5,'discussion',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(6,'library',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(7,'people',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(8,'podcast',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(9,'profile',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(10,'search',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(11,'event',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'ResourceOrganisation&NotGuest'),(12,'resourceorganisation',1,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(13,'coursecontent',NULL,'role','pcoordinator',1,NULL,NULL,1,NULL,'CourseOwner'),(14,'evaluation',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(15,'evaluationform',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(16,'evaluationformquestion',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(17,'event',NULL,'role','pcoordinator',1,1,NULL,NULL,NULL,'CourseOwner'),(18,'event',NULL,'role','pcoordinator',1,NULL,NULL,1,1,'EventOwner'),(19,'event',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'EventEnrollment&NotGuest'),(20,'event',NULL,'group','student',1,NULL,0,NULL,NULL,'NotEventEnrollment'),(21,'eventcontent',NULL,'role','pcoordinator',1,NULL,NULL,1,NULL,'EventOwner'),(22,'coursecontent',NULL,'role','director',1,NULL,NULL,1,NULL,'CourseOwner'),(23,'coursecontent',NULL,'role','lecturer',1,NULL,NULL,1,NULL,'CourseOwner'),(24,'eventcontent',NULL,'role','lecturer',1,NULL,NULL,1,NULL,'EventOwner'),(25,'eventcontent',NULL,'role','director',1,NULL,NULL,1,NULL,'EventOwner'),(26,'eventcontent',NULL,'group:role','faculty:admin',1,NULL,NULL,1,NULL,'EventOwner'),(27,NULL,NULL,'group:role','medtech:admin',1,1,1,1,1,NULL),(28,'notice',NULL,'group:role','faculty:director',1,1,NULL,1,1,'ResourceOrganisation'),(29,'notice',NULL,'group:role','faculty:admin',1,1,NULL,1,1,'ResourceOrganisation'),(30,'notice',NULL,'group:role','staff:admin',1,1,NULL,1,1,'ResourceOrganisation'),(31,'notice',NULL,'group:role','staff:pcoordinator',1,1,NULL,1,1,'ResourceOrganisation'),(32,'resourceorganisation',1,'organisation:group:role','1:faculty:director',1,1,NULL,NULL,NULL,NULL),(33,'resourceorganisation',1,'organisation:group:role','1:faculty:admin',1,1,NULL,NULL,NULL,NULL),(34,'resourceorganisation',1,'organisation:group:role','1:staff:admin',1,1,NULL,NULL,NULL,NULL),(35,'resourceorganisation',1,'organisation:group:role','1:staff:pcoordinator',1,1,NULL,NULL,NULL,NULL),(36,'resourceorganisation',NULL,NULL,NULL,1,NULL,NULL,0,NULL,NULL),(37,'poll',NULL,'role','admin',1,1,NULL,1,1,NULL),(38,'poll',NULL,'role','pcoordinator',1,1,NULL,1,1,NULL),(39,'quiz',NULL,'group:role','faculty:director',1,NULL,NULL,1,1,'QuizOwner'),(40,'firstlogin',NULL,NULL,NULL,1,NULL,1,NULL,NULL,NULL),(41,'community',NULL,NULL,NULL,1,NULL,NULL,1,1,'CommunityOwner'),(42,'quiz',NULL,'group:role','faculty:admin',1,NULL,NULL,1,1,'QuizOwner'),(43,'quiz',NULL,'group:role','faculty:lecturer',1,NULL,NULL,1,1,'QuizOwner'),(44,'quiz',NULL,'group:role','resident:lecturer',1,NULL,NULL,1,1,'QuizOwner'),(45,'quiz',NULL,'group:role','staff:admin',1,NULL,NULL,1,1,'QuizOwner'),(46,'quiz',NULL,'group:role','staff:pcoordinator',1,NULL,NULL,1,1,'QuizOwner'),(47,NULL,NULL,'group:role','guest:communityinvite',1,0,0,0,0,NULL),(48,'clerkship',NULL,'group','student',1,NULL,1,NULL,NULL,'Clerkship'),(49,'clerkship',NULL,'group','staff',1,NULL,1,NULL,NULL,NULL),(50,'clerkship',NULL,'group','faculty',1,NULL,1,NULL,NULL,NULL),(51,NULL,NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(52,'resourceorganisation',1,'organisation:group:role','1:staff:admin',1,1,1,1,1,NULL),(53,'clerkship',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(54,'clerkship',NULL,'group:role','faculty:clerkship',1,1,1,1,1,NULL),(55,'quiz',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(56,'quiz',NULL,'group','faculty',1,1,NULL,NULL,NULL,NULL),(57,'quiz',NULL,'group','staff',1,1,NULL,NULL,NULL,NULL),(58,'quiz',NULL,'group:role','resident:lecturer',1,1,NULL,NULL,NULL,NULL),(59,'photo',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'Photo'),(60,'photo',NULL,'group','faculty',1,NULL,1,NULL,NULL,NULL),(61,'photo',NULL,'group','staff',1,NULL,1,NULL,NULL,NULL),(62,'clerkshipschedules',NULL,'group','faculty',1,NULL,1,NULL,NULL,NULL),(63,'clerkshipschedules',NULL,'group','staff',1,NULL,1,NULL,NULL,NULL),(64,'reportindex',NULL,'organisation:group:role','1:staff:admin',1,NULL,1,NULL,NULL,NULL),(65,'report',NULL,'organisation:group:role','1:staff:admin',1,NULL,1,NULL,NULL,NULL),(66,'assistant_support',NULL,'group:role','faculty:director',1,1,1,1,1,NULL),(67,'assistant_support',NULL,'group:role','faculty:clerkship',1,1,1,1,1,NULL),(68,'assistant_support',NULL,'group:role','faculty:admin',1,1,1,1,1,NULL),(69,'assistant_support',NULL,'group:role','faculty:lecturer',1,1,1,1,1,NULL),(70,'assistant_support',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(71,'assistant_support',NULL,'group:role','staff:pcoordinator',1,1,1,1,1,NULL),(72,'lottery',NULL,'group','student',1,NULL,1,NULL,NULL,'ClerkshipLottery'),(73,'lottery',NULL,'group:role','staff:admin',1,NULL,1,NULL,NULL,NULL),(74,'lottery',NULL,'group:role','faculty:director',1,NULL,1,NULL,NULL,NULL),(75,'logbook',NULL,'group:role','staff:pcoordinator',1,NULL,1,1,NULL,NULL),(76,'annualreport',NULL,'group','faculty',1,1,1,1,1,NULL),(77,'gradebook',NULL,'role','pcoordinator',1,NULL,1,NULL,NULL,'GradebookOwner'),(78,'gradebook',NULL,'group:role','faculty:admin',1,NULL,1,NULL,NULL,'GradebookOwner'),(79,'gradebook',NULL,'group:role','faculty:director',1,NULL,1,NULL,NULL,'GradebookOwner'),(80,'dashboard',NULL,NULL,NULL,1,NULL,NULL,1,NULL,'NotGuest'),(81,'regionaled',NULL,'group','resident',1,NULL,1,NULL,NULL,'HasAccommodations'),(82,'regionaled',NULL,'group','student',1,NULL,1,NULL,NULL,'HasAccommodations'),(83,'regionaled_tab',NULL,'group','resident',1,NULL,1,NULL,NULL,'HasAccommodations'),(84,'awards',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(85,'mspr',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(86,'mspr',NULL,'group','student',1,NULL,1,1,NULL,NULL),(87,'user',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(88,'incident',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(89,'task',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(90,'task',NULL,'group:role','faculty:director',1,NULL,1,1,1,'TaskOwner'),(91,'task',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'TaskRecipient'),(92,'task',NULL,'role','pcoordinator',1,NULL,1,1,1,'TaskOwner'),(93,'task',NULL,'group:role','faculty:director',1,1,NULL,NULL,NULL,'CourseOwner'),(94,'task',NULL,'role','pcoordinator',1,1,NULL,NULL,NULL,'CourseOwner'),(95,'taskverification',NULL,NULL,NULL,1,NULL,NULL,1,NULL,'TaskVerifier'),(96,'task',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'TaskVerifier'),(97,'tasktab',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'ShowTaskTab'),(98,'mydepartment',NULL,'group','faculty',1,1,1,1,1,'DepartmentHead'),(99,'myowndepartment',NULL,'user','1',1,1,1,1,1,NULL),(100,'annualreportadmin',NULL,'group:role','medtech:admin',1,1,1,1,1,NULL),(101,'gradebook',NULL,'group','student',1,NULL,1,NULL,NULL,NULL),(102,'metadata',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(103,'evaluation',NULL,'group','faculty',1,NULL,1,NULL,NULL,'IsEvaluated'),(104,'evaluation',NULL,'group','faculty',1,NULL,1,NULL,NULL,'EvaluationReviewer'),(105,'evaluationform',NULL,'group','faculty',1,1,1,1,NULL,'EvaluationFormAuthor&ResourceOrganisation'),(106,'evaluationquestion',NULL,'group','faculty',1,1,1,1,NULL,'ResourceOrganisation'),(107,'evaluationquestion',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(108,'encounter_tracking',NULL,'group','student',NULL,NULL,1,NULL,NULL,'LoggableFound'),(109,'encounter_tracking',NULL,'role','admin',NULL,NULL,0,NULL,NULL,NULL),(110,'coursecontent',NULL,'group:role','staff:admin',NULL,NULL,0,NULL,NULL,'NotCourseOwner'),(111,'coursecontent',NULL,'group','faculty',NULL,NULL,0,NULL,NULL,'NotCourseOwner'),(112,'gradebook',NULL,'group','faculty',NULL,NULL,1,1,NULL,'GradebookDropbox'),(113,'gradebook',NULL,'group:role','staff:admin',NULL,NULL,1,1,NULL,'GradebookDropbox'),(114,'assignment',NULL,'group','faculty',NULL,NULL,1,1,NULL,'AssignmentContact'),(115,'assessment',NULL,'group','faculty',NULL,NULL,NULL,1,NULL,'AssessmentContact'),(116,'assignment',NULL,'group:role','staff:admin',NULL,NULL,1,1,NULL,'AssignmentContact'),(117,'assessment',NULL,'group:role','staff:admin',NULL,NULL,NULL,1,NULL,'AssessmentContact'),(118,'eportfolio',NULL,'group:role','medtech:admin',1,1,1,1,1,'EportfolioOwner'),(119,'eportfolio',NULL,'group','student',1,NULL,1,NULL,NULL,'EportfolioOwner'),(120,'eportfolio',NULL,'group','resident',1,NULL,1,NULL,NULL,'EportfolioOwner'),(121,'eportfolio',NULL,'group','alumni',1,NULL,1,NULL,NULL,'EportfolioOwner'),(122,'eportfolio',NULL,'group','faculty',1,NULL,1,NULL,NULL,'EportfolioOwner'),(123,'eportfolio-review',NULL,'group:role','medtech:admin',1,1,1,1,NULL,'EportfolioArtifactReviewer'),(124,'eportfolio-artifact-entry',NULL,'group','student',1,1,1,1,1,'EportfolioArtifactEntryOwner'),(125,'eportfolio-review',NULL,'group','faculty',1,1,1,1,1,NULL),(126,'eportfolio-mentor-view',NULL,'group','faculty',1,1,1,1,1,NULL),(127,'eportfolio-artifact-entry',NULL,'group','student',1,1,1,NULL,NULL,'EportfolioArtifactSharePermitted'),(128,'eportfolio-manage',NULL,'group:role','medtech:admin',1,1,1,NULL,NULL,NULL),(129,'eportfolio-artifact-entry',NULL,'group','faculty',1,1,1,NULL,NULL,NULL),(130,'eportfolio-review-interface',NULL,'group','faculty',1,1,1,1,1,NULL),(131,'masquerade',NULL,'group:role','medtech:admin',1,1,1,1,1,NULL),(132,'observerships',NULL,'role','admin',1,1,1,1,1,NULL),(133,'observerships',NULL,'role','student',1,1,1,1,0,NULL);
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `department_heads` (
+  `department_heads_id` int(11) NOT NULL AUTO_INCREMENT,
+  `department_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  PRIMARY KEY (`department_heads_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`, `entity_value`, `app_id`, `create`, `read`, `update`, `delete`, `assertion`) VALUES
-('community', NULL, NULL, NULL, 1, 1, 1, NULL, NULL, 'NotGuest'),
-('course', NULL, 'group', 'student', 1, NULL, 0, NULL, NULL, 'CourseEnrollment'),
-('course', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'ResourceOrganisation&NotGuest'),
-('dashboard', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
-('discussion', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
-('library', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
-('people', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
-('podcast', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
-('profile', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
-('search', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
-('event', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'ResourceOrganisation&NotGuest'),
-('resourceorganisation', 1, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
-('coursecontent', NULL, 'role', 'pcoordinator', 1, NULL, NULL, 1, NULL, 'CourseOwner'),
-('evaluation', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, 'ResourceOrganisation'),
-('evaluationform', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, 'ResourceOrganisation'),
-('evaluationformquestion', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('event', NULL, 'role', 'pcoordinator', 1, 1, NULL, NULL, NULL, 'CourseOwner'),
-('event', NULL, 'role', 'pcoordinator', 1, NULL, NULL, 1, 1, 'EventOwner'),
-('event', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'EventEnrollment&NotGuest'),
-('event', NULL, 'group', 'student', 1, NULL, 0, NULL, NULL, 'NotEventEnrollment'),
-('eventcontent', NULL, 'role', 'pcoordinator', 1, NULL, NULL, 1, NULL, 'EventOwner'),
-('coursecontent', NULL, 'role', 'director', 1, NULL, NULL, 1, NULL, 'CourseOwner'),
-('coursecontent', NULL, 'role', 'lecturer', 1, NULL, NULL, 1, NULL, 'CourseOwner'),
-('eventcontent', NULL, 'role', 'lecturer', 1, NULL, NULL, 1, NULL, 'EventOwner'),
-('eventcontent', NULL, 'role', 'director', 1, NULL, NULL, 1, NULL, 'EventOwner'),
-('eventcontent', NULL, 'group:role', 'faculty:admin', 1, NULL, NULL, 1, NULL, 'EventOwner'),
-(NULL, NULL, 'group:role', 'medtech:admin', 1, 1, 1, 1, 1, NULL),
-('notice', NULL, 'group:role', 'faculty:director', 1, 1, NULL, 1, 1, 'ResourceOrganisation'),
-('notice', NULL, 'group:role', 'faculty:admin', 1, 1, NULL, 1, 1, 'ResourceOrganisation'),
-('notice', NULL, 'group:role', 'staff:admin', 1, 1, NULL, 1, 1, 'ResourceOrganisation'),
-('notice', NULL, 'group:role', 'staff:pcoordinator', 1, 1, NULL, 1, 1, 'ResourceOrganisation'),
-('resourceorganisation', 1, 'organisation:group:role', '1:faculty:director', 1, 1, NULL, NULL, NULL, NULL),
-('resourceorganisation', 1, 'organisation:group:role', '1:faculty:admin', 1, 1, NULL, NULL, NULL, NULL),
-('resourceorganisation', 1, 'organisation:group:role', '1:staff:admin', 1, 1, NULL, NULL, NULL, NULL),
-('resourceorganisation', 1, 'organisation:group:role', '1:staff:pcoordinator', 1, 1, NULL, NULL, NULL, NULL),
-('resourceorganisation', NULL, NULL, NULL, 1, NULL, NULL, 0, NULL, NULL),
-('poll', NULL, 'role', 'admin', 1, 1, NULL, 1, 1, NULL),
-('poll', NULL, 'role', 'pcoordinator', 1, 1, NULL, 1, 1, NULL),
-('quiz', NULL, 'group:role', 'faculty:director', 1, NULL, NULL, 1, 1, 'QuizOwner'),
-('firstlogin', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, NULL),
-('community', NULL, NULL, NULL, 1, NULL, NULL, 1, 1, 'CommunityOwner'),
-('quiz', NULL, 'group:role', 'faculty:admin', 1, NULL, NULL, 1, 1, 'QuizOwner'),
-('quiz', NULL, 'group:role', 'faculty:lecturer', 1, NULL, NULL, 1, 1, 'QuizOwner'),
-('quiz', NULL, 'group:role', 'resident:lecturer', 1, NULL, NULL, 1, 1, 'QuizOwner'),
-('quiz', NULL, 'group:role', 'staff:admin', 1, NULL, NULL, 1, 1, 'QuizOwner'),
-('quiz', NULL, 'group:role', 'staff:pcoordinator', 1, NULL, NULL, 1, 1, 'QuizOwner'),
-(NULL, NULL, 'group:role', 'guest:communityinvite', 1, 0, 0, 0, 0, NULL),
-('clerkship', NULL, 'group', 'student', 1, NULL, 1, NULL, NULL, 'Clerkship'),
-('clerkship', NULL, 'group', 'staff', 1, NULL, 1, NULL, NULL, NULL),
-('clerkship', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, NULL),
-(NULL, NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, 'ResourceOrganisation'),
-('resourceorganisation', 1, 'organisation:group:role', '1:staff:admin', 1, 1, 1, 1, 1, NULL),
-('clerkship', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('clerkship', NULL, 'group:role', 'faculty:clerkship', 1, 1, 1, 1, 1, NULL),
-('quiz', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
-('quiz', NULL, 'group', 'faculty', 1, 1, NULL, NULL, NULL, NULL),
-('quiz', NULL, 'group', 'staff', 1, 1, NULL, NULL, NULL, NULL),
-('quiz', NULL, 'group:role', 'resident:lecturer', 1, 1, NULL, NULL, NULL, NULL),
-('photo', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'Photo'),
-('photo', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, NULL),
-('photo', NULL, 'group', 'staff', 1, NULL, 1, NULL, NULL, NULL),
-('clerkshipschedules', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, NULL),
-('clerkshipschedules', NULL, 'group', 'staff', 1, NULL, 1, NULL, NULL, NULL),
-('reportindex', NULL, 'organisation:group:role', '1:staff:admin', 1, NULL, 1, NULL, NULL, NULL),
-('report', NULL, 'organisation:group:role', '1:staff:admin', 1, NULL, 1, NULL, NULL, NULL),
-('assistant_support', NULL, 'group:role', 'faculty:director', 1, 1, 1, 1, 1, NULL),
-('assistant_support', NULL, 'group:role', 'faculty:clerkship', 1, 1, 1, 1, 1, NULL),
-('assistant_support', NULL, 'group:role', 'faculty:admin', 1, 1, 1, 1, 1, NULL),
-('assistant_support', NULL, 'group:role', 'faculty:lecturer', 1, 1, 1, 1, 1, NULL),
-('assistant_support', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('assistant_support', NULL, 'group:role', 'staff:pcoordinator', 1, 1, 1, 1, 1, NULL),
-('lottery', NULL, 'group', 'student', 1, NULL, 1, NULL, NULL, 'ClerkshipLottery'),
-('lottery', NULL, 'group:role', 'staff:admin', 1, NULL, 1, NULL, NULL, NULL),
-('lottery', NULL, 'group:role', 'faculty:director', 1, NULL, 1, NULL, NULL, NULL),
-('logbook', NULL, 'group:role', 'staff:pcoordinator', 1, NULL, 1, 1, NULL, NULL),
-('annualreport', NULL, 'group', 'faculty', 1, 1, 1, 1, 1, NULL),
-('gradebook', NULL, 'role', 'pcoordinator', 1, NULL, 1, NULL, NULL, 'GradebookOwner'),
-('gradebook', NULL, 'group:role', 'faculty:admin', 1, NULL, 1, NULL, NULL, 'GradebookOwner'),
-('gradebook', NULL, 'group:role', 'faculty:director', 1, NULL, 1, NULL, NULL, 'GradebookOwner'),
-('dashboard', NULL, NULL, NULL, 1, NULL, NULL, 1, NULL, 'NotGuest'),
-('regionaled', NULL, 'group', 'resident', 1, NULL, 1, NULL, NULL, 'HasAccommodations'),
-('regionaled', NULL, 'group', 'student', 1, NULL, 1, NULL, NULL, 'HasAccommodations'),
-('regionaled_tab', NULL, 'group', 'resident', 1, NULL, 1, NULL, NULL, 'HasAccommodations'),
-('awards', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('mspr', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('mspr', NULL, 'group', 'student', 1, NULL, 1, 1, NULL, NULL),
-('user', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('incident', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('task', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, 'ResourceOrganisation'),
-('task', NULL, 'group:role', 'faculty:director', 1, NULL, 1, 1, 1, 'TaskOwner'),
-('task', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'TaskRecipient'),
-('task', NULL, 'role', 'pcoordinator', 1, NULL, 1, 1, 1, 'TaskOwner'),
-('task', NULL, 'group:role', 'faculty:director', 1, 1, NULL, NULL, NULL, 'CourseOwner'),
-('task', NULL, 'role', 'pcoordinator', 1, 1, NULL, NULL, NULL,'CourseOwner'),
-('taskverification', NULL, NULL, NULL, 1, NULL, NULL, 1, NULL, 'TaskVerifier'),
-('task', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'TaskVerifier'),
-('tasktab', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'ShowTaskTab'),
-('mydepartment', NULL, 'group', 'faculty', 1, 1, 1, 1, 1, 'DepartmentHead'),
-('myowndepartment', NULL, 'user', 1, 1, 1, 1, 1, 1, NULL),
-('annualreportadmin', NULL, 'group:role', 'medtech:admin', 1, 1, 1, 1, 1, NULL),
-('gradebook', NULL, 'group', 'student', 1, NULL, 1, NULL, NULL, NULL),
-('metadata', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('evaluation', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, 'IsEvaluated'),
-('evaluation', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, 'EvaluationReviewer'),
-('evaluationform', NULL, 'group', 'faculty', 1, 1, 1, 1, NULL, 'EvaluationFormAuthor&ResourceOrganisation'),
-('evaluationquestion', NULL, 'group', 'faculty', 1, 1, 1, 1, NULL, 'ResourceOrganisation'),
-('evaluationquestion', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, 'ResourceOrganisation'),
-('encounter_tracking', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, 'LoggableFound'),
-('encounter_tracking', NULL, 'role', 'admin', NULL, NULL, 0, NULL, NULL, NULL),
-('coursecontent', NULL, 'group:role', 'staff:admin', NULL, NULL, 0, NULL, NULL, 'NotCourseOwner'),
-('coursecontent', NULL, 'group', 'faculty', NULL, NULL, 0, NULL, NULL, 'NotCourseOwner'),
-('gradebook', NULL, 'group', 'faculty', NULL, NULL, 1, 1, NULL, 'GradebookDropbox'),
-('gradebook', NULL, 'group:role', 'staff:admin', NULL, NULL, 1, 1, NULL, 'GradebookDropbox'),
-('assignment', NULL, 'group', 'faculty', NULL, NULL, 1, 1, NULL, 'AssignmentContact'),
-('assessment', NULL, 'group', 'faculty', NULL, NULL, NULL, 1, NULL, 'AssessmentContact'),
-('assignment', NULL, 'group:role', 'staff:admin', NULL, NULL, 1, 1, NULL, 'AssignmentContact'),
-('assessment', NULL, 'group:role', 'staff:admin', NULL, NULL, NULL, 1, NULL, 'AssessmentContact'),
-('eportfolio', NULL, 'group:role', 'medtech:admin', 1, 1, 1, 1, 1, 'EportfolioOwner'),
-('eportfolio', NULL, 'group', 'student', 1, NULL, 1, NULL, NULL, 'EportfolioOwner'),
-('eportfolio', NULL, 'group', 'resident', 1, NULL, 1, NULL, NULL, 'EportfolioOwner'),
-('eportfolio', NULL, 'group', 'alumni', 1, NULL, 1, NULL, NULL, 'EportfolioOwner'),
-('eportfolio', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, 'EportfolioOwner'),
-('eportfolio-review', NULL, 'group:role', 'medtech:admin', 1, 1, 1, 1, NULL, 'EportfolioArtifactReviewer'),
-('eportfolio-artifact-entry', NULL, 'group', 'student', 1, 1, 1, 1, 1, 'EportfolioArtifactEntryOwner'),
-('eportfolio-review', NULL, 'group', 'faculty', 1, 1, 1, 1, 1, NULL),
-('eportfolio-mentor-view', NULL, 'group', 'faculty', 1, 1, 1, 1, 1, NULL),
-('eportfolio-artifact-entry', NULL, 'group', 'student', 1, 1, 1, NULL, NULL, 'EportfolioArtifactSharePermitted'),
-('eportfolio-manage', NULL, 'group:role', 'medtech:admin', 1, 1, 1, NULL, NULL, NULL),
-('eportfolio-artifact-entry', NULL, 'group', 'faculty', 1, 1, 1, NULL, NULL, NULL),
-('eportfolio-review-interface', NULL, 'group', 'faculty', 1, 1, 1, 1, 1, NULL),
-('masquerade', NULL, 'group:role', 'medtech:admin', 1, 1, 1, 1, 1, NULL),
-('observerships', NULL, 'role', 'admin', 1, 1, 1, 1, 1, NULL),
-('observerships', NULL, 'role', 'student', 1, 1, 1, 1, 0, NULL);
-
-CREATE TABLE IF NOT EXISTS `departments` (
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `departments` (
   `department_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `organisation_id` int(12) unsigned NOT NULL DEFAULT '1',
   `entity_id` int(12) unsigned NOT NULL DEFAULT '0',
@@ -173,36 +56,39 @@ CREATE TABLE IF NOT EXISTS `departments` (
   `department_active` int(1) NOT NULL DEFAULT '1',
   `updated_date` bigint(64) unsigned NOT NULL,
   `updated_by` int(12) unsigned NOT NULL,
-  PRIMARY KEY  (`department_id`),
+  PRIMARY KEY (`department_id`),
   UNIQUE KEY `organisation_id` (`organisation_id`,`entity_id`,`department_title`),
   KEY `department_active` (`department_active`),
   KEY `parent_id` (`parent_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `departments` (`department_id`, `organisation_id`, `entity_id`, `department_title`, `department_address1`, `department_address2`, `department_city`, `department_province`, `department_country`, `department_postcode`, `department_telephone`, `department_fax`, `department_email`, `department_url`, `department_desc`) VALUES
-(1, 1, 5, 'Medical IT', '', '', 'Kingston', 'ON', 'CA', '', '', '', '', '', NULL);
-
-CREATE TABLE IF NOT EXISTS `department_heads` (
-  `department_heads_id` int(11) NOT NULL auto_increment,
-  `department_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  PRIMARY KEY  (`department_heads_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `entity_type` (
+INSERT INTO `departments` VALUES (1,1,5,0,'Medical IT','','','Kingston','ON',9,'CA',39,'','','','','',NULL,1,0,0);
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `entity_type` (
   `entity_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `entity_title` varchar(100) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`entity_id`)
+  PRIMARY KEY (`entity_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+INSERT INTO `entity_type` VALUES (1,'Faculty'),(2,'School'),(3,'Department'),(4,'Division'),(5,'Unit');
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `location_ipranges` (
+  `iprange_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `location_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `block_start` varchar(32) NOT NULL DEFAULT '0',
+  `block_end` varchar(32) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`iprange_id`),
+  KEY `location_id` (`location_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `entity_type` (`entity_id`, `entity_title`) VALUES
-(1, 'Faculty'),
-(2, 'School'),
-(3, 'Department'),
-(4, 'Division'),
-(5, 'Unit');
-
-CREATE TABLE IF NOT EXISTS `locations` (
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `locations` (
   `location_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `organisation_id` int(12) unsigned NOT NULL DEFAULT '1',
   `department_id` int(12) unsigned NOT NULL DEFAULT '0',
@@ -220,19 +106,13 @@ CREATE TABLE IF NOT EXISTS `locations` (
   `location_longitude` varchar(12) DEFAULT NULL,
   `location_latitude` varchar(12) DEFAULT NULL,
   `location_desc` text,
-  PRIMARY KEY  (`location_id`)
+  PRIMARY KEY (`location_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS `location_ipranges` (
-  `iprange_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
-  `location_id` int(12) unsigned NOT NULL DEFAULT '0',
-  `block_start` varchar(32) NOT NULL DEFAULT '0',
-  `block_end` varchar(32) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`iprange_id`),
-  KEY `location_id` (`location_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `organisations` (
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `organisations` (
   `organisation_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `organisation_title` varchar(128) NOT NULL DEFAULT '',
   `organisation_address1` varchar(128) NOT NULL DEFAULT '',
@@ -252,25 +132,30 @@ CREATE TABLE IF NOT EXISTS `organisations` (
   `aamc_program_id` varchar(32) DEFAULT NULL,
   `aamc_program_name` varchar(255) DEFAULT NULL,
   `organisation_active` tinyint(1) NOT NULL DEFAULT '1',
+  `app_id` int(11) NOT NULL DEFAULT '1',
   PRIMARY KEY (`organisation_id`),
   KEY `organisation_active` (`organisation_active`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `organisations` (`organisation_id`, `organisation_title`, `organisation_address1`, `organisation_address2`, `organisation_city`, `organisation_province`, `organisation_country`, `organisation_postcode`, `organisation_telephone`, `organisation_fax`, `organisation_email`, `organisation_url`, `organisation_desc`, `organisation_active`) VALUES
-(1, 'Your University', 'University Avenue', '', 'Kingston', 'ON', 'CA', 'K7L3N6', '613-533-2000', '', '', 'http://www.yourschool.ca', NULL, 1);
-
-CREATE TABLE IF NOT EXISTS `password_reset` (
+INSERT INTO `organisations` VALUES (1,'Your University','University Avenue','','Kingston','ON','CA','K7L3N6','613-533-2000','','','http://www.yourschool.ca',NULL,'default',NULL,NULL,NULL,NULL,1,1);
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `password_reset` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `ip` varchar(24) NOT NULL DEFAULT '',
   `date` bigint(64) NOT NULL DEFAULT '0',
   `user_id` int(12) NOT NULL DEFAULT '0',
   `hash` varchar(64) NOT NULL DEFAULT '',
   `complete` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`id`),
+  PRIMARY KEY (`id`),
   UNIQUE KEY `hash` (`hash`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS `registered_apps` (
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `registered_apps` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `script_id` varchar(32) NOT NULL DEFAULT '0',
   `script_password` varchar(32) NOT NULL DEFAULT '',
@@ -278,29 +163,33 @@ CREATE TABLE IF NOT EXISTS `registered_apps` (
   `server_url` text NOT NULL,
   `employee_rep` int(12) unsigned NOT NULL DEFAULT '0',
   `notes` text NOT NULL,
-  PRIMARY KEY  (`id`),
+  PRIMARY KEY (`id`),
   KEY `script_id` (`script_id`),
   KEY `script_password` (`script_password`),
   KEY `server_ip` (`server_ip`),
   KEY `employee_rep` (`employee_rep`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `registered_apps` (`id`, `script_id`, `script_password`, `server_ip`, `server_url`, `employee_rep`, `notes`) VALUES
-(1, '%AUTH_USERNAME%', MD5('%AUTH_PASSWORD%'), '%', '%', 1, 'Entrada');
-
-CREATE TABLE IF NOT EXISTS `sessions` (
+INSERT INTO `registered_apps` VALUES (1,'%AUTH_USERNAME%',MD5('%AUTH_PASSWORD%'),'%','%',1,'Entrada');
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sessions` (
   `sesskey` varchar(64) NOT NULL DEFAULT '',
   `expiry` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `expireref` varchar(250) DEFAULT '',
   `created` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `modified` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `sessdata` longtext,
-  PRIMARY KEY  (`sesskey`),
+  PRIMARY KEY (`sesskey`),
   KEY `sess2_expiry` (`expiry`),
   KEY `sess2_expireref` (`expireref`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS `statistics` (
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `statistics` (
   `statistic_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `proxy_id` int(12) unsigned NOT NULL DEFAULT '0',
   `app_id` int(12) unsigned NOT NULL DEFAULT '0',
@@ -308,15 +197,49 @@ CREATE TABLE IF NOT EXISTS `statistics` (
   `group` varchar(32) NOT NULL DEFAULT '',
   `timestamp` bigint(64) NOT NULL DEFAULT '0',
   `prune_after` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`statistic_id`),
+  PRIMARY KEY (`statistic_id`),
   KEY `proxy_id` (`proxy_id`,`app_id`,`role`,`group`,`timestamp`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS `user_access` (
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_group_organisation` (
+  `groups_id` int(11) NOT NULL,
+  `organisation_id` int(12) unsigned NOT NULL,
+  PRIMARY KEY (`groups_id`,`organisation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+INSERT INTO `system_group_organisation` VALUES (1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1);
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_groups` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_name` varchar(45) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+INSERT INTO `system_groups` VALUES (1,'student'),(2,'alumni'),(3,'faculty'),(4,'resident'),(5,'staff'),(6,'medtech'),(7,'guest');
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_roles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `role_name` varchar(45) NOT NULL,
+  `groups_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`,`groups_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=31 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+INSERT INTO `system_roles` VALUES (1,(YEAR(CURRENT_DATE())+4),1),(2,(YEAR(CURRENT_DATE())+3),1),(3,(YEAR(CURRENT_DATE())+2),1),(4,(YEAR(CURRENT_DATE())+1),1),(5,(YEAR(CURRENT_DATE())),1),(6,(YEAR(CURRENT_DATE())-1),1),(7,(YEAR(CURRENT_DATE())-2),1),(8,(YEAR(CURRENT_DATE())-3),1),(9,(YEAR(CURRENT_DATE())-4),1),(10,(YEAR(CURRENT_DATE())+4),2),(11,(YEAR(CURRENT_DATE())+3),2),(12,(YEAR(CURRENT_DATE())+2),2),(13,(YEAR(CURRENT_DATE())+1),2),(14,(YEAR(CURRENT_DATE())),2),(15,(YEAR(CURRENT_DATE())-1),2),(16,(YEAR(CURRENT_DATE())-2),2),(17,(YEAR(CURRENT_DATE())-3),2),(18,(YEAR(CURRENT_DATE())-4),2),(19,'faculty',3),(20,'lecturer',3),(21,'director',3),(22,'admin',3),(23,'resident',4),(24,'lecturer',4),(25,'staff',5),(26,'pcoordinator',5),(27,'admin',5),(28,'staff',6),(29,'admin',6),(30,'communityinvite',7);
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_access` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(12) unsigned NOT NULL DEFAULT '0',
   `app_id` int(12) unsigned NOT NULL DEFAULT '0',
-  `organisation_id` INT(12) unsigned NOT NULL DEFAULT '0',
+  `organisation_id` int(12) unsigned NOT NULL DEFAULT '0',
   `account_active` enum('true','false') NOT NULL DEFAULT 'true',
   `access_starts` bigint(64) NOT NULL DEFAULT '0',
   `access_expires` bigint(64) NOT NULL DEFAULT '0',
@@ -329,7 +252,7 @@ CREATE TABLE IF NOT EXISTS `user_access` (
   `extras` longtext NOT NULL,
   `private_hash` varchar(32) DEFAULT NULL,
   `notes` text NOT NULL,
-  PRIMARY KEY  (`id`),
+  PRIMARY KEY (`id`),
   UNIQUE KEY `private_hash` (`private_hash`),
   KEY `user_id` (`user_id`),
   KEY `app_id` (`app_id`),
@@ -339,22 +262,24 @@ CREATE TABLE IF NOT EXISTS `user_access` (
   KEY `role` (`role`),
   KEY `group` (`group`),
   KEY `user_app_id` (`user_id`,`app_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `user_access` (`id`, `user_id`, `app_id`, `organisation_id`, `account_active`, `access_starts`, `access_expires`, `last_login`, `last_ip`, `login_attempts`, `locked_out_until`, `role`, `group`, `extras`, `private_hash`, `notes`) VALUES
-(1, 1, 1, 1, 'true', 1216149930, 0, 0, '', NULL, NULL, 'admin', 'medtech', 'YToxOntzOjE2OiJhbGxvd19wb2RjYXN0aW5nIjtzOjM6ImFsbCI7fQ==', MD5(CONCAT(rand(), CURRENT_TIMESTAMP)), '');
-
-CREATE TABLE IF NOT EXISTS `user_data` (
+INSERT INTO `user_access` VALUES (1,1,1,1,'true',1216149930,0,0,'',NULL,NULL,'admin','medtech','YToxOntzOjE2OiJhbGxvd19wb2RjYXN0aW5nIjtzOjM6ImFsbCI7fQ==','fbbeb05c0bdeb9fe489765034ae76b58','');
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_data` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `number` int(12) unsigned NOT NULL DEFAULT '0',
   `username` varchar(25) NOT NULL DEFAULT '',
   `password` varchar(255) NOT NULL DEFAULT '',
-  `salt` varchar(64) NULL DEFAULT NULL,
+  `salt` varchar(64) DEFAULT NULL,
   `organisation_id` int(12) NOT NULL DEFAULT '1',
   `department` varchar(255) DEFAULT NULL,
   `prefix` varchar(10) NOT NULL DEFAULT '',
   `firstname` varchar(35) NOT NULL DEFAULT '',
   `lastname` varchar(35) NOT NULL DEFAULT '',
+  `date_of_birth` bigint(64) DEFAULT NULL,
   `email` varchar(255) NOT NULL DEFAULT '',
   `email_alt` varchar(255) NOT NULL DEFAULT '',
   `email_updated` bigint(64) DEFAULT NULL,
@@ -379,7 +304,7 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   `clinical` int(1) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`id`),
+  PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   KEY `number` (`number`),
   KEY `password` (`password`),
@@ -393,63 +318,13 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   KEY `country_id` (`country_id`),
   KEY `province_id` (`province_id`),
   FULLTEXT KEY `firstname_2` (`firstname`,`lastname`,`email`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-INSERT INTO `user_data` (`id`, `number`, `username`, `password`, `organisation_id`, `department`, `prefix`, `firstname`, `lastname`, `email`, `email_alt`, `google_id`, `telephone`, `fax`, `address`, `city`, `province`, `postcode`, `country`, `notes`, `office_hours`, `privacy_level`, `notifications`, `clinical`) VALUES
-(1, 0, '%ADMIN_USERNAME%', '%ADMIN_PASSWORD_HASH%', 1, NULL, '', '%ADMIN_FIRSTNAME%', '%ADMIN_LASTNAME%', '%ADMIN_EMAIL%', '', NULL, '', '', '', '', '', '', '', 'System Administrator', NULL, 0, 1, 1);
-
-CREATE TABLE `user_departments` (
-  `udep_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(12) unsigned NOT NULL DEFAULT '0',
-  `dep_id` int(12) unsigned NOT NULL DEFAULT '0',
-  `dep_title` varchar(255) NOT NULL DEFAULT '',
-  `entrada_only` int(1) DEFAULT '0',
-  PRIMARY KEY (`udep_id`),
-  KEY `user_id` (`user_id`),
-  KEY `dep_id` (`dep_id`),
-  KEY `dep_title` (`dep_title`)
 ) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `user_departments` (`udep_id`, `user_id`, `dep_id`, `dep_title`, `entrada_only`) VALUES
-(1, 1, 1, 'System Administrator', 0);
-
-CREATE TABLE IF NOT EXISTS `user_incidents` (
-  `incident_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
-  `proxy_id` int(12) unsigned NOT NULL DEFAULT '0',
-  `incident_title` text NOT NULL,
-  `incident_description` text,
-  `incident_severity` tinyint(1) NOT NULL DEFAULT '1',
-  `incident_status` tinyint(1) NOT NULL DEFAULT '1',
-  `incident_author_id` int(12) NOT NULL DEFAULT '0',
-  `incident_date` bigint(64) NOT NULL DEFAULT '0',
-  `follow_up_date` bigint(64) DEFAULT NULL,
-  PRIMARY KEY  (`incident_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `user_photos` (
-  `photo_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
-  `proxy_id` int(12) unsigned NOT NULL DEFAULT '0',
-  `photo_mimetype` varchar(64) NOT NULL,
-  `photo_filesize` int(32) NOT NULL DEFAULT '0',
-  `photo_active` int(1) NOT NULL DEFAULT '1',
-  `photo_type` int(1) NOT NULL DEFAULT '0',
-  `updated_date` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`photo_id`),
-  KEY `photo_active` (`photo_active`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `user_preferences` (
-  `preference_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
-  `app_id` int(12) unsigned NOT NULL DEFAULT '0',
-  `proxy_id` int(12) unsigned NOT NULL DEFAULT '0',
-  `module` varchar(32) NOT NULL DEFAULT '',
-  `preferences` text NOT NULL,
-  `updated` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`preference_id`),
-  KEY `app_id` (`app_id`,`proxy_id`,`module`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `user_data_resident` (
+INSERT INTO `user_data` VALUES (1,0,'%ADMIN_USERNAME%','%ADMIN_PASSWORD_HASH%',NULL,1,NULL,'','%ADMIN_FIRSTNAME%','%ADMIN_LASTNAME%',NULL,'%ADMIN_EMAIL%','',NULL,NULL,'','','','','','','',NULL,NULL,'System Administrator',NULL,0,0,1,NULL,NULL,0,1,0,0);
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_data_resident` (
   `proxy_id` int(12) NOT NULL,
   `cmpa_no` int(11) NOT NULL,
   `cpso_no` int(11) NOT NULL,
@@ -463,73 +338,72 @@ CREATE TABLE IF NOT EXISTS `user_data_resident` (
   `assess_prog_non_img` varchar(1) NOT NULL,
   PRIMARY KEY (`proxy_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS `system_groups` (
-  `id` INT NOT NULL AUTO_INCREMENT ,
-  `group_name` VARCHAR(45) NOT NULL ,
-  PRIMARY KEY (`id`) )
-ENGINE = MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_departments` (
+  `udep_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `dep_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `dep_title` varchar(255) NOT NULL DEFAULT '',
+  `entrada_only` int(1) DEFAULT '0',
+  PRIMARY KEY (`udep_id`),
+  KEY `user_id` (`user_id`),
+  KEY `dep_id` (`dep_id`),
+  KEY `dep_title` (`dep_title`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `system_groups` (`group_name`) VALUES
-('student'),
-('alumni'),
-('faculty'),
-('resident'),
-('staff'),
-('medtech'),
-('guest');
+INSERT INTO `user_departments` VALUES (1,1,1,'System Administrator',0);
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_incidents` (
+  `incident_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `proxy_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `incident_title` text NOT NULL,
+  `incident_description` text,
+  `incident_severity` tinyint(1) NOT NULL DEFAULT '1',
+  `incident_status` tinyint(1) NOT NULL DEFAULT '1',
+  `incident_author_id` int(12) NOT NULL DEFAULT '0',
+  `incident_date` bigint(64) NOT NULL DEFAULT '0',
+  `follow_up_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`incident_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS `system_roles` (
-  `id` INT NOT NULL AUTO_INCREMENT ,
-  `role_name` VARCHAR(45) NOT NULL ,
-  `groups_id` INT NOT NULL ,
-  PRIMARY KEY (`id`, `groups_id`) )
-ENGINE = MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_photos` (
+  `photo_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `proxy_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `photo_mimetype` varchar(64) NOT NULL,
+  `photo_filesize` int(32) NOT NULL DEFAULT '0',
+  `photo_active` int(1) NOT NULL DEFAULT '1',
+  `photo_type` int(1) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`photo_id`),
+  KEY `photo_active` (`photo_active`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `system_roles` (`role_name`, `groups_id`) VALUES
-((YEAR(CURRENT_DATE())+4),1),
-((YEAR(CURRENT_DATE())+3),1),
-((YEAR(CURRENT_DATE())+2),1),
-((YEAR(CURRENT_DATE())+1),1),
-((YEAR(CURRENT_DATE())),1),
-((YEAR(CURRENT_DATE())-1),1),
-((YEAR(CURRENT_DATE())-2),1),
-((YEAR(CURRENT_DATE())-3),1),
-((YEAR(CURRENT_DATE())-4),1),
-((YEAR(CURRENT_DATE())+4),2),
-((YEAR(CURRENT_DATE())+3),2),
-((YEAR(CURRENT_DATE())+2),2),
-((YEAR(CURRENT_DATE())+1),2),
-((YEAR(CURRENT_DATE())),2),
-((YEAR(CURRENT_DATE())-1),2),
-((YEAR(CURRENT_DATE())-2),2),
-((YEAR(CURRENT_DATE())-3),2),
-((YEAR(CURRENT_DATE())-4),2),
-('faculty',3),
-('lecturer',3),
-('director',3),
-('admin',3),
-('resident',4),
-('lecturer',4),
-('staff',5),
-('pcoordinator',5),
-('admin',5),
-('staff',6),
-('admin',6),
-('communityinvite',7);
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_preferences` (
+  `preference_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `app_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `proxy_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `module` varchar(32) NOT NULL DEFAULT '',
+  `preferences` text NOT NULL,
+  `updated` bigint(64) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`preference_id`),
+  KEY `app_id` (`app_id`,`proxy_id`,`module`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE  TABLE IF NOT EXISTS `system_group_organisation` (
-  `groups_id` INT NOT NULL ,
-  `organisation_id` INT(12) UNSIGNED NOT NULL ,
-  PRIMARY KEY (`groups_id`, `organisation_id`) )
-ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `system_group_organisation` (`organisation_id`, `groups_id`)
-VALUES
-(1, 1),
-(1, 2),
-(1, 3),
-(1, 4),
-(1, 5),
-(1, 6),
-(1, 7);
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+

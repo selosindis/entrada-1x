@@ -21,9 +21,9 @@
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
  *
  */
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: " . ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "update", false)) {
@@ -33,6 +33,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	application_log("error", "Group [" . $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] . "] and role [" . $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"] . "] do not have access to this module [" . $MODULE . "]");
 } else {
+    $PROCESSED = array();
+
 	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/settings?section=edit&amp;org=" . $ORGANISATION['organisation_id'], "title" => "Edit Organisation");
 
 	switch ($STEP) {
@@ -186,19 +188,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		break;
 		case 1 :
 		default :
-			$PROCESSED["organisation_title"] = $ORGANISATION["organisation_title"];
-			$PROCESSED["organisation_country"] = $ORGANISATION["organisation_country"];
-			$PROCESSED["organisation_province"] = $ORGANISATION["organisation_province"];
-			$PROCESSED["organisation_city"] = $ORGANISATION["organisation_city"];
-			$PROCESSED["organisation_postcode"] = $ORGANISATION["organisation_postcode"];
-			$PROCESSED["organisation_address1"] = $ORGANISATION["organisation_address1"];
-			$PROCESSED["organisation_address2"] = $ORGANISATION["organisation_address2"];
-			$PROCESSED["organisation_telephone"] = $ORGANISATION["organisation_telephone"];
-			$PROCESSED["organisation_fax"] = $ORGANISATION["organisation_fax"];
-			$PROCESSED["organisation_email"] = $ORGANISATION["organisation_email"];
-			$PROCESSED["organisation_url"] = $ORGANISATION["organisation_url"];
-			$PROCESSED["organisation_desc"] = $ORGANISATION["organisation_desc"];
-			$PROCESSED["template"] = $ORGANISATION["template"];
+            /*
+             * Set the default $PROCESSED array to $ORGANISATION.
+             */
+            $PROCESSED = $ORGANISATION;
 
 			$query = "SELECT * FROM `global_lu_countries` WHERE `country` = " . $db->qstr($PROCESSED["organisation_country"]);
 			$result = $db->GetRow($query);
@@ -502,7 +495,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				</div>
 				<div class="control-group">
 					<div class="pull-right">
-						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage?org=<?php echo $ORGANISATION_ID; ?>'" />
+						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage?org=<?php echo $ORGANISATION_ID; ?>'" />
 						<input type="submit" class="btn btn-primary" value="Save" />
 					</div>
 				</div>

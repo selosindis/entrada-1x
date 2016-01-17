@@ -4,10 +4,13 @@ nbproject
 .DS_Store
 .htaccess
 .idea
-www-root/core/config/config.inc.php
-www-root/calendars
-www-root/syllabi
+/www-root/core/config/config.inc.php
+/www-root/calendars
+/www-root/syllabi
+/www-root/templates/*
+!/www-root/templates/default
 *.buildpath
 *.eclipse.*.prefs
 *.swp
 .settings
+/vendor/

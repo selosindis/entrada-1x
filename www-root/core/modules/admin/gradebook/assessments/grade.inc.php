@@ -90,7 +90,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							ON a.`id` = c.`proxy_id`
 							WHERE b.`group` = 'student'
 							AND c.`group_id` = ".$db->qstr($COHORT)."
-							AND c.`member_active` = '1' 
+							AND c.`member_active` = '1'
+							GROUP BY a.`id`
 							ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 				$students = $db->GetAll($query);
                 
@@ -140,7 +141,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								<li><a href="#" id="import-quiz-button">Import grades from attached Quiz</a></li>
 							<?php } ?>
 								<li><a href="#" id="import-csv-button">Import grades from CSV file</a></li>
-								<li><a href="#" onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'; return false;">Export grades to CSV file</a></li>
+								<li><a href="#" onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "cohort" => $COHORT, "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'; return false;">Export grades to CSV file</a></li>
 							</ul>
 						</div>
 						<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit", "step" => false)); ?>" class="btn btn-success">Edit Assessment</a>

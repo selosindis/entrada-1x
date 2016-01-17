@@ -77,7 +77,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         var event_views_table = $("#event-views").DataTable({
                             "bPaginate": false,
                             "bInfo": false,
-                            "bFilter": false
+                            "bFilter": false,
+                            'oLanguage': {
+                                'sEmptyTable': 'This event has not yet been viewed.',
+                                'sZeroRecords': 'No views found to display.'
+                            }
                         });
                     });
                 </script>
@@ -90,8 +94,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($statistics) { ?>
-                            <?php foreach ($statistics as $statistic) { 
+                        <?php
+                        if ($statistics) {
+                            foreach ($statistics as $statistic) {
                                 $total_views += $statistic["views"];
                                 ?>
                             <tr>
@@ -99,12 +104,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 <td><?php echo $statistic["views"]; ?></td>
                                 <td><?php echo date("Y-m-d H:i", $statistic["last_viewed_time"]); ?></td>
                             </tr>
-                            <?php } ?>
-                        <?php } else { ?>
-                            <tr>
-                                <td colspan="3">This event has not yet been viewed.</td>
-                            </tr>
-                        <?php } ?>
+                                <?php
+                            }
+                        } ?>
                     </tbody>
                     <tfoot>
                         <tr>

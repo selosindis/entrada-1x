@@ -57,11 +57,8 @@ class ObservershipReflection extends ModelBase implements Validation {
 		return array(	"observership_id",
 						"physicians_role",	
 						"physician_reflection",		
-						"role_practice",							
 						"observership_challenge",									
 						"discipline_reflection",						
-						"challenge_predictions",
-						"questions",
 						"career");		
 	}
 
@@ -70,11 +67,8 @@ class ObservershipReflection extends ModelBase implements Validation {
 						"observership_id"=>array("int"),
 						"physicians_role"=>array("trim", "notags"),	
 						"physician_reflection"=>array("trim", "notags"),	
-						"role_practice"=>array("trim", "notags"),	
 						"observership_challenge"=>array("trim", "notags"),	
 						"discipline_reflection"=>array("trim", "notags"),	
-						"challenge_predictions"=>array("trim", "notags"),	
-						"questions"=>array("trim", "notags"),
 						"career"=>array("int")
 					);
 	}
@@ -84,11 +78,8 @@ class ObservershipReflection extends ModelBase implements Validation {
 						"observership_id",
 						"physicians_role",	
 						"physician_reflection",		
-						"role_practice",							
 						"observership_challenge",									
 						"discipline_reflection",						
-						"challenge_predictions",
-						"questions",
 						"career"
 					);
 	}	

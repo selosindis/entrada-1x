@@ -127,7 +127,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			/**
 			 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
 			 */
-			$start_date = validate_calendars("event", true, false);
+			$start_date = Entrada_Utilities::validate_calendars("event", true, false);
 			if ((isset($start_date["start"])) && ((int) $start_date["start"])) {
 				$PROCESSED["event_start"] = (int) $start_date["start"];
 			}
@@ -158,7 +158,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if (isset($eventtype_durations[$order])) {
 									$duration = clean_input($eventtype_durations[$order], array("trim", "int"));
 
-									if ($duration <= LEARNING_EVENT_MIN_DURATION) {
+									if ($duration < LEARNING_EVENT_MIN_DURATION) {
 										add_error("The duration of <strong>".html_encode($eventtype_title)."</strong> (".numeric_suffix(($order + 1))." <strong>Event Type</strong> entry) must be greater than ".LEARNING_EVENT_MIN_DURATION.".");
 									}
 								} else {
@@ -321,7 +321,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
 			 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
 			 */
-			$viewable_date = validate_calendars("viewable", false, false);
+			$viewable_date = Entrada_Utilities::validate_calendars("viewable", false, false);
 			if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 				$PROCESSED["release_date"] = (int) $viewable_date["start"];
 			} else {
@@ -837,11 +837,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         <input type="text" id="event_title" name="event_title" value="<?php echo ((isset($PROCESSED["event_title"]) && $PROCESSED["event_title"]) ? html_encode($PROCESSED["event_title"]) : ""); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
                     </div>
                 </div>
-                <div class="control-group">
-                    <table>
-                        <?php echo generate_calendars("event", "Event Date", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
-                    </table>
-                </div>
+
+                <?php echo Entrada_Utilities::generate_calendars("event", "Event Date", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
+
                 <div class="control-group">
                     <label for="repeat_frequency" class="control-label form-nrequired">Repeat Frequency</label>
                     <div class="controls">
@@ -1043,11 +1041,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     ?>
                 </div>
                 <h2>Time Release Options</h2>
-                <div class="control-group">
-                    <table>
-                        <?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-                    </table>
-                </div>
+
+                <?php echo Entrada_Utilities::generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+
                 <div class="control-group">
                     <?php
                     if ($draft_id) {

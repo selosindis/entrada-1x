@@ -174,72 +174,125 @@ if ($RECORD_ID) {
 						}
 						?>
 						<form id="upload-file-form" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=edit-file&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data">
-						<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit File">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 20%" />
-							<col style="width: 77%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="3" style="padding-top: 15px; text-align: right">
-									<div id="display-upload-button">
-										<input type="button" class="btn btn-primary" value="Save" onclick="uploadFile()" />
-									</div>
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td colspan="3"><h2>File Details</h2></td>
-							</tr>
-							<tr>
-								<td colspan="2"><label for="file_title" class="form-required">File Title</label></td>
-								<td><input type="text" id="file_title" name="file_title" value="<?php echo ((isset($PROCESSED["file_title"])) ? html_encode($PROCESSED["file_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
-							</tr>
-							<tr>
-								<td colspan="2" style="vertical-align: top"><label for="file_description" class="form-nrequired">File Description</label></td>
-								<td style="vertical-align: top">
-									<textarea id="file_description" name="file_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["file_description"])) ? html_encode($PROCESSED["file_description"]) : ""); ?></textarea>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td colspan="2" style="vertical-align: top"><label for="access_method" class="form-nrequired">Access Method</label></td>
-								<td>
-									<input type="radio" id="access_method_0" name="access_method" value="0" style="vertical-align: middle"<?php echo (((!isset($PROCESSED["access_method"])) || ((isset($PROCESSED["access_method"])) && (!(int) $PROCESSED["access_method"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="access_method_0" style="vertical-align: middle" class="content-small">Download this file to their computer first, then open it.</label><br />
-									<input type="radio" id="access_method_1" name="access_method" value="1" style="vertical-align: middle"<?php echo (((isset($PROCESSED["access_method"])) && ((int) $PROCESSED["access_method"])) ? " checked=\"checked\"" : ""); ?> /> <label for="access_method_1" style="vertical-align: middle" class="content-small">Attempt to view it directly in the web-browser.</label><br />
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3" style="padding-top: 15px">
-									<div class="content-small">
-										<strong>Notice:</strong> If you are trying to replace the file that users download, you need to click <a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>" style="font-size: 11px">Upload Revised File</a>.
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3"><h2>File Permissions</h2></td>
-							</tr>
-							<tr>
-								<td><input type="checkbox" id="allow_member_revision" name="allow_member_revision" value="1"<?php echo (((isset($PROCESSED["allow_member_revision"])) && ($PROCESSED["allow_member_revision"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-								<td colspan="2"><label for="allow_member_revision" class="form-nrequired">Allow <strong>other community members</strong> to upload newer versions of this file.</label></td>
-							</tr>
-							<?php if (!(int) $community_details["community_registration"]) :  ?>
-							<tr>
-								<td><input type="checkbox" id="allow_troll_revision" name="allow_troll_revision" value="1"<?php echo (((isset($PROCESSED["allow_troll_revision"])) && ($PROCESSED["allow_troll_revision"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-								<td colspan="2"><label for="allow_troll_revision" class="form-nrequired">Allow <strong>non-community members</strong> to upload newer versions of this file.</label></td>
-							</tr>
-							<?php endif; ?>
-							<tr>
-								<td colspan="3"><h2>Time Release Options</h2></td>
-							</tr>
-							<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-						</tbody>
-						</table>
+                            <input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
+                            <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Edit File">
+                                <colgroup>
+                                    <col style="width: 20%" />
+                                    <col style="width: 80%" />
+                                </colgroup>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" style="padding-top: 15px; text-align: right">
+                                            <div id="display-upload-button">
+                                                <input type="button" class="btn btn-primary" value="Save" onclick="uploadFile()" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="2"><h2>File Details</h2></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label for="file_title" class="form-required">File Title</label>
+                                        </td>
+                                        <td>
+                                            <input type="text" id="file_title" name="file_title" value="<?php echo ((isset($PROCESSED["file_title"])) ? html_encode($PROCESSED["file_title"]) : ""); ?>" maxlength="64" style="width: 300px" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label for="file_description" class="form-nrequired">File Description</label>
+                                        </td>
+                                        <td>
+                                            <textarea id="file_description" name="file_description" style="width: 98%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["file_description"])) ? html_encode($PROCESSED["file_description"]) : ""); ?></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label for="access_method" class="form-nrequired">Access Method</label>
+                                        </td>
+                                        <td>
+                                            <table class="table table-bordered no-thead" style="margin-bottom:0;">
+                                                <colgroup>
+                                                    <col style="width: 5%" />
+                                                    <col style="width: auto" />
+                                                </colgroup>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="center">
+                                                            <input type="radio" id="access_method_0" name="access_method" value="0"<?php echo (((!isset($PROCESSED["access_method"])) || ((isset($PROCESSED["access_method"])) && (!(int) $PROCESSED["access_method"]))) ? " checked=\"checked\"" : ""); ?> />
+                                                        </td>
+                                                        <td>
+                                                            <label for="access_method_0" class="content-small">Download this file to their computer first, then open it.</label>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="center">
+                                                            <input type="radio" id="access_method_1" name="access_method" value="1"<?php echo (((isset($PROCESSED["access_method"])) && ((int) $PROCESSED["access_method"])) ? " checked=\"checked\"" : ""); ?> />
+                                                        </td>
+                                                        <td>
+                                                            <label for="access_method_1" class="content-small">Attempt to view it directly in the web-browser.</label>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding-top: 15px">
+                                            <div class="content-small">
+                                                <strong>Notice:</strong> If you are trying to replace the file that users download, you need to click <a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>" style="font-size: 11px">Upload Revised File</a>.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2"><h2>File Permissions</h2></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <table class="table table-bordered no-thead">
+                                                <colgroup>
+                                                    <col style="width: 5%" />
+                                                    <col style="width: auto" />
+                                                </colgroup>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="center">
+                                                            <input type="checkbox" id="allow_member_revision" name="allow_member_revision" value="1"<?php echo (((isset($PROCESSED["allow_member_revision"])) && ($PROCESSED["allow_member_revision"] == 1)) ? " checked=\"checked\"" : ""); ?> />
+                                                        </td>
+                                                        <td>
+                                                            <label for="allow_member_revision" class="form-nrequired">Allow <strong>other community members</strong> to upload newer versions of this file.</label>
+                                                        </td>
+                                                    </tr>
+                                                    <?php if (!(int) $community_details["community_registration"]) :  ?>
+                                                    <tr>
+                                                        <td class="center">
+                                                            <input type="checkbox" id="allow_troll_revision" name="allow_troll_revision" value="1"<?php echo (((isset($PROCESSED["allow_troll_revision"])) && ($PROCESSED["allow_troll_revision"] == 1)) ? " checked=\"checked\"" : ""); ?> />
+                                                        </td>
+                                                        <td>
+                                                            <label for="allow_troll_revision" class="form-nrequired">Allow <strong>non-community members</strong> to upload newer versions of this file.</label>
+                                                        </td>
+                                                        </td>
+                                                    </tr>
+                                                    <?php endif; ?>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2"><h2>Time Release Options</h2></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <table class="date-time">
+                                                <?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
 						</form>
 						<div id="display-upload-status" style="display: none">
 							<div style="text-align: left; background-color: #EEEEEE; border: 1px #666666 solid; padding: 10px">

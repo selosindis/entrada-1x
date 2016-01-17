@@ -88,7 +88,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 				$modal_onload[] = "closeWizard()";
 
 				$ERROR++;
-				$ERRORSTR[]	= "Your MEdTech account does not have the permissions required to use this feature. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.";
+				$ERRORSTR[]	= "Your account does not have the permissions required to use this feature. If you believe you are receiving this message in error please us for assistance.";
 
 				echo display_error();
 
@@ -161,7 +161,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 								break;
 								case 6 :
 								case 7 :
-									$modal_onload[]		= "alert('Unable to store the new file on the server; the MEdTech Unit has been informed of this error, please try again later.')";
+									$modal_onload[]		= "alert('Unable to store the new file on the server. We have been informed of this error, please try again later.')";
 
 									$ERROR++;
 									$ERRORSTR[]		= "q1";
@@ -201,6 +201,27 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 							} else {
 								if(!DEMO_MODE) {
 									if(($db->AutoExecute("event_files", $PROCESSED, "INSERT")) && ($EFILE_ID = $db->Insert_Id())) {
+                                        $resource_entity = new Models_Event_Resource_Entity(
+                                            array(
+                                                "event_id" => $EVENT_ID,
+                                                "entity_type" => 1,
+                                                "entity_value" => $EFILE_ID,
+                                                "release_date" => 0,
+                                                "release_until" => 0,
+                                                "updated_date" => time(),
+                                                "updated_by" => $ENTRADA_USER->getID(),
+                                                "active" => 1
+                                            )
+                                        );
+                                        
+                                        if (!$resource_entity->insert()) {
+                                            $modal_onload[]		= "alert('An error occured while attempting to save this podcast resource. The MEdTech Unit has been informed of this error, please try again later')";
+                                            
+                                            $ERROR++;
+                                            $ERRORSTR[]		= "q2";
+                                            application_log("error", "An error occured while attempting to save the event_resource_entity record DB said: " . $db->ErrorMsg());
+                                        }
+                                        
 										if((@is_dir(FILE_STORAGE_PATH)) && (@is_writable(FILE_STORAGE_PATH))) {
 											if(@file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
 												application_log("notice", "File ID [".$EFILE_ID."] already existed and was overwritten with newer file.");

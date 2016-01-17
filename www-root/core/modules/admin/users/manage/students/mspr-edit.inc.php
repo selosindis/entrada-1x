@@ -27,7 +27,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	require_once("Entrada/mspr/functions.inc.php");
 	require_once("Models/mspr/MSPRs.class.php");
 	$PROXY_ID = $user_record["id"];
-	$user = User::get($PROXY_ID);
+	$user = User::fetchRowByID($PROXY_ID);
 
 	if (!(isset($_GET['from']) && ($from = $_GET['from']) && (in_array($from,array("attention", "class","user"))))) {
 		$from = 'user';

@@ -8,12 +8,6 @@
 	<meta name="robots" content="noindex, nofollow" />
 
 	<link href="{$template_relative}/css/stylesheet.css" rel="stylesheet" type="text/css" />
-
-	<style type="text/css">
-	#site-header {
-		background: transparent url('{$template_relative}/images/header-default.gif') no-repeat bottom;
-	}
-	</style>
 </head>
 <body>
 <div id="site-container">

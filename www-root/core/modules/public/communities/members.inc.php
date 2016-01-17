@@ -260,7 +260,11 @@ if ($COMMUNITY_ID) {
 
 											if ($mail->send($template, $to, $from, DEFAULT_LANGUAGE, $keywords)) {
 												if ($MAILING_LISTS["active"]) {
+                                                    try {
 													$mail_list = new MailingList($COMMUNITY_ID);
+                                                    } catch (Zend_Exception $e) {
+                                                        application_log("error", "Instantiating mailing list failed. Exception message: ".$e->getMessage());
+                                                    }
 												}
 											} else {
 												add_error("We were unable to send an invitation e-mail to the guest at this time.<br /><br />A system administrator was notified of this issue, but you may wish to contact this individual manually and let them know they have been added.");
@@ -348,7 +352,11 @@ if ($COMMUNITY_ID) {
 							$member_add_failure	= 0;
 							if ((isset($_POST["acc_community_members"])) && ($proxy_ids = explode(',', $_POST["acc_community_members"])) && (count($proxy_ids))) {
 								if ($MAILING_LISTS["active"]) {
+									try {
 									$mail_list = new MailingList($COMMUNITY_ID);
+                                    } catch (Zend_Exception $e) {
+                                        application_log("error", "Instantiating mailing list failed. Exception message: ".$e->getMessage());
+                                    }
 								}
 
 								foreach ($proxy_ids as $proxy_id) {
@@ -437,7 +445,11 @@ if ($COMMUNITY_ID) {
 											$result	= $db->Execute($query);
 											if (($result) && ($total_deleted = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
+													try {
 													$mail_list = new MailingList($COMMUNITY_ID);
+                                                    } catch (Zend_Exception $e) {
+                                                        application_log("error", "Instantiating mailing list failed. Exception message: ".$e->getMessage());
+                                                    }
 													foreach ($PROXY_IDS as $proxy_id) {
 														$mail_list->deactivate_member($proxy_id);
 													}
@@ -454,7 +466,12 @@ if ($COMMUNITY_ID) {
 										case "deactivate" :
 											if (($db->AutoExecute("community_members", array("member_active" => 0, "member_acl" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '1'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
+                                                    try {
 													$mail_list = new MailingList($COMMUNITY_ID);
+                                                    } catch (Zend_Exception $e) {
+                                                        application_log("error", "Instantiating mailing list failed. Exception message: ".$e->getMessage());
+                                                    }
+                                                    
 													foreach ($PROXY_IDS as $proxy_id) {
 														$mail_list->deactivate_member($proxy_id);
 													}
@@ -471,7 +488,12 @@ if ($COMMUNITY_ID) {
 										case "demote" :
 											if (($db->AutoExecute("community_members", array("member_acl" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '1'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
+													try {
 													$mail_list = new MailingList($COMMUNITY_ID);
+                                                    } catch (Zend_Exception $e) {
+                                                        application_log("error", "Instantiating mailing list failed. Exception message: ".$e->getMessage());
+                                                    }
+                                                    
 													foreach ($PROXY_IDS as $proxy_id) {
 														$mail_list->demote_administrator($proxy_id);
 													}
@@ -530,7 +552,12 @@ if ($COMMUNITY_ID) {
 											$result	= $db->Execute($query);
 											if (($result) && ($total_deleted = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
+													try {
 													$mail_list = new MailingList($COMMUNITY_ID);
+                                                    } catch (Zend_Exception $e) {
+                                                        application_log("error", "Instantiating mailing list failed. Exception message: ".$e->getMessage());
+                                                    }
+                                                    
 													foreach ($PROXY_IDS as $proxy_id) {
 														$mail_list->deactivate_member($proxy_id);
 													}
@@ -547,7 +574,12 @@ if ($COMMUNITY_ID) {
 										case "deactivate" :
 											if (($db->AutoExecute("community_members", array("member_active" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
+													try {
 													$mail_list = new MailingList($COMMUNITY_ID);
+                                                    } catch (Zend_Exception $e) {
+                                                        application_log("error", "Instantiating mailing list failed. Exception message: ".$e->getMessage());
+                                                    }
+                                                    
 													foreach ($PROXY_IDS as $proxy_id) {
 														$mail_list->deactivate_member($proxy_id);
 													}
@@ -562,15 +594,21 @@ if ($COMMUNITY_ID) {
 											}
 											break;
 										case "promote" :
-											if (($db->AutoExecute("community_members", array("member_acl" => 1), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
+											if ($db->AutoExecute("community_members", array("member_acl" => 1), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) {
 												if ($MAILING_LISTS["active"]) {
+													try {
 													$mail_list = new MailingList($COMMUNITY_ID);
+                                                    } catch (Zend_Exception $e) {
+                                                        application_log("error", "Instantiating mailing list failed. Exception message: ".$e->getMessage());
+                                                    }
+                                                    
 													if ($mail_list) {
 														foreach ($PROXY_IDS as $proxy_id) {
 															$mail_list->promote_administrator($proxy_id);
 														}
 													}
 												}
+                                                $total_updated = ($db->Affected_Rows() ? $db->Affected_Rows() : 1);
 												$SUCCESS++;
 												$SUCCESSSTR[] = "You have successfully promoted <strong>".$total_updated." member".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($community_details["community_title"])."</strong> community to community administrators. They will now be able to perform all of the same actions as you in this community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
@@ -711,7 +749,11 @@ if ($COMMUNITY_ID) {
 		<h2 style="margin-top: 0px">Community Members</h2>
 							<?php
 							if ($MAILING_LISTS["active"]) {
-								$mail_list = new MailingList($COMMUNITY_ID);
+                                try {
+                                    $mail_list = new MailingList($COMMUNITY_ID);
+                                } catch (Zend_Exception $e) {
+                                    application_log("error", "Instantiating mailing list failed. Exception message: ".$e->getMessage());
+                                }
 							}
 
 							/**
@@ -970,173 +1012,173 @@ if ($COMMUNITY_ID) {
 		</div>
 		<div class="row-fluid">
 			<div class="span7 member-add-type" id="existing-member-add-type">
-													<?php
-													$nmembers_query			= "";
-													$nmembers_results		= false;
+                <?php
+                $nmembers_query			= "";
+                $nmembers_results		= false;
 
-													/**
-													 * Check registration requirements for this community.
-													 */
-													switch ($community_details["community_registration"]) {
-														case 2 :	// Selected Group Registration
-														/**
-														 * List everyone in the specific groups with the specific role combination. What a PITA.
-														 */
-															if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
-																$role_group_combinations = array();
-																$student_cohort_ids_string = false;
-																foreach ($community_members as $member_group) {
-																	if ($member_group != "") {
-																		$tmp_build	= array();
-																		$role	= "";
-																		$pieces = explode("_", $member_group);
+                /**
+                 * Check registration requirements for this community.
+                 */
+                switch ($community_details["community_registration"]) {
+                    case 2 :	// Selected Group Registration
+                    /**
+                     * List everyone in the specific groups with the specific role combination. What a PITA.
+                     */
+                        if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
+                            $role_group_combinations = array();
+                            $student_cohort_ids_string = false;
+                            foreach ($community_members as $member_group) {
+                                if ($member_group != "") {
+                                    $tmp_build	= array();
+                                    $role	= "";
+                                    $pieces = explode("_", $member_group);
 
-																		if (isset($pieces[1]) && (isset($pieces[0]) && $pieces[0] == "student")) {
-																			if ($student_cohort_ids_string) {
-																				$student_cohort_ids_string .= ", ".$db->qstr(clean_input($pieces[1], "int"));
-																			} else {
-																				$student_cohort_ids_string = $db->qstr(clean_input($pieces[1], "int"));
-																			}
-																		}
-																		if (isset($pieces[0])) {
-																			if ($pieces[0] == "student") {
-																				$tmp_build["group"]	= "b.`group` = ".$db->qstr(clean_input($pieces[0], "alphanumeric"))." AND c.`group_id` = ".$db->qstr(clean_input($pieces[1], "int"));
-																			} else {
-																				$tmp_build["group"]	= "b.`group` = ".$db->qstr(clean_input($pieces[0], "alphanumeric"));
-																			}
-																		}
+                                    if (isset($pieces[1]) && (isset($pieces[0]) && $pieces[0] == "student")) {
+                                        if ($student_cohort_ids_string) {
+                                            $student_cohort_ids_string .= ", ".$db->qstr(clean_input($pieces[1], "int"));
+                                        } else {
+                                            $student_cohort_ids_string = $db->qstr(clean_input($pieces[1], "int"));
+                                        }
+                                    }
+                                    if (isset($pieces[0])) {
+                                        if ($pieces[0] == "student") {
+                                            $tmp_build["group"]	= "b.`group` = ".$db->qstr(clean_input($pieces[0], "alphanumeric"))." AND c.`group_id` = ".$db->qstr(clean_input($pieces[1], "int"));
+                                        } else {
+                                            $tmp_build["group"]	= "b.`group` = ".$db->qstr(clean_input($pieces[0], "alphanumeric"));
+                                        }
+                                    }
 
-																		$role_group_combinations[] = "(".implode(" AND ", $tmp_build).")";
-																	}
-																}
-																if (@count($role_group_combinations)) {
-																	$nmembers_query	= "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
-																						FROM `".AUTH_DATABASE."`.`user_data` AS a
-																						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-																						ON a.`id` = b.`user_id`
-																						".($student_cohort_ids_string ? "LEFT JOIN `group_members` AS c
-																						ON a.`id` = c.`proxy_id`
-																						AND c.`group_id` IN (".$student_cohort_ids_string.")" : "")."
-																						WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-																						AND b.`account_active` = 'true'
-																						AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-																						AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-																						AND (".implode(" OR ", $role_group_combinations).")
-																						GROUP BY a.`id`
-																						ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-																}
-															}
-														break;
-														case 3 :	// Selected Community Registration
-															if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
-																$tmp_community_member_list = array();
-																$query		= "SELECT `proxy_id` FROM `community_members` WHERE `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
-																$results	= $db->GetAll($query);
-																if ($results) {
-																	foreach ($results as $result) {
-																		if ($proxy_id = (int) $result["proxy_id"]) {
-																			$tmp_community_member_list[] = $proxy_id;
-																		}
-																	}
-																}
-																if (@count($tmp_community_member_list)) {
-																	$nmembers_query	= "
-																		SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
-																		FROM `".AUTH_DATABASE."`.`user_data` AS a
-																		LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-																		ON a.`id` = b.`user_id`
-																		WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-																		AND b.`account_active` = 'true'
-																		AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-																		AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-																		AND a.`id` IN ('".implode("', '", $tmp_community_member_list)."')
-																		GROUP BY a.`id`
-																		ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-																}
-															}
-															break;
-														case 0 :	// Open Community
-														case 1 :	// Open Registration
-														case 4 :	// Private Community
-														default :
-															$nmembers_query	= "
-																SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
-																FROM `".AUTH_DATABASE."`.`user_data` AS a
-																LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-																ON a.`id` = b.`user_id`
-																WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-																AND b.`account_active` = 'true'
-																AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-																AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-																GROUP BY a.`id`
-																ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-															break;
-													}
-													//Fetch list of categories
-													$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-													$organisation_results	= $db->GetAll($query);
-													if ($organisation_results) {
-														$organisations = array();
-														foreach ($organisation_results as $result) {
-															$member_categories[$result["organisation_id"]] = array("text" => $result["organisation_title"], "value" => "organisation_".$result["organisation_id"], "category"=>true);
-														}
+                                    $role_group_combinations[] = "(".implode(" AND ", $tmp_build).")";
+                                }
+                            }
+                            if (@count($role_group_combinations)) {
+                                $nmembers_query	= "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+                                                    FROM `".AUTH_DATABASE."`.`user_data` AS a
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                                                    ON a.`id` = b.`user_id`
+                                                    ".($student_cohort_ids_string ? "LEFT JOIN `group_members` AS c
+                                                    ON a.`id` = c.`proxy_id`
+                                                    AND c.`group_id` IN (".$student_cohort_ids_string.")" : "")."
+                                                    WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+                                                    AND b.`account_active` = 'true'
+                                                    AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+                                                    AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+                                                    AND (".implode(" OR ", $role_group_combinations).")
+                                                    GROUP BY a.`id`
+                                                    ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+                            }
+                        }
+                    break;
+                    case 3 :	// Selected Community Registration
+                        if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
+                            $tmp_community_member_list = array();
+                            $query		= "SELECT `proxy_id` FROM `community_members` WHERE `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
+                            $results	= $db->GetAll($query);
+                            if ($results) {
+                                foreach ($results as $result) {
+                                    if ($proxy_id = (int) $result["proxy_id"]) {
+                                        $tmp_community_member_list[] = $proxy_id;
+                                    }
+                                }
+                            }
+                            if (@count($tmp_community_member_list)) {
+                                $nmembers_query	= "
+                                    SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+                                    FROM `".AUTH_DATABASE."`.`user_data` AS a
+                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                                    ON a.`id` = b.`user_id`
+                                    WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+                                    AND b.`account_active` = 'true'
+                                    AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+                                    AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+                                    AND a.`id` IN ('".implode("', '", $tmp_community_member_list)."')
+                                    GROUP BY a.`id`
+                                    ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+                            }
+                        }
+                        break;
+                    case 0 :	// Open Community
+                    case 1 :	// Open Registration
+                    case 4 :	// Private Community
+                    default :
+                        $nmembers_query	= "
+                            SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+                            FROM `".AUTH_DATABASE."`.`user_data` AS a
+                            LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                            ON a.`id` = b.`user_id`
+                            WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+                            AND b.`account_active` = 'true'
+                            AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+                            AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+                            GROUP BY a.`id`
+                            ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+                        break;
+                }
+                //Fetch list of categories
+                $query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
+                $organisation_results	= $db->GetAll($query);
+                if ($organisation_results) {
+                    $organisations = array();
+                    foreach ($organisation_results as $result) {
+                        $member_categories[$result["organisation_id"]] = array("text" => $result["organisation_title"], "value" => "organisation_".$result["organisation_id"], "category"=>true);
+                    }
 
-													}
+                }
 
-													$current_member_list	= array();
-													$query		= "SELECT `proxy_id` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1'";
-													$results	= $db->GetAll($query);
-													if ($results) {
-														foreach ($results as $result) {
-															if ($proxy_id = (int) $result["proxy_id"]) {
-																$current_member_list[] = $proxy_id;
-															}
-														}
-													}
+                $current_member_list	= array();
+                $query		= "SELECT `proxy_id` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1'";
+                $results	= $db->GetAll($query);
+                if ($results) {
+                    foreach ($results as $result) {
+                        if ($proxy_id = (int) $result["proxy_id"]) {
+                            $current_member_list[] = $proxy_id;
+                        }
+                    }
+                }
 
-													if ($nmembers_query != "") {
-														$nmembers_results = $db->GetAll($nmembers_query);
-														if ($nmembers_results) {
-															$members = $member_categories;
+                if ($nmembers_query != "") {
+                    $nmembers_results = $db->GetAll($nmembers_query);
+                    if ($nmembers_results) {
+                        $members = $member_categories;
 
-															foreach ($nmembers_results as $member) {
+                        foreach ($nmembers_results as $member) {
 
-																$organisation_id = $member['organisation_id'];
-																$group = $member['group'];
-																$role = $member['role'];
+                            $organisation_id = $member['organisation_id'];
+                            $group = $member['group'];
+                            $role = $member['role'];
 
-																if ($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
-																	$members[$organisation_id]['options'][$group.$role] = array('text' => $group. ' > '.$role, 'value' => $organisation_id.'|'.$group.'|'.$role);
-																} elseif ($group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$group."all"])) {
-																	$members[$organisation_id]['options'][$group."all"] = array('text' => $group. ' > all', 'value' => $organisation_id.'|'.$group.'|all');
-																}
-															}
+                            if ($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
+                                $members[$organisation_id]['options'][$group.$role] = array('text' => $group. ' > '.$role, 'value' => $organisation_id.'|'.$group.'|'.$role);
+                            } elseif ($group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$group."all"])) {
+                                $members[$organisation_id]['options'][$group."all"] = array('text' => $group. ' > all', 'value' => $organisation_id.'|'.$group.'|all');
+                            }
+                        }
 
-															foreach ($members as $key => $member) {
-																if (isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
-																	sort($members[$key]['options']);
-																}
-															}
+                        foreach ($members as $key => $member) {
+                            if (isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
+                                sort($members[$key]['options']);
+                            }
+                        }
 
-															echo lp_multiple_select_inline('community_members', $members, array(
-															'width'	=>'100%',
-															'ajax'=>true,
-															'selectboxname'=>'group and role',
-															'default-option'=>'-- Select Group & Role --',
-															'category_check_all'=>true));
-														} else {
-															echo "No One Available [1]";
-														}
-													} else {
-														echo "No One Available [2]";
-													}
-													?>
+                        echo lp_multiple_select_inline('community_members', $members, array(
+                        'width'	=>'100%',
+                        'ajax'=>true,
+                        'selectboxname'=>'group and role',
+                        'default-option'=>'-- Select Group & Role --',
+                        'category_check_all'=>true));
+                    } else {
+                        echo "No One Available [1]";
+                    }
+                } else {
+                    echo "No One Available [2]";
+                }
+                ?>
 
-								<input class="multi-picklist" id="community_members" name="community_members" style="display: none;">
-							</div>
+                <input class="multi-picklist" id="community_members" name="community_members" style="display: none;">
+            </div>
 			<div class="span5">
 				<input id="acc_community_members" style="display: none;" name="acc_community_members"/>
-				<h3>Members to be Added on Submission</h3>
+				<h4>Members to be Added on Submission</h4>
 				<div id="community_members_list"></div>
 			</div>
 		</div>

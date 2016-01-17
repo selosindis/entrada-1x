@@ -55,7 +55,7 @@ function fetchFilename(file_id) {
 }
 
 function updateFolderIcon(folder_number) {
-	if($('folder_icon')) {
+	if ($('folder_icon')) {
 		if((!folder_number) || (folder_number < 1)  || (folder_number > 6) || (folder_number == '')) {
 			folder_number = 1;
 		}
@@ -63,13 +63,13 @@ function updateFolderIcon(folder_number) {
 		var folder_icon_number = folder_number;
 
 		if($('folder-icon-' + folder_number)) {
-			$('folder-icon-1').style.borderColor = '#FFFFFF';
-			$('folder-icon-2').style.borderColor = '#FFFFFF';
-			$('folder-icon-3').style.borderColor = '#FFFFFF';
-			$('folder-icon-4').style.borderColor = '#FFFFFF';
-			$('folder-icon-5').style.borderColor = '#FFFFFF';
-			$('folder-icon-6').style.borderColor = '#FFFFFF';
-			$('folder-icon-' + folder_number).style.borderColor = '#999999';
+			$('folder-icon-1').style.border = '1px solid #FFF';
+			$('folder-icon-2').style.border = '1px solid #FFF';
+			$('folder-icon-3').style.border = '1px solid #FFF';
+			$('folder-icon-4').style.border = '1px solid #FFF';
+			$('folder-icon-5').style.border = '1px solid #FFF';
+			$('folder-icon-6').style.border = '1px solid #FFF';
+			$('folder-icon-' + folder_number).style.border = '1px solid #999999';
 		}
 
 		$('folder_icon').value = folder_number;

@@ -42,7 +42,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 				if ($drafts = $db->GetAll($query)) {
 
 					application_log("notice", "Draft schedule importer found ".count($drafts)." approved drafts and started importing.");
-
+                    
 					foreach ($drafts as $draft) {
 						$msg[$draft["draft_id"]][] = "Imported draft: \"".$draft["draf_title"]."\" on ".date("Y-m-d H:i", time());
 						$notification_events = "";
@@ -253,6 +253,41 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 															application_log("success", "Failed to copy file [".$old_event_file."] to file [".$new_file_id."].");
 														}
 													}
+                                                    
+                                                    switch ($file["file_category"]) {
+                                                        case "podcast" :
+                                                            $entity_type = 1;
+                                                        break;
+                                                        case "lecture_notes" :
+                                                            $entity_type = 5;
+                                                        break;
+                                                        case "lecture_slides" :
+                                                            $entity_type = 6;
+                                                        break;
+                                                        case "other" :
+                                                            $entity_type = 11;
+                                                        break;
+
+                                                    }
+
+                                                    $event_resource_entity = new Models_Event_Resource_Entity(array(
+                                                        "event_id" => $event_id,
+                                                        "entity_type" => $entity_type,
+                                                        "entity_value" => $new_file_id,
+                                                        "release_date" => 0,
+                                                        "release_until" => 0,
+                                                        "updated_date" => time(),
+                                                        "updated_by" => $draft_creators[0]["proxy_id"],
+                                                        "active" => 1
+                                                        )
+                                                    );
+
+                                                    if (!$event_resource_entity->insert()) {
+                                                        $ERROR++;
+                                                        $ERRORSTR[] = "There was an error while trying to save the selected <strong>Event File</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+                                                        application_log("error", "Unable to insert a new event_file record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
+                                                    }
+                                                    
 												} else {
 													$error++;
 													application_log("error", "Error inserting event_files [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
@@ -273,12 +308,35 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 										if ($event_links = $db->GetAll($query)) {
 											application_log("notice", "Found ".count($event_links)." event links attached to original event [".$old_event_id."], will be ported over to new event [".$event_id."].");
 											foreach ($event_links as $link) {
+                                                $original_elink_id = $link["elink_id"];
 												unset($link["elink_id"]);
 												$link["event_id"]		= $event_id;
 												$link["accesses"]		= 0;
 												$file["updated_by"]		= $draft_creators[0]["proxy_id"];
 												if ($db->AutoExecute("`event_links`", $link, "INSERT")) {
 													application_log("success", "Successfully inserted link [".$db->Insert_ID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
+                                                    
+                                                    $new_link_id = (int) $db->Insert_ID();
+                                                    $resource = Models_Event_Resource_Entity::fetchRowByEventIDEntityValue($old_event_id, $original_elink_id);
+                                                    if ($resource) {
+                                                        $event_resource_entity = new Models_Event_Resource_Entity(array(
+                                                            "event_id" => $event_id,
+                                                            "entity_type" => $resource->getEntityType(),
+                                                            "entity_value" => $new_link_id,
+                                                            "release_date" => 0,
+                                                            "release_until" => 0,
+                                                            "updated_date" => time(),
+                                                            "updated_by" => $draft_creators[0]["proxy_id"],
+                                                            "active" => 1
+                                                            )
+                                                        );
+
+                                                        if (!$event_resource_entity->insert()) {
+                                                            $ERROR++;
+                                                            $ERRORSTR[] = "There was an error while trying to save the selected <strong>Event File</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+                                                            application_log("error", "Unable to insert a new event_file record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
+                                                        }
+                                                    }
 												} else {
 													$error++;
 													application_log("error", "Error inserting event_links [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
@@ -354,6 +412,25 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 												$quiz["updated_by"]	= $draft_creators[0]["proxy_id"];
 												if ($db->AutoExecute("`attached_quizzes`", $quiz, "INSERT")) {
 													application_log("success", "Successfully inserted quiz [".$db->Insert_ID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
+                                                    
+                                                    $new_quiz_id = $db->Insert_Id();
+                                                    $event_resource_entity = new Models_Event_Resource_Entity(array(
+                                                        "event_id" => $event_id,
+                                                        "entity_type" => 8,
+                                                        "entity_value" => $new_quiz_id,
+                                                        "release_date" => 0,
+                                                        "release_until" => 0,
+                                                        "updated_date" => time(),
+                                                        "updated_by" => $draft_creators[0]["proxy_id"],
+                                                        "active" => 1
+                                                        )
+                                                    );
+
+                                                    if (!$event_resource_entity->insert()) {
+                                                        $ERROR++;
+                                                        $ERRORSTR[] = "There was an error while trying to save the selected <strong>Event File</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+                                                        application_log("error", "Unable to insert a new event_file record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
+                                                    }
 												} else {
 													$error++;
 													application_log("error", "Error inserting event_objectives [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());

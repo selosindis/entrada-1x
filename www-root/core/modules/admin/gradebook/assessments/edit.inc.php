@@ -44,6 +44,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("notice", "Failed to provide assessment identifier when attempting to edit an assessment");
 } else {
+    $HEAD[] = "<script type=\"text/javascript\">var SITE_URL = '".ENTRADA_URL."';</script>";
+    $HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
+    $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+    $HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
+    $HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+    $HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_assessment.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";			
+
 	$assessment = Models_Gradebook_Assessment::fetchRowByID($ASSESSMENT_ID);
 	$assessment_details = $assessment->toArray();
 
@@ -62,16 +69,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								AND `course_active` = '1'";
 			$course_details = $db->GetRow($query);
 
-            $HEAD[] = "<script type=\"text/javascript\">var SITE_URL = '".ENTRADA_URL."';</script>";
-			$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
-			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
-			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_assessment.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";			
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grade Assessment");
 
-			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
-
-			
 			$m_query = "	SELECT * FROM `assessment_marking_schemes` 
 								WHERE `enabled` = 1;";
 			$MARKING_SCHEMES = $db->GetAll($m_query);
@@ -81,13 +80,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									 WHERE `active` = '1'";
 			$assessment_options = $db->GetAll($assessment_options_query);
 			if ($course_details && $MARKING_SCHEMES && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-
 				function return_id($arr) {
 					return $arr["id"];
 				}
 
 				$MARKING_SCHEME_IDS = array_map("return_id", $MARKING_SCHEMES);
-				$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/" . $MODULE . "?" . replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing Assessment");
+				$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/" . $MODULE . "?" . replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Edit Assessment");
 				
                 //characteristic check
                 if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int")))) {
@@ -95,10 +93,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                 } elseif ((isset($_GET["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_GET["assessment_characteristic"], array("trim", "int")))) {
                     $PROCESSED["characteristic_id"] = $assessment_characteristic;
                 }
+
 				// Error Checking
 				switch ($STEP) {
 					case 2 :
-						
 						$clinical_presentations = array();
 					
 						if (isset($_POST["clinical_presentations"])) {
@@ -158,6 +156,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						} else {
 							$PROCESSED["description"] = "";
 						}
+					
 						if ((isset($_POST["type"])) && ($type = clean_input($_POST["type"], array("trim")))) {
 							if ((@in_array($type, $ASSESSMENT_TYPES))) {
 								$PROCESSED["type"] = $type;
@@ -170,7 +169,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$ERRORSTR[] = "You must pick a valid <strong>Type</strong> for this assessment.";
 						}
 
-						if ((isset($_POST["marking_scheme_id"])) && ($marking_scheme_id = clean_input($_POST["marking_scheme_id"], array("int")))) {
+						if ((isset($_POST["marking_scheme_id"])) && ($marking_scheme_id = clean_input($_POST["marking_scheme_id"], array("trim","int")))) {
 							if (@in_array($marking_scheme_id, $MARKING_SCHEME_IDS)) {
 								$PROCESSED["marking_scheme_id"] = $marking_scheme_id;
 							} else {
@@ -181,6 +180,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Marking Scheme</strong> field is a required field.";
 						}
+
 						//Show in learner gradebook check
 						if ((isset($_POST["show_learner_option"]))) {
 							switch ($show_learner_option = clean_input($_POST["show_learner_option"], array("trim", "int"))) {
@@ -323,6 +323,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         }
                                     }
                                 }
+
 								if ($assessment_options) {
 									$query = "SELECT `option_id`, `assessment_id`, `option_active` FROM `assessment_options` WHERE `assessment_id` = ".$db->qstr($assessment_details["assessment_id"]);
 									$current_assessment_options = $db->GetAssoc($query);
@@ -365,7 +366,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     $assessment_event = new Models_Assessment_AssessmentEvent($assessment_event_array);
 
                                     if (!$assessment_event->insert()) {
-                                        echo $db->ErrorMsg(); exit;
                                         application_log("error", "Unable insert the attached learning event. Database said: ".$db->ErrorMsg());
                                     } else {
                                         application_log("success", "Successfully attached learning event [".$PROCESSED["event_id"]."] to assessment ID [".$ASSESSMENT_ID."]");
@@ -451,7 +451,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$assessment_options_selected[] = 0;
 							}
 						}
-						break;
+					break;
 				}
 
 				// Display Content
@@ -466,7 +466,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						if ($ERROR) {
 							echo display_error();
 						}
-						break;
+					break;
 					case 1 :
 					default :
                         if(isset($_GET["aquiz_id"]) && ($tmp_input = clean_input($_GET["aquiz_id"], array("trim", "int")))) {
@@ -504,7 +504,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$clinical_presentations = array();
 
 						$results = fetch_clinical_presentations();
-						
 						if ($results) {
 							foreach ($results as $result) {
 								$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
@@ -520,7 +519,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                      AND b.`objective_active` = '1'
 									 WHERE a.`course_id` = ".$COURSE_ID."
 									 AND a.`objective_type` = 'event'";
-						
 						$course_clinical_presentations = $db->GetAssoc($query);
 
 						if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
@@ -590,7 +588,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$curriculum_objectives_list["objectives"][$result["objective_id"]]["event_objective_details"] = $result["objective_details"];
 							}
 						}
-						
 						?>
 						<h1>Edit Assessment</h1>
 						<?php
@@ -598,436 +595,418 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							echo display_error();
 						}
 						?>
-						<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="assessment-form">
-							<h2>Assessment Details</h2>
-							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Assessment">
-								<colgroup>
-									<col style="width: 3%" />
-									<col style="width: 22%" />
-									<col style="width: 75%" />
-								</colgroup>
-								<tbody>
-									<tr>
-										<td></td>
-										<td><label class="form-nrequired">Course Name</label></td>
-										<td>
-											<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
-										</td>
-									</tr>
-									<?php 					
-									$query = "	SELECT * 
-												FROM `groups` 
-												WHERE `group_type` = 'course_list' 
-												AND `group_value` = ".$db->qstr($COURSE_ID)." 
-												AND `group_active` = '1'
-												ORDER BY `group_name`";
-									$course_lists = $db->GetAll($query);
-									if($course_lists) {
-										if (count($course_lists) == 1) {
-										?>											
-											<tr>
-												<td></td>
-												<td><label for="course_list" class="form-required">Course List:</label></td>
-												<td>
-													<span class="radio-group-title">All Learners in the <?php echo $course_details["course_code"];?> Course List Group</span>
-													<div class="content-small">This assessment is intended for all learners that are members of the <?php echo $course_details["course_code"];?> Course List.</div>
-													<input id="course_list" class="course-list" name="course_list" type="hidden" value="<?php echo $course_lists[0]["group_id"]; ?>">
-												</td>
-											</tr>
-									<?php
-										} else { ?>
-											<tr>
-											<td></td>
-											<td><label for="course_list" class="form-required">Course List:</label></td>
-											<td>
-												<select id="course_list" class="course-list" name="course_list" style="width: 250px">
-												<?php
-													foreach ($course_lists as $course_list) {
-														echo "<option value=\"".$course_list["group_id"]."\"".(($PROCESSED["cohort"] == $course_list["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($course_list["group_name"])."</option>\n";
-													}											
-												?>
-												</select>							
-											</td>
-										</tr>									
-									<?php	
-										}									
-									} else { 
-									?>	
-										<tr>
-											<td></td>
-											<td><label for="cohort" class="form-required">Cohort</label></td>
-											<td>
-												<select id="cohort" class="course-list" name="cohort" style="width: 250px">
-													<?php
-													$active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
-													if (isset($active_cohorts) && !empty($active_cohorts)) {
-														foreach ($active_cohorts as $cohort) {
-															echo "<option value=\"" . $cohort["group_id"] . "\"" . (($PROCESSED["cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "") . ">" . html_encode($cohort["group_name"]) . "</option>\n";
-														}
-													}
-													?>
-												</select>
-											</td>
-										</tr>
-									<?php 								
-										} 
-									?>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td><label for="name" class="form-required">Assessment Name</label></td>
-										<td><input type="text" id="name" name="name" value="<?php echo html_encode($PROCESSED["name"]); ?>" maxlength="64" style="width: 243px" /></td>
-									</tr>
-									<tr>
-										<td>&nbsp;</td>
-										<td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description</label></td>
-										<td><textarea id="description" name="description" class="expandable" style="width: 99%; height: 150px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
-									</tr>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
-										<td>
-											<input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (float) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="5" style="width: 40px" />
-											<span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
-										</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td><label for="grade_threshold" class="form-nrequired">Assessment Threshold (%)</label></td>
-										<td>
-											<input type="text" id="grade_threshold" name="grade_threshold" value="<?php echo (float) html_encode($PROCESSED["grade_threshold"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
-											<span class="content-small"><strong>Tip:</strong> If a student receives a grade below the threshold the coordinator / director are notified.</span>
-										</td>
-									</tr>
-								</tbody>
-								<tbody id="assessment_required_options">
-									<tr>
-										<td>&nbsp;</td>
-										<td colspan="2" style="padding-top: 10px">
-											<label class="form-nrequired" for="assessment_required_0">Is this assessment <strong>optional</strong> or <strong>required</strong>?</label>
-											<div style="margin: 5px 0 0 25px">
-												<label class="form-nrequired radio" for="assessment_required_0">
-													<input type="radio" name="assessment_required" value="0" id="assessment_required_0" <?php echo (($PROCESSED["required"] == 0)) ? " checked=\"checked\"" : "" ?> /> Optional
-												</label><br />
-												<label class="form-nrequired radio" for="assessment_required_1">
-													<input type="radio" name="assessment_required" value="1" id="assessment_required_1" <?php echo (($PROCESSED["required"] == 1)) ? " checked=\"checked\"" : "" ?> /> Required
-												</label>
-											</div>
-										</td>
-									</tr>
-								</tbody>
-								<tbody>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td><label for="assessment_characteristic" class="form-required">Characteristic</label></td>
-										<td>
-											<select id="assessment_characteristic" name="assessment_characteristic" onchange="window.location = '<?php echo ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("assessment_characteristic" => NULL)); ?>&assessment_characteristic='+this.value">
-												<option value="">-- Select Assessment Characteristic --</option>
-												<?php
-												$query = "	SELECT *
-												FROM `assessments_lu_meta`
-												WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
-												AND `active` = '1'
-												ORDER BY `type` ASC, `title` ASC";
-												$assessment_characteristics = $db->GetAll($query);
-												if ($assessment_characteristics) {
-													$type = "";
-													foreach ($assessment_characteristics as $key => $characteristic) {
-														if ($type != $characteristic["type"]) {
-															if ($key) {
-																echo "</optgroup>";
-															}
-															echo "<optgroup label=\"" . (strtolower($characteristic["type"]) != "quiz" ? ucwords(strtolower($characteristic["type"]))."s" : "Quizzes") . "\">";
-
-															$type = $characteristic["type"];
-														}
-
-														echo "<option value=\"" . $characteristic["id"] . "\" assessmenttype=\"" . $characteristic["type"] . "\"" . (($PROCESSED["characteristic_id"] == $characteristic["id"]) ? " selected=\"selected\"" : "") . ">" . $characteristic["title"] . "</option>";
-														if ($PROCESSED["characteristic_id"] == $characteristic["id"]) {
-															$current_type = $characteristic["type"];
-														}
-													}
-													echo "</optgroup>";
-												}
-												?>
-											</select>
-										</td>
-									</tr>
-								</tbody>
-								<tbody id="assessment_options">
-									<tr>
-										<td></td>
-										<td style="vertical-align: top;"><label for="extended_option1" class="form-nrequired">Extended Options</label></td>
-										<td>
-											<?php
-											if (in_array($current_type, array("reflection", "paper", "project"))) {
-												$where = " WHERE `type` LIKE ".$db->qstr("%".$current_type."%");
-											} else if (in_array($current_type, array("quiz", "exam"))) {
-												$where = " WHERE `type` IS NULL ";
-											} else {
-												$where = " WHERE 'x' = 'y'";
-											}
-											$query = "SELECT `id`, `title` FROM `assessments_lu_meta_options`" . $where;
-											$assessment_options = $db->GetAll($query);
-											if ($assessment_options) {
-												foreach ($assessment_options as $assessment_option) {
-													echo "<label class=\"checkbox\" for=\"extended_option" . $assessment_option["id"] . "\"><input type=\"checkbox\" value=\"" . $assessment_option["id"] . "\" name=\"option[]\"" . (((is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected))) ? " checked=\"checked\"" : "") . " id=\"extended_option" . $assessment_option["id"] . "\"/>" . $assessment_option["title"] . "</label><br />";
-												}
-											}
-											?>
-										</td>
-									</tr>
-								</tbody>
-								<tbody>
-                                    <?php
-                                    $query = "SELECT aq.*, COUNT(c.`quiz_id`) AS `question_total`, COUNT(d.`qquestion_id`) AS `attached_question_count`
-                                                 FROM `assessment_attached_quizzes` AS a
-                                                 JOIN `attached_quizzes` AS aq
-                                                 ON a.`aquiz_id` = aq.`aquiz_id`
-                                                 JOIN `quizzes` AS b
-                                                 ON aq.`quiz_id` = b.`quiz_id`
-                                                 LEFT JOIN `quiz_questions` AS c
-                                                 ON b.`quiz_id` = c.`quiz_id`
-                                                 AND c.`question_active` = 1
-                                                 LEFT JOIN `assessment_quiz_questions` AS d
-                                                 ON a.`assessment_id` = d.`assessment_id`
-                                                 AND c.`qquestion_id` = d.`qquestion_id`
-                                                 WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
-                                                 GROUP BY aq.`aquiz_id`";
-                                    $attached_quizzes = $db->GetAll($query);
-                                    ?>
-									<tr>
-										<td colspan="3">
-											<label class="form-nrequired radio" for="show_quiz_option_0">
-												<input type="radio" name="show_quiz_option" value="0" onclick="jQuery('#quiz_options').toggle(false)" id="show_quiz_option_0" <?php echo (!$attached_quizzes ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Do not link online quizzes to this assessment
-											</label>
-										</td>
-									</tr>
-									<tr>
-										<td colspan="3">
-											<label class="form-nrequired radio" for="show_quiz_option_1">
-												<input type="radio" name="show_quiz_option" value="1" onclick="jQuery('#quiz_options').toggle(true)" id="show_quiz_option_1" <?php echo ($attached_quizzes ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Link existing online quizzes to this assessment
-											</label>
-										</td>
-									</tr>
-								</tbody>
-								<tbody id="quiz_options" style="display: none;">
-                                    <tr>
-                                        <td></td>
-                                        <td colspan="2">
-                                            <a id="false-link" href="#placeholder"></a>
-                                            <div id="placeholder" style="display: none; width: 800px;"></div>
-                                            <div class="row-fluid">
-                                                <h2 class="span8">Attached Quizzes</h2>
-                                                <div class="span4">
-                                                    <a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("section" => "attach-quiz", "assessment_id" => $ASSESSMENT_ID)); ?>" class="btn btn-primary pull-right">Attach a Quiz</a>
+						<form id="assessment-form" action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post">
+							<h2 title="Assessment Details Section">Assessment Details</h2>
+							<div id="assessment-details-section">
+                                <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing a Gradebook Assessment">
+                                    <colgroup>
+                                        <col style="width: 3%" />
+                                        <col style="width: 23%" />
+                                        <col style="width: 74%" />
+                                    </colgroup>
+                                    <tbody>
+                                        <tr>
+                                            <td></td>
+                                            <td><label class="form-nrequired">Course Name:</label></td>
+                                            <td>
+                                                <a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
+                                            </td>
+                                        </tr>
+                                        <?php
+                                        $query = "	SELECT *
+                                                    FROM `groups`
+                                                    WHERE `group_type` = 'course_list'
+                                                    AND `group_value` = ".$db->qstr($COURSE_ID)."
+                                                    AND `group_active` = '1'
+                                                    ORDER BY `group_name`";
+                                        $course_lists = $db->GetAll($query);
+                                        if($course_lists) {
+                                            if (count($course_lists) == 1) {
+                                            ?>
+                                                <tr>
+                                                    <td></td>
+                                                    <td><label for="course_list" class="form-required">Course List:</label></td>
+                                                    <td>
+                                                        <span class="radio-group-title">All Learners in the <?php echo $course_details["course_code"];?> Course List Group</span>
+                                                        <div class="content-small">This assessment is intended for all learners that are members of the <?php echo $course_details["course_code"];?> Course List.</div>
+                                                        <input id="course_list" class="course-list" name="course_list" type="hidden" value="<?php echo $course_lists[0]["group_id"]; ?>">
+                                                    </td>
+                                                </tr>
+                                        <?php
+                                            } else { ?>
+                                                <tr>
+                                                <td></td>
+                                                <td><label for="course_list" class="form-required">Course List:</label></td>
+                                                <td>
+                                                    <select id="course_list" class="course-list" name="course_list" style="width: 250px">
+                                                    <?php
+                                                        foreach ($course_lists as $course_list) {
+                                                            echo "<option value=\"".$course_list["group_id"]."\"".(($PROCESSED["cohort"] == $course_list["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($course_list["group_name"])."</option>\n";
+                                                        }
+                                                    ?>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        <?php
+                                            }
+                                        } else {
+                                        ?>
+                                            <tr>
+                                                <td></td>
+                                                <td><label for="cohort" class="form-required">Cohort:</label></td>
+                                                <td>
+                                                    <select id="cohort" class="course-list" name="cohort" style="width: 250px">
+                                                        <?php
+                                                        $active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
+                                                        if (isset($active_cohorts) && !empty($active_cohorts)) {
+                                                            foreach ($active_cohorts as $cohort) {
+                                                                echo "<option value=\"" . $cohort["group_id"] . "\"" . (($PROCESSED["cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "") . ">" . html_encode($cohort["group_name"]) . "</option>\n";
+                                                            }
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        <?php
+                                            }
+                                        ?>
+                                        <tr>
+                                            <td colspan="3">&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td><label for="name" class="form-required">Assessment Name:</label></td>
+                                            <td><input type="text" id="name" name="name" value="<?php echo html_encode($PROCESSED["name"]); ?>" maxlength="255" class="span11" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td>&nbsp;</td>
+                                            <td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description:</label></td>
+                                            <td><textarea id="description" name="description" class="expandable span11"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3">&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
+                                            <td>
+                                                <input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (float) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
+                                                <span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td><label for="grade_threshold" class="form-nrequired">Assessment Threshold (%):</label></td>
+                                            <td>
+                                                <input type="text" id="grade_threshold" name="grade_threshold" value="<?php echo (float) html_encode($PROCESSED["grade_threshold"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
+                                                <span class="content-small"><strong>Tip:</strong> Student grades below the threshold will trigger coordinator / director flag.</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tbody id="assessment_required_options">
+                                        <tr>
+                                            <td>&nbsp;</td>
+                                            <td colspan="2" style="padding-top: 10px">
+                                                <label class="form-nrequired" for="assessment_required_0">Is this assessment <strong>optional</strong> or <strong>required</strong>?</label>
+                                                <div style="margin: 5px 0 0 25px">
+                                                    <label class="form-nrequired radio" for="assessment_required_0">
+                                                        <input type="radio" name="assessment_required" value="0" id="assessment_required_0" <?php echo (($PROCESSED["required"] == 0)) ? " checked=\"checked\"" : "" ?> /> Optional
+                                                    </label>
+                                                    <label class="form-nrequired radio" for="assessment_required_1">
+                                                        <input type="radio" name="assessment_required" value="1" id="assessment_required_1" <?php echo (($PROCESSED["required"] == 1)) ? " checked=\"checked\"" : "" ?> /> Required
+                                                    </label>
                                                 </div>
-                                            </div>
-                                            <div id="quiz-questions-notice">&nbsp;</div>
-                                            <?php
-                                            if (isset($attached_quizzes) && $attached_quizzes) {
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="3">&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td><label for="assessment_characteristic" class="form-required">Characteristic:</label></td>
+                                            <td>
+                                                <select id="assessment_characteristic" name="assessment_characteristic" onchange="window.location = '<?php echo ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("assessment_characteristic" => NULL)); ?>&assessment_characteristic='+this.value">
+                                                    <option value="">-- Select Assessment Characteristic --</option>
+                                                    <?php
+                                                    $query = "	SELECT *
+                                                    FROM `assessments_lu_meta`
+                                                    WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
+                                                    AND `active` = '1'
+                                                    ORDER BY `type` ASC, `title` ASC";
+                                                    $assessment_characteristics = $db->GetAll($query);
+                                                    if ($assessment_characteristics) {
+                                                        $type = "";
+                                                        foreach ($assessment_characteristics as $key => $characteristic) {
+                                                            if ($type != $characteristic["type"]) {
+                                                                if ($key) {
+                                                                    echo "</optgroup>";
+                                                                }
+                                                                echo "<optgroup label=\"" . (strtolower($characteristic["type"]) != "quiz" ? ucwords(strtolower($characteristic["type"]))."s" : "Quizzes") . "\">";
+
+                                                                $type = $characteristic["type"];
+                                                            }
+
+                                                            echo "<option value=\"" . $characteristic["id"] . "\" assessmenttype=\"" . $characteristic["type"] . "\"" . (($PROCESSED["characteristic_id"] == $characteristic["id"]) ? " selected=\"selected\"" : "") . ">" . $characteristic["title"] . "</option>";
+                                                            if ($PROCESSED["characteristic_id"] == $characteristic["id"]) {
+                                                                $current_type = $characteristic["type"];
+                                                            }
+                                                        }
+                                                        echo "</optgroup>";
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tbody id="assessment_options">
+                                        <tr>
+                                            <td></td>
+                                            <td style="vertical-align: top;"><label for="extended_option1" class="form-nrequired">Extended Options:</label></td>
+                                            <td class="options">
+                                                <?php
+                                                if (in_array($current_type, array("reflection", "paper", "project"))) {
+                                                    $where = " WHERE `type` LIKE ".$db->qstr("%".$current_type."%");
+                                                } else if (in_array($current_type, array("quiz", "exam"))) {
+                                                    $where = " WHERE `type` IS NULL ";
+                                                } else {
+                                                    $where = " WHERE 'x' = 'y'";
+                                                }
+                                                $query = "SELECT `id`, `title` FROM `assessments_lu_meta_options`" . $where;
+                                                $assessment_options = $db->GetAll($query);
+                                                if ($assessment_options) {
+                                                    foreach ($assessment_options as $assessment_option) {
+                                                        echo "<label class=\"checkbox\" for=\"extended_option" . $assessment_option["id"] . "\"><input type=\"checkbox\" value=\"" . $assessment_option["id"] . "\" name=\"option[]\"" . (((is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected))) ? " checked=\"checked\"" : "") . " id=\"extended_option" . $assessment_option["id"] . "\"/>" . $assessment_option["title"] . "</label>";
+                                                    }
+                                                }
                                                 ?>
-                                                <table class="tableList accordion" cellspacing="0" summary="List of Attached Quizzes" id="quiz_list">
-                                                    <colgroup>
-                                                        <col class="modified" />
-                                                        <col class="title" />
-                                                        <col class="general" />
-                                                        <col class="modified" />
-                                                    </colgroup>
-                                                    <thead>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td><label for="marking_scheme_id" class="form-required">Marking Scheme:</label></td>
+                                            <td>
+                                                <select id="marking_scheme_id" name="marking_scheme_id">
+                                                <?php
+                                                foreach ($MARKING_SCHEMES as $scheme) {
+                                                    echo "<option value=\"" . $scheme["id"] . "\"" . (($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "") . ">" . $scheme["name"] . "</option>";
+                                                }
+                                                ?>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr id="numeric_marking_scheme_details" style="display: none;">
+                                            <td></td>
+                                            <td><label for="numeric_grade_points_total" class="form-required">Maximum Points:</label></td>
+                                            <td>
+                                                <input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="5" style="width: 50px" />
+                                                <span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td><label for="type" class="form-required">Assessment Type:</label></td>
+                                            <td>
+                                                <select id="type" name="type">
+                                                <?php
+                                                foreach ($ASSESSMENT_TYPES as $type) {
+                                                    echo "<option value=\"" . $type . "\"" . (($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "") . ">" . $type . "</option>";
+                                                }
+                                                ?>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3">&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3">
+                                                <label class="checkbox form-nrequired" for="narrative_assessment">
+                                                    <input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /> This is a <strong>narrative assessment</strong>.
+                                                </label>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="3">&nbsp;</td>
+                                        </tr>
+                                        <?php
+                                        $query = "SELECT aq.*, COUNT(c.`quiz_id`) AS `question_total`, COUNT(d.`qquestion_id`) AS `attached_question_count`
+                                                         FROM `assessment_attached_quizzes` AS a
+                                                         JOIN `attached_quizzes` AS aq
+                                                         ON a.`aquiz_id` = aq.`aquiz_id`
+                                                         JOIN `quizzes` AS b
+                                                         ON aq.`quiz_id` = b.`quiz_id`
+                                                         LEFT JOIN `quiz_questions` AS c
+                                                         ON b.`quiz_id` = c.`quiz_id`
+                                                         AND c.`question_active` = 1
+                                                         LEFT JOIN `assessment_quiz_questions` AS d
+                                                         ON a.`assessment_id` = d.`assessment_id`
+                                                         AND c.`qquestion_id` = d.`qquestion_id`
+                                                         WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                                         GROUP BY aq.`aquiz_id`";
+                                        $attached_quizzes = $db->GetAll($query);
+                                        ?>
+                                        <tr>
+                                            <td colspan="3">
+                                                <label class="form-nrequired radio" for="show_quiz_option_0">
+                                                    <input type="radio" name="show_quiz_option" value="0" onclick="jQuery('#quiz_options').toggle(false)" id="show_quiz_option_0" <?php echo (!$attached_quizzes ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Do not link online quizzes to this assessment
+                                                </label>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3">
+                                                <label class="form-nrequired radio" for="show_quiz_option_1">
+                                                    <input type="radio" name="show_quiz_option" value="1" onclick="jQuery('#quiz_options').toggle(true)" id="show_quiz_option_1" <?php echo ($attached_quizzes ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Link existing online quizzes to this assessment
+                                                </label>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tbody id="quiz_options" style="display: none;">
+                                        <tr>
+                                            <td></td>
+                                            <td style="vertical-align: top"><label class="form-nrequired">Attached Quizzes:</label></td>
+                                            <td>
+                                                <a id="false-link" href="#placeholder"></a>
+                                                <a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("section" => "attach-quiz", "assessment_id" => $ASSESSMENT_ID)); ?>" class="btn btn-success space-below"><i class="icon-plus-sign icon-white"></i> Attach Quiz</a>
+
+                                                <div id="placeholder" style="display: none; width: 800px;"></div>
+                                                <div id="quiz-questions-notice">&nbsp;</div>
+                                                <?php
+                                                if (isset($attached_quizzes) && $attached_quizzes) {
+                                                    ?>
+                                                    <table class="tableList accordion" cellspacing="0" summary="List of Attached Quizzes" id="quiz_list">
+                                                        <colgroup>
+                                                            <col class="modified" />
+                                                            <col class="title" />
+                                                            <col class="general" />
+                                                            <col class="modified" />
+                                                        </colgroup>
+                                                        <thead>
                                                         <tr>
                                                             <td class="modified">&nbsp;</td>
                                                             <td class="title"><span>Quiz Title</span></td>
                                                             <td class="general"><span>Quiz Questions</span></td>
                                                             <td class="modified">&nbsp;</td>
                                                         </tr>
-                                                    </thead>
-                                                    <?php
-                                                    foreach ($attached_quizzes as $attached_quiz) {
-                                                        echo "<tbody class=\"accordion-toggle\" data-toggle=\"collapse\" data-target=\"#quiz-".$attached_quiz["aquiz_id"]."-container\" data-parent=\"#quiz_list\">\n";
-                                                        echo "  <tr id=\"quiz-".$attached_quiz["aquiz_id"]."\">\n";
-                                                        echo "      <td>&nbsp;</td>\n";
-                                                        echo "      <td>".html_encode($attached_quiz["quiz_title"])."</td>\n";
-                                                        echo "      <td><i class=\"icon-pencil\"></i>&nbsp;&nbsp;<span id=\"question_count_".$attached_quiz["aquiz_id"]."\">".($attached_quiz["attached_question_count"] ? (int)$attached_quiz["attached_question_count"] : (int)$attached_quiz["question_total"]) . "</span> of " . (int)$attached_quiz["question_total"]."</td>\n";
-                                                        echo "      <td><a href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("assessment_id" => $ASSESSMENT_ID, "aquiz_id" => $attached_quiz["aquiz_id"], "delete" => true))."\"><i class=\"icon-trash\"></i></a></td>\n";
-                                                        echo "  </tr>\n";
-                                                        echo "</tbody>\n";
-                                                        echo "<tbody id=\"quiz-".$attached_quiz["aquiz_id"]."-container\" class=\"quiz-question-container accordion-body collapse\">\n";
-                                                        echo "  <tr>\n";
-                                                        echo "      <td>&nbsp;</td>\n";
-                                                        echo "      <td colspan=\"3\">\n";
-                                                        echo "          <div class=\"row-fluid wrap\" id=\"quiz-".$attached_quiz["aquiz_id"]."-questions\">\n";
-                                                        $questions_list = array();
-                                                        $questions_array = array();
-                                                        $query = "SELECT * FROM `quiz_questions`
-                                                                    WHERE `quiz_id` = ".$db->qstr($attached_quiz["quiz_id"])."
-                                                                    AND `questiontype_id` = 1
-                                                                    AND `question_active` = 1";
-                                                        $quiz_questions = $db->GetAll($query);
-                                                        if ($quiz_questions) {
-                                                            foreach ($quiz_questions as $quiz_question) {
-                                                                $questions_list[$quiz_question["qquestion_id"]] = $quiz_question;
-                                                            }
-                                                            $query = "SELECT a.*, b.`assessment_id` FROM `quiz_questions` AS a
-                                                                        LEFT JOIN `assessment_quiz_questions` AS b
-                                                                        ON a.`qquestion_id` = b.`qquestion_id`
-                                                                        WHERE b.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
-                                                                        AND a.`questiontype_id` = 1
-                                                                        AND a.`question_active` = 1";
+                                                        </thead>
+                                                        <?php
+                                                        foreach ($attached_quizzes as $attached_quiz) {
+                                                            echo "<tbody class=\"accordion-toggle\" data-toggle=\"collapse\" data-target=\"#quiz-".$attached_quiz["aquiz_id"]."-container\" data-parent=\"#quiz_list\">\n";
+                                                            echo "  <tr id=\"quiz-".$attached_quiz["aquiz_id"]."\">\n";
+                                                            echo "      <td>&nbsp;</td>\n";
+                                                            echo "      <td>".html_encode($attached_quiz["quiz_title"])."</td>\n";
+                                                            echo "      <td><i class=\"icon-pencil\"></i>&nbsp;&nbsp;<span id=\"question_count_".$attached_quiz["aquiz_id"]."\">".($attached_quiz["attached_question_count"] ? (int)$attached_quiz["attached_question_count"] : (int)$attached_quiz["question_total"]) . "</span> of " . (int)$attached_quiz["question_total"]."</td>\n";
+                                                            echo "      <td><a href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("assessment_id" => $ASSESSMENT_ID, "aquiz_id" => $attached_quiz["aquiz_id"], "delete" => true))."\"><i class=\"icon-trash\"></i></a></td>\n";
+                                                            echo "  </tr>\n";
+                                                            echo "</tbody>\n";
+                                                            echo "<tbody id=\"quiz-".$attached_quiz["aquiz_id"]."-container\" class=\"quiz-question-container accordion-body collapse\">\n";
+                                                            echo "  <tr>\n";
+                                                            echo "      <td>&nbsp;</td>\n";
+                                                            echo "      <td colspan=\"3\">\n";
+                                                            echo "          <div class=\"row-fluid wrap\" id=\"quiz-".$attached_quiz["aquiz_id"]."-questions\">\n";
+                                                            $questions_list = array();
+                                                            $questions_array = array();
+                                                            $query = "SELECT * FROM `quiz_questions`
+                                                                            WHERE `quiz_id` = ".$db->qstr($attached_quiz["quiz_id"])."
+                                                                            AND `questiontype_id` = 1
+                                                                            AND `question_active` = 1";
                                                             $quiz_questions = $db->GetAll($query);
                                                             if ($quiz_questions) {
                                                                 foreach ($quiz_questions as $quiz_question) {
-                                                                    if (isset($quiz_question["assessment_id"]) && $quiz_question["assessment_id"]) {
-                                                                        $questions_array[$quiz_question["qquestion_id"]] = $quiz_question;
-                                                                    }
+                                                                    $questions_list[$quiz_question["qquestion_id"]] = $quiz_question;
                                                                 }
-                                                                if (!count($questions_array)) {
-                                                                    $questions_array = $questions_list;
+                                                                $query = "SELECT a.*, b.`assessment_id` FROM `quiz_questions` AS a
+                                                                                LEFT JOIN `assessment_quiz_questions` AS b
+                                                                                ON a.`qquestion_id` = b.`qquestion_id`
+                                                                                WHERE b.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                                                                AND a.`questiontype_id` = 1
+                                                                                AND a.`question_active` = 1";
+                                                                $quiz_questions = $db->GetAll($query);
+                                                                if ($quiz_questions) {
+                                                                    foreach ($quiz_questions as $quiz_question) {
+                                                                        if (isset($quiz_question["assessment_id"]) && $quiz_question["assessment_id"]) {
+                                                                            $questions_array[$quiz_question["qquestion_id"]] = $quiz_question;
+                                                                        }
+                                                                    }
+                                                                    if (!count($questions_array)) {
+                                                                        $questions_array = $questions_list;
+                                                                    }
                                                                 }
                                                             }
-                                                        }
 
-                                                        if ($questions_list) {
-                                                            ?>
-                                                            <br />
-                                                            <div class="quiz-questions row-fluid" id="quiz-content-questions-holder">
-                                                                <ol class="questions" id="quiz-questions-list" style="padding-left: 20px;">
-                                                                    <?php
-                                                                    foreach ($questions_list as $question) {
-                                                                        echo "<li id=\"question_".$question["qquestion_id"]."\" class=\"question\">";
-                                                                        echo "<input onclick=\"submitQuizQuestions(".$attached_quiz["aquiz_id"].")\" type=\"checkbox\" value=\"".$question["qquestion_id"]."\" name=\"question_ids[]\"".(array_key_exists($question["qquestion_id"], $questions_array) || !count($questions_array) ? " checked=\"checked\"" : "")." style=\"position: absolute; margin-left: -40px;\" />";
-                                                                        echo "		".clean_input($question["question_text"], array("trim", "notags"));
-                                                                        echo "</li>\n";
-                                                                    }
-                                                                    ?>
-                                                                </ol>
-                                                            </div>
-                                                            <?php
-                                                        } else {
-                                                            add_error("No valid questions were found associated with this quiz.");
-                                                            echo display_error();
+                                                            if ($questions_list) {
+                                                                ?>
+                                                                <br />
+                                                                <div class="quiz-questions row-fluid" id="quiz-content-questions-holder">
+                                                                    <ol class="questions" id="quiz-questions-list" style="padding-left: 20px;">
+                                                                        <?php
+                                                                        foreach ($questions_list as $question) {
+                                                                            echo "<li id=\"question_".$question["qquestion_id"]."\" class=\"question\">";
+                                                                            echo "<input onclick=\"submitQuizQuestions(".$attached_quiz["aquiz_id"].")\" type=\"checkbox\" value=\"".$question["qquestion_id"]."\" name=\"question_ids[]\"".(array_key_exists($question["qquestion_id"], $questions_array) || !count($questions_array) ? " checked=\"checked\"" : "")." style=\"position: absolute; margin-left: -40px;\" />";
+                                                                            echo "		".clean_input($question["question_text"], array("trim", "notags"));
+                                                                            echo "</li>\n";
+                                                                        }
+                                                                        ?>
+                                                                    </ol>
+                                                                </div>
+                                                                <?php
+                                                            } else {
+                                                                add_error("No valid questions were found associated with this quiz.");
+                                                                echo display_error();
+                                                            }
+                                                            echo "          </div>\n";
+                                                            echo "      </td>\n";
+                                                            echo "</tbody>\n";
                                                         }
-                                                        echo "          </div>\n";
-                                                        echo "      </td>\n";
-                                                        echo "</tbody>\n";
-                                                    }
-                                                    ?>
-                                                </table>
-                                                <?php
-                                            } else {
-                                                add_notice("There are currently no quizzes associated with this assessment. To add one, please click the <strong>Attach a Quiz</strong> button above.");
-                                                echo display_notice();
-                                            }
-                                            ?>
-                                        </td>
-									</tr>
-                                </tbody>
-								<tbody>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td><label for="marking_scheme_id" class="form-required">Marking Scheme</label></td>
-										<td>
-											<select id="marking_scheme_id" name="marking_scheme_id" style="width: 203px">
-												<?php
-												foreach ($MARKING_SCHEMES as $scheme) {
-													echo "<option value=\"" . $scheme["id"] . "\"" . (($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "") . ">" . $scheme["name"] . "</option>";
-												}
-												?>
-											</select>
-										</td>
-									</tr>
-									<tr id="numeric_marking_scheme_details" style="display: none;">
-										<td></td>
-										<td><label for="numeric_grade_points_total" class="form-required">Maximum Points</label></td>
-										<td>
-											<input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="5" style="width: 50px" />
-											<span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
-										</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td><label for="type" class="form-required">Assessment Type</label></td>
-										<td>
-											<select id="type" name="type" style="width: 203px">
-												<?php
-												foreach ($ASSESSMENT_TYPES as $type) {
-													echo "<option value=\"" . $type . "\"" . (($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "") . ">" . $type . "</option>";
-												}
-												?>
-											</select>
-										</td>
-									</tr>
-                                    <tr>
-                                        <td colspan="3">&nbsp;</td>
-                                    </tr>
-                                    <tr>
-                                        <td></td>
-                                        <td valign="top"><label class="form-nrequired">Assessment Event:</label></td>
-                                        <td>
-                                            <a id="attach-event-button" href="#event-modal" class="btn btn-success space-below <?php echo $event ? "hide" : ""; ?>" role="button" data-toggle="modal"><i class="icon-plus-sign icon-white"></i> Attach Learning Event </a>
-                                            <ul id="attached-event-list">
-                                                <li>
-                                                    <div class="well well-small content-small" id="no-learning-event">
-                                                        There are currently no learning events attached to this assessment. To attach a learning event to this assessment, use the attach event button.
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                        </td>
-                                    </tr>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
-								</tbody>
-								<tbody>
-									<tr>
-										<td colspan="3">
-											<label class="form-nrequired radio" for="show_learner_option_0">
-												<input type="radio" name="show_learner_option" value="0" id="show_learner_option_0" <?php echo (($PROCESSED["show_learner"] == 0)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" />Don't Show this Assessment in Learner Gradebook
-											</label>
-										</td>
-									</tr>
-									<tr>
-										<td colspan="3">
-											<label class="form-nrequired radio" for="show_learner_option_1">
-												<input type="radio" name="show_learner_option" value="1" id="show_learner_option_1" <?php echo (($PROCESSED["show_learner"] == 1)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" />Show this Assessment in Learner Gradebook
-											</label>
-										</td>
-									</tr>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
-								</tbody>
-								<tbody id="gradebook_release_options" style="display: none;">
-									<tr>
-										<td></td>
-										<td><?php echo generate_calendars("show", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, false, " in Gradebook After", " in Gradebook Until"); ?></td>
-										<td></td>
-									</tr>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
-								</tbody>
-								<tbody>
-									<tr>
-										<td colspan="3">
-                                            <label for="narrative_assessment" class="form-nrequired checkbox">
-                                                <input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /> This is a <strong>narrative assessment</strong>.
-                                            </label>
-                                        </td>
-									</tr>
-								</tbody>
-							</table>
+                                                        ?>
+                                                    </table>
+                                                    <?php
+                                                }
+                                                ?>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="3">&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td valign="top"><label class="form-nrequired">Assessment Event:</label></td>
+                                            <td>
+                                                <a id="attach-event-button" href="#event-modal" class="btn btn-success space-below <?php echo $event ? "hide" : ""; ?>" role="button" data-toggle="modal"><i class="icon-plus-sign icon-white"></i> Attach Learning Event </a>
+                                                <ul id="attached-event-list">
+                                                    <li>
+                                                        <div class="well well-small content-small" id="no-learning-event">
+                                                            There are currently no learning events attached to this assessment. To attach a learning event to this assessment, use the attach event button.
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3">&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3">
+                                                <label class="radio form-nrequired" for="show_learner_option_0">
+                                                    <input type="radio" name="show_learner_option" value="0" id="show_learner_option_0" <?php echo (($PROCESSED["show_learner"] == 0)) ? " checked=\"checked\"" : "" ?> /> Don't Show this Assessment in Learner Gradebook
+                                                </label>
+                                                <label class="radio form-nrequired" for="show_learner_option_1">
+                                                    <input type="radio" name="show_learner_option" value="1" id="show_learner_option_1" <?php echo (($PROCESSED["show_learner"] == 1)) ? " checked=\"checked\"" : "" ?> /> Show this Assessment in Learner Gradebook
+                                                </label>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tbody id="gradebook_release_options" style="display: none;">
+                                        <?php echo generate_calendars("show", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, false, " grades starting", " grades until"); ?>
+                                    </tbody>
+                                </table>
+							</div>
+
 							<script type="text/javascript" charset="utf-8">
                                 var course_id = "<?php echo $COURSE_ID ?>";
                                 var modalDialog;
@@ -1198,7 +1177,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 
                                 function getEventsByTitle (title) {
                                     var audience = jQuery(".course-list").val();
-                                    
                                     jQuery.ajax({
                                         url: "<?php echo ENTRADA_URL; ?>/api/assessment-event.api.php",
                                         data: "method=title_search&course_id=" + course_id + "&title=" + title + "&audience=" + audience,
@@ -1279,9 +1257,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     jQuery("#attached-event-list").append(event_li);
                                 }
 							</script>
-                            <br />
+
                             <?php
-                            $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
                             $query = "	SELECT a.* FROM `global_lu_objectives` a
                                         JOIN `objective_audience` b
                                         ON a.`objective_id` = b.`objective_id`
@@ -1294,11 +1271,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         AND a.`objective_parent` = '0'
                                         AND a.`objective_active` = '1'";									
                             $objectives = $db->GetAll($query);
-
                             if ($objectives) {
                                 ?>
+                                <style type="text/css">
+                                .mapped-objective {
+                                    padding-left: 30px!important;
+                                }
+                                </style>
                                 <a name="assessment-objectives-section"></a>
-                                <h2 title="Assessment Objectives Section">Assessment Objectives</h2>
+                                <h2 title="Assessment Objectives Section" class="collapsed">Assessment Objectives</h2>
                                 <div id="assessment-objectives-section">
                                     <?php
                                     $objective_name = $translate->_("events_filter_controls");
@@ -1310,11 +1291,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             <?php		
                                             foreach($objectives as $objective){
                                                 ?>
-                                                <li class = "objective-container objective-set"
+                                                <li class = "objective-container objective-set assessment-objective"
                                                     id = "objective_<?php echo $objective["objective_id"]; ?>"
                                                     data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
                                                     data-id="<?php echo $objective["objective_id"]; ?>">
-                                                    <?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+                                                    <?php
+                                                    $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+                                                    ?>
                                                     <div 	class="objective-title"
                                                             id="objective_title_<?php echo $objective["objective_id"]; ?>"
                                                             data-title="<?php echo $title;?>"
@@ -1335,7 +1318,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             ?>
                                         </ul>
                                     </div>
-
 
                                     <?php   
                                     $query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`,
@@ -1359,20 +1341,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     $tertiary = false;
                                     $hierarchical_objectives = array();
                                     $flat_objectives = array();
-                                    $explicit_assessment_objectives = false;//array();
+                                    $explicit_assessment_objectives = false;
                                     $mapped_assessment_objectives = array();
                                     if ($mapped_objectives) {
                                         foreach ($mapped_objectives as $objective) {
-                                            //if its mapped to the assessment, but not the course, then it belongs in the assessment objective list
-                                            //echo $objective["objective_name"].' is '.$objective["mapped"].' and '.$objective["mapped_to_course"]."<br/>";
                                             if ($objective["mapped"] && !$objective["mapped_to_course"]) {
-                                                //may not belong in assessment specific objective list if parent objective is mapped to course
                                                 $response = assessment_objective_parent_mapped_course($objective["objective_id"], $ASSESSMENT_ID);
                                                 if (!$response) {
                                                     $explicit_assessment_objectives[] = $objective;
                                                 } else {
                                                     if (in_array($objective["objective_type"], array("curricular_objective","course"))) {
-                                                        //$objective_id = $objective["objective_id"];
                                                         $hierarchical_objectives[] = $objective;
                                                     } else {
                                                         $flat_objectives[] = $objective;
@@ -1380,7 +1358,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                 }
                                             } else {
                                                 if (in_array($objective["objective_type"], array("curricular_objective","course"))) {
-                                                    //$objective_id = $objective["objective_id"];
                                                     $hierarchical_objectives[] = $objective;
                                                 } else {
                                                     $flat_objectives[] = $objective;
@@ -1393,11 +1370,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         }
                                     }
                                     ?>
-                                    <style type="text/css">
-                                    	.mapped-objective{
-                                			padding-left: 30px!important;
-                                    	}
-                                    </style>
                                     <div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="assessment" data-resource-id="<?php echo $ASSESSMENT_ID;?>">
                                         <h3>Mapped Objectives</h3>
                                         <div class="clearfix">
@@ -1407,54 +1379,52 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                 </li>
                                             </ul>
                                         </div>												
-                                        <p class="well well-small content-small">
-                                            <strong>Helpful Tip:</strong> Click <strong>Map Additional Objectives</strong> to view the list of available objective sets. Select an objective from the list on the left and it will be mapped to the assessment.
-                                        </p>
-                                    <?php
-                                        if ($hierarchical_objectives) {
-                                            //function loads bottom leaves and displays them	
-                                            assessment_objectives_display_leafs($hierarchical_objectives,$COURSE_ID,$ASSESSMENT_ID);
-                                        }
-                                        if($flat_objectives){
-                                        ?>
-                                        <div id="clinical-list-wrapper">
-                                            <a name="clinical-objective-list"></a>
-                                            <h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
-                                            <div id="clinical-objective-list">
-                                                <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
-                                                <?php
-                                                    if ($flat_objectives) {
-                                                        foreach($flat_objectives as $objective){
-                                                                $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-                                                            ?>
-                                                    <li class = "mapped-objective"
-                                                        id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-                                                        data-id = "<?php echo $objective["objective_id"]; ?>"
-                                                        data-title="<?php echo $title;?>"
-                                                        data-description="<?php echo htmlentities($objective["objective_description"]);?>">
-                                                        <strong><?php echo $title; ?></strong>
-                                                        <div class="objective-description">
-                                                            <?php
-                                                            $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-                                                            if ($set) {
-                                                                echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-                                                            }
-                                                            ?>
-                                                            <?php echo $objective["objective_description"];?>
-                                                        </div>
-
-                                                        <div class="assessment-objective-controls">
-                                                            <input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
-                                                        </div>
-                                                    </li>
-
-                                                <?php
-                                                        }
-                                                    } ?>
-                                                </ul>
-                                            </div>
-                                        </div>
                                         <?php
+                                        if ($hierarchical_objectives) {
+                                            assessment_objectives_display_leafs($hierarchical_objectives, $COURSE_ID, $ASSESSMENT_ID);
+                                        }
+
+                                        if ($flat_objectives) {
+                                            ?>
+                                            <div id="clinical-list-wrapper">
+                                                <a name="clinical-objective-list"></a>
+                                                <h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
+                                                <div id="clinical-objective-list">
+                                                    <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
+                                                    <?php
+                                                    if ($flat_objectives) {
+                                                        foreach ($flat_objectives as $objective) {
+                                                            $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+                                                            ?>
+                                                            <li class = "mapped-objective"
+                                                                id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+                                                                data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                                data-title="<?php echo $title;?>"
+                                                                data-description="<?php echo htmlentities($objective["objective_description"]);?>">
+                                                                <strong><?php echo $title; ?></strong>
+                                                                <div class="objective-description">
+                                                                    <?php
+                                                                    $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+                                                                    if ($set) {
+                                                                        echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                                    }
+
+                                                                    echo $objective["objective_description"];
+                                                                    ?>
+                                                                </div>
+
+                                                                <div class="assessment-objective-controls">
+                                                                    <input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
+                                                                </div>
+                                                            </li>
+                                                            <?php
+                                                        }
+                                                    }
+                                                    ?>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <?php
                                         }
                                         ?>
 
@@ -1464,153 +1434,149 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             <div id="assessment-objective-list">
                                                 <ul class="objective-list mapped-list" id="mapped_assessment_objectives" data-importance="assessment">
                                                 <?php
-                                                    if ($explicit_assessment_objectives) {
-                                                        foreach($explicit_assessment_objectives as $objective){
-                                                                $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-                                                            ?>
-                                                            <li class = "mapped-objective"
-                                                                id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-                                                                data-id = "<?php echo $objective["objective_id"]; ?>"
-                                                                data-title="<?php echo $title;?>"
-                                                                data-description="<?php echo htmlentities($objective["objective_description"]);?>"
-                                                                data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
-                                                                <strong><?php echo $title; ?></strong>
-                                                                <div class="objective-description">
-                                                                    <?php
-                                                                    $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-                                                                    if ($set) {
-                                                                        echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-                                                                    }
-                                                                    ?>
-                                                                    <?php echo $objective["objective_description"];?>
-                                                                </div>
+                                                if ($explicit_assessment_objectives) {
+                                                    foreach ($explicit_assessment_objectives as $objective) {
+                                                        $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+                                                        ?>
+                                                        <li class = "mapped-objective"
+                                                            id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+                                                            data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                            data-title="<?php echo $title;?>"
+                                                            data-description="<?php echo htmlentities($objective["objective_description"]);?>"
+                                                            data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
+                                                            <strong><?php echo $title; ?></strong>
+                                                            <div class="objective-description">
+                                                                <?php
+                                                                $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+                                                                if ($set) {
+                                                                    echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                                }
 
-                                                                <div class="assessment-objective-controls">
-                                                                    <img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
-                                                                            class="objective-remove list-cancel-image"
-                                                                            id="objective_remove_<?php echo $objective["objective_id"];?>"
-                                                                            data-id="<?php echo $objective["objective_id"];?>">
-                                                                </div>
-                                                            </li>
-                                                            <?php
-                                                        }
-                                                    } ?>
+                                                                echo $objective["objective_description"];
+                                                                ?>
+                                                            </div>
+
+                                                            <div class="assessment-objective-controls">
+                                                                <img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
+                                                                        class="objective-remove list-cancel-image"
+                                                                        id="objective_remove_<?php echo $objective["objective_id"];?>"
+                                                                        data-id="<?php echo $objective["objective_id"];?>">
+                                                            </div>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                }
+                                                ?>
                                                 </ul>
                                             </div>
                                         </div>
                                         <select id="checked_objectives_select" name="checked_objectives[]" multiple="multiple" style="display:none;">
                                         <?php
-                                            if ($mapped_assessment_objectives) {
-                                                foreach($mapped_assessment_objectives as $objective){
-                                                    if(in_array($objective["objective_type"], array("curricular_objective","course"))) {
+                                        if ($mapped_assessment_objectives) {
+                                            foreach ($mapped_assessment_objectives as $objective) {
+                                                if (in_array($objective["objective_type"], array("curricular_objective","course"))) {
+                                                    $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
                                                     ?>
-                                                    <?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
                                                     <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-                                                <?php
-                                                    }
+                                                    <?php
                                                 }
                                             }
+                                        }
                                         ?>
                                         </select>
                                         <select id="clinical_objectives_select" name="clinical_presentations[]" multiple="multiple" style="display:none;">
                                         <?php
-                                            if ($mapped_assessment_objectives) {
-                                                foreach($mapped_assessment_objectives as $objective){
-                                                    if(in_array($objective["objective_type"], array("clinical_presentation","event"))) {
+                                        if ($mapped_assessment_objectives) {
+                                            foreach ($mapped_assessment_objectives as $objective) {
+                                                if (in_array($objective["objective_type"], array("clinical_presentation","event"))) {
+                                                    $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
                                                     ?>
-                                                    <?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
                                                     <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-                                                <?php
-                                                    }
+                                                    <?php
                                                 }
                                             }
+                                        }
                                         ?>
                                         </select>
-
                                     </div>
-                                    <div style="clear:both;"></div>
                                 </div>		
+                                <div style="clear:both;"></div>
                                 <?php 	
                             }	
                             ?>											
-                            <div style="padding-top: 25px">
-                                <table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-                                    <tr>
-                                        <td style="width: 25%; text-align: left">
-                                            <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view", "assessment_id" => false)); ?>'" />
-                                        </td>
-                                        <td style="width: 75%; text-align: right; vertical-align: middle">
-                                            <span class="content-small">After saving:</span>
-                                            <select id="post_action" name="post_action">
-                                                <option value="grade"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "grade") ? " selected=\"selected\"" : ""); ?>>Grade assessment</option>
-                                                <option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another assessment</option>
-                                                <option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
-                                                <option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
-                                            </select>
-                                            <input type="submit" class="btn btn-primary" value="Save" />
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <?php 
-                            if ($event) { ?>
+                            <table style="width: 100%; margin-top: 25px" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td style="width: 25%; text-align: left">
+                                        <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view", "assessment_id" => false)); ?>'" />
+                                    </td>
+                                    <td style="width: 75%; text-align: right; vertical-align: middle">
+                                        <span class="content-small">After saving:</span>
+                                        <select id="post_action" name="post_action">
+                                            <option value="grade"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "grade") ? " selected=\"selected\"" : ""); ?>>Grade assessment</option>
+                                            <option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another assessment</option>
+                                            <option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
+                                            <option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
+                                        </select>
+                                        <input type="submit" class="btn btn-primary" value="Save" />
+                                    </td>
+                                </tr>
+                            </table>
+                            <?php
+                            if ($event) {
+                                ?>
                                 <input type="hidden" id="assessment-event" name="event_id" value="<?php echo $event->getID(); ?>" data-title="<?php echo $event->getEventTitle(); ?>" data-date="<?php echo date("D M d/y g:ia", $event->getEventStart()) ?>" />
-                            <?    
+                                <?php
                             }
                             ?>
                         </form>
                         <div id="event-modal" class="modal hide fade">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h3 id="event-modal-title">Search learning events to attach to this assessment</h3>
-                        </div>
-                        <div class="modal-body">
-                            <div id="title-search">
-                                <input type="text" placeholder="Search learning events by title" id="event-title-search" />
-                                <div id="event-search-msgs">
-                                    <div class="alert alert-block">
-                                        <ul>
-                                            <li>To search for learning events, begin typing the title of the event you wish to find in the search box.</li>
-                                        </ul>
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h3 id="event-modal-title">Search learning events to attach to this assessment</h3>
+                            </div>
+                            <div class="modal-body">
+                                <div id="title-search">
+                                    <input type="text" placeholder="Search learning events by title" id="event-title-search" />
+                                    <div id="event-search-msgs">
+                                        <div class="alert alert-block">
+                                            <ul>
+                                                <li>To search for learning events, begin typing the title of the event you wish to find in the search box.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div id="events-search-wrap">
+                                        <ul id="events-search-list"></ul>
                                     </div>
                                 </div>
-                                <div id="events-search-wrap">
-                                    <ul id="events-search-list"></ul>
-                                </div>
+                                <div id="loading" class="hide"><img src="<?php echo ENTRADA_URL ?>/images/loading.gif" /></div>
                             </div>
-                            <div id="loading" class="hide"><img src="<?php echo ENTRADA_URL ?>/images/loading.gif" /></div>
+                            <div id="event-modal-footer">
+                                <a href="#" class="btn" id="close-event-modal">Close</a>
+                                <a href="#" id="attach-learning-event" class="btn btn-primary pull-right">Attach Learning Event</a>
+                            </div>
                         </div>
-                        <div id="event-modal-footer">
-                            <a href="#" class="btn" id="close-event-modal">Close</a>
-                            <a href="#" id="attach-learning-event" class="btn btn-primary pull-right">Attach Learning event</a>
-                        </div>
-                    </div>
                         <?php
                     break;
 				}
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "In order to edit an assessment in a gradebook you must provide a valid course identifier. The provided ID does not exist in this system.";
+				add_error("In order to edit an assessment in a gradebook you must provide a valid course identifier. The provided ID does not exist in this system.");
 
 				echo display_error();
 
 				application_log("notice", "Failed to provide a valid course identifier when attempting to edit an assessment");
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "In order to edit an assessment in a gradebook you must provide a valid course identifier. The provided ID does not exist in this system.";
+			add_error("In order to edit an assessment in a gradebook you must provide a valid course identifier. The provided ID does not exist in this system.");
 
 			echo display_error();
 
 			application_log("notice", "Failed to provide course identifier when attempting to edit an assessment");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "In order to edit an assessment in a gradebook you must provide a valid assessment identifier. The provided ID is invalid.";
+		add_error("In order to edit an assessment in a gradebook you must provide a valid assessment identifier. The provided ID is invalid.");
 
 		echo display_error();
 
 		application_log("notice", "Failed to provide assessment identifier when attempting to edit an assessment");
 	}
 }
-?>

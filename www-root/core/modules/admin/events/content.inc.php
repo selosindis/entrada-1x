@@ -40,22 +40,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+    $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.timepicker.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	?>
 	<script type="text/javascript">
 		var EVENT_LIST_STATIC_TOTAL_DURATION = true;
 	</script>
 	<?php
 	if ($EVENT_ID) {
-		$HEAD[] = "<script type=\"text/javascript\">var SITE_URL = '".ENTRADA_URL."';</script>";
-		$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-		$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_event.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-		$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/keywords_event.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+        $HEAD[] = "<script>var SITE_URL = '".ENTRADA_URL."';</script>";
+        $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+        $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/objectives_event.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+        $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/keywords_event.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+        $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/event_resources.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+        $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/events_nl_form.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
-		$query		= "	SELECT a.*, b.`organisation_id`
-						FROM `events` AS a
-						LEFT JOIN `courses` AS b
-						ON b.`course_id` = a.`course_id`
-						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
+		$query = "SELECT a.*, b.`organisation_id`
+                    FROM `events` AS a
+                    LEFT JOIN `courses` AS b
+                    ON b.`course_id` = a.`course_id`
+                    WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info) {
             if ($event_info["recurring_id"]) {
@@ -78,7 +81,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $EVENT_ID)), "title" => "Event Content");
 
-				$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+				$HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/picklist.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 
 				/**
 				 * Load the rich text editor.
@@ -97,13 +100,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 
 				if (($event_info["release_date"]) && ($event_info["release_date"] > time())) {
-					$NOTICE++;
-					$NOTICESTR[] = "This event is not yet visible to students due to Time Release Options set by an administrator. The release date is set to ".date("r", $event_info["release_date"]);
+					add_notice("This event is not yet visible to students due to Time Release Options set by an administrator. The release date is set to ".date("r", $event_info["release_date"]));
 				}
 
 				if (($event_info["release_until"]) && ($event_info["release_until"] < time())) {
-					$NOTICE++;
-					$NOTICESTR[] = "This event is no longer visible to students due to Time Release Options set by an administrator. The expiry date was set to ".date("r", $event_info["release_until"]);
+					add_notice("This event is no longer visible to students due to Time Release Options set by an administrator. The expiry date was set to ".date("r", $event_info["release_until"]));
 				}
 
 				/**
@@ -255,8 +256,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						foreach ($event_types as $order => $eventtype_id) {
 							if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
 								if (!($duration >= LEARNING_EVENT_MIN_DURATION)) {
-									$ERROR++;
-									$ERRORSTR[] = "Event type <strong>durations</strong> may not be less than ".LEARNING_EVENT_MIN_DURATION." minutes.";
+									add_error("Event type <strong>durations</strong> may not be less than ".LEARNING_EVENT_MIN_DURATION." minutes.");
 								}
 
 								$query	= "SELECT `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);
@@ -278,12 +278,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						}
 
 						if($old_event_duration != $event_duration) {
-							$ERROR++;
-							$ERRORSTR[] = "The modified <strong>Event Types</strong> duration specified is different than the exisitng one, please ensure the event's duration remains the same.";
+							add_error("The modified <strong>Event Types</strong> duration specified is different than the existing one, please ensure the event's duration remains the same.");
 						}
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "At least one event type in the <strong>Event Types</strong> field is required.";
+						add_error("At least one event type in the <strong>Event Types</strong> field is required.");
 					}
 				}
 
@@ -304,24 +302,44 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             /**
                              * Event keyword release date
                              */
-                            $PROCESSED["keywords_release_date"] = 0;
-                            if (isset($_POST["delay_release_keywords"]) && $tmp_input = clean_input($_POST["delay_release_keywords"], array("int"))) {
-                                $PROCESSED["delay_release_keywords"] = $tmp_input;
-                                $release_date = validate_calendar("Delay release until", "delay_release_keywords_option", true, true);
-                                if (!$ERROR) {
-                                    $PROCESSED["keywords_release_date"] = (int) $release_date;
+                            if (isset($_POST["keywords_release_date"]) && $tmp_input = clean_input($_POST["keywords_release_date"], array("notags", "nows"))) {
+                                switch ($tmp_input) {
+                                    case "now" :
+                                        $PROCESSED["keywords_release_date"] = 0;
+                                    break;
+                                    case "delay" :
+                                        $PROCESSED["delay_release_keywords"] = true;
+                                        $release_date = Entrada_Utilities::validate_calendar("Delay release until", "delay_release_keywords_option", true, true);
+
+                                        if (!$ERROR) {
+                                            $PROCESSED["keywords_release_date"] = (int) $release_date;
+                                        }
+                                    break;
+                                    case "never" :
+                                        $PROCESSED["keywords_release_date"] = null;
+                                    break;
                                 }
                             }
 
                             /**
                             * Event objective release date
                             */
-                            $PROCESSED["objectives_release_date"] = 0;
-                            if (isset($_POST["delay_release"]) && $tmp_input = clean_input($_POST["delay_release"], array("int"))) {
-                                $PROCESSED["delay_release"] = $tmp_input;
-                                $release_date = validate_calendar("Delay release until", "delay_release_option", true, true);
-                                if (!$ERROR) {
-                                    $PROCESSED["objectives_release_date"] = (int) $release_date;
+                            if (isset($_POST["objectives_release_date"]) && $tmp_input = clean_input($_POST["objectives_release_date"], array("notags", "nows"))) {
+                                switch ($tmp_input) {
+                                    case "now" :
+                                        $PROCESSED["objectives_release_date"] = 0;
+                                    break;
+                                    case "delay" :
+                                        $PROCESSED["delay_release"] = true;
+                                        $release_date = Entrada_Utilities::validate_calendar("Delay release until", "delay_release_option", true, true);
+
+                                        if (!$ERROR) {
+                                            $PROCESSED["objectives_release_date"] = (int) $release_date;
+                                        }
+                                    break;
+                                    case "never" :
+                                        $PROCESSED["objectives_release_date"] = null;
+                                    break;
                                 }
                             }
 
@@ -338,7 +356,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 if ($changed) {
                                     $history_texts .= "Event Description";
                                 }
-                                if ((isset($_POST["event_description"])) && (clean_input($_POST["event_description"], array("notags", "nows")))) {
+                                if ((isset($_POST["event_description"])) && (clean_input($_POST["event_description"], array("allowedtags", "nows")))) {
                                     $event_description = clean_input($_POST["event_description"], array("allowedtags"));
                                 } else {
                                     $event_description = "";
@@ -356,7 +374,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     }
                                     $history_texts .= "Event Objectives";
                                 }
-                                if ((isset($_POST["event_objectives"])) && (clean_input($_POST["event_objectives"], array("notags", "nows")))) {
+                                if ((isset($_POST["event_objectives"])) && (clean_input($_POST["event_objectives"], array("allowedtags", "nows")))) {
                                     $event_objectives = clean_input($_POST["event_objectives"], array("allowedtags"));
                                 } else {
                                     $event_objectives = "";
@@ -375,7 +393,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     }
                                     $history_texts .= "Event Preparation";
                                 }
-                                if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
+                                if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("allowedtags", "nows")))) {
                                     $event_message = clean_input($_POST["event_message"], array("allowedtags"));
                                 } else {
                                     $event_message = "";
@@ -393,8 +411,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                  * Update base Learning Event.
                                  */
                                 if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "keywords_hidden" => $PROCESSED["keywords_hidden"], "keywords_release_date" => $PROCESSED["keywords_release_date"], "objectives_release_date" => $PROCESSED["objectives_release_date"] , "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
-                                    $SUCCESS++;
-                                    $SUCCESSSTR[] = "You have successfully updated the event details for this learning event.";
+                                    add_success("You have successfully updated the event details for this learning event.");
 
                                     application_log("success", "Updated learning event content.");
 
@@ -410,15 +427,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 if ($db->Execute($query)) {
                                     foreach ($event_eventtypes as $event_type) {
                                         if (!$db->AutoExecute("event_eventtypes", array("event_id" => $EVENT_ID, "eventtype_id" => $event_type["eventtype_id"], "duration" => $event_type["duration"]), "INSERT")) {
-                                            $ERROR++;
-                                            $ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Type</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
+                                            add_error("There was an error while trying to save the selected <strong>Event Type</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.");
 
                                             application_log("error", "Unable to insert a new event_eventtype record while adding a new event. Database said: ".$db->ErrorMsg());
                                         }
                                     }
                                 } else {
-                                    $ERROR++;
-                                    $ERRORSTR[] = "There was an error while trying to update the selected <strong>Event Types</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
+                                    add_error("There was an error while trying to update the selected <strong>Event Types</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.");
 
                                     application_log("error", "Unable to delete any eventtype records while editing an event. Database said: ".$db->ErrorMsg());
                                 }
@@ -436,8 +451,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 $objective_text = false;
                                             }
                                             if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
-                                                $ERROR++;
-                                                $ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
+                                                add_error("There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.");
 
                                                 application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
                                             }
@@ -463,8 +477,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 $result	= $db->GetRow($query);
                                                 if ($result) {
                                                     if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
-                                                        $ERROR++;
-                                                        $ERRORSTR[] = "There was an error when trying to insert a &quot;course objective&quot; into the system. System administrators have been informed of this error; please try again later.";
+                                                        add_error("There was an error when trying to insert a &quot;course objective&quot; into the system. System administrators have been informed of this error; please try again later.");
 
                                                         application_log("error", "Unable to insert a new course objective to the database when adding a new event. Database said: ".$db->ErrorMsg());
                                                     }
@@ -532,15 +545,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 if ($sresult) {
                                                     if ($value == "major") {
                                                         if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "major", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
-                                                            $ERROR++;
-                                                            $ERRORSTR[] = "There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.";
+                                                            add_error("There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.");
 
                                                             application_log("error", "Unable to insert a new event_topic entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
                                                         }
                                                     } elseif ($value == "minor") {
                                                         if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "minor", "topic_time" => "0", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
-                                                            $ERROR++;
-                                                            $ERRORSTR[] = "There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.";
+                                                            add_error("There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.");
 
                                                             application_log("error", "Unable to insert a new event_topic response to the database while modifying event contents. Database said: ".$db->ErrorMsg());
                                                         }
@@ -619,10 +630,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             $PROCESSED_RECURRING_EVENT["event_description"] = $event_info["event_description"];
                                         }
                                         if (in_array("event_message", $_POST["update_recurring_fields"])) {
-                                            $PROCESSED_RECURRING_EVENT["event_message"] = $PROCESSED["event_message"];
+                                            $PROCESSED_RECURRING_EVENT["event_message"] = $event_info["event_message"];
                                         }
                                         if (in_array("event_objectives", $_POST["update_recurring_fields"])) {
-                                            $PROCESSED_RECURRING_EVENT["event_objectives"] = $PROCESSED["event_objectives"];
+                                            $PROCESSED_RECURRING_EVENT["event_objectives"] = $event_objectives;
                                         }
 
                                         foreach ($updating_recurring_events as $order => $recurring_event) {
@@ -736,8 +747,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 communities_log_history($COMMUNITY_ID, $PAGE_ID, $event_info["recurring_id"], "community_history_edit_recurring_events", 1);
                                             }
 
-                                            $SUCCESS++;
-                                            $SUCCESSSTR[] = "You have successfully edited the recurring events associated with <strong>".html_encode($event_info["event_title"])."</strong> in the system.";
+                                            add_success("You have successfully edited the recurring events associated with <strong>".html_encode($event_info["event_title"])."</strong> in the system.");
 
                                             application_log("success", "Recurring Events [".$event_info["recurring_id"]."] have been modified.");
                                         }
@@ -746,182 +756,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             }
 						break;
 						case "files" :
-							$FILE_IDS = array();
-
-							if ((!isset($_POST["delete"])) || (!is_array($_POST["delete"])) || (!count($_POST["delete"]))) {
-								$ERROR++;
-								$ERRORSTR[] = "You must select at least 1 file to delete by checking the checkbox to the left the file title.";
-
-								application_log("notice", "User pressed the Delete Selected button without selecting any files to delete.");
-							} else {
-								foreach ($_POST["delete"] as $efile_id) {
-									$efile_id = clean_input($efile_id, "int");
-									if ($efile_id) {
-										$FILE_IDS[] = $efile_id;
-									}
-								}
-
-								if (count($FILE_IDS) < 1) {
-									$ERROR++;
-									$ERRORSTR[] = "There were no valid file identifiers provided to delete.";
-								} else {
-									foreach ($FILE_IDS as $efile_id) {
-										$query		= "SELECT * FROM `event_files` WHERE `efile_id` = ".$db->qstr($efile_id)." AND `event_id` = ".$db->qstr($EVENT_ID);
-										$sresult	= $db->GetRow($query);
-										if ($sresult) {
-											$query = "DELETE FROM `event_files` WHERE `efile_id` = ".$db->qstr($efile_id)." AND `event_id` = ".$db->qstr($EVENT_ID);
-											if ($db->Execute($query)) {
-												if ($db->Affected_Rows()) {
-													if (@unlink(FILE_STORAGE_PATH."/".$efile_id)) {
-														$SUCCESS++;
-														$SUCCESSSTR[] = "Successfully deleted ".$sresult["file_name"]." from this event.";
-
-														application_log("success", "Deleted ".$sresult["file_name"]." [ID: ".$efile_id."] from filesystem.");
-													}
-
-													application_log("success", "Deleted ".$sresult["file_name"]." [ID: ".$efile_id."] from database.");
-												} else {
-													application_log("error", "Trying to delete ".$sresult["file_name"]." [ID: ".$efile_id."] from database, but there were no rows affected. Database said: ".$db->ErrorMsg());
-												}
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "We are unable to delete ".$sresult["file_name"]." from the event at this time. The MEdTech Unit has been informed of the error, please try again later.";
-
-												application_log("error", "Trying to delete ".$sresult["file_name"]." [ID: ".$efile_id."] from database, but the execute statement returned false. Database said: ".$db->ErrorMsg());
-											}
-										}
-									}
-									history_log($EVENT_ID, "deleted ". count($FILE_IDS) ." resource file".(count($FILE_IDS)>1?"s":""), $PROXY_ID);
-								}
-							}
+                            history_log($EVENT_ID, "deleted ". count($FILE_IDS) ." resource file".(count($FILE_IDS)>1?"s":""), $PROXY_ID);
 						break;
 						case "links" :
-							$LINK_IDS = array();
-
-							if ((!isset($_POST["delete"])) || (!is_array($_POST["delete"])) || (!@count($_POST["delete"]))) {
-								$ERROR++;
-								$ERRORSTR[] = "You must select at least 1 link to delete by checking the box to the left the link.";
-
-								application_log("notice", "User pressed the Delete Selected button without selecting any links to delete.");
-							} else {
-								foreach ($_POST["delete"] as $elink_id) {
-									$elink_id = clean_input($elink_id, "int");
-									if ($elink_id) {
-										$LINK_IDS[] = $elink_id;
-									}
-								}
-
-								if (count($LINK_IDS) < 1) {
-									$ERROR++;
-									$ERRORSTR[] = "There were no valid link identifiers provided to delete.";
-								} else {
-									foreach ($LINK_IDS as $elink_id) {
-										$query		= "SELECT * FROM `event_links` WHERE `elink_id` = ".$db->qstr($elink_id)." AND `event_id` = ".$db->qstr($EVENT_ID);
-										$sresult	= $db->GetRow($query);
-										if ($sresult) {
-											$query = "DELETE FROM `event_links` WHERE `elink_id` = ".$db->qstr($elink_id)." AND `event_id` = ".$db->qstr($EVENT_ID);
-											if ($db->Execute($query)) {
-												if ($db->Affected_Rows()) {
-													application_log("success", "Deleted ".$sresult["link"]." [ID: ".$elink_id."] from database.");
-												} else {
-													application_log("error", "Trying to delete ".$sresult["link"]." [ID: ".$elink_id."] from database, but there were no rows affected. Database said: ".$db->ErrorMsg());
-												}
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "We are unable to delete ".$sresult["link"]." from the event at this time. System administrators have been informed of the error, please try again later.";
-
-												application_log("error", "Trying to delete ".$sresult["link"]." [ID: ".$elink_id."] from database, but the execute statement returned false. Database said: ".$db->ErrorMsg());
-											}
-										}
-									}
-									history_log($EVENT_ID, "deleted ". count($LINK_IDS) ." resource file".(count($LINK_IDS)>1?"s":""), $PROXY_ID);
-								}
-							}
+                            history_log($EVENT_ID, "deleted ". count($LINK_IDS) ." resource file".(count($LINK_IDS)>1?"s":""), $PROXY_ID);
 						break;
 						case "quizzes" :
-							$QUIZ_IDS = array();
-
-							if ((!isset($_POST["delete"])) || (!is_array($_POST["delete"])) || (!@count($_POST["delete"]))) {
-								$ERROR++;
-								$ERRORSTR[] = "You must select at least 1 quiz to detach by checking the box to the left the quiz.";
-
-								application_log("notice", "User pressed the Detach Selected button without selecting any quizzes to detach.");
-							} else {
-								foreach ($_POST["delete"] as $aquiz_id) {
-									$aquiz_id = clean_input($aquiz_id, "int");
-									if ($aquiz_id) {
-										$QUIZ_IDS[] = $aquiz_id;
-									}
-								}
-
-								if (count($QUIZ_IDS) < 1) {
-									$ERROR++;
-									$ERRORSTR[] = "There were no valid quiz identifiers provided to detach.";
-								} else {
-									foreach ($QUIZ_IDS as $aquiz_id) {
-										$query	= "SELECT * FROM `attached_quizzes` WHERE `aquiz_id` = ".$db->qstr($aquiz_id)." AND `content_type` = 'event' AND `content_id` = ".$db->qstr($EVENT_ID);
-										$result	= $db->GetRow($query);
-										if ($result) {
-											$query = "DELETE FROM `attached_quizzes` WHERE `aquiz_id` = ".$db->qstr($aquiz_id)." AND `content_type` = 'event' AND `content_id` = ".$db->qstr($EVENT_ID);
-											if ($db->Execute($query)) {
-												if ($db->Affected_Rows()) {
-													application_log("success", "Detached quiz [".$result["quiz_id"]."] from event [".$EVENT_ID."].");
-												} else {
-													application_log("error", "Failed to detach quiz [".$result["quiz_id"]."] from event [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
-												}
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "We are unable to detach <strong>".html_encode($result["quiz_title"])."</strong> from this event. The system administrator has been informed of the error; please try again later.";
-
-												application_log("error", "Failed to detach quiz [".$result["quiz_id"]."] from event [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
-											}
-										}
-									}
-									history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." quiz".(count($QUIZ_IDS)>1?"es":""), $PROXY_ID);
-								}
-							}
+                            history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." quiz".(count($QUIZ_IDS)>1?"es":""), $PROXY_ID);
 						break;
                         case "lti" :
-                            $LTI_IDS = array();
-
-                            if((!isset($_POST["delete"])) || (!is_array($_POST["delete"])) || (!@count($_POST["delete"]))) {
-                                $ERROR++;
-                                $ERRORSTR[] = "You must select at least 1 LTI Provider to delete by checking the checkbox to the left the LTI Provider.";
-
-                                application_log("notice", "User pressed the Delete LTI Provider button without selecting any files to delete.");
-                            } else {
-                                foreach($_POST["delete"] as $lti_id) {
-                                    $lti_id = (int) trim($lti_id);
-                                    if($lti_id) {
-                                        $LTI_IDS[] = (int) trim($lti_id);
-                                    }
-                                }
-
-                                if(!@count($LTI_IDS)) {
-                                    $ERROR++;
-                                    $ERRORSTR[] = "There were no valid LTI Provider identifiers provided to delete.";
-                                } else {
-                                    foreach($LTI_IDS as $lti_id) {
-                                        $query	= "SELECT * FROM `event_lti_consumers` WHERE `id`=".$db->qstr($lti_id)." AND `event_id`=".$db->qstr($EVENT_ID);
-                                        $sresult	= $db->GetRow($query);
-                                        if($sresult) {
-                                            $query = "DELETE FROM `event_lti_consumers` WHERE `id`=".$db->qstr($lti_id)." AND `event_id`=".$db->qstr($EVENT_ID);
-                                            if($db->Execute($query)) {
-                                                if($db->Affected_Rows()) {
-                                                    application_log("success", "Deleted course ".$sresult["lti_title"]." [ID: ".$lti_id."] from database.");
-                                                } else {
-                                                    application_log("error", "Trying to delete course ".$sresult["lti_title"]." [ID: ".$lti_id."] from database, but there were no rows affected. Database said: ".$db->ErrorMsg());
-                                                }
-                                            } else {
-                                                $ERROR++;
-                                                $ERRORSTR[] = "We are unable to delete ".$sresult["lti_title"]." from the course at this time. The system administrator has been informed of the error, please try again later.";
-
-                                                application_log("error", "Trying to delete course ".$sresult["lti_title"]." [ID: ".$link_id."] from database, but the execute statement returned false. Database said: ".$db->ErrorMsg());
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                           
                             break;
 						default :
 							continue;
@@ -933,38 +777,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 textarea.expandable {
                     width: 90%;
                 }
+                
+                .datepicker, .timepicker {
+                    z-index: 1151 !important;
+                }
+                
+                
                 </style>
-                <?php
-                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-                $HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
-                ?>
-                <iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
                 <a id="false-link" href="#placeholder"></a>
                 <div id="placeholder" style="display: none"></div>
                 <?php
-                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+                $HEAD[] = "<script src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
                 ?>
                 <script type="text/javascript">
-                jQuery(function($) {
-                    var datatables = $(".datatable").DataTable({
-                        "bPaginate": false,
-                        "bInfo": false,
-                        "bFilter": false
-                    });
-                });
-                    
                 jQuery(document).ready(function () {
-                    jQuery("#delay_release_keywords_option_date").css("margin", "0");
-                    jQuery("#delay_release_keywords").is(":checked") ? jQuery("#delay_release_keywords_controls").show() : jQuery("#delay_release_keywords_controls").hide();
-                    jQuery("#delay_release_keywords").on("click", function() {
-                        jQuery("#delay_release_keywords_controls").toggle(this.checked);
-                    });
+//                    jQuery("#delay_release_keywords_option_date").css("margin", "0");
+//                    jQuery("#delay_release_keywords").is(":checked") ? jQuery("#delay_release_keywords_controls").show() : jQuery("#delay_release_keywords_controls").hide();
+//                    jQuery("#delay_release_keywords").on("click", function() {
+//                        jQuery("#delay_release_keywords_controls").toggle(this.checked);
+//                    });
                     
-                    jQuery("#delay_release_option_date").css("margin", "0");
-                    jQuery("#delay_release").is(":checked") ? jQuery("#delay_release_controls").show() : jQuery("#delay_release_controls").hide();
-                    jQuery("#delay_release").on("click", function() {
-                        jQuery("#delay_release_controls").toggle(this.checked);
-                    });
+//                    jQuery("#delay_release_option_date").css("margin", "0");
 
                     jQuery(".remove-hottopic").on("click", function(e) {
                         jQuery("#topic_"+jQuery(this).attr("data-id")+"_major").removeAttr("checked");
@@ -1101,11 +934,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     echo display_error();
                 }
                 ?>
-                <form id="content_form" action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(); ?>" method="post" style="margin-bottom:0">
+                <form id="content_form" class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(); ?>" method="post">
                     <input type="hidden" name="type" value="content" />
                     <a name="event-details-section"></a>
                     <div id="event-details-section">
-                        <table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Details" class="table">
+                        <table class="table" summary="Learning Event Details">
                             <colgroup>
                                 <col style="width: 20%" />
                                 <col style="width: 80%" />
@@ -1208,7 +1041,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             foreach ($event_eventtypes as $eventtype) {
                                                 echo "<li id=\"type_".(int) $eventtype["eventtype_id"]."\" class=\"\">".html_encode($eventtype["eventtype_title"])."
                                                     <a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
-                                                        <img src=\"".ENTRADA_URL."/images/action-delete.gif\">
+                                                        <img src=\"".ENTRADA_RELATIVE."/images/action-delete.gif\">
                                                     </a>
                                                     <span class=\"duration_segment_container\">
                                                         Duration: <input type=\"text\" class=\"input-mini duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".(int) $eventtype["duration"]."\"> minutes
@@ -1250,24 +1083,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         <a name="event-keywords-section"></a>
                         <h1 class="collapsable" title="Event Keywords Section">Event Keywords</h1>
                         <div id="event-keywords-section">
-                            <div class="row-fluid">
-                                <label class="checkbox" for="keywords_hidden">
-                                    <input type="checkbox" id="keywords_hidden" name="keywords_hidden" value="1"<?php echo ($PROCESSED["keywords_hidden"] != 0 ? " checked=\"checked\"" : "") ?> />
-                                    Hide all keywords from students
-                                </label>
+                            <div class="row-fluid space-below">
+                                <div id="keyword-display" class="nl-form">
+                                    I want to
+                                    <select id="keywords_release_date" name="keywords_release_date">
+                                        <option value="heading" disabled="disabled">Learner View Release Options</option>
+                                        <option value="now"<?php echo ($PROCESSED["keywords_release_date"] === 0 && !$PROCESSED["delay_release_keywords"]) ? " selected=\"selected\"" : ""; ?>>release all keywords now</option>
+                                        <option value="delay"<?php echo ($PROCESSED["keywords_release_date"] > 0 || $PROCESSED["delay_release_keywords"]) ? " selected=\"selected\"" : ""; ?>>delay the release of all keywords</option>
+                                        <option value="never"<?php echo ($PROCESSED["keywords_release_date"] === null && !$PROCESSED["delay_release_keywords"]) ? " selected=\"selected\"" : ""; ?>>never release keywords</option>
+                                    </select>
+                                    on the Learner View.
+                                    <div class="nl-overlay"></div>
+                                </div>
+                                <script type="text/javascript">
+                                    var keywordDisplay = new NLForm(document.getElementById("keyword-display"));
+                                </script>
                             </div>
                             <div class="row-fluid">
-                                <label class="checkbox" for="delay_release_keywords">
-                                    <input type="checkbox" id="delay_release_keywords" name="delay_release_keywords" value="1"<?php echo ($event_info["keywords_release_date"] != 0 || isset($PROCESSED["delay_release_keywords"]) ? " checked=\"checked\"" : "") ?> />
-                                    Delay the release of all keywords
-                                </label>
-                                <div id="delay_release_keywords_controls" class="space-below">
-                                    <table>
-                                        <?php echo generate_calendar("delay_release_keywords_option", "Delay release until", true, $PROCESSED["keywords_release_date"], true, false, false, false, false); ?>
-                                    </table>
+                                <div id="delay_release_keywords_controls" class="space-below<?php echo ($PROCESSED["keywords_release_date"] > 0 || $PROCESSED["delay_release_keywords"]) ? "" : " hide"; ?>">
+                                    <?php echo Entrada_Utilities::generate_calendar("delay_release_keywords_option", "Delay release until", true, $PROCESSED["keywords_release_date"], true, false, false, false, false); ?>
                                 </div>
                             </div>
-                            
+
                             <div class="keywords half left">
                                 <h3>Keyword Search</h3>
                                 <div>Search MeSH Keywords
@@ -1289,9 +1126,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         </div>
                                     </ul>
                                 </div>
-                                <p class="well well-small content-small">
-                                    <strong>Did you know:</strong> You can click <strong>Show Keyword Search</strong> to search the MeSH keyword database.
-                                </p>
                                 <div id="tagged">
                                     <div id="right1">
                                         <ul>
@@ -1327,15 +1161,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     <a name="event-objectives-section"></a>
                     <h1 class="collapsable" title="Event Objectives Section">Event Objectives</h1>
                     <div id="event-objectives-section">
+                        <div class="row-fluid space-below">
+                            <div id="objective-display" class="nl-form">
+                                I want to
+                                <select id="objectives_release_date" name="objectives_release_date">
+                                    <option value="heading" disabled="disabled">Learner View Release Options</option>
+                                    <option value="now"<?php echo ($PROCESSED["objectives_release_date"] === 0 && !$PROCESSED["delay_release"]) ? " selected=\"selected\"" : ""; ?>>release all objectives now</option>
+                                    <option value="delay"<?php echo ($PROCESSED["objectives_release_date"] > 0 || $PROCESSED["delay_release"]) ? " selected=\"selected\"" : ""; ?>>delay the release of all objectives</option>
+                                    <option value="never"<?php echo ($PROCESSED["objectives_release_date"] === null && !$PROCESSED["delay_release"]) ? " selected=\"selected\"" : ""; ?>>never release objectives</option>
+                                </select>
+                                on the Learner View.
+                                <div class="nl-overlay"></div>
+                            </div>
+                            <script type="text/javascript">
+                                var objectiveDisplay = new NLForm(document.getElementById("objective-display"));
+                            </script>
+                        </div>
                         <div class="row-fluid">
-                            <label class="checkbox">
-                                <input type="checkbox" id="delay_release" name="delay_release" value="1" <?php echo ($event_info["objectives_release_date"] != 0 || isset($PROCESSED["delay_release"]) ? " checked=\"checked\"" : "") ?> />
-                                Delay the release of all objectives
-                            </label>
-                            <div id="delay_release_controls" class="space-below">
-                                <table>
-                                    <?php echo generate_calendar("delay_release_option", "Delay release until", true, $PROCESSED["objectives_release_date"], true, false, false, false, false); ?>
-                                </table>
+                            <div id="delay_release_controls" class="space-below<?php echo ($PROCESSED["objectives_release_date"] > 0 || $PROCESSED["delay_release"]) ? "" : " hide"; ?>">
+                                <?php echo Entrada_Utilities::generate_calendar("delay_release_option", "Delay release until", true, $PROCESSED["objectives_release_date"], true, false, false, false, false); ?>
                             </div>
                         </div>
 
@@ -1536,7 +1380,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                         </div>
 
                                                         <div class="event-objective-controls">
-                                                            <img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
+                                                            <img 	src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif"
                                                                     class="objective-remove list-cancel-image"
                                                                     id="objective_remove_<?php echo $objective["objective_id"];?>"
                                                                     data-id="<?php echo $objective["objective_id"];?>">
@@ -1578,7 +1422,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     ?>
                                 </select>
                             </div>
-
                             <div class="clearfix"></div>
 
                             <div class="pull-right">
@@ -1656,12 +1499,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         $sidebar_html = "<div class=\"content-small\">Please select which fields (if any) you would like to apply to related recurring events: </div>\n";
                         $sidebar_html .= "<div class=\"pad-left\">\n";
                         $sidebar_html .= "  <ul class=\"menu none\">\n";
-                        $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_description\" id=\"cascade_event_description\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_description\">Event Description</label></li>\n";
-                        $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_message\" id=\"cascade_event_message\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_message\">Required Preparation</label></li>\n";
-                        $sidebar_html .= "      <li><input type=\"checkbox\" value=\"mesh_keywords\" id=\"cascade_mesh_keywords\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_mesh_keywords\">Event Keywords</label></li>\n";
-                        $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_objectives\" id=\"cascade_event_objectives\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_objectives\">Free-Text Objectives</label></li>\n";
-                        $sidebar_html .= "      <li><input type=\"checkbox\" value=\"mapped_objectives\" id=\"cascade_mapped_objectives\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_mapped_objectives\">Event Objectives</label></li>\n";
-                        $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_topics\" id=\"cascade_event_topics\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_topics\">Event Topics</label></li>\n";
+                        $sidebar_html .= "      <li><label for=\"cascade_event_description\" class=\"checkbox\"><input type=\"checkbox\" value=\"event_description\" id=\"cascade_event_description\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Description</label></li>\n";
+                        $sidebar_html .= "      <li><label for=\"cascade_event_message\" class=\"checkbox\"><input type=\"checkbox\" value=\"event_message\" id=\"cascade_event_message\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Required Preparation</label></li>\n";
+                        $sidebar_html .= "      <li><label for=\"cascade_mesh_keywords\" class=\"checkbox\"><input type=\"checkbox\" value=\"mesh_keywords\" id=\"cascade_mesh_keywords\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Keywords</label></li>\n";
+                        $sidebar_html .= "      <li><label for=\"cascade_event_objectives\" class=\"checkbox\"><input type=\"checkbox\" value=\"event_objectives\" id=\"cascade_event_objectives\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Free-Text Objectives</label></li>\n";
+                        $sidebar_html .= "      <li><label for=\"cascade_mapped_objectives\" class=\"checkbox\"><input type=\"checkbox\" value=\"mapped_objectives\" id=\"cascade_mapped_objectives\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Objectives</label></li>\n";
+                        $sidebar_html .= "      <li><label for=\"cascade_event_topics\" class=\"checkbox\"><input type=\"checkbox\" value=\"event_topics\" id=\"cascade_event_topics\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Topics</label></li>\n";
                         $sidebar_html .= "  </ul>\n";
                         $sidebar_html .= "</div>\n";
                         $sidebar_html .= "<div><strong><a href=\"#recurringEvents\" data-toggle=\"modal\" data-target=\"#recurringEvents\"><i class=\"icon-edit\"></i> <span id=\"recurring_events_count\">".(isset($_POST["recurring_event_ids"]) && @count($_POST["recurring_event_ids"]) ? @count($_POST["recurring_event_ids"]) : @count($recurring_events))."</span> Recurring Events Selected</a></strong></div>";
@@ -1678,7 +1521,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             #recurring-events-sidebar .panel-head {
                                 background: linear-gradient(to bottom, #8A0808 0%, #3B0B0B 100%);
                             }
-
                         </style>
                         <script type="text/javascript">
                             var shown = false;
@@ -1699,13 +1541,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                             function toggleRecurringEventField(checked, fieldname) {
                                 if (checked && jQuery('#update_' + fieldname).length < 1) {
-                                    jQuery('#content_form').append('<input type="hidden" name="update_recurring_fields[]" value="'+fieldname+'" id="update_"'+fieldname+' />');
+                                    jQuery('#content_form').append('<input type="hidden" name="update_recurring_fields[]" value="'+fieldname+'" id="update_'+fieldname+'" />');
                                 } else if (!checked && jQuery('#update_' + fieldname).length >= 1) {
                                     jQuery('#update_' + fieldname).remove();
                                 }
                             }
                         </script>
-                        <div id="recurringEvents" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="Select Associated Recurring Events" aria-hidden="true">
+                        <div id="recurringEvents" class="modal fade hide" tabindex="-1" role="dialog" aria-labelledby="Select Associated Recurring Events" aria-hidden="true">
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                                 <h3>Associated Recurring Events</h3>
@@ -1747,485 +1589,152 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     }
                     ?>
                 </form>
-
-                <a name="event-resources-section"></a>
-                <h1 class="collapsable" title="Event Resources Section">Event Resources</h1>
-                <div id="event-resources-section">
-                    <div style="margin: 15px 0">
-                        <div style="float: left; margin-bottom: 5px">
-                            <h3>Attached Files</h3>
-                        </div>
-                        <div class="pull-right">
-                            <input type="button" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')" value="Add A File" />
-                        </div>
-                        <div class="clear"></div>
-                        <?php
-                        $query		= "	SELECT *
-                                        FROM `event_files`
-                                        WHERE `event_id` = ".$db->qstr($EVENT_ID)."
-                                        ORDER BY `file_category` ASC, `file_title` ASC";
-                        $results	= $db->GetAll($query);
-                        echo "<form id=\"file-listing\" action=\"".ENTRADA_URL."/admin/events?".replace_query()."\" method=\"post\">\n";
-                        echo "<input type=\"hidden\" name=\"type\" value=\"files\" />\n";
-                        echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Attached Files\">\n";
-                        echo "<colgroup>\n";
-                        echo "	<col class=\"modified\" style=\"width: 50px\" />\n";
-                        echo "	<col class=\"file-category\" />\n";
-                        echo "	<col class=\"title\" />\n";
-                        echo "	<col class=\"date\" />\n";
-                        echo "	<col class=\"date\" />\n";
-                        echo "	<col class=\"accesses\" />\n";
-                        echo "</colgroup>\n";
-                        echo "<thead>\n";
-                        echo "	<tr>\n";
-                        echo "		<td class=\"modified\">&nbsp;</td>\n";
-                        echo "		<td class=\"file-category sortedASC\"><div class=\"noLink\">Category</div></td>\n";
-                        echo "		<td class=\"title\">File Title</td>\n";
-                        echo "		<td class=\"date-small\">Accessible Start</td>\n";
-                        echo "		<td class=\"date-small\">Accessible Finish</td>\n";
-                        echo "		<td class=\"accesses\">Saves</td>\n";
-                        echo "	</tr>\n";
-                        echo "</thead>\n";
-                        echo "<tfoot>\n";
-                        echo "	<tr>\n";
-                        echo "		<td>&nbsp;</td>\n";
-                        echo "		<td colspan=\"5\" style=\"padding-top: 10px\">\n";
-                        echo "			".(($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmFileDelete()\" />" : "&nbsp;");
-                        echo "		</td>\n";
-                        echo "	</tr>\n";
-                        echo "</tfoot>\n";
-                        echo "<tbody>\n";
-                        if ($results) {
-                            $output_views = array();
-                            foreach ($results as $result) {
-                                $filename	= $result["file_name"];
-                                $parts		= pathinfo($filename);
-                                $ext		= $parts["extension"];
-                                
-                                $student_hidden = $result["student_hidden"];
-                                if ($student_hidden) {
-                                    $image_src = $ext."_h";
-                                } else {
-                                    $image_src = $ext;
-                                }
-
-                                $total_views = 0;
-                                
-                                $event_file_views = Models_Statistic::getEventFileViews($result["efile_id"]);
-                                if ($event_file_views) {
-                                    $output_views[$result["efile_id"]]["file_name"] = $result["file_name"];
-                                    $output_views[$result["efile_id"]]["views"] = $event_file_views;
-                                    foreach ($event_file_views as $event_file_view) {
-                                        $total_views += $event_file_view["views"];
-                                    }
-                                }
-                                
-                                echo "<tr>\n";
-                                echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
-                                echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["efile_id"]."\" style=\"vertical-align: middle\" />\n";
-                                echo "		<a href=\"".ENTRADA_URL."/file-event.php?id=".$result["efile_id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/btn_save.gif\" width=\"16\" height=\"16\" alt=\"Download ".html_encode($result["file_name"])." to your computer.\" title=\"Download ".html_encode($result["file_name"])." to your computer.\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
-                                echo "	</td>\n";
-                                echo "	<td class=\"file-category\">".((isset($RESOURCE_CATEGORIES["event"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["event"][$result["file_category"]]) : "Unknown Category")."</td>\n";
-                                echo "	<td class=\"title\">\n";
-                                    echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$image_src."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($image_src)." Document\" style=\"vertical-align: middle\" />";
-                                    echo "		<a " . ($student_hidden ? "class='hidden_shares'" : "") . " href=\"#file-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-event.api.php?action=edit&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
-                                echo "	</td>\n";
-                                echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
-                                echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-                                    echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#file-views-".$result["efile_id"]."\" data-toggle=\"modal\" title=\"Click to see access log ".html_encode($total_views)."\" style=\"font-weight: bold\">".html_encode($total_views)."</a></td>\n";
-                                echo "</tr>\n";
-                            }
-                        } else {
-                            echo "<tr>\n";
-                            echo "	<td colspan=\"6\">\n";
-                            echo "		<div class=\"display-generic\">\n";
-                            echo "			There have been no files added to this event. To <strong>add a new file</strong>, simply click the Add File button.\n";
-                            echo "		</div>\n";
-                            echo "	</td>\n";
-                            echo "</tr>\n";
-                        }
-                        echo "</tbody>\n";
-                        echo "</table>\n";
-                        echo "</form>\n";
-                        
-                        if (!empty($output_views)) {
-                            foreach ($output_views as $efile_id => $output_view) {
-                                ?>
-                                <div id="file-views-<?php echo $efile_id; ?>" class="modal hide fade">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                        <h3><?php echo $output_view["file_name"]; ?> views</h3>
-                                    </div>
-                                    <div class="modal-body">
-                                        <table class="table table-striped table-bordered datatable">
-                                            <thead>
-                                                <tr>
-                                                    <th>Name</th>
-                                                    <th>Views</th>
-                                                    <th>Last Viewed</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                        <?php foreach ($output_view["views"] as $view) { ?>
-                                                <tr>
-                                                    <td><?php echo $view["lastname"] . ", " . $view["firstname"]; ?></td>
-                                                    <td><?php echo $view["views"]; ?></td>
-                                                    <td><?php echo date("Y-m-d H:i", $view["last_viewed_time"]); ?></td>
-                                                </tr>
-                                        <?php } ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
-                                    </div>
-                                </div>
-                                <?php
-                            }
-                        }
-                        ?>
+                <a name="event-resources-section" id="event-resources-section"></a>
+                <h1 class="space-above large">Event Resources</h1>
+                <div id="event-resources-delete-confirmation"></div>
+                <div id="event-resources-container-loading" class="hide">
+                    <img src="<?php echo ENTRADA_URL ."/images/loading.gif" ?>" />
+                    <p id="event_resources_loading_msg">Loading Event Resources...</p>
+                </div>
+                <div id="event-resources-container">
+                    <div class="row">
+                        <a  href="#" id="event-resource-toggle" class="btn pull-right">Add a Resource</a>
                     </div>
-
-                    <div style="margin-bottom: 15px">
-                        <div style="float: left; margin-bottom: 5px">
-                            <h3>Attached Links</h3>
-                        </div>
-
-                        <div class="pull-right">
-                            <input type="button" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')" value="Add A Link" />
-                        </div>
-                        <div class="clear"></div>
-                        <?php
-                        $query		= "	SELECT *
-                                        FROM `event_links`
-                                        WHERE `event_id`=".$db->qstr($EVENT_ID)."
-                                        ORDER BY `link_title` ASC";
-                        $results	= $db->GetAll($query);
-                        echo "<form id=\"link-listing\" action=\"".ENTRADA_URL."/admin/events?".replace_query()."\" method=\"post\">\n";
-                        echo "<input type=\"hidden\" name=\"type\" value=\"links\" />\n";
-                        echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Attached Links\">\n";
-                        echo "<colgroup>\n";
-                        echo "	<col class=\"modified\" style=\"width: 50px\" />\n";
-                        echo "	<col class=\"title\" />\n";
-                        echo "	<col class=\"date\" />\n";
-                        echo "	<col class=\"date\" />\n";
-                        echo "	<col class=\"accesses\" />\n";
-                        echo "</colgroup>\n";
-                        echo "<thead>\n";
-                        echo "	<tr>\n";
-                        echo "		<td class=\"modified\">&nbsp;</td>\n";
-                        echo "		<td class=\"title sortedASC\"><div class=\"noLink\">Linked Resources</div></td>\n";
-                        echo "		<td class=\"date-small\">Accessible Start</td>\n";
-                        echo "		<td class=\"date-small\">Accessible Finish</td>\n";
-                        echo "		<td class=\"accesses\">Hits</td>\n";
-                        echo "	</tr>\n";
-                        echo "</thead>\n";
-                        echo "<tfoot>\n";
-                        echo "	<tr>\n";
-                        echo "		<td>&nbsp;</td>\n";
-                        echo "		<td colspan=\"4\" style=\"padding-top: 10px\">\n";
-                        echo "			".(($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmLinkDelete()\" />" : "&nbsp;");
-                        echo "		</td>\n";
-                        echo "	</tr>\n";
-                        echo "</tfoot>\n";
-                        echo "<tbody>\n";
-                        if ($results) {
-                            foreach ($results as $result) {
-                                
-                                $student_hidden = $result["student_hidden"];
-                                if ($student_hidden) {
-                                    $link_src = "htmlh";
-                                } else {
-                                    $link_src = "html";
-                                }
-                                
-                                $link_statistics[$result["elink_id"]]["title"] = $result["link_title"];
-                                $link_statistics[$result["elink_id"]]["statistics"] = Models_Statistic::getEventLinkViews($result["elink_id"]);
-                                
-                                echo "<tr>\n";
-                                echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
-                                echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["elink_id"]."\" style=\"vertical-align: middle\" />\n";
-                                echo "		<a href=\"".ENTRADA_URL."/link-event.php?id=".$result["elink_id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/url-visit.gif\" width=\"16\" height=\"16\" alt=\"Visit ".html_encode($result["link"])."\" title=\"Visit ".html_encode($result["link"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
-                                echo "	</td>\n";
-                                echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-                                    echo "<img src='".ENTRADA_URL."/serve-icon.php?ext=" . $link_src . "' width='16' height='16' alt='".strtoupper($link_src)." Document' title='".strtoupper($link_src)." Document' style='vertical-align: middle; margin-right: 4px' />\n";
-                                    echo "		<a " . ($student_hidden ? "class='hidden_shares'" : "") . "  href=\"#link-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-event.api.php?action=edit&id=".$EVENT_ID."&lid=".$result["elink_id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
-                                echo "	</td>\n";
-                                echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
-                                echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-                                    echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#link-statistic-".$result["elink_id"]."\" data-toggle=\"modal\" title=\"Click to see access log ".html_encode($result["accesses"])."\" style=\"font-weight: bold\">".html_encode($result["accesses"])."</a></td>\n";                                                                
-                                echo "</tr>\n";
-                            }
-                        } else {
-                            echo "<tr>\n";
-                            echo "	<td colspan=\"5\">\n";
-                            echo "		<div class=\"display-generic\">\n";
-                            echo "			There have been no links added to this event. To <strong>add a new link</strong>, simply click the Add Link button.\n";
-                            echo "		</div>\n";
-                            echo "	</td>\n";
-                            echo "</tr>\n";
-                        }
-                        echo "</tbody>\n";
-                        echo "</table>\n";
-                        echo "</form>\n";
-                        
-                        if (isset($link_statistics) && !empty($link_statistics)) {
-                            foreach ($link_statistics as $elink_id => $link_statistic_set) {
-                                ?>
-                                <div class="modal hide fade" id="link-statistic-<?php echo $elink_id; ?>">
-                                    <div class="modal-header">
-                                        <h3><?php echo $link_statistics[$result["elink_id"]]["title"]; ?> Statistics</h3>
-                                    </div>
-                                    <div class="modal-body">
-                                        <table class="table table-striped table-bordered datatable">
-                                            <thead>
-                                                <tr>
-                                                    <th>Name</th>
-                                                    <th>Views</th>
-                                                    <th>Last Viewed</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                    <?php 
-                                    if (!empty($link_statistic_set["statistics"])) {
-                                        foreach ($link_statistic_set["statistics"] as $link_statistic) { 
-                                        ?>
-                                        <tr>
-                                            <td><?php echo $link_statistic["lastname"] . ", " . $link_statistic["firstname"]; ?></td>
-                                            <td><?php echo $link_statistic["views"]; ?></td>
-                                            <td><?php echo date("Y-m-d H:i", $link_statistic["last_viewed_time"]); ?></td>
-                                        </tr>
-                                        <?php 
-                                        }
-                                    } ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <a href="#" class="btn" data-dismiss="modal">Close</a>
-                                    </div>
-                                </div>
-                                <?php
-                            }
-                        }
-                        
-                        ?>
-                    </div>
-
-                    <div style="margin-bottom: 15px">
-                        <div style="float: left; margin-bottom: 5px">
-                            <h3>Attached Quizzes</h3>
-                        </div>
-
-                        <div class="pull-right">
-                                <input type="button" class="btn" onclick="window.location = '<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add'" value="Create New Quiz" />
-                                <input type="button" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?action=add&id=<?php echo $EVENT_ID; ?>')" value="Attach Existing Quiz" />
-                        </div>
-                        <div class="clear"></div>
-                        <?php
-                        $query		= "	SELECT a.*, b.`quiztype_title`
-                                        FROM `attached_quizzes` AS a
-                                        LEFT JOIN `quizzes_lu_quiztypes` AS b
-                                        ON b.`quiztype_id` = a.`quiztype_id`
-                                        WHERE a.`content_type` = 'event'
-                                        AND a.`content_id` = ".$db->qstr($EVENT_ID)."
-                                        ORDER BY b.`quiztype_title` ASC, a.`quiz_title` ASC";
-                        $results	= $db->GetAll($query);
-                        echo "<form id=\"quiz-listing\" action=\"".ENTRADA_URL."/admin/events?".replace_query()."\" method=\"post\">\n";
-                        echo "<input type=\"hidden\" name=\"type\" value=\"quizzes\" />\n";
-                        echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Attached Quizzes\">\n";
-                        echo "<colgroup>\n";
-                        echo "	<col class=\"modified\" style=\"width: 50px\"  />\n";
-                        echo "	<col class=\"file-category\" />\n";
-                        echo "	<col class=\"title\" />\n";
-                        echo "	<col class=\"date\" />\n";
-                        echo "	<col class=\"date\" />\n";
-                        echo "	<col class=\"accesses\" />\n";
-                        echo "</colgroup>\n";
-                        echo "<thead>\n";
-                        echo "	<tr>\n";
-                        echo "		<td class=\"modified\">&nbsp;</td>\n";
-                        echo "		<td class=\"file-category sortedASC\"><div class=\"noLink\">Category</div></td>\n";
-                        echo "		<td class=\"title\">Quiz Title</td>\n";
-                        echo "		<td class=\"date-small\">Accessible Start</td>\n";
-                        echo "		<td class=\"date-small\">Accessible Finish</td>\n";
-                        echo "		<td class=\"accesses\">Done</td>\n";
-                        echo "	</tr>\n";
-                        echo "</thead>\n";
-                        echo "<tfoot>\n";
-                        echo "	<tr>\n";
-                        echo "		<td>&nbsp;</td>\n";
-                        echo "		<td colspan=\"5\" style=\"padding-top: 10px\">\n";
-                        echo "			".(($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Detach Selected\" onclick=\"confirmQuizDelete()\" />" : "&nbsp;");
-                        echo "		</td>\n";
-                        echo "	</tr>\n";
-                        echo "</tfoot>\n";
-                        echo "<tbody>\n";
-                        if ($results) {
-                            foreach ($results as $result) {
-                                $completed_attempts = $db->GetOne("SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($result["aquiz_id"]));
-                                echo "<tr>\n";
-                                echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
-                                echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["aquiz_id"]."\" style=\"vertical-align: middle\" />\n";
-                                if ($completed_attempts > 0) {
-                                    echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;id=".$result["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
-                                } else {
-                                    echo "	<img src=\"".ENTRADA_URL."/images/view-stats-disabled.gif\" width=\"16\" height=\"16\" alt=\"No completed quizzes at this time.\" title=\"No completed quizzes at this time.\" style=\"vertical-align: middle\" border=\"0\" />\n";
-                                }
-                                echo "	</td>\n";
-                                echo "	<td class=\"file-category\">".html_encode($result["quiztype_title"])."</td>\n";
-                                echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-                                echo "		<a href=\"#quiz-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&id=".$EVENT_ID."&qid=".$result["aquiz_id"]."')\" title=\"Click to edit ".html_encode($result["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($result["quiz_title"])."</a>\n";
-                                echo "	</td>\n";
-                                echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
-                                echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-                                echo "	<td class=\"accesses\" style=\"text-align: center\">".$completed_attempts."</td>\n";
-                                echo "</tr>\n";
-                            }
-                        } else {
-                            echo "<tr>\n";
-                            echo "	<td colspan=\"6\">\n";
-                            echo "		<div class=\"display-generic\" style=\"white-space: normal\">\n";
-                            echo "			There have been no quizzes attached to this event. To <strong>create a new quiz</strong> click the <a href=\"".ENTRADA_URL."/admin/quizzes\" style=\"font-weight: bold\">Manage Quizzes</a> tab, and then to attach the quiz to this event click the <strong>Attach Quiz</strong> button below.\n";
-                            echo "		</div>\n";
-                            echo "	</td>\n";
-                            echo "</tr>\n";
-                        }
-                        echo "</tbody>\n";
-                        echo "</table>\n";
-                        echo "</form>\n";
-                        ?>
-                    </div>
-                    <div style="margin-bottom: 15px">
-                        <div style="float: left; margin-bottom: 5px">
-                            <h3>Attached LTI Providers</h3>
-                        </div>
-                        <div class="pull-right">
-                            <a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/lti-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')" class="btn">Add LTI Provider</a>
-                        </div>
-                        <div class="clear"></div>
-                        <?php
-                        $query		= "SELECT *
-                                       FROM `event_lti_consumers`
-                                       WHERE `event_id` = ".$db->qstr($EVENT_ID)."
-                                       ORDER BY `lti_title` ASC";
-                        $results	= $db->GetAll($query);
-                        ?>
-                        <form id="lti-listing" action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(); ?>" method="post">
-                            <input type="hidden" name="type" value="lti" />
-                            <table class="tableList" cellspacing="0" summary="List of Attached LTI Providers">
-                                <colgroup>
-                                    <col class="modified wide"/>
-                                    <col class="title" />
-                                    <col class="title" />
-                                    <col class="date" />
-                                    <col class="date" />
-                                </colgroup>
-                                <thead>
-                                    <tr>
-                                        <td class="modified">&nbsp;</td>
-                                        <td class="title sortedASC"><div class="noLink">LTI Provider Title</div></td>
-                                        <td class="title">Launch URL</td>
-                                        <td class="date-small">Accessible Start</td>
-                                        <td class="date-small">Accessible Finish</td>
-                                    </tr>
-                                </thead>
-                                <tfoot>
-                                    <tr>
-                                        <td>&nbsp;</td>
-                                        <td colspan="4" style="padding-top: 10px">
-                                            <?php
-                                            echo (($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmLTIDelete()\" />" : "&nbsp;")."\n";
-                                            ?>
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                                <tbody>
-                                <?php
-                                if($results) {
-                                    foreach($results as $result) { ?>
-                                        <tr>
-                                            <td class="modified wide">
-                                                <input type="checkbox" name="delete[]" value="<?php echo $result["id"];?>"/>
-                                            </td>
-                                            <td class="title">
-                                                <a 	href="#"
-                                                      onclick="openDialog('<?php echo ENTRADA_URL;?>/api/lti-wizard-event.api.php?action=edit&id=<?php echo $EVENT_ID."&ltiid=".$result["id"];?>')"
-                                                      title="Click to edit <?php echo html_encode($result["lti_title"]); ?>">
-                                                    <strong>
-                                                        <?php echo (($result["lti_title"] != "") ? html_encode($result["lti_title"]) : $result["lti_title"]);?>
-                                                    </strong>
-                                                </a>
-                                            </td>
-                                            <td class="title">
-                                                <?php echo (($result["launch_url"] != "") ? html_encode($result["launch_url"]) : $result["launch_url"]);?>
-                                            </td>
-                                            <td class="date-small">
-                                                <span class="content-date">
-                                                    <?php echo (((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions");?>
-                                                </span>
-                                            </td>
-                                            <td class="date-small">
-                                                <span class="content-date">
-                                                    <?php echo (((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions");?>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    <?php
-                                    }
-                                } else { ?>
-                                    <tr>
-                                        <td colspan="5">
-                                            <div class="display-generic" style="white-space: normal">
-                                                There have been no LTI Providers added to this event. To <strong>add a new LTI Provider</strong> simply click the Add LTI Provider button.
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php
-                                } ?>
-                                </tbody>
-                            </table>
-                        </form>
-                    </div>
+                    <div id="event-resources-msgs"></div>
+                </div>
                     <?php
                     $attached_gradebook_assessment = Models_Assessment_AssessmentEvent::fetchRowByEventID($EVENT_ID);
                     if ($attached_gradebook_assessment) {
                         $assessment = $attached_gradebook_assessment->getAssessment();
-                        ?>
-                        <div class="space-below">
-                            <h3>Attached Gradebook Assessments</h3>
-                            <table class="tableList" cellspacing="0" summary="List of Attached LTI Providers">
-                                <colgroup>
-                                    <col class="modified wide"/>
-                                    <col class="title" />
-                                    <col class="title" />
-                                    <col class="date" />
-                                    <col class="date" />
-                                </colgroup>
-                                <thead>
-                                    <tr>
-                                        <td class="modified">&nbsp;</td>
-                                        <td class="title sortedASC"><div class="noLink">Assessment Name</div></td>
-                                        <td class="title">Assessment Type</td>
-                                        <td class="date-small">Assessment Points</td>
-                                        <td class="date-small">Assessment Weight</td>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td></td>
-                                        <td><a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments/?section=grade&id=<?php echo $assessment->getCourseID(); ?>&assessment_id=<?php echo $assessment->getAssessmentID(); ?>"><strong><?php echo $assessment->getName(); ?></strong></a></td>
-                                        <td><?php echo $assessment->getType(); ?></td>
-                                        <td><?php echo $assessment->getNumericGradePointsTotal(); ?></td>
-                                        <td><?php echo $assessment->getGradeWeighting(); ?>%</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        if ($assessment) { ?>
+                            <div class="space-below">
+                                <h3>Attached Gradebook Assessments</h3>
+                                <table class="tableList" cellspacing="0" summary="List of Attached LTI Providers">
+                                    <colgroup>
+                                        <col class="modified wide"/>
+                                        <col class="title" />
+                                        <col class="title" />
+                                        <col class="date" />
+                                        <col class="date" />
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <td class="modified">&nbsp;</td>
+                                            <td class="title sortedASC"><div class="noLink">Assessment Name</div></td>
+                                            <td class="title">Assessment Type</td>
+                                            <td class="date-small">Assessment Points</td>
+                                            <td class="date-small">Assessment Weight</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td></td>
+                                            <td><a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments/?section=grade&id=<?php echo $assessment->getCourseID(); ?>&assessment_id=<?php echo $assessment->getAssessmentID(); ?>"><strong><?php echo $assessment->getName(); ?></strong></a></td>
+                                            <td><?php echo $assessment->getType(); ?></td>
+                                            <td><?php echo $assessment->getNumericGradePointsTotal(); ?></td>
+                                            <td><?php echo $assessment->getGradeWeighting(); ?>%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         <?php
+                        }
                     }
                     ?>
                     
+                </div>
+               
+                <div id="delete-event-resource-modal" class="modal scrollable fade hide" style="max-height: 314px;">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">Delete Event Resource</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div id="delete-event-resource-msgs"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                                <button id="delete-event-resource" type="button" class="btn btn-danger">Delete Resource</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="event-resource-view-modal" class="modal fade hide">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                                <h4 id="event-resource-view-modal-heading" class="modal-title"></h4>
+                            </div>
+                            <div class="modal-body">
+                                <div id="event-resource-view-msgs"></div>
+                                <table id="resource-views-table" class="table table-striped table-bordered datatable">
+                                    <thead>
+                                        <tr>
+                                            <th width="40%">Name</th>
+                                            <th width="15%">Views</th>
+                                            <th width="45%">Last Viewed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="event-resource-modal" class="modal scrollable fade hide">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                                <h4 id="event_resource_modal_title" class="modal-title">Add Event Resource</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form class="form-horizontal" action="<?php echo ENTRADA_URL . "/admin/events?section=api-resource-wizard" ?>" method="post" id="event_resource_form" enctype="multipart/form-data">
+                                    <input id="event_id" type="hidden" name="event_id" value="<?php echo $EVENT_ID; ?>" />
+                                    <input id="event_resource_entity_id" type="hidden" name="event_resource_entity_id" value="" />
+                                    <input id="resource_id" type="hidden" name="resource_id" value="" />
+                                    <input id="resource_step" type="hidden" name="step" value="1" />
+                                    <input id="resource_substep" type="hidden" name="resource_substep" value="1" />
+                                    <input id="resource_next_step" type="hidden" name="next_step" value="0" />
+                                    <input id="resource_previous_step" type="hidden" name="previous_step" value="0" />
+                                    <input id="event_resource_type_value" type="hidden" name="event_resource_type_value" value="11" />
+                                    <input id="event_resource_required_value" type="hidden" name="event_resource_required_value" value="no" />
+                                    <input id="event_resource_timeframe_value" type="hidden" name="event_resource_timeframe_value" value="none" />
+                                    <input id="event_resource_release_value" type="hidden" name="event_resource_release_value" value="no" />
+                                    <input id="event_resource_release_start_value" type="hidden" name="event_resource_release_start_value" value="" />
+                                    <input id="event_resource_release_start_time_value" type="hidden" name="event_resource_release_start_time_value" value="" />
+                                    <input id="event_resource_release_finish_value" type="hidden" name="event_resource_release_finish_value" value="" />
+                                    <input id="event_resource_release_finish_time_value" type="hidden" name="event_resource_release_finish_time_value" value="" />
+                                    <input id="event_resource_attach_file" type="hidden" name="event_resource_attach_file" value="no" />
+                                    <input id="upload" type="hidden" name="upload" value="upload" />
+                                    <input id="" type="hidden" name="method" value="add" />
+                                    <div id="event-resource-msgs"></div>
+                                    <div id="event-resource-step"></div>
+                                </form>
+                                <div id="event_resource_loading">
+                                    <img src="<?php echo ENTRADA_URL ."/images/loading.gif" ?>" />
+                                    <p id="event_resource_loading_msg"></p>
+                                </div>
+                                <div id="event_resource_drop_overlay" class="hide">
+                                    <div id="event_resource_drop_box"></div>
+                                    <p id="event_resource_loading_msg">Drop the selected file anywhere to upload.</p>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                                <button id="event-resource-previous" type="button" class="btn btn-default hide">Previous Step</button>
+                                <button id="event-resource-next" type="button" class="btn btn-primary">Next Step</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <script type="text/javascript">
@@ -2247,16 +1756,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "In order to edit a event you must provide a valid event identifier. The provided ID does not exist in this system.";
+			add_error("In order to edit a event you must provide a valid event identifier. The provided ID does not exist in this system.");
 
 			echo display_error();
 
 			application_log("notice", "Failed to provide a valid event identifer when attempting to edit a event.");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "In order to edit a event you must provide the events identifier.";
+		add_error("In order to edit a event you must provide the events identifier.");
 
 		echo display_error();
 

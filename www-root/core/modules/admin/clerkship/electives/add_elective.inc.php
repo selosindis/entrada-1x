@@ -442,6 +442,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 											
 											$mail->clearRecipients();
 											$mail->clearReplyTo();
+											$mail->clearFrom();
+											$mail->clearSubject();
 										}
 										
 										$message  = "Attention ".$student_name.",\n\n";
@@ -478,6 +480,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
                                                                                 
 										$mail->clearRecipients();
 										$mail->clearReplyTo();
+										$mail->clearFrom();
+										$mail->clearSubject();
 										
 										$message  = "Attention ".(isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "")." ".(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] != "" ? $PROCESSED["preceptor_first_name"] . " " : "") . $PROCESSED["preceptor_last_name"].",\n\n";
 										$message .= "A Clerkship elective has been approved by Queen's University please review this:\n";
@@ -515,6 +519,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
                                                                                 
 										$mail->clearRecipients();
 										$mail->clearReplyTo();
+										$mail->clearFrom();
+										$mail->clearSubject();
 										
 										if (count($NOTICESTR) == 1 && $msg == "") {
 											$msg	= "You have approved this elective for ".$NOTICESTR[0].".  An email will be sent to this student informing them of this.<br /><br /> You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
@@ -553,6 +559,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						}
 					}
 					if (!isset($SUCCESSSTR) || count($SUCCESS == 0)) {
+                        add_statistic("clerkship_electives", "create", "event_id", $EVENT_ID, $ENTRADA_USER->getID());
 						$SUCCESS++;
 						if (isset($msg) && $msg != "") {
 							$SUCCESSSTR[]  	= $msg;
@@ -641,6 +648,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
                         var days = 27;
                         var weekText = ' weeks';
                         break;
+                    case '5':
+                        var days = 34;
+                        var weekText = ' weeks';
+                        break;
                     default:
                         var days = 13;
                         var weekText = ' weeks';
@@ -669,6 +680,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
                         break;
                     case '4':
                         var days = 27;
+                        var weekText = ' weeks';
+                        break;
+                    case '5':
+                        var days = 34;
                         var weekText = ' weeks';
                         break;
                     default:
@@ -891,7 +906,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
                 <?php
                     $duration = ceil((isset($PROCESSED["event_finish"]) && $PROCESSED["event_finish"] && isset($PROCESSED["event_start"]) && $PROCESSED["event_start"] ? (($PROCESSED["event_finish"] - $PROCESSED["event_start"]) / 604800) : 0));
                     echo "<select id=\"event_finish\" name=\"event_finish_name\" style=\"width: 10%\" onchange=\"changeDurationMessage();\">\n";
-                    for($i=1; $i<=4; $i++)  {
+                    for($i=1; $i<=5; $i++)  {
                         echo "<option value=\"".$i."\"".(($i == $duration) ? " selected=\"selected\"" : "").">".$i."</option>\n";
                     }
                     echo "</select>\n<div id=\"auto_end_date\" class=\"content-small\" style=\"display: none\"></div>";

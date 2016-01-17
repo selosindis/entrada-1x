@@ -7,6 +7,6 @@ div.printing-enabled,.yes-printing {
 display:block;
 }
 
-#navigator-container,div.printing-disabled,.no-printing,div.bread-crumb-trail {
+div.printing-disabled,.no-printing,div.bread-crumb-trail {
 display:none;
 }

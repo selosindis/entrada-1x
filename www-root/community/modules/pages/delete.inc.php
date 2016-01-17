@@ -92,33 +92,31 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 				echo display_notice(array("Please review the following page or pages to ensure that you wish to permanently delete them. This action cannot be undone, and once removed the content is not recoverable."));
 				?>
 				<form action="<?php echo COMMUNITY_URL.$community_details["community_url"].":pages?".replace_query(array("action" => "delete", "step" => 2)); ?>" method="post">
-				<table class="tableList" cellspacing="0" summary="List of pages to be removed">
-				<colgroup>
-					<col class="modified" />
-					<col class="title" />
-				</colgroup>
-				<thead>
-					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="title">Community Pages</td>
-					</tr>
-				</thead>
-				<tfoot>
-					<tr>
-						<td>&nbsp;</td>
-						<td style="padding-top: 10px">
-							<input type="submit" class="btn btn-danger" value="Delete Selected" />
-						</td>
-					</tr>
-				</tfoot>
-				<tbody>
-				<?php
-					foreach ($pages as $page) {
-						echo communities_pages_intable($page["CPAGE_ID"], 0, array("selected" => $page["CPAGE_ID"], "selectable_children" => false));
-					}
-				?>
-				</tbody>
-				</table>
+					<table class="table" cellspacing="0" summary="List of pages to be removed">
+						<colgroup>
+							<col style="width: 40px" />
+							<col style="width: 100%" />
+						</colgroup>
+						<tfoot>
+							<tr>
+								<td colspan="2" style="padding-top: 20px">
+									<input type="submit" class="btn btn-danger" value="Delete Selected" />
+								</td>
+							</tr>
+						</tfoot>
+						<thead>
+							<tr>
+								<td colspan="2">Community Pages</td>
+							</tr>
+						</thead>
+						<tbody class="page-delete-list">
+						<?php
+							foreach ($pages as $page) {
+								echo communities_pages_intable($page["CPAGE_ID"], 0, array("selected" => $page["CPAGE_ID"], "selectable_children" => false));
+							}
+						?>
+						</tbody>
+					</table>
 				</form>
 				<?php
 			}

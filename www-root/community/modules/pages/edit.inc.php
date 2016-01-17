@@ -989,462 +989,507 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								});
 							}
 							</script>
+							<h1>Edit Community Page</h1>
 							<form id="edit_page_form" action="<?php echo ENTRADA_URL."/community".$community_details["community_url"].":pages?".replace_query(array("action" => "edit", "step" => 2)); ?>" method="post" enctype="multipart/form-data" onsubmit="selIt()">
-							<table style="width: 95%;" cellspacing="0" cellpadding="2" border="0" summary="Editing Page">
-							<colgroup>
-								<col style="width: 30%" />
-								<col style="width: 70%" />
-							</colgroup>
-							<thead>
-							<thead>
-								<tr>
-									<td colspan="2"><h1>Edit Community Page</h1></td>
-								</tr>
-							</thead>
-							<tfoot>
-								<tr>
-									<td colspan="2" style="padding-top: 15px; text-align: right">
-                                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
-									</td>
-								</tr>
-							</tfoot>
-							<tbody>
-								<tr>
-									<td style="vertical-align: top"><label for="page_type" class="form-required">Page Type:</label></td>
-									<td style="vertical-align: top">
-										<?php
-										if ((is_array($PAGE_TYPES)) && (count($PAGE_TYPES))) {
-											echo "<select id=\"page_type\" name=\"page_type\" style=\"width: 204px\" onchange=\"window.location = '".COMMUNITY_URL.$COMMUNITY_URL.":pages?section=edit&page=".($home_page ? "home" : $PAGE_ID)."&type='+this.options[this.selectedIndex].value\" ".(array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? "disabled=\"disabled\" " : "").">\n";
-											foreach ($PAGE_TYPES as $page_type_info) {
-												echo "<option value=\"".html_encode($page_type_info["module_shortname"])."\"".(((isset($PAGE_TYPE)) && ($PAGE_TYPE == $page_type_info["module_shortname"])) || ((isset($page_details["page_type"])) && !isset($PAGE_TYPE) && ($page_details["page_type"] == $page_type_info["module_shortname"])) ? " selected=\"selected\"" : "").">".html_encode($page_type_info["module_title"])."</option>\n";
-											}
-											if ($PAGE_TYPE == "course") {
-												echo "<option value=\"course\" selected=\"selected\">Course Content Page</option>\n";
-											}
-											echo "</select>";
-											if (isset($PAGE_TYPES[$page_details["page_type"]]["description"])) {
-												echo "<div class=\"content-small\" style=\"margin-top: 5px\">\n";
-												echo "<strong>Page Type Description:</strong><br />".html_encode($PAGE_TYPES[$page_details["page_type"]]["description"]);
-												echo "</div>\n";
-											}
-										} else {
-											echo "<input type=\"hidden\" name=\"page_type\" value=\"default\" />\n";
-											echo "<strong>Default Content Page</strong>\n";
-
-											application_log("error", "No available page types during content page add or edit.");
-										}
-										?>
-									</td>
-								</tr>
-								<?php
-								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
-										?>
-									<tr>
-										<td colspan="2">&nbsp;</td>
-									</tr>
-									<tr>
-										<td><label for="parent_id" class="form-required">Page Parent:</label></td>
-										<td>
-											<select id="parent_id" name="parent_id" onchange="parentChange(this.value)" style="width: 304px">
-											<?php
-											echo "<option value=\"0\"".(!$page_details["parent_id"] ? " selected=\"selected\"" : "").">-- No Parent Page --</option>\n";
-
-											$current_selected	= array($page_details["parent_id"]);
-											$exclude			= array($PAGE_ID);
-
-											echo communities_pages_inselect(0, $current_selected, 0, $exclude, $COMMUNITY_ID);
-											?>
-											</select>
-										</td>
-									</tr>
-									<?php
-								}
-								?>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-								</tr>
-								<tr>
-									<td><label for="menu_title" class="form-required">Menu Title:</label></td>
-									<td><input type="text" id="menu_title" name="menu_title" value="<?php echo ((isset($PROCESSED["menu_title"])) ? html_encode($PROCESSED["menu_title"]) : ((isset($page_details["menu_title"])) ? html_encode($page_details["menu_title"]) : "")); ?>" maxlength="32" style="width: 300px" onblur="fieldCopy('menu_title', 'page_title', 1)"<?php echo (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? " disabled=\"disabled\"" : ""); ?> /></td>
-								</tr>
-								<tr>
-									<td><label for="page_title" class="form-nrequired">Page Title:</label></td>
-									<td><input type="text" id="page_title" name="page_title" value="<?php echo ((isset($PROCESSED["page_title"])) ? html_encode($PROCESSED["page_title"]) : ""); ?>" maxlength="100" style="width: 300px"<?php echo (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? " disabled=\"disabled\"" : ""); ?> /></td>
-								</tr>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-								</tr>
-								<?php
-								if ($PAGE_TYPE == "url") {
-									?>
-									<tr>
-										<td><label for="page_content" class="form-required">External URL:</label></td>
-										<td>
-											<input type="textbox" id="page_content" name="page_content" style="width: 99%" value="<?php echo (((isset($PROCESSED["page_content"])) && ($page_details["page_type"] == "url")) ? html_encode($PROCESSED["page_content"]) : ""); ?>">
-										</td>
-									</tr>
-									<?php
-								} elseif($PAGE_TYPE == "lticonsumer") {
-									$ltiSettings = null;
-									if(isset($PROCESSED["page_content"]) && !empty($PROCESSED["page_content"])) {
-										$ltiSettings = json_decode($PROCESSED["page_content"]);
-									}
-									?>
-									<tr>
-										<td><label for="lti_url" class="form-required">LTI Launch URL:</label></td>
-										<td><input type="textbox" id="lti_url" name="lti_url" style="width: 99%;" value="<?php echo ((isset($ltiSettings) && property_exists($ltiSettings, "lti_url")) ? html_encode($ltiSettings->lti_url) : ""); ?>" /></td>
-									</tr>
-									<tr>
-										<td><label for="lti_key" class="form-required">LTI Key:</label></td>
-										<td><input type="textbox" id="lti_key" name="lti_key" style="width: 99%;" value="<?php echo ((isset($ltiSettings) && property_exists($ltiSettings, "lti_key")) ? html_encode($ltiSettings->lti_key) : ""); ?>" /></td>
-									</tr>
-									<tr>
-										<td><label for="lti_secret" class="form-required">LTI Secret:</label></td>
-										<td><input type="textbox" id="lti_secret" name="lti_secret" style="width: 99%;" value="<?php echo ((isset($ltiSettings) && property_exists($ltiSettings, "lti_secret")) ? html_encode($ltiSettings->lti_secret) : ""); ?>" /></td>
-									</tr>
-									<tr>
-										<td style="vertical-align: top"><label for="lti_params">LTI Additional Parameters:</label></td>
-										<td><textarea class="expandable" id="lti_params" name="lti_params" style="width: 98%;"><?php echo ((isset($ltiSettings)) ? html_encode($ltiSettings->lti_params) : ""); ?></textarea></td>
-									</tr>
-									<?php
-								} else {
-									?>
-									<tr>
-										<td colspan="2"><label for="page_content" class="form-nrequired"><?php (($PAGE_TYPE != "default") ? "Top of " : ""); ?>Page Content:</label></td>
-									</tr>
-									<tr>
-										<td colspan="2">
-                                            <textarea id="page_content" name="page_content" style="margin-right: 10px;width: 95%; height: <?php echo (($PAGE_TYPE == "default") ? "400" : "200"); ?>px" rows="20" cols="70"><?php echo ((isset($PROCESSED["page_content"])) ? html_encode($PROCESSED["page_content"]) : ""); ?></textarea>
-										</td>
-									</tr>
-									<?php
-								}
-
-								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
-									if ($PAGE_TYPE == "events" || $PAGE_TYPE == "announcements") {
-										?>
+								<table summary="Editing Page">
+									<colgroup>
+										<col style="width: 20%" />
+										<col style="width: 80%" />
+									</colgroup>
+									<tfoot>
 										<tr>
-											<td colspan="2">&nbsp;</td>
-										</tr>
-										<tr>
-											<td colspan="2"><h2>Page Permissions</h2></td>
-										</tr>
-										<tr>
-											<td colspan="2">
-												<table class="permissions" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-												<colgroup>
-													<col style="width: 40%" />
-													<col style="width: 20%" />
-													<col style="width: 25%" />
-													<col style="width: 15%" />
-												</colgroup>
-												<thead>
-													<tr>
-														<td>Group</td>
-														<td style="border-left: none">View Page</td>
-														<td style="border-left: none">Post <?php echo ucfirst($PAGE_TYPE); ?></td>
-														<td style="border-left: none">&nbsp;</td>
-													</tr>
-												</thead>
-												<tbody>
-													<tr>
-														<td class="left"><strong>Community Administrators</strong></td>
-														<td class="on"><input type="checkbox" id="allow_admin_view" name="allow_admin_view" value="1" checked="checked" onclick="this.checked = true" /></td>
-														<td><input type="checkbox" checked="checked" disabled="disabled"/></td>
-														<td>&nbsp;</td>
-													</tr>
-													<tr>
-														<td class="left"><strong>Community Members</strong></td>
-														<td class="on"><input type="checkbox" id="allow_member_view" name="allow_member_view" value="1"<?php echo (((!isset($PROCESSED["allow_member_view"])) || ((isset($PROCESSED["allow_member_view"])) && ($PROCESSED["allow_member_view"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-														<td><input onclick="show_hide_moderation()" type="checkbox" id="allow_member_posts" name="allow_member_posts" value="1"<?php echo (((isset($page_options["allow_member_posts"]["option_value"])) && (((int)$page_options["allow_member_posts"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-														<td>&nbsp;</td>
-													</tr>
-													<?php if (!(int) $community_details["community_registration"]) : ?>
-													<tr>
-														<td class="left"><strong>Browsing Non-Members</strong></td>
-														<td class="on"><input type="checkbox" id="allow_troll_view" name="allow_troll_view" value="1"<?php echo (((!isset($PROCESSED["allow_troll_view"])) || ((isset($PROCESSED["allow_troll_view"])) && ($PROCESSED["allow_troll_view"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-														<td><input onclick="show_hide_moderation()" type="checkbox" id="allow_troll_posts" name="allow_troll_posts" value="1"<?php echo (((isset($page_options["allow_troll_posts"]["option_value"])) && (((int)$page_options["allow_troll_posts"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-														<td>&nbsp;</td>
-													</tr>
-													<?php endif; ?>
-													<?php if (!(int) $community_details["community_protected"]) :  ?>
-													<tr>
-														<td class="left"><strong>Non-Authenticated / Public Users</strong></td>
-														<td class="on"><input type="checkbox" id="allow_public_view" name="allow_public_view" value="1"<?php echo (((isset($PROCESSED["allow_public_view"])) && ($PROCESSED["allow_public_view"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-														<td><input type="checkbox" disabled="disabled"/></td>
-														<td>&nbsp;</td>
-													</tr>
-													<?php endif; ?>
-												</tbody>
-												</table>
+											<td colspan="2" style="padding-top: 15px; text-align: right">
+		                                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
 											</td>
 										</tr>
-										</tbody>
-										<script type="text/javascript">
-											function show_hide_moderation() {
-												if($('allow_member_posts').checked || ($('allow_troll_posts') && $('allow_troll_posts').checked)) {
-													if (!$('moderate-posts-body').visible()) {
-														Effect.BlindDown($('moderate-posts-body'), { duration: 0.3 });
+									</tfoot>
+									<tbody>
+										<tr>
+											<td style="vertical-align: middle">
+												<label for="page_type" class="form-required">Page Type:</label>
+											</td>
+											<td style="vertical-align: middle">
+												<?php
+												if ((is_array($PAGE_TYPES)) && (count($PAGE_TYPES))) {
+													echo "<select id=\"page_type\" name=\"page_type\" style=\"width: 312px\" onchange=\"window.location = '".COMMUNITY_URL.$COMMUNITY_URL.":pages?section=edit&page=".($home_page ? "home" : $PAGE_ID)."&type='+this.options[this.selectedIndex].value\" ".(array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? "disabled=\"disabled\" " : "").">\n";
+													foreach ($PAGE_TYPES as $page_type_info) {
+														echo "<option value=\"".html_encode($page_type_info["module_shortname"])."\"".(((isset($PAGE_TYPE)) && ($PAGE_TYPE == $page_type_info["module_shortname"])) || ((isset($page_details["page_type"])) && !isset($PAGE_TYPE) && ($page_details["page_type"] == $page_type_info["module_shortname"])) ? " selected=\"selected\"" : "").">".html_encode($page_type_info["module_title"])."</option>\n";
+													}
+													if ($PAGE_TYPE == "course") {
+														echo "<option value=\"course\" selected=\"selected\">Course Content Page</option>\n";
+													}
+													echo "</select>";
+													if (isset($PAGE_TYPES[$page_details["page_type"]]["description"])) {
+														echo "<div class=\"content-small\" style=\"margin-top: 5px\">\n";
+														echo "<strong>Page Type Description:</strong><br />".html_encode($PAGE_TYPES[$page_details["page_type"]]["description"]);
+														echo "</div>\n";
 													}
 												} else {
-													if ($('moderate-posts-body').visible()) {
-														Effect.BlindUp($('moderate-posts-body'), { duration: 0.3 });
-													}
+													echo "<input type=\"hidden\" name=\"page_type\" value=\"default\" />\n";
+													echo "<strong>Default Content Page</strong>\n";
+
+													application_log("error", "No available page types during content page add or edit.");
 												}
+												?>
+											</td>
+										</tr>
+										<?php
+										if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
+												?>
+											<tr>
+												<td style="vertical-align: middle">
+													<label for="parent_id" class="form-required">Page Parent:</label>
+												</td>
+												<td style="vertical-align: middle">
+													<select id="parent_id" name="parent_id" onchange="parentChange(this.value)" style="width: 312px">
+													<?php
+													echo "<option value=\"0\"".(!$page_details["parent_id"] ? " selected=\"selected\"" : "").">-- No Parent Page --</option>\n";
+
+													$current_selected	= array($page_details["parent_id"]);
+													$exclude			= array($PAGE_ID);
+
+													echo communities_pages_inselect(0, $current_selected, 0, $exclude, $COMMUNITY_ID);
+													?>
+													</select>
+												</td>
+											</tr>
+											<?php
+										}
+										?>
+										<tr>
+											<td style="vertical-align: middle">
+												<label for="menu_title" class="form-required">Menu Title:</label>
+											</td>
+											<td style="vertical-align: middle">
+												<input type="text" id="menu_title" name="menu_title" value="<?php echo ((isset($PROCESSED["menu_title"])) ? html_encode($PROCESSED["menu_title"]) : ((isset($page_details["menu_title"])) ? html_encode($page_details["menu_title"]) : "")); ?>" maxlength="32" style="width: 300px" onblur="fieldCopy('menu_title', 'page_title', 1)"<?php echo (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? " disabled=\"disabled\"" : ""); ?> />
+											</td>
+										</tr>
+										<tr>
+											<td style="vertical-align: middle">
+												<label for="page_title" class="form-nrequired">Page Title:</label>
+											</td>
+											<td style="vertical-align: middle">
+												<input type="text" id="page_title" name="page_title" value="<?php echo ((isset($PROCESSED["page_title"])) ? html_encode($PROCESSED["page_title"]) : ""); ?>" maxlength="100" style="width: 300px"<?php echo (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? " disabled=\"disabled\"" : ""); ?> />
+											</td>
+										</tr>
+										<?php
+										if ($PAGE_TYPE == "url") {
+											?>
+											<tr>
+												<td style="vertical-align: middle">
+													<label for="page_content" class="form-required">External URL:</label>
+												</td>
+												<td style="vertical-align: middle">
+													<input type="text" id="page_content" name="page_content" style="width: 98%" value="<?php echo (((isset($PROCESSED["page_content"])) && ($page_details["page_type"] == "url")) ? html_encode($PROCESSED["page_content"]) : ""); ?>">
+												</td>
+											</tr>
+											<?php
+										} elseif($PAGE_TYPE == "lticonsumer") {
+											$ltiSettings = null;
+											if(isset($PROCESSED["page_content"]) && !empty($PROCESSED["page_content"])) {
+												$ltiSettings = json_decode($PROCESSED["page_content"]);
 											}
-										</script>
-										<tbody id="moderate-posts-body" <?php echo ((((isset($page_options["allow_troll_posts"]["option_value"])) && (((int)$page_options["allow_troll_posts"]["option_value"]) == 1)) && (!(int) $community_details["community_protected"])) || ((isset($page_options["allow_member_posts"]["option_value"])) && (((int)$page_options["allow_member_posts"]["option_value"]) == 1)) ? "" : " style=\"display: none;\""); ?>>
+											?>
+											<tr>
+												<td style="vertical-align: middle">
+													<label for="lti_url" class="form-required">LTI Launch URL:</label>
+												</td>
+												<td style="vertical-align: middle">
+													<input type="text" id="lti_url" name="lti_url" style="width: 98%;" value="<?php echo ((isset($ltiSettings) && property_exists($ltiSettings, "lti_url")) ? html_encode($ltiSettings->lti_url) : ""); ?>" />
+												</td>
+											</tr>
+											<tr>
+												<td style="vertical-align: middle">
+													<label for="lti_key" class="form-required">LTI Key:</label>
+												</td>
+												<td style="vertical-align: middle">
+													<input type="text" id="lti_key" name="lti_key" style="width: 98%;" value="<?php echo ((isset($ltiSettings) && property_exists($ltiSettings, "lti_key")) ? html_encode($ltiSettings->lti_key) : ""); ?>" />
+												</td>
+											</tr>
+											<tr>
+												<td style="vertical-align: middle">
+													<label for="lti_secret" class="form-required">LTI Secret:</label>
+												</td>
+												<td style="vertical-align: middle">
+													<input type="text" id="lti_secret" name="lti_secret" style="width: 98%;" value="<?php echo ((isset($ltiSettings) && property_exists($ltiSettings, "lti_secret")) ? html_encode($ltiSettings->lti_secret) : ""); ?>" />
+												</td>
+											</tr>
+											<tr>
+												<td style="vertical-align: middle">
+													<label for="lti_params">LTI Additional Parameters:</label>
+												</td>
+												<td style="vertical-align: middle">
+													<textarea class="expandable" id="lti_params" name="lti_params" style="width: 98%;"><?php echo ((isset($ltiSettings)) ? html_encode($ltiSettings->lti_params) : ""); ?></textarea>
+												</td>
+											</tr>
+											<?php
+										} else {
+											?>
 											<tr>
 												<td colspan="2">
-													&nbsp;
+													<label for="page_content" class="form-nrequired"><?php if ($PAGE_TYPE != "default"){ echo "Top of "; } ?>Page Content:</label>
 												</td>
 											</tr>
 											<tr>
-												<td>
-													<label for="moderate_posts" class="form-nrequired">
-														Moderation
-													</label>
-												</td>
-												<td>
-													<input type="checkbox" id="moderate_posts" name="moderate_posts" value="1"<?php echo (((isset($page_options["moderate_posts"]["option_value"])) && (((int)$page_options["moderate_posts"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> />
-													<span class="content-small">Require non-administrator <?php echo $PAGE_TYPE; ?> to be moderated</span>
+												<td colspan="2">
+		                                            <textarea id="page_content" name="page_content" style="margin-right: 10px;width: 95%; height: <?php echo (($PAGE_TYPE == "default") ? "400" : "200"); ?>px" rows="20" cols="70"><?php echo ((isset($PROCESSED["page_content"])) ? html_encode($PROCESSED["page_content"]) : ""); ?></textarea>
 												</td>
 											</tr>
-										</tbody>
-										<tbody>
-										<?php
-									} else {
-										?>
-										<tr>
-											<td colspan="2">&nbsp;</td>
-										</tr>
-										<tr>
-											<td colspan="2"><h2>Page Permissions</h2></td>
-										</tr>
-										<tr>
-											<td colspan="2">
-												<table class="permissions" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-												<colgroup>
-													<col style="width: 40%" />
-													<col style="width: 20%" />
-													<col style="width: 40%" />
-												</colgroup>
-												<thead>
-													<tr>
-														<td>Group</td>
-														<td style="border-left: none">View Page</td>
-														<td style="border-left: none">&nbsp;</td>
-													</tr>
-												</thead>
-												<tbody>
-													<tr>
-														<td class="left"><strong>Community Administrators</strong></td>
-														<td class="on"><input type="checkbox" id="allow_admin_view" name="allow_admin_view" value="1" checked="checked" onclick="this.checked = true" /></td>
-														<td>&nbsp;</td>
-													</tr>
-													<tr>
-														<td class="left"><strong>Community Members</strong></td>
-														<td class="on"><input type="checkbox" id="allow_member_view" name="allow_member_view" value="1"<?php echo (((!isset($PROCESSED["allow_member_view"])) || ((isset($PROCESSED["allow_member_view"])) && ($PROCESSED["allow_member_view"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-														<td>&nbsp;</td>
-													</tr>
-													<?php if (!(int) $community_details["community_registration"]) : ?>
-													<tr>
-														<td class="left"><strong>Browsing Non-Members</strong></td>
-														<td class="on"><input type="checkbox" id="allow_troll_view" name="allow_troll_view" value="1"<?php echo (((!isset($PROCESSED["allow_troll_view"])) || ((isset($PROCESSED["allow_troll_view"])) && ($PROCESSED["allow_troll_view"] == 1))) ? " checked=\"checked\"" : ""); ?> /></td>
-														<td>&nbsp;</td>
-													</tr>
-													<?php endif; ?>
-													<?php if (!(int) $community_details["community_protected"]) :  ?>
-													<tr>
-														<td class="left"><strong>Non-Authenticated / Public Users</strong></td>
-														<td class="on"><input type="checkbox" id="allow_public_view" name="allow_public_view" value="1"<?php echo (((isset($PROCESSED["allow_public_view"])) && ($PROCESSED["allow_public_view"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-														<td>&nbsp;</td>
-													</tr>
-													<?php endif; ?>
-												</tbody>
-												</table>
-											</td>
-										</tr>
-										<?php
-									}
-								} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "objectives") !== false) {
-								?>
-										 <tr>
-											<td colspan="2">
-												<br />
-												<div class="display-notice">
-													Please edit the Learning Objectives through the Manage Courses > Course Content tab found <a href="<?php echo ENTRADA_URL . "/admin/courses" ;?>">here</a>.
-												</div>
-											</td>
-										 </tr>
-								<?php
-								} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "mcc_presentations") !== false) {
-								?>
-										<tr>
-											<td colspan="2">
-												<br />
-												<div class="display-notice">
-													Please edit the MCC Presentation Objectives through the Manage Courses > Course Content tab found <a href="<?php echo ENTRADA_URL . "/admin/courses" ;?>">here</a>.
-												</div>
-											</td>
-										 </tr>
-							    <?php
-								}
-								?>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-								</tr>
-								<?php
-								if (($PAGE_TYPE == "url") || (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) || ($home_page && $PAGE_TYPE == "default")) {
-									?>
-									<tr>
-										<td colspan="2"><h2>Page Options</h2></td>
-									</tr>
-									<?php
-								}
-								if ($PAGE_TYPE == "url") {
-								?>
-									<tr>
-										<td colspan="2" style="padding-top: 1em;">
-											<table class="page-options" style="width: 95%; padding-bottom: 20px;" cellspacing="0" cellpadding="0" border="0">
-											<colgroup>
-												<col style="width: 70%" />
-												<col style="width: 20%" />
-												<col style="width: 10%" />
-											</colgroup>
-											<thead>
-												<tr>
-													<td>Additional Options</td>
-													<td style="border-left: none">Status</td>
-													<td style="border-left: none">&nbsp;</td>
-												</tr>
-											</thead>
-											<tbody>
-												<tr>
-													<td class="left"><strong>Open page in new window. </strong></td>
-													<td class="on"><input type="checkbox" id="new_window" name="new_window" value="1"<?php echo (((isset($page_options["new_window"]["option_value"])) && (((int)$page_options["new_window"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-													<td>&nbsp;</td>
-												</tr>
-											</tbody>
-											</table>
-										</td>
-									</tr>
-								<?php
-								} else if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1") { ?>
-									<tr>
-										<td>
-											<label for="show_left_nav" class="form-nrequired">Show Left Navigation</label>
-										</td>
-										<td>
-											<input id="show_left_nav" name="show_left_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_previous_nav"]) || ((int) $PROCESSED["page_navigation"]["show_previous_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
-											<input class="btn" id="change_previous_nav_button" name="change_previous_nav_button" type="button" value="Previous Page" />
-											<input type="hidden" name="selected_nav_previous_page_id" id="selected_nav_previous_page_id" <?php echo (isset($nav_previous_page_id) && $nav_previous_page_id ? "value = \"" . $nav_previous_page_id . "\"" : "value = \"" . (isset($default_previous_page["cpage_id"]) && $default_previous_page["cpage_id"] ? $default_previous_page["cpage_id"] : "")) . "\"" ?> />
-										</td>
-									</tr>
-									<tr>
-										<td>
-											<label for="show_right_nav" class="form-nrequired">Show Right Navigation</label>
-										</td>
-										<td>
-											<input id="show_right_nav" name="show_right_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_next_nav"]) || ((int) $PROCESSED["page_navigation"]["show_next_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
-											<input class="btn" id="change_next_nav_button" name="change_next_nav_button" type="button" value="Next Page" />
-											<input type="hidden" name="selected_nav_next_page_id" id="selected_nav_next_page_id" <?php echo (isset($nav_next_page_id) && $nav_next_page_id ? "value = \"" . $nav_next_page_id . "\"" : "value = \"" . $default_next_page["cpage_id"] . "\"") ?> />
-										</td>
-									</tr>
-								<?php
-								}
+											<?php
+										}
 
-								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
-									$query		= "SELECT `cpage_id`, `page_order`, `menu_title` FROM `community_pages` WHERE `cpage_id` <> ".$db->qstr($PAGE_ID)." AND `parent_id` = ".$db->qstr($PROCESSED["parent_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` != '' AND `page_type` != 'course' ORDER BY `page_order` ASC";
-									$results	= $db->GetAll($query);
-									if ($results) {
+										if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
+											if ($PAGE_TYPE == "events" || $PAGE_TYPE == "announcements") {
+												?>
+												<tr>
+													<td colspan="2">
+														<h2>Page Permissions</h2>
+													</td>
+												</tr>
+												<tr>
+													<td colspan="2">
+														<table class="table table-striped table-bordered">
+															<colgroup>
+																<col style="width: 50%" />
+																<col style="width: 25%" />
+																<col style="width: 25%" />
+															</colgroup>
+															<thead>
+																<tr>
+																	<td>Group</td>
+																	<td>View Page</td>
+																	<td>Post <?php echo ucfirst($PAGE_TYPE); ?></td>
+																</tr>
+															</thead>
+															<tbody>
+																<tr>
+																	<td>
+																		<strong>Community Administrators</strong>
+																	</td>
+																	<td class="on">
+																		<input type="checkbox" id="allow_admin_view" name="allow_admin_view" value="1" checked="checked" onclick="this.checked = true" />
+																	</td>
+																	<td>
+																		<input type="checkbox" checked="checked" disabled="disabled"/>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<strong>Community Members</strong>
+																	</td>
+																	<td class="on">
+																		<input type="checkbox" id="allow_member_view" name="allow_member_view" value="1"<?php echo (((!isset($PROCESSED["allow_member_view"])) || ((isset($PROCESSED["allow_member_view"])) && ($PROCESSED["allow_member_view"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																	<td>
+																		<input onclick="show_hide_moderation()" type="checkbox" id="allow_member_posts" name="allow_member_posts" value="1"<?php echo (((isset($page_options["allow_member_posts"]["option_value"])) && (((int)$page_options["allow_member_posts"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																</tr>
+																<?php if (!(int) $community_details["community_registration"]) : ?>
+																<tr>
+																	<td>
+																		<strong>Browsing Non-Members</strong>
+																	</td>
+																	<td class="on">
+																		<input type="checkbox" id="allow_troll_view" name="allow_troll_view" value="1"<?php echo (((!isset($PROCESSED["allow_troll_view"])) || ((isset($PROCESSED["allow_troll_view"])) && ($PROCESSED["allow_troll_view"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																	<td>
+																		<input onclick="show_hide_moderation()" type="checkbox" id="allow_troll_posts" name="allow_troll_posts" value="1"<?php echo (((isset($page_options["allow_troll_posts"]["option_value"])) && (((int)$page_options["allow_troll_posts"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																</tr>
+																<?php endif; ?>
+																<?php if (!(int) $community_details["community_protected"]) :  ?>
+																<tr>
+																	<td class="left">
+																		<strong>Non-Authenticated / Public Users</strong>
+																	</td>
+																	<td class="on">
+																		<input type="checkbox" id="allow_public_view" name="allow_public_view" value="1"<?php echo (((isset($PROCESSED["allow_public_view"])) && ($PROCESSED["allow_public_view"] == 1)) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																	<td>
+																		<input type="checkbox" disabled="disabled"/>
+																	</td>
+																</tr>
+																<?php endif; ?>
+															</tbody>
+														</table>
+													</td>
+												</tr>
+												<script type="text/javascript">
+													function show_hide_moderation() {
+														if($('allow_member_posts').checked || ($('allow_troll_posts') && $('allow_troll_posts').checked)) {
+															if (!$('moderate-posts-body').visible()) {
+																Effect.BlindDown($('moderate-posts-body'), { duration: 0.3 });
+															}
+														} else {
+															if ($('moderate-posts-body').visible()) {
+																Effect.BlindUp($('moderate-posts-body'), { duration: 0.3 });
+															}
+														}
+													}
+												</script>
+												<tr>
+													<td colspan="2">
+														<table class="table table-bordered no-thead" id="moderate-posts-body" <?php echo ((((isset($page_options["allow_troll_posts"]["option_value"])) && (((int)$page_options["allow_troll_posts"]["option_value"]) == 1)) && (!(int) $community_details["community_protected"])) || ((isset($page_options["allow_member_posts"]["option_value"])) && (((int)$page_options["allow_member_posts"]["option_value"]) == 1)) ? "" : " style=\"display: none;\""); ?>>
+															<colgroup>
+																<col style="width: 5%" />
+																<col style="width: auto" />
+															</colgroup>
+															<tbody>
+																<tr>
+																	<td class="center">
+																		<input type="checkbox" id="moderate_posts" name="moderate_posts" value="1"<?php echo (((isset($page_options["moderate_posts"]["option_value"])) && (((int)$page_options["moderate_posts"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																	<td>
+																		<label class="form-nrequired">Require non-administrator <?php echo $PAGE_TYPE; ?> to be moderated</label>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
+												</tr>
+												<?php
+											} else {
+												?>
+												<tr>
+													<td colspan="2">
+														<h2>Page Permissions</h2>
+													</td>
+												</tr>
+												<tr>
+													<td colspan="2">
+														<table class="table table-striped table-bordered">
+															<colgroup>
+																<col style="width: 50%" />
+																<col style="width: 50%" />
+															</colgroup>
+															<thead>
+																<tr>
+																	<td>Group</td>
+																	<td>View Page</td>
+																</tr>
+															</thead>
+															<tbody>
+																<tr>
+																	<td>
+																		<strong>Community Administrators</strong>
+																	</td>
+																	<td class="on"><input type="checkbox" id="allow_admin_view" name="allow_admin_view" value="1" checked="checked" onclick="this.checked = true" /></td>
+																</tr>
+																<tr>
+																	<td>
+																		<strong>Community Members</strong>
+																	</td>
+																	<td class="on">
+																		<input type="checkbox" id="allow_member_view" name="allow_member_view" value="1"<?php echo (((!isset($PROCESSED["allow_member_view"])) || ((isset($PROCESSED["allow_member_view"])) && ($PROCESSED["allow_member_view"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																</tr>
+																<?php if (!(int) $community_details["community_registration"]) : ?>
+																<tr>
+																	<td>
+																		<strong>Browsing Non-Members</strong>
+																	</td>
+																	<td class="on">
+																		<input type="checkbox" id="allow_troll_view" name="allow_troll_view" value="1"<?php echo (((!isset($PROCESSED["allow_troll_view"])) || ((isset($PROCESSED["allow_troll_view"])) && ($PROCESSED["allow_troll_view"] == 1))) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																</tr>
+																<?php endif; ?>
+																<?php if (!(int) $community_details["community_protected"]) :  ?>
+																<tr>
+																	<td>
+																		<strong>Non-Authenticated / Public Users</strong>
+																	</td>
+																	<td class="on">
+																		<input type="checkbox" id="allow_public_view" name="allow_public_view" value="1"<?php echo (((isset($PROCESSED["allow_public_view"])) && ($PROCESSED["allow_public_view"] == 1)) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																</tr>
+																<?php endif; ?>
+															</tbody>
+														</table>
+													</td>
+												</tr>
+												<?php
+											}
+										} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "objectives") !== false) {
 										?>
-										<tr>
-											<td><label for="page_order" class="form-nrequired">Page Position:</label></td>
-											<td>
-												<select id="page_order" name="page_order" style="width: 304px" onchange="orderChange(this.value)">
-													<option value="no">Do Not Move Page</option>
-													<?php
-													if ((int) $PROCESSED["parent_id"]) {
-														?>
-														<optgroup label="&rarr; /<?php echo html_encode($PROCESSED["menu_title"]); ?>">
-														<?php
-													} else {
-														?>
-														<optgroup label="/">
-														<?php
-													}
-													?>
-													<option value="0">Appear First</option>
-													<?php
-													foreach ($results as $result) {
-														echo "<option value=\"".(((int) $result["page_order"]) + 1)."\">After &quot;".html_encode($result["menu_title"])."&quot;</option>\n";
-													}
-													?>
-													</optgroup>
-												</select>
-											</td>
-										</tr>
+												<tr>
+													<td colspan="2">
+														<br />
+														<div class="display-notice">
+															Please edit the Learning Objectives through the Manage Courses > Course Content tab found <a href="<?php echo ENTRADA_URL . "/admin/courses" ;?>">here</a>.
+														</div>
+													</td>
+												</tr>
 										<?php
-									}
-									?>
-									<tr>
-										<td><label for="page_visibile" class="form-nrequired">Page Visibility:</label></td>
-										<td>
-											<select id="page_visibile" name="page_visibile">
-												<option value="1"<?php echo (((int)$PROCESSED["page_visible"]) == 1 ? " selected=\"true\"" : ""); ?>>Show this page on menu</option>
-												<option value="0"<?php echo (((int)$PROCESSED["page_visible"]) == 0 ? " selected=\"true\"" : ""); ?>>Hide this page from menu</option>
-											</select>
-										</td>
-									</tr>
-									<?php
-								} elseif ($home_page) {
-								?>
-									<tr>
-										<td colspan="2" style="padding-top: 1em;">
-											<table class="page-options" style="width: 95%" cellspacing="0" cellpadding="0" border="0">
-											<colgroup>
-												<col style="width: 40%" />
-												<col style="width: 30%" />
-												<col style="width: 30%" />
-											</colgroup>
-											<thead>
+										} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "mcc_presentations") !== false) {
+										?>
 												<tr>
-													<td>Option</td>
-													<td style="border-left: none">Additional Options</td>
-													<td style="border-left: none">&nbsp;</td>
+													<td colspan="2">
+														<br />
+														<div class="display-notice">
+															Please edit the MCC Presentation Objectives through the Manage Courses > Course Content tab found <a href="<?php echo ENTRADA_URL . "/admin/courses" ;?>">here</a>.
+														</div>
+													</td>
 												</tr>
-											</thead>
-											<tbody>
+									    <?php
+										}
+										?>
+										<?php
+										if (($PAGE_TYPE == "url") || (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) || ($home_page && $PAGE_TYPE == "default")) {
+											?>
 												<tr>
-													<td class="left"><strong>Show New Announcements</strong></td>
-													<td class="on"><input type="checkbox" id="show_announcements" name="show_announcements" value="1"<?php echo (((isset($page_options["show_announcements"]["option_value"])) && (((int)$page_options["show_announcements"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-													<td>&nbsp;</td>
+													<td colspan="2"><h2>Page Options</h2></td>
+												</tr>
+											<?php
+										}
+										if ($PAGE_TYPE == "url") {
+										?>
+												<tr>
+													<td colspan="2">
+														<table class="table table-striped table-bordered">
+															<colgroup>
+																<col style="width: 50%" />
+																<col style="width: 50%" />
+															</colgroup>
+															<thead>
+																<tr>
+																	<td>Additional Options</td>
+																	<td>Status</td>
+																</tr>
+															</thead>
+															<tbody>
+																<tr>
+																	<td><strong>Open page in new window.</strong></td>
+																	<td class="on">
+																		<input type="checkbox" id="new_window" name="new_window" value="1"<?php echo (((isset($page_options["new_window"]["option_value"])) && (((int)$page_options["new_window"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
+												</tr>
+										<?php
+										} else if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1") { ?>
+												<tr>
+													<td>
+														<label for="show_left_nav" class="form-nrequired">Show Left Navigation</label>
+													</td>
+													<td>
+														<input id="show_left_nav" name="show_left_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_previous_nav"]) || ((int) $PROCESSED["page_navigation"]["show_previous_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
+														<input class="btn" id="change_previous_nav_button" name="change_previous_nav_button" type="button" value="Previous Page" />
+														<input type="hidden" name="selected_nav_previous_page_id" id="selected_nav_previous_page_id" <?php echo (isset($nav_previous_page_id) && $nav_previous_page_id ? "value = \"" . $nav_previous_page_id . "\"" : "value = \"" . (isset($default_previous_page["cpage_id"]) && $default_previous_page["cpage_id"] ? $default_previous_page["cpage_id"] : "")) . "\"" ?> />
+													</td>
 												</tr>
 												<tr>
-													<td class="left"><strong>Show Upcoming Events</strong></td>
-													<td class="on"><input type="checkbox" id="show_events" name="show_events" value="1"<?php echo (((isset($page_options["show_events"]["option_value"])) && (((int)$page_options["show_events"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-													<td>&nbsp;</td>
-												</tr>												<tr>
-													<td class="left"><strong>Show Community History</strong></td>
-													<td class="on"><input type="checkbox" id="show_history" name="show_history" value="1"<?php echo (((isset($page_options["show_history"]["option_value"])) && (((int)$page_options["show_history"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-													<td>&nbsp;</td>
+													<td>
+														<label for="show_right_nav" class="form-nrequired">Show Right Navigation</label>
+													</td>
+													<td>
+														<input id="show_right_nav" name="show_right_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_next_nav"]) || ((int) $PROCESSED["page_navigation"]["show_next_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
+														<input class="btn" id="change_next_nav_button" name="change_next_nav_button" type="button" value="Next Page" />
+														<input type="hidden" name="selected_nav_next_page_id" id="selected_nav_next_page_id" <?php echo (isset($nav_next_page_id) && $nav_next_page_id ? "value = \"" . $nav_next_page_id . "\"" : "value = \"" . $default_next_page["cpage_id"] . "\"") ?> />
+													</td>
 												</tr>
-											</tbody>
-											</table>
-										</td>
-									</tr>
-								<?php
-								}
-								?>
-							</tbody>
-							</table>
-							<div id="modal_page_navigation" style="display: none; text-align: left;">
-								<?php echo communities_pages_inradio(0, 0, array('id'=>'next_page_list', "nav_type" => "next", "selected" => (isset($nav_next_page_id) && $nav_next_page_id ? $nav_next_page_id : $default_next_page["cpage_id"]))); ?>
-							</div>
-							<div id="modal_previous_page_navigation" style="display: none; text-align: left;">
-								<?php echo communities_pages_inradio(0, 0, array('id'=>'previous_page_list', "nav_type" => "previous", "selected" => (isset($nav_previous_page_id) && $nav_previous_page_id ? $nav_previous_page_id : (isset($default_previous_page["cpage_id"]) && $default_previous_page["cpage_id"] ? $default_previous_page["cpage_id"] : "")))); ?>
-							</div>
+										<?php
+										}
+
+										if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
+											$query		= "SELECT `cpage_id`, `page_order`, `menu_title` FROM `community_pages` WHERE `cpage_id` <> ".$db->qstr($PAGE_ID)." AND `parent_id` = ".$db->qstr($PROCESSED["parent_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` != '' AND `page_type` != 'course' ORDER BY `page_order` ASC";
+											$results	= $db->GetAll($query);
+											if ($results) {
+												?>
+												<tr>
+													<td style="vertical-align: middle">
+														<label for="page_order" class="form-nrequired">Page Position:</label>
+													</td>
+													<td style="vertical-align: middle">
+														<select id="page_order" name="page_order" style="width: 312px" onchange="orderChange(this.value)">
+															<option value="no">Do Not Move Page</option>
+															<?php
+															if ((int) $PROCESSED["parent_id"]) {
+																?>
+																<optgroup label="&rarr; /<?php echo html_encode($PROCESSED["menu_title"]); ?>">
+																<?php
+															} else {
+																?>
+																<optgroup label="/">
+																<?php
+															}
+															?>
+															<option value="0">Appear First</option>
+															<?php
+															foreach ($results as $result) {
+																echo "<option value=\"".(((int) $result["page_order"]) + 1)."\">After &quot;".html_encode($result["menu_title"])."&quot;</option>\n";
+															}
+															?>
+															</optgroup>
+														</select>
+													</td>
+												</tr>
+												<?php
+											}
+											?>
+												<tr>
+													<td><label for="page_visibile" class="form-nrequired">Page Visibility:</label></td>
+													<td>
+														<select id="page_visibile" name="page_visibile" style="width: 312px">
+															<option value="1"<?php echo (((int)$PROCESSED["page_visible"]) == 1 ? " selected=\"true\"" : ""); ?>>Show this page on menu</option>
+															<option value="0"<?php echo (((int)$PROCESSED["page_visible"]) == 0 ? " selected=\"true\"" : ""); ?>>Hide this page from menu</option>
+														</select>
+													</td>
+												</tr>
+											<?php
+										} elseif ($home_page) {
+										?>
+												<tr>
+													<td colspan="2">
+														<table class="table table-striped table-bordered">
+															<colgroup>
+																<col style="width: 50%" />
+																<col style="width: 50%" />
+															</colgroup>
+															<thead>
+																<tr>
+																	<td>Option</td>
+																	<td>Additional Options</td>
+																</tr>
+															</thead>
+															<tbody>
+																<tr>
+																	<td>
+																		<strong>Show New Announcements</strong>
+																	</td>
+																	<td class="on">
+																		<input type="checkbox" id="show_announcements" name="show_announcements" value="1"<?php echo (((isset($page_options["show_announcements"]["option_value"])) && (((int)$page_options["show_announcements"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<strong>Show Upcoming Events</strong>
+																	</td>
+																	<td class="on"><input type="checkbox" id="show_events" name="show_events" value="1"<?php echo (((isset($page_options["show_events"]["option_value"])) && (((int)$page_options["show_events"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
+																</tr>												<tr>
+																	<td>
+																		<strong>Show Community History</strong>
+																	</td>
+																	<td class="on">
+																		<input type="checkbox" id="show_history" name="show_history" value="1"<?php echo (((isset($page_options["show_history"]["option_value"])) && (((int)$page_options["show_history"]["option_value"]) == 1)) ? " checked=\"checked\"" : ""); ?> />
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
+												</tr>
+											<?php
+										}
+										?>
+									</tbody>
+								</table>
+								<div id="modal_page_navigation" style="display: none; text-align: left;">
+									<?php echo communities_pages_inradio(0, 0, array('id'=>'next_page_list', "nav_type" => "next", "selected" => (isset($nav_next_page_id) && $nav_next_page_id ? $nav_next_page_id : $default_next_page["cpage_id"]))); ?>
+								</div>
+								<div id="modal_previous_page_navigation" style="display: none; text-align: left;">
+									<?php echo communities_pages_inradio(0, 0, array('id'=>'previous_page_list', "nav_type" => "previous", "selected" => (isset($nav_previous_page_id) && $nav_previous_page_id ? $nav_previous_page_id : (isset($default_previous_page["cpage_id"]) && $default_previous_page["cpage_id"] ? $default_previous_page["cpage_id"] : "")))); ?>
+								</div>
 							</form>
 							<?php
 						break;

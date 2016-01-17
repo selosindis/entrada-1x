@@ -18,5 +18,18 @@
             <field name="active">1</field>
         </row>
     </table_data>
+	<table_data name="evaluation_forms">
+		<row>
+			<field name="eform_id">1</field>
+			<field name="organisation_id">1</field>
+			<field name="target_id">8</field>
+			<field name="form_parent">0</field>
+			<field name="form_title">Test Self Assessment</field>
+			<field name="form_description">Test Self Assessment</field>
+			<field name="form_active">1</field>
+			<field name="updated_date">1445613717</field>
+			<field name="updated_by">2</field>
+		</row>
+	</table_data>
 </database>
 </mysqldump>

@@ -350,6 +350,9 @@ class Calendar {
 			foreach ($this->events[$yyyymmdd] as $event) {
 				if (is_array($events[$event["order"]])) {
 					$order = ($event["order"] + 1);
+                    while (is_array($events[$order])) {
+                        $order++;
+                    }
 				} else {
 					$order = $event["order"];	
 				}

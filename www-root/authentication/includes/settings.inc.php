@@ -40,6 +40,7 @@ define("LDAP_HOST", "ldap.yourschool.ca");										// The hostname of your LDAP
 define("LDAP_BASE_DN", "ou=people,dc=queensu,dc=ca");							// The BaseDN of your LDAP server.
 define("LDAP_SEARCH_DN", "uid=readonly,ou=people,dc=yourschool,dc=ca");			// The LDAP username that is used to search LDAP tree for the member attribute.
 define("LDAP_SEARCH_DN_PASS", "");												// The LDAP password for the SearchDN above. These fields are optional.
+define("LDAP_QUERYMEMBER_ATTR", "uid");                              //The member attribute used to query within the LDAP_BASE_DN. Normal values: uid or sAMAccountName, depending on variety of LDAP (sAMAccountName is MS AD version).
 define("LDAP_MEMBER_ATTR", "UniUid");											// The member attribute used to identify the users unique LDAP ID.
 define("LDAP_USER_QUERY_FIELD", "UniCaPKey");									// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
 define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : This field allows you to specify which local user_data field is used to search for a valid username.

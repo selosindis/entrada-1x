@@ -166,6 +166,11 @@ class Models_Event extends Models_Base {
         return $this->updated_by;
     }
     
+    public function getOrganisationID() {
+        $course = Models_Course::get($this->course_id);
+        return $course->getOrganisationID();
+    }
+    
     public static function get($event_id = null) {
         $self = new self();
         return $self->fetchRow(array("event_id" => $event_id));

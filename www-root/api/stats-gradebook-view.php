@@ -59,7 +59,7 @@ if($ASSESSMENT_ID) {
             $modal_onload[]= "closeWizard()";
 
             $ERROR++;
-            $ERRORSTR[]= $query."Your MEdTech account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.";
+            $ERRORSTR[]= $query."Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact us for assistance.";
 
             echo display_error();
 

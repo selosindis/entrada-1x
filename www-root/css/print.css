@@ -2,7 +2,7 @@ div.printing-enabled,.yes-printing,div.print-only {
 display:block;
 }
 
-#navigator-container,#main-header,div.printing-disabled,.no-printing,div.bread-crumb-trail {
+#main-header,div.printing-disabled,.no-printing,div.bread-crumb-trail {
 display:none;
 }
 

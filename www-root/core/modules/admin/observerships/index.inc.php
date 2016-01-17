@@ -103,7 +103,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 						<tbody>
 				<?php
 				foreach ($observerships as $observership) {
-					$student = User::get($observership->getStudentID());
+					$student = User::fetchRowByID($observership->getStudentID());
 					echo "<tr>\n";
 					echo "<td><input type=\"checkbox\" name=\"status[".$observership->getId()."]\" /></td>\n";
 					echo "<td><a href=\"".ENTRADA_URL."/admin/users/manage/students?section=observerships&id=".$student->getID()."\">".$student->getFullname(false)."</a></td>\n";

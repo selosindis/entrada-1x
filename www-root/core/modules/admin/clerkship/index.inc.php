@@ -262,7 +262,14 @@ if (!defined("IN_CLERKSHIP")) {
 							} else {
 								$query_name = trim($_GET["name"]);
 							}
-							$query	= "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`user_access`.`role` AS `gradyear` FROM `".AUTH_DATABASE."`.`user_data` LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id` WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."' AND CONCAT(`".AUTH_DATABASE."`.`user_data`.`firstname`, `".AUTH_DATABASE."`.`user_data`.`lastname`) LIKE '%".checkslashes(trim($query_name))."%' AND `group`='student' ORDER BY `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname` ASC";
+                            $query	= "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`grad_year` AS `gradyear`
+                                        FROM `".AUTH_DATABASE."`.`user_data` AS a
+                                        LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                                        ON b.`user_id` = a.`id`
+                                        WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                                        AND CONCAT_WS(' ', a.`firstname`, a.`lastname`) LIKE ".($db->qstr("%".trim($query_name)."%"))."
+                                        AND `group` = 'student'
+                                        ORDER BY a.`lastname`, a.`firstname` ASC";
 							$results	= $db->GetAll($query);
 							if ($results) {
 								$counter	= 0;

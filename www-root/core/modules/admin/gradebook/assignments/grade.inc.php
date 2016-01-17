@@ -199,7 +199,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     ?>
                 </div>
 				<div class="clearfix"></div>
-
 				<?php				
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
 				if ($students && !empty($students)) {
@@ -435,7 +434,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     $grades = array(0,0,0,0,0,0,0,0,0,0,0);
 
                                     $sum = 0;
-
                                     $entered = 0;
                                     $unentered = 0;
 

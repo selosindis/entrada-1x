@@ -32,8 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 } elseif (!$ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getActiveOrganisation()), 'update', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -73,8 +72,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			if ((isset($_POST["prefix"])) && ($group_prefix = clean_input($_POST["prefix"], array("notags", "trim")))) {
 				$PROCESSED["group_name"] = $group_prefix;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Group Prefix</strong> field is required.";
+				add_error("The <strong>Group Prefix</strong> field is required.");
 			}
 
 			/**
@@ -87,8 +85,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				switch($group_type) {
 					case "individual" :
 						if (!((isset($_POST["group_number"])) && ($number_of_groups = clean_input($_POST["group_number"], array("trim", "int"))))) {
-							$ERROR++;
-							$ERRORSTR[] = "A <strong>Number of Groups</strong> value is required.";
+							add_error("A <strong>Number of Groups</strong> value is required.");
 						}
 					break;
 					case "populated" :
@@ -101,29 +98,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						} else {
 							$PROCESSED["group_audience_type"] = $audience_type;
 						}
-						/**
-						 * If the audience is custom sets $groups variable to false, or an array of group ids. Used to fetch course members for each group further down.
-						 */
-						if ($audience_type == 'custom') {
-							if(!isset($_POST["group_audience_cohorts"]) || !$cohorts = clean_input($_POST["group_audience_cohorts"],array("trim"))){
+
+						if ($audience_type == "course") {
+							if (!isset($_POST["cperiod_id"]) || !$cperiod_id = clean_input($_POST["cperiod_id"], array("trim"))) {
+								add_error("You selected all learners enrolled in " . $course_details["course_code"] . " to prepopulate the groups from but did not select an enrolment period.");
+							}
+						} else {
+							/**
+							 * If the audience is custom sets $groups variable to false, or an array of group ids. Used to fetch course members for each group further down.
+							 */
+							if (!isset($_POST["group_audience_cohorts"]) || !$cohorts = clean_input($_POST["group_audience_cohorts"], array("trim"))) {
 								add_error("You selected a custom audience to prepopulate the groups from but did not select any groups.");
 								$groups = false;
 							} else {
-								$split_cohorts = explode(",",$cohorts);
+								$split_cohorts = explode(",", $cohorts);
 								if (!$split_cohorts || empty($split_cohorts)) {
 									add_error("You selected a custom audience to prepopulate the groups from but did not select any groups.");
-									$groups = false;									
+									$groups = false;
 								} else {
 									$groups = array();
-									foreach($split_cohorts as $cohort){
+									foreach ($split_cohorts as $cohort) {
 										$groups[] = substr($cohort, 6);
 										$PROCESSED["associated_cohort_ids"][] = substr($cohort, 6);
 									}
 								}
-								
+
 							}
 						}
-						
+
 						if (!((isset($_POST["number"])) && ($number_of_groups = clean_input($_POST["number"], array("trim", "int"))))) {
 							$number_of_groups = 0;
 						}
@@ -136,37 +138,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 							switch($group_populate) {
 								case "group_number" :
 									if (!$number_of_groups) {
-										$ERROR++;
-										$ERRORSTR[] = "A value for <strong>Number of Groups</strong> is required.";
+										add_error("A value for <strong>Number of Groups</strong> is required.");
 									}
 								break;
 								case "group_size" :
 									if (!$size_of_groups) {
-										$ERROR++;
-										$ERRORSTR[] = "A value for <strong>Group size</strong> is required.";
+										add_error("A value for <strong>Group size</strong> is required.");
 									}
 								break;
 								default:
-									$ERROR++;
-									$ERRORSTR[] = "Unable to proceed because the <strong>Groups</strong> style is unrecognized.";
+									add_error("Unable to proceed because the <strong>Groups</strong> style is unrecognized.");
 								break;
 							}
 						} else {
-							$ERROR++;
-							$ERRORSTR[] = "Unable to proceed because the <strong>Groups</strong> style is unrecognized.";
+							add_error("Unable to proceed because the <strong>Groups</strong> style is unrecognized.");
 						}
 						$populate = 1;
 					break;
 					default :
-						$ERROR++;
-						$ERRORSTR[] = "Unable to proceed because the <strong>Grouping</strong> type is unrecognized.";
+						add_error("Unable to proceed because the <strong>Grouping</strong> type is unrecognized.");
 
 						application_log("error", "Unrecognized group_type [".$_POST["group_type"]."] encountered.");
 					break;
 				}
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "Unable to proceed because the <strong>Grouping</strong> type is unrecognized.";
+				add_error("Unable to proceed because the <strong>Grouping</strong> type is unrecognized.");
 
 				application_log("error", "The group_type field has not been set.");
 			}
@@ -220,12 +216,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				if ($number_of_groups == 1) {
 					$result = $db->GetRow("SELECT `cgroup_id` FROM `course_groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"])." AND `course_id` = ".$db->qstr($COURSE_ID));
 					if ($result) {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Group name</strong> already exists. The group was not created";
+						add_error("The <strong>Group name</strong> already exists. The group was not created");
 					} else {
 						if (!$db->AutoExecute("course_groups", $PROCESSED, "INSERT")) {
-							$ERROR++;
-							$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
+							add_error("There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.");
 							application_log("error", "Unable to insert a new group ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
 						}
 						$GROUP_IDS[] = $db->Insert_Id();
@@ -240,19 +234,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 							 * Sets the audience_members to the audience of the course at the time the groups are being made.
 							 * Also sets $students to the number of results.
 							 */
-							$audience_members = course_fetch_course_audience($COURSE_ID);
+                            if (isset($course_details) && isset($cperiod_id)) {
+                                $course = new Models_Course();
+                                $course->fromArray($course_details);
+
+                                if ($course) {
+                                    $course_audience = $course->getMembers($cperiod_id);
+
+                                    if ($course_audience) {
+                                        $audience_members = array();
+
+                                        foreach ($course_audience as $type => $audience_type_members) {
+                                            if ($type == "groups") {
+                                                foreach ($audience_type_members as $audience) {
+                                                    foreach ($audience as $audience_member) {
+                                                        $audience_members[] = array("id" => $audience_member->getProxyId());
+                                                    }
+                                                }
+                                            } else {
+                                                foreach ($audience_type_members as $audience_member) {
+                                                    $audience_members[] = array("id" => $audience_member->getProxyId());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
 							$students = count($audience_members);
 						} else {
 							$query	= "	SELECT a.`id`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+										JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON a.`id` = b.`user_id`
 										JOIN `group_members` c
 										ON a.`id` = c.`proxy_id`
 										AND c.`group_id` IN(".implode(",",$groups).")
 										AND c.`member_active` = '1'
 										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")					
-										AND b.`group` = 'student'										
 										AND b.`account_active` = 'true'
 										AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 										AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
@@ -268,19 +286,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					$dfmt = "%0".strlen((string) $number_of_groups)."d";
 
 					$result = false;
-					for ($i=1;$i<=$number_of_groups&&!$result;$i++){
+					for ($i = 1; $i <= $number_of_groups && !$result; $i++) {
                         $result = $db->GetRow("SELECT `cgroup_id` FROM `course_groups` WHERE `group_name` = ".$db->qstr($prefix.sprintf($dfmt,$i))." AND `course_id` = ".$db->qstr($COURSE_ID))?true:$result;    
 					}
 					if ($result) {
-						$ERROR++;
-						$ERRORSTR[] = "A <strong>Group name</strong> already exists. The groups were not created";
+						add_error("A <strong>Group name</strong> already exists. The groups were not created");
 					} else {
-						for ($i=1;$i<=$number_of_groups;$i++) {
+						for ($i = 1; $i <= $number_of_groups; $i++) {
 							$PROCESSED["group_name"] = $prefix.sprintf($dfmt,$i);
 							$PROCESSED["active"] = 1;
 							if (!$db->AutoExecute("course_groups", $PROCESSED, "INSERT")) {
-								$ERROR++;
-								$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
+								add_error("There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.");
 								application_log("error", "Unable to insert a new group ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
 								break;
 							}
@@ -291,27 +307,47 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				if ($populate) {
 					unset($PROCESSED["group_name"]);
 					$PROCESSED["active"] = 1;
-					if ($audience_type == "course") {
+					if (!isset($audience_members) || !$audience_members) {
 						/**
 						 * if somehow the audience wasn't populated above, populate it here.
 						 */
-						if(!isset($audience_members) || !$audience_members){
-							$audience_members = course_fetch_course_audience($COURSE_ID);
-						}
-					} else {
-						/**
-						 * if somehow the audience wasn't populated above, populate it here.
-						 */						
-						if(!isset($audience_members) || !$audience_members){
+						if ($audience_type == "course") {
+							if (isset($course_details) && isset($cperiod_id)) {
+								$course = new Models_Course();
+								$course->fromArray($course_details);
+
+								if ($course) {
+									$course_audience = $course->getMembers($cperiod_id);
+
+									if ($course_audience) {
+										$audience_members = array();
+
+										foreach ($course_audience as $type => $audience_type_members) {
+                                            if ($type == "groups") {
+                                                foreach ($audience_type_members as $audience) {
+                                                    foreach ($audience as $audience_member) {
+                                                        $audience_members[] = array("id" => $audience_member->getProxyId());
+                                                    }
+                                                }
+                                            } else {
+                                                foreach ($audience_type_members as $audience_member) {
+                                                    $audience_members[] = array("id" => $audience_member->getProxyId());
+                                                }
+                                            }
+										}
+									}
+								}
+							}
+						} else {
 							$query	= "	SELECT a.`id`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+										JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON a.`id` = b.`user_id`
 										JOIN `group_members` c
 										ON a.`id` = c.`proxy_id`
 										AND c.`group_id` IN(".implode(",",$groups).")
 										AND c.`member_active` = '1'
-										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")					
+										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										AND b.`account_active` = 'true'
 										AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 										AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
@@ -319,10 +355,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										AND (c.`finish_date` = '0' OR c.`finish_date` > ".$db->qstr(time()).")
 										GROUP BY a.`id`
 										ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-							$audience_members = $db->GetAll($query);							
+							$audience_members = $db->GetAll($query);
 						}
 					}
-					$results = $db->GetAll($query);
 
 					$i = 0;
 					if ($audience_members) {
@@ -332,8 +367,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 							$PROCESSED["cgroup_id"] =  $GROUP_IDS[$i];
 							$i++;
 							if (!$db->AutoExecute("course_group_audience", $PROCESSED, "INSERT")) {
-								$ERROR++;
-								$ERRORSTR[] = "There was an error while trying to add an audience member to the database.<br /><br />The system administrator was informed of this error; please try again later.";
+								add_error("There was an error while trying to add an audience member to the database.<br /><br />The system administrator was informed of this error; please try again later.");
 								application_log("error", "Unable to insert a new group member ".$PROCESSED["proxy_id"].". Database said: ".$db->ErrorMsg());
 								break;
 							}
@@ -360,15 +394,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						break;
 					}
 	
-					$SUCCESS++;
-					$SUCCESSSTR[] = "You have successfully added <strong>".$number_of_groups." course groups</strong> to the system.<br /><br />".$msg;
+					add_success("You have successfully added <strong>".$number_of_groups." course groups</strong> to the system.<br /><br />".$msg);
 					$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 	
 					application_log("success", "New course groups added for course [".$COURSE_ID."] added to the system.");
 				}
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "There was a problem inserting group into the system. The system administrator was informed of this error; please try again later.";
+				add_error("There was a problem inserting group into the system. The system administrator was informed of this error; please try again later.");
 
 				application_log("error", "There was an error inserting a group. Database said: ".$db->ErrorMsg());
 			}
@@ -398,100 +430,100 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			}
 
 			?>
-			<form id="frmSubmit" action="<?php echo ENTRADA_URL; ?>/admin/courses/groups?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addGroupForm">
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Group">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 20%" />
-						<col style="width: 77%" />
-					</colgroup>
-					<tr>
-						<td colspan="3"><h3>Group Details</h3></td>
-					</tr>
-					<tr class="prefixR">
-						<td></td>
-						<td><label for="prefix" class="form-required">Group Prefix</label></td>
-						<td><input type="text" id="prefix" name="prefix" value="<?php echo (isset($PROCESSED["group_name"]) && $PROCESSED["group_name"] ? html_encode($PROCESSED["group_name"]) : ""); ?>" maxlength="255" style="width: 45%" /></td>
-					</tr>
-					<tr>
-						<td colspan="2">&nbsp;</td>
-						<td>
-							<div class="content-small">This will be used as the first portion of the default name for the groups created, with the second portion being which number the group is (eg. For the prefix "small group" the first 3 groups created would be named: small group 1, small group 2 and small group 3).</div>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top"><input type="radio" name="group_type" id="group_type_individual" value="individual" onclick="selectgroupOption('individual',0)" style="vertical-align: middle"<?php echo (($group_type == "individual") ? " checked=\"checked\"" : ""); ?> /></td>
-						<td colspan="2" style="padding-bottom: 15px">
-							<label for="group_type_individual" class="radio-group-title">Empty Groups</label>
-							<div class="content-small">These groups will be created without any members, then you may add whichever members you require on the next screen.</div>
-						</td>
-					</tr>
-					<tr class="group_members individual_members">
-						<td></td>
-						<td style="vertical-align: top; text-align: left"><label for="number_of_groups" class="form-required">Number of Groups</label></td>
-						<td><input type="text" id="empty_group_number" name="group_number" value="<?php echo html_encode($number_of_groups); ?>" maxlength="10" style="width: 15%" />
-							<span class="content-small">   For a single group the Group Prefix is the Group name.</span>
-						</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top"><input type="radio" name="group_type" id="group_type_populated" value="populated" onclick="selectgroupOption('populated',0)" style="vertical-align: middle"<?php echo (($group_type == "populated") ? " checked=\"checked\"" : ""); ?> /></td>
-						<td colspan="2" style="padding-bottom: 15px">
-							<label for="group_type_populated" class="radio-group-title">Prepopulated Groups</label>
-							<div class="content-small">These groups will be prepopulated with a number of users based on either the number of groups, or the explicit maximum group size.</div>
-						</td>
-					</tr>
-				<?php
-					$PROCESSED["course_id"] = $COURSE_ID;
-					if (isset($PROCESSED["course_id"]) && $PROCESSED["course_id"]) {
-						require_once(ENTRADA_ABSOLUTE."/core/modules/admin/courses/groups/api-audience-options.inc.php");
-					}
-					?>									
-					
-					<tr class="group_members populated_members">
-						<td></td>
-						<td><label class="form-required">Populate based on</label></td>
-						<td>
-							<div style="display: inline-block; width: 180px;">
-								<input type="radio" onchange="toggleGroupTextbox()" name="group_populate" id="group_populate_group_number" value="group_number" <?php echo (!isset($group_populate) || ($group_populate == "group_number") ? " checked=\"checked\"" : ""); ?> />
-								<label for="group_number" class="form-nrequired">Number of Groups</label>
-							</div>
-							<input type="text" id="group_number" name="number" value="<?php echo html_encode($number_of_groups); ?>"  style="width: 50px<?php echo (!isset($group_populate) || ($group_populate == "group_number") ? "" : "; display: none;"); ?>" />
-						</td>
-					</tr>
-					<tr class="group_members populated_members">
-						<td colspan="2">&nbsp;</td>
-						<td>
-							<div style="display: inline-block; width: 180px;">
-								<input type="radio" onchange="toggleGroupTextbox()" name="group_populate" id="group_populate_group_size" value="group_size" <?php echo (($group_populate == "group_size") ? " checked=\"checked\"" : ""); ?> />
-								<label for="group_size" class="form-nrequired">Group Size</label>
-							</div>
-							<input type="text" id="group_size" name="size" value="<?php echo html_encode($number_of_groups); ?>"  style="width: 50px<?php echo (($group_populate == "group_size") ? "" : "; display: none;"); ?>" />
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3" style="padding-top: 25px">
-							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-								<tr>
-									<td style="width: 25%; text-align: left">
-										<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses/groups?id=<?php echo $COURSE_ID; ?>'" />
-									</td>
-									<td style="width: 75%; text-align: right; vertical-align: middle">
-										<span class="content-small">After saving:</span>
-										<select id="post_action" name="post_action">
-											<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add members to group(s)</option>
-											<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add additional group(s)</option>
-											<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to group list</option>
-										</select>
-										<input type="submit" class="btn btn-primary" value="Proceed" />
-									</td>
-								</tr>
-							</table>
-						</td>
-					</tr>
-				</table>
+			<form id="frmSubmit" class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/courses/groups?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addGroupForm">
+				<h3>Group Details</h3>
+
+                <div class="control-group">
+                    <label class="control-label form-required" for="prefix">Group Name Prefix</label>
+
+                    <div class="controls">
+                        <input type="text" id="prefix" name="prefix" class="span8" value="<?php echo (isset($PROCESSED["group_name"]) && $PROCESSED["group_name"] ? html_encode($PROCESSED["group_name"]) : ""); ?>" maxlength="255"/>
+                        <div class="content-small" style="margin-top: 10px">This will be used as the first portion of the default name for the groups created, with the second portion being which number the group is (eg. For the prefix "small group" the first 3 groups created would be named: small group 1, small group 2 and small group 3).</div>
+                    </div>
+                </div>
+
+                <label class="control-label form-required">Group Type</label>
+
+                <div class="control-group">
+                    <div class="controls">
+                        <label class="radio radio-group-title" for="group_type_individual">
+                            <input type="radio" name="group_type" id="group_type_individual" value="individual" onclick="selectgroupOption('individual', 0)"<?php echo (($group_type == "individual") ? " checked=\"checked\"" : ""); ?> />
+                            &nbsp;Empty Groups
+                        </label>
+
+                        <div class="content-small">These groups will be created without any members, then you may add whichever members you require on the next screen.</div>
+
+                        <br />
+
+                        <div class="control-group group_members individual_members">
+                            <label class="control-label form-required" for="empty_group_number">Number of Groups</label>
+
+                            <div class="controls">
+                                <input type="text" id="empty_group_number" name="group_number" style="width: 50px;" value="<?php echo html_encode($number_of_groups); ?>" maxlength="10"/>
+                            </div>
+                        </div>
+
+                        <label class="radio radio-group-title" for="group_type_populated">
+                            <input type="radio" name="group_type" id="group_type_populated" value="populated" onclick="selectgroupOption('populated', 0)" <?php echo (($group_type == "populated") ? " checked=\"checked\"" : ""); ?> />
+                            &nbsp;Prepopulated Groups
+                        </label>
+
+                        <div class="content-small">These groups will be prepopulated with a number of users based on either the number of groups, or the explicit maximum group size.</div>
+
+                        <br />
+
+                        <div class="group_members populated_members">
+                            <?php
+                            $PROCESSED["course_id"] = $COURSE_ID;
+                            if (isset($PROCESSED["course_id"]) && $PROCESSED["course_id"]) {
+                                require_once(ENTRADA_ABSOLUTE."/core/modules/admin/courses/groups/api-audience-options.inc.php");
+                            }
+                            ?>
+
+                            <label class="control-label form-required">Populate based on</label>
+
+                            <div class="control-group">
+                                <div class="controls">
+                                    <label class="radio pull-left space-right span5" for="group_populate_group_number">
+                                        <input type="radio" name="group_populate" id="group_populate_group_number" value="group_number" onclick="toggleGroupTextbox()" <?php echo (!isset($group_populate) || ($group_populate == "group_number") ? " checked=\"checked\"" : ""); ?> />
+                                        &nbsp;Number of Groups
+                                    </label>
+
+                                    <input type="text" id="group_number" class="pull-left" name="number" value="<?php echo html_encode($number_of_groups); ?>"  style="width: 50px<?php echo (!isset($group_populate) || ($group_populate == "group_number") ? "" : "; display: none;"); ?>" />
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <div class="controls">
+                                    <label class="radio pull-left space-right span5" for="group_populate_group_size">
+                                        <input type="radio" name="group_populate" id="group_populate_group_size" value="group_size" onclick="toggleGroupTextbox()" <?php echo (($group_populate == "group_size") ? " checked=\"checked\"" : ""); ?> />
+                                        &nbsp;Group Size
+                                    </label>
+
+                                    <input type="text" id="group_size" class="pull-left" name="size" value="<?php echo html_encode($number_of_groups); ?>"  style="width: 50px<?php echo (($group_populate == "group_size") ? "" : "; display: none;"); ?>" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row-fluid">
+                    <div class="pull-left">
+                        <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses/groups?id=<?php echo $COURSE_ID; ?>'" />
+                    </div>
+
+                    <div class="pull-right">
+                        <span class="content-small">After saving:</span>
+
+                        <select id="post_action" name="post_action">
+                            <option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add members to group(s)</option>
+                            <option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add additional group(s)</option>
+                            <option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to group list</option>
+                        </select>
+
+                        <input type="submit" class="btn btn-primary" value="Proceed" />
+                    </div>
+                </div>
 			</form>
 			<script type="text/javascript">
 				function selectgroupOption(type,files) {
@@ -513,11 +545,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				function toggleGroupTextbox () {
 					if ($('group_populate_group_size').checked) {
 						$('group_size').show();
+                        $('group_size').focus();
 						$('group_number').hide();
 					} else {
-						$('group_size').hide();
 						$('group_number').show();
-					}
+                        $('group_number').focus();
+                        $('group_size').hide();
+                    }
 				}
 			</script>
 			<script type="text/javascript">
@@ -640,10 +674,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			}
 
 			function selectGroupAudienceOption(type) {
-				if (type == 'custom' && !jQuery('#group_audience_type_custom_options').is(":visible")) {
-					jQuery('#group_audience_type_custom_options').slideDown();
-				} else if (type != 'custom' && jQuery('#group_audience_type_custom_options').is(":visible")) {
-					jQuery('#group_audience_type_custom_options').slideUp();
+				switch (type) {
+					case 'course' :
+						if (!jQuery('#group_audience_type_course_options').is(":visible")) {
+							jQuery('#group_audience_type_course_options').slideDown();
+							jQuery('#group_audience_type_custom_options').slideUp();
+						}
+					break;
+					case 'custom' :
+						if (!jQuery('#group_audience_type_custom_options').is(":visible")) {
+							jQuery('#group_audience_type_custom_options').slideDown();
+							jQuery('#group_audience_type_course_options').slideUp();
+						}
+					break;
 				}
 			}
 			

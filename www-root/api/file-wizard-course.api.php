@@ -85,7 +85,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				$modal_onload[]	= "closeWizard()";
 
 				$ERROR++;
-				$ERRORSTR[]	= "Your MEdTech account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.";
+				$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact us for assistance.";
 
 				echo display_error();
 
@@ -145,7 +145,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													break;
 													case 6 :
 													case 7 :
-														$modal_onload[]		= "alert('Unable to store the new file on the server; the MEdTech Unit has been informed of this error, please try again later.')";
+														$modal_onload[]		= "alert('Unable to store the new file on the server. We have been informed of this error, please try again later.')";
 
 														$ERROR++;
 														$ERRORSTR[]		= "q5";
@@ -625,7 +625,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										break;
 										case 6 :
 										case 7 :
-											$modal_onload[]		= "alert('Unable to store the new file on the server; the MEdTech Unit has been informed of this error, please try again later.')";
+											$modal_onload[]		= "alert('Unable to store the new file on the server. We have been informed of this error, please try again later.')";
 
 											$ERROR++;
 											$ERRORSTR[]		= "q5";

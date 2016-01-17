@@ -46,6 +46,14 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	} else {
 		$type = "";
 	}
+    
+    if (isset($_POST["organisation_id"]) && ($tmp_input = (int)$_POST["organisation_id"])) {
+        $organisation_id = $tmp_input;
+    } else if (isset($_GET["organisation_id"]) && ($tmp_input = (int)$_GET["organisation_id"])) {
+        $organisation_id = $tmp_input;
+    } else {
+        $organisation_id = null;
+    }
 
 	if ($fullname) {
 		$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`, c.`organisation_title`, b.`group`
@@ -56,6 +64,9 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					ON c.`organisation_id` = b.`organisation_id`
 					WHERE CONCAT_WS(', ', a.`lastname`, a.`firstname`) LIKE ".$db->qstr("%".$fullname."%")."
 					AND (b.`group` <> 'guest')";
+        if ($organisation_id) {
+            $query .= " AND c.`organisation_id` = ".$db->qstr($organisation_id);
+        }
 		switch ($type) {
 			case "facultyorstaff":
 				$query .= "	AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer') OR b.`group` = 'staff' OR b.`group` = 'medtech')";

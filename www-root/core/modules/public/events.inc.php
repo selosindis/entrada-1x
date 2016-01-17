@@ -97,7 +97,7 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 
 		$sidebar_html  = "<ul class=\"menu none\">\n";
-		$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE."/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => false)) : "")."\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>Student View</span></a></li>\n";
+		$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE."/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => false)) : "")."\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>Learner View</span></a></li>\n";
 		if (($admin_wording) && ($admin_url)) {
 			$sidebar_html .= "<li><a href=\"".$admin_url."\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>".html_encode($admin_wording)."</span></a></li>\n";
 		}
@@ -165,21 +165,18 @@ if (!defined("PARENT_INCLUDED")) {
 					WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if (!$event_info) {
-			$ERROR++;
-			$ERRORSTR[] = "The requested learning event does not exist in the system.";
+			add_error("The requested learning event does not exist in the system.");
 
 			echo display_error();
 		} else {
 			$LASTUPDATED = $event_info["updated_date"];
 
 			if (($event_info["release_date"]) && ($event_info["release_date"] > time())) {
-				$ERROR++;
-				$ERRORSTR[] = "The event you are trying to view is not yet available. Please try again after ".date("r", $event_info["release_date"]);
+				add_error("The event you are trying to view is not yet available. Please try again after ".date("r", $event_info["release_date"]));
 
 				echo display_error();
 			} elseif (($event_info["release_until"]) && ($event_info["release_until"] < time())) {
-				$ERROR++;
-				$ERRORSTR[] = "The event you are trying to view is no longer available; it expired ".date("r", $event_info["release_until"]);
+				add_error("The event you are trying to view is no longer available; it expired ".date("r", $event_info["release_until"]));
 
 				echo display_error($errorstr);
 			} else {
@@ -203,12 +200,8 @@ if (!defined("PARENT_INCLUDED")) {
 					}
 
 					$event_resources = events_fetch_event_resources($EVENT_ID, "all");
-					$event_files = $event_resources["files"];
-					$event_links = $event_resources["links"];
-					$event_quizzes = $event_resources["quizzes"];
 					$event_discussions = $event_resources["discussions"];
 					$event_types = $event_resources["types"];
-                    $event_lti = $event_resources['lti'];
 
 					// Meta information for this page.
 					$PAGE_META["title"]			= $event_info["event_title"]." - ".APPLICATION_NAME;
@@ -223,11 +216,9 @@ if (!defined("PARENT_INCLUDED")) {
 					$include_resources			= true;
 					$include_comments			= true;
 
-					$icon_resources				= ((((is_array($event_files)) && (count($event_files))) || ((is_array($event_links)) && (count($event_links))) || ((is_array($event_quizzes)) && (count($event_quizzes)))) ? true : false);
 					$icon_discussion			= (((is_array($event_discussions)) && (count($event_discussions))) ? true : false);
 					$icon_course_website		= true;
 
-					$resources_title			= (($icon_resources) ? "Download or view the attached event resources." : "There are no event resources currently attached.");
 					$discussion_title			= (($icon_discussion) ? "Read the posted discussion comments." : "Start up a conversion, leave your comment!");
 					$syllabus_title				= "Visit Course Website";
 
@@ -286,48 +277,50 @@ if (!defined("PARENT_INCLUDED")) {
 					if ($transverse) {
 						$transversal_ids = events_fetch_transversal_ids($EVENT_ID, (isset($community_id) && $community_id ? $community_id : false));
 					}
-					echo "<div class=\"no-printing\">\n";
-					if ($transverse && is_array($transversal_ids) && !empty($transversal_ids)) {
-						$back_click = "";
-						$next_click = "";
-                        ?>
-                        <div class="btn-toolbar clearfix">
-                            <div class="btn-group span10">
-                                <?php
-                                if (isset($transversal_ids["prev"])) {
-                                    $back_click = ENTRADA_RELATIVE . "/events?" . replace_query(array((isset($_GET["drid"]) ? "drid" : "rid") => $transversal_ids["prev"]));
-
-                                    echo "<a class=\"btn\" id=\"back_event\" href=\"".$back_click."\" title=\"Previous Event\"><i class=\"icon-chevron-left\"></i></a>";
-                                } else {
-                                    echo "<a class=\"btn disabled\" id=\"back_event\" href=\"#\" title=\"Previous Event\"><i class=\"icon-chevron-left\"></i></a>";
-                                }
-                                ?>
-                                <div id="swipe-location" class="event-navbar-middle"><?php echo html_encode($event_info["event_title"]); ?></div>
-                                <?php
-                                if (isset($transversal_ids["next"])) {
-                                    $next_click = ENTRADA_RELATIVE . "/events?" . replace_query(array((isset($_GET["drid"]) ? "drid" : "rid") => $transversal_ids["next"]));
-
-                                    echo "<a class=\"btn\" id=\"next_event\" href=\"".$next_click."\" title=\"Next Event\"><i class=\"icon-chevron-right\"></i></a>";
-                                } else {
-                                    echo "<a class=\"btn disabled\" id=\"next_event\" href=\"#\" title=\"Next Event\"><i class=\"icon-chevron-right\"></i></a>";
-                                }
-                                ?>
-                            </div>
-                        </div>
+                    ?>
+					<div class="no-printing">
                         <?php
-					}
+                        if ($transverse && is_array($transversal_ids) && !empty($transversal_ids)) {
+                            $back_click = "";
+                            $next_click = "";
+                            ?>
+                            <div class="btn-toolbar clearfix">
+                                <div class="btn-group span10">
+                                    <?php
+                                    if (isset($transversal_ids["prev"])) {
+                                        $back_click = ENTRADA_RELATIVE . "/events?" . replace_query(array((isset($_GET["drid"]) ? "drid" : "rid") => $transversal_ids["prev"]));
+    
+                                        echo "<a class=\"btn\" id=\"back_event\" href=\"".$back_click."\" title=\"Previous Event\"><i class=\"icon-chevron-left\"></i></a>";
+                                    } else {
+                                        echo "<a class=\"btn disabled\" id=\"back_event\" href=\"#\" title=\"Previous Event\"><i class=\"icon-chevron-left\"></i></a>";
+                                    }
+                                    ?>
+                                    <div id="swipe-location" class="event-navbar-middle"><?php echo html_encode($event_info["event_title"]); ?></div>
+                                    <?php
+                                    if (isset($transversal_ids["next"])) {
+                                        $next_click = ENTRADA_RELATIVE . "/events?" . replace_query(array((isset($_GET["drid"]) ? "drid" : "rid") => $transversal_ids["next"]));
+    
+                                        echo "<a class=\"btn\" id=\"next_event\" href=\"".$next_click."\" title=\"Next Event\"><i class=\"icon-chevron-right\"></i></a>";
+                                    } else {
+                                        echo "<a class=\"btn disabled\" id=\"next_event\" href=\"#\" title=\"Next Event\"><i class=\"icon-chevron-right\"></i></a>";
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                            <?php
+                        }
+                        ?>
 
-					echo "	<div style=\"text-align: right; margin-top: 8px\">\n";
-					echo "		<a href=\"".ENTRADA_RELATIVE."/events?id=".$event_info["event_id"]."\"><img src=\"".ENTRADA_RELATIVE."/images/page-link.gif\" width=\"16\" height=\"16\" alt=\"Link to this page\" title=\"Link to this page\" border=\"0\" style=\"margin-right: 3px; vertical-align: middle\" /></a> <a href=\"".ENTRADA_RELATIVE."/events?id=".$event_info["event_id"]."\" style=\"font-size: 10px; margin-right: 8px\">Link to this page</a>\n";
-					echo "		<a href=\"javascript:window.print()\"><img src=\"".ENTRADA_RELATIVE."/images/page-print.gif\" width=\"16\" height=\"16\" alt=\"Print this page\" title=\"Print this page\" border=\"0\" style=\"margin-right: 3px; vertical-align: middle\" /></a> <a href=\"javascript: window.print()\" style=\"font-size: 10px; margin-right: 8px\">Print this page</a>\n";
-					echo "	</div>\n";
+                        <div class="pull-right">
+                            <i class="fa fa-link"></i> <a href="<?php echo ENTRADA_RELATIVE; ?>/events?id=<?php echo $event_info["event_id"]; ?>" class="space-right"><small>Link to this page</small></a>
+                            <i class="fa fa-print"></i> <a href="javascript: window.print()"><small>Print this page</small></a>
+                        </div>
+					</div>
 
-					echo "</div>\n";
+                    <div class="clearfix"></div>
+					<div class="content-small"><?php echo fetch_course_path($event_info["course_id"]); ?></div>
+					<h1 id="page-top" class="event-title"><?php echo html_encode($event_info["event_title"]); ?></h1>
 
-					echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
-					echo "<h1 id=\"page-top\" class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
-
-					?>
                     <script type="text/javascript">
                         var ajax_url = '';
                         var modalDialog;
@@ -374,16 +367,17 @@ if (!defined("PARENT_INCLUDED")) {
                             modalDialog.close();
                         }
                     </script>
+
                     <div class="row-fluid">
-                        <div class="span7">
+                        <div class="span8">
                             <?php
-                            if (clean_input($event_info["event_description"], array("notags", "nows")) != "") {
+                            if (clean_input($event_info["event_description"], array("allowedtags", "nows")) != "") {
                                 echo "<div class=\"event-description\">";
                                 echo trim(strip_selected_tags($event_info["event_description"], array("font")));
                                 echo "</div>";
                             }
 
-                            if (clean_input($event_info["event_message"], array("notags", "nows")) != "") {
+                            if (clean_input($event_info["event_message"], array("allowedtags", "nows")) != "") {
                                 echo "<div class=\"event-message\">\n";
                                 echo "	<h3>Required Preparation</h3>\n";
                                 echo	trim(strip_selected_tags($event_info["event_message"], array("font")));
@@ -391,7 +385,8 @@ if (!defined("PARENT_INCLUDED")) {
                             }
                             ?>
                         </div>
-                        <div class="span5">
+
+                        <div class="span4">
                             <table class="event-details">
                                 <tbody>
                                     <tr>
@@ -436,13 +431,11 @@ if (!defined("PARENT_INCLUDED")) {
                                             <tr>
                                                 <th>Teacher<?php echo (($count != 1) ? "s" : ""); ?></th>
                                                 <td>
-                                                    <ul class="menu">
                                                     <?php
                                                     foreach ($event_contacts["teacher"] as $contact) {
-                                                        echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
+                                                        echo "<a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a><br />\n";
                                                     }
                                                     ?>
-                                                    </ul>
                                                 </td>
                                             </tr>
                                             <?php
@@ -455,13 +448,11 @@ if (!defined("PARENT_INCLUDED")) {
                                             <tr>
                                                 <th>Tutor<?php echo (($count != 1) ? "s" : ""); ?></th>
                                                 <td>
-                                                    <ul class="menu">
                                                     <?php
                                                     foreach ($event_contacts["tutor"] as $contact) {
-                                                        echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
+                                                        echo "<a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a>\n";
                                                     }
                                                     ?>
-                                                    </ul>
                                                 </td>
                                             </tr>
                                             <?php
@@ -474,13 +465,11 @@ if (!defined("PARENT_INCLUDED")) {
                                             <tr>
                                                 <th>TA<?php echo (($count != 1) ? "s" : ""); ?></th>
                                                 <td>
-                                                    <ul class="menu">
                                                     <?php
                                                     foreach ($event_contacts["ta"] as $contact) {
-                                                        echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
+                                                        echo "<a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a><br />\n";
                                                     }
                                                     ?>
-                                                    </ul>
                                                 </td>
                                             </tr>
                                             <?php
@@ -493,13 +482,11 @@ if (!defined("PARENT_INCLUDED")) {
                                             <tr>
                                                 <th>Auditor<?php echo (($count != 1) ? "s" : ""); ?></th>
                                                 <td>
-                                                    <ul class="menu">
                                                     <?php
                                                     foreach ($event_contacts["auditor"] as $contact) {
-                                                        echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
+                                                        echo "<a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a><br />\n";
                                                     }
                                                     ?>
-                                                    </ul>
                                                 </td>
                                             </tr>
                                             <?php
@@ -515,16 +502,14 @@ if (!defined("PARENT_INCLUDED")) {
                                         <td>
                                             <?php
                                             if ($event_audience) {
-                                                ?>
-                                                <ul class="menu">
-                                                    <?php
-                                                    foreach ($event_audience as $audience) {
-                                                        $a = $audience->getAudience();
-                                                        if (is_array($a->getAudienceMembers())) {
+                                                foreach ($event_audience as $audience) {
+                                                    $a = $audience->getAudience();
+
+                                                    if ($a && method_exists($a, "getAudienceMembers") && is_array($a->getAudienceMembers())) {
                                                         $link = false;
                                                         switch ($audience->getAudienceType()) {
                                                             case "proxy_id" :
-                                                                $css_class = "user";
+                                                                $css_class = "fa fa-user";
                                                             break;
                                                             case "course_id" :
                                                             case "group_id" :
@@ -538,60 +523,64 @@ if (!defined("PARENT_INCLUDED")) {
                                                                         $link = true;
                                                                     }
                                                                 }
-                                                                $css_class = "group";
+                                                                $css_class = "fa fa-users";
                                                             break;
                                                             default:
-                                                                $css_class = "group";
+                                                                $css_class = "fa fa-users";
                                                             break;
                                                         }
+
                                                         if ($a) {
-                                                    ?>
-                                                        <li class="<?php echo $css_class; ?>"><?php if ($link) { ?><a href="#audience-<?php echo $audience->getEventAudienceID(); ?>" data-toggle="modal"><?php } echo $a->getAudienceName(); if ($link) { ?></a><?php } ?>
-                                                        <?php
-                                                        if ($a && $link && count($a->getAudienceMembers() > 0)) {
-                                                            ?>
-                                                            <div id="audience-<?php echo $audience->getEventAudienceID(); ?>" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-                                                                <div class="modal-header">
-                                                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                                                                    <h3 id="myModalLabel"><?php echo $a->getAudienceName(); ?> Group Members</h3>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <div class="row-fluid">
-                                                                    <?php 
-                                                                        $count = round(count($a->getAudienceMembers()) / 3);
-                                                                        $i = 0;
-                                                                        
-                                                                        echo "<div class=\"span4\"><ul class=\"menu\">\n";
-                                                                        foreach ($a->getAudienceMembers() as $member) {
-                                                                            if (($i == $count || $i == $count * 2) && $count != 0) {
-                                                                                echo "</ul></div><div class=\"span4\"><ul class=\"menu\">\n";
+                                                            if ($link) {
+                                                                ?>
+                                                                <a href="#audience-<?php echo $audience->getEventAudienceID(); ?>" data-toggle="modal"><?php echo $a->getAudienceName(); ?></a>
+                                                                <?php
+                                                            } else {
+                                                                echo $a->getAudienceName();
+                                                            }
+
+                                                            if ($a && $link && count($a->getAudienceMembers() > 0)) {
+                                                                ?>
+                                                                <div id="audience-<?php echo $audience->getEventAudienceID(); ?>" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                                                    <div class="modal-header">
+                                                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                                                        <h3 id="myModalLabel"><?php echo $a->getAudienceName(); ?> Group Members</h3>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <div class="row-fluid">
+                                                                        <?php
+                                                                            $count = round(count($a->getAudienceMembers()) / 3);
+                                                                            $i = 0;
+
+                                                                            echo "<div class=\"span4\">\n";
+                                                                            foreach ($a->getAudienceMembers() as $member) {
+                                                                                if (($i == $count || $i == $count * 2) && $count != 0) {
+                                                                                    echo "</div><div class=\"span4\">\n";
+                                                                                }
+                                                                                echo $member["firstname"] . " " . $member["lastname"]."<br />\n";
+                                                                                $i++;
                                                                             }
-                                                                            echo "<li class=\"user\">".$member["firstname"] . " " . $member["lastname"]."</li>\n";
-                                                                            $i++;
-                                                                        } 
-                                                                        echo "</ul></div>\n"
-                                                                    ?>
+                                                                            echo "</div>\n"
+                                                                        ?>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
                                                                     </div>
                                                                 </div>
-                                                                <div class="modal-footer">
-                                                                    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-                                                                </div>
-                                                            </div>
-                                                                        <?php
-                                                                    }
-                                                                    ?>
-                                                        </li>
                                                                 <?php
                                                             }
-                                                        } else {
-                                                            ?>
-                                                        <li><?php echo $a->getAudienceName(); ?></li>
-                                                            <?php
                                                         }
+                                                    } elseif (method_exists($a, "getAudienceName")) {
+                                                        echo $a->getAudienceName();
+                                                    } else {
+                                                        echo "Not Available";
                                                     }
-                                                    ?>
-                                                </ul>
-                                                <?php
+
+                                                    echo "<br />";
+                                                }
+                                            } else {
+                                                echo "Not Available";
                                             }
                                             ?>
                                         </td>
@@ -604,7 +593,7 @@ if (!defined("PARENT_INCLUDED")) {
                                     /**
                                      * @todo simpson This needs to be fixed as $event_audience_type is no longer for grad_year.
                                      */
-                                    if ($event_audience_type == "cohort") {
+                                    if (isset($event_audience_type) && $event_audience_type == "cohort") {
                                         $query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_cohort`
                                                     FROM `events` AS a
                                                     LEFT JOIN `event_audience` AS b
@@ -651,7 +640,7 @@ if (!defined("PARENT_INCLUDED")) {
                                     ORDER BY `descriptor_name`";
 
                         $results = $db->GetAll($query);
-                        if ($results && (!$event_info['keywords_hidden'] || $ENTRADA_USER->getActiveGroup() != "student") && (int)$event_info['keywords_release_date'] <= time()) {
+                        if ($results && (!$event_info['keywords_hidden'] || $ENTRADA_USER->getActiveGroup() != "student") && isset($event_info['keywords_release_date']) && time() >= $event_info['keywords_release_date']) {
                             $include_keywords = true;
                             ?>
                             <a name="event-keywords-section"></a>
@@ -678,7 +667,7 @@ if (!defined("PARENT_INCLUDED")) {
                                     ON b.`objective_id` = a.`objective_id`
                                     JOIN `objective_organisation` AS c
                                     ON b.`objective_id` = c.`objective_id`
-                                    AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+                                    AND c.`organisation_id` = ".$db->qstr($event->getOrganisationID())."
                                     WHERE a.`objective_type` = 'event'
                                     AND b.`objective_active` = '1'
                                     AND a.`event_id` = ".$db->qstr($EVENT_ID)."
@@ -688,7 +677,7 @@ if (!defined("PARENT_INCLUDED")) {
                         $show_clinical_presentations = (($clinical_presentations) ? true : false);
 
                         $show_curriculum_objectives = false;
-                        list($curriculum_objectives,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(),array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
+                        list($curriculum_objectives,$top_level_id) = courses_fetch_objectives($event->getOrganisationID(),array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
 
                         $temp_objectives = $curriculum_objectives["objectives"];
                         foreach ($temp_objectives as $objective_id => $objective) {
@@ -725,7 +714,7 @@ if (!defined("PARENT_INCLUDED")) {
                                 }
                             }
                         }
-						if (time() >= $event_info["objectives_release_date"]) {
+						if (isset($event_info["objectives_release_date"]) && time() >= $event_info["objectives_release_date"]) {
 							if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
 								$include_objectives = true;
 
@@ -740,13 +729,24 @@ if (!defined("PARENT_INCLUDED")) {
 									echo "	</div>\n";
 								}
 
-								if ($show_clinical_presentations) {
-									echo "	<div class=\"section-holder\">\n";
-									echo "		<h3>Clinical Presentations</h3>\n";
-									foreach ($clinical_presentations as $key => $result) {
-										echo (($key) ? ", " : "").$result["objective_name"];
-									}
-									echo "	</div>\n";
+								if ($show_clinical_presentations) { ?>
+									<div class="section-holder mapped">
+                                        <h2 title="Clinical Presentation List" class="list-heading">Clinical Presentations</h2>
+                                        <ul class="objective-list mapped-list">
+                                        <?php
+                                        foreach ($clinical_presentations as $key => $result) {
+                                            $set = Models_Objective::fetchObjectiveSet($result["objective_id"]);
+                                            ?>
+                                            <li>
+                                                <strong><?php echo $result["objective_name"]; ?></strong>
+                                                <div class="objective-description">From the Objective Set: <strong><?php echo $set->getName(); ?></strong></div>
+                                            </li>
+                                            <?php
+                                        }
+                                        ?>
+                                        </ul>
+									</div>
+                                    <?php
 								}
 
 								if ($show_curriculum_objectives) {
@@ -775,6 +775,7 @@ if (!defined("PARENT_INCLUDED")) {
 								}
 							}
 
+							$COURSE_ID = $event_info["course_id"];
                             $query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`,
                                     b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`,
                                     COALESCE(b.`cobjective_id`,0) AS `mapped_to_course`
@@ -797,15 +798,26 @@ if (!defined("PARENT_INCLUDED")) {
                                 foreach ($mapped_objectives as $objective) {
                                     //if its mapped to the event, but not the course, then it belongs in the event objective list
                                     if ($objective["mapped"] && !$objective["mapped_to_course"]) {
-                                        if (!event_objective_parent_mapped_course($objective["objective_id"],$EVENT_ID)) {
-                                            $explicit_event_objectives[] = $objective;
+                                        $objective_name = $translate->_("events_filter_controls");
+                                        $clinical_presentations_name = $objective_name["cp"]["global_lu_objectives_name"];
+                                        
+                                        $objective_set = Models_Objective::fetchObjectiveSet($objective["objective_id"]);
+                                        
+                                        if ($objective_set->getName() != $clinical_presentations_name) {
+                                            if (!event_objective_parent_mapped_course($objective["objective_id"], $EVENT_ID, true)) {
+                                                $explicit_event_objectives[] = $objective;
+                                            }
+                                        } else {
+                                            if (Models_Objective::fetchExplicitEventObjective($objective["objective_id"], $EVENT_ID)) {
+                                                $explicit_event_objectives[] = $objective;
+                                            }
                                         }
                                     }
                                 }
                             }
                             ?>
                             <div class="section-holder">
-                                <div id="mapped_objectives">
+                                <div id="mapped_objectives" class="mapped">
                                     <div id="event-list-wrapper" <?php echo ($explicit_event_objectives)?'':' style="display:none;"';?>>
                                         <a name="event-objective-list"></a>
                                         <h2 id="event-toggle"  title="Event Objective List" class="list-heading">Event Specific Objectives</h2>
@@ -893,324 +905,557 @@ if (!defined("PARENT_INCLUDED")) {
                         }
                         ?>
 					</div>
-
-                    <div>
-                        <?php
+                    <?php 
+                    $event_resource_entites = Models_Event_Resource_Entity::fetchAllByEventID($EVENT_ID);
+                    if ($event_resource_entites) {
                         echo "<a name=\"event-resources-section\"></a>";
-                        echo "<h2 title=\"Event Resources Section\">Event Resources</h2>\n";
-                        echo "<div id=\"event-resources-section\">\n";
-                        echo "	<div class=\"section-holder\">\n";
-                        echo "		<h3>Attached Files</h3><a name=\"event-resources-files\"></a>\n";
-                        echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of File Attachments\">\n";
-                        echo "		<colgroup>\n";
-                        echo "			<col class=\"modified\" />\n";
-                        echo "			<col class=\"file-category\" />\n";
-                        echo "			<col class=\"title\" />\n";
-                        echo "			<col class=\"date\" />\n";
-                        echo "		</colgroup>\n";
-                        echo "		<thead>\n";
-                        echo "			<tr>\n";
-                        echo "				<td class=\"modified\">&nbsp;</td>\n";
-                        echo "				<td class=\"file-category sortedASC\"><div class=\"noLink\">File Category</div></td>\n";
-                        echo "				<td class=\"title\"><div class=\"noLink\">File Title</div></td>\n";
-                        echo "				<td class=\"date\">Last Updated</td>\n";
-                        echo "			</tr>\n";
-                        echo "		</thead>\n";
-                        echo "		<tbody>\n";
-                        if ($event_files) {
-                            foreach ($event_files as $result) {
-                                $filename	= $result["file_name"];
-                                $parts		= pathinfo($filename);
-                                $ext		= $parts["extension"];
+                        echo "<h2 title=\"Event Resources Section\">Event Resources</h2>";
 
-                                echo "	<tr id=\"file-".$result["efile_id"]."\">\n";
-                                echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have already downloaded the latest version.\" title=\"You have already downloaded the latest version.\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"This file has been updated since you have last downloaded it.\" title=\"This file has been updated since you have last downloaded it.\" />") : "")."</td>\n";
-                                echo "		<td class=\"file-category\" style=\"vertical-align: top\">".((isset($RESOURCE_CATEGORIES["event"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["event"][$result["file_category"]]) : "Unknown Category")."</td>\n";
-                                echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
-                                echo "			<img src=\"".ENTRADA_RELATIVE."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />\n";
-                                if (((!(int) $result["release_date"]) || ($result["release_date"] <= time())) && ((!(int) $result["release_until"]) || ($result["release_until"] >= time()))) {
-                                    echo "		<a href=\"".ENTRADA_RELATIVE."/file-event.php?id=".$result["efile_id"]."\" title=\"Click to download ".html_encode($result["file_title"])."\" style=\"font-weight: bold\"".(((int) $result["access_method"]) ? " target=\"_blank\"" : "").">".html_encode($result["file_title"])."</a>";
-                                } else {
-                                    echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($result["file_title"])."</span>";
-                                }
-                                echo "			<span class=\"content-small\">(".readable_size($result["file_size"]).")</span>";
-                                echo "			<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
-                                if (((int) $result["release_date"]) && ($result["release_date"] > time())) {
-                                    echo "		This file will be available for downloading <strong>".date(DEFAULT_DATE_FORMAT, $result["release_date"])."</strong>.<br /><br />";
-                                } elseif (((int) $result["release_until"]) && ($result["release_until"] < time())) {
-                                    echo "		This file was only available for download until <strong>".date(DEFAULT_DATE_FORMAT, $result["release_until"])."</strong>. Please contact the primary teacher for assistance if required.<br /><br />";
-                                }
-                                if (clean_input($result["file_notes"], array("notags", "nows")) != "") {
-                                    echo "		".trim(strip_selected_tags($result["file_notes"], array("font")))."\n";
-                                }
-                                echo "			</div>\n";
-                                echo "		</td>\n";
-                                echo "		<td class=\"date\" style=\"vertical-align: top\">".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown")."</td>\n";
-                                echo "	</tr>\n";
-                            }
-                        } else {
-                            echo "		<tr>\n";
-                            echo "			<td colspan=\"4\">\n";
-                            echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no file downloads added to this event.</div>\n";
-                            echo "			</td>\n";
-                            echo "		</tr>\n";
-                        }
-                        echo "		</tbody>\n";
-                        echo "		</table>\n";
-                        echo "	</div>\n";
+                        echo "<div id=\"event-resources-section\">";
 
-                        echo "	<div class=\"section-holder\">\n";
-                        echo "		<h3>Attached Links</h3><a name=\"event-resources-links\"></a>\n";
-                        echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Linked Resources\">\n";
-                        echo "		<colgroup>\n";
-                        echo "			<col class=\"modified\" />\n";
-                        echo "			<col class=\"title\" />\n";
-                        echo "			<col class=\"date\" />\n";
-                        echo "		</colgroup>\n";
-                        echo "		<thead>\n";
-                        echo "			<tr>\n";
-                        echo "				<td class=\"modified\">&nbsp;</td>\n";
-                        echo "				<td class=\"title sortedASC\"><div class=\"noLink\">Linked Resource</div></td>\n";
-                        echo "				<td class=\"date\">Last Updated</td>\n";
-                        echo "			</tr>\n";
-                        echo "		</thead>\n";
-                        echo "		<tbody>\n";
-                        if ($event_links) {
-                            foreach ($event_links as $result) {
-                                echo "	<tr>\n";
-                                echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have previously visited this link.\" title=\"You have previously visited this link.\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"An update to this link has been made, please re-visit it.\" title=\"An update to this link has been made, please re-visit it.\" />") : "")."</td>\n";
-                                echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
-                                if (((!(int) $result["release_date"]) || ($result["release_date"] <= time())) && ((!(int) $result["release_until"]) || ($result["release_until"] >= time()))) {
-                                    echo "		<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".$result["elink_id"]."\" title=\"Click to visit ".$result["link"]."\" style=\"font-weight:  bold\" target=\"_blank\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
-                                } else {
-                                    echo "		<span style=\"color: #666666; font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : "Untitled Link")."</span>";
-                                }
-                                echo "			<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
-                                if (((int) $result["release_date"]) && ($result["release_date"] > time())) {
-                                    echo "		This link will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $result["release_date"])."</strong>.<br /><br />";
-                                } elseif (((int) $result["release_until"]) && ($result["release_until"] < time())) {
-                                    echo "		This link was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $result["release_until"])."</strong>. Please contact the primary teacher for assistance if required.<br /><br />";
-                                }
-                                if (clean_input($result["link_notes"], array("notags", "nows")) != "") {
-                                    echo "		".trim(strip_selected_tags($result["link_notes"], array("font")))."\n";
-                                }
-                                echo "			</div>\n";
-                                echo "		</td>\n";
-                                echo "		<td class=\"date\" style=\"vertical-align: top\">".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown")."</td>\n";
-                                echo "	</tr>\n";
-                            }
-                        } else {
-                            echo "		<tr>\n";
-                            echo "			<td colspan=\"3\">\n";
-                            echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no linked resources added to this event.</div>\n";
-                            echo "			</td>\n";
-                            echo "		</tr>\n";
-                        }
-                        echo "		</tbody>\n";
-                        echo "		</table>\n";
-                        echo "	</div>\n";
+                            $resource = false;
+                            $entity_timeframe_pre = array();
+                            $entity_timeframe_during = array();
+                            $entity_timeframe_post = array();
+                            $entity_timeframe_none = array();
+                            foreach ($event_resource_entites as $entity) {
+                                $resource = $entity->getResource()->toArray();
+                                if ($resource) {
+                                    switch ($entity->getEntityType()) {
+                                        case 1 :
+                                        case 5 :
+                                        case 6 :
+                                        case 11 :
 
-                        echo "	<div class=\"section-holder\">\n";
-                        echo "		<h3>Attached Quizzes</h3><a name=\"event-resources-quizzes\"></a>\n";
-                        echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Attached Quizzes\">\n";
-                        echo "		<colgroup>\n";
-                        echo "			<col class=\"modified\" />\n";
-                        echo "			<col class=\"title\" />\n";
-                        echo "			<col class=\"date\" />\n";
-                        echo "		</colgroup>\n";
-                        echo "		<thead>\n";
-                        echo "			<tr>\n";
-                        echo "				<td class=\"modified\">&nbsp;</td>\n";
-                        echo "				<td class=\"title sortedASC\"><div class=\"noLink\">Quiz Title</div></td>\n";
-                        echo "				<td class=\"date\">Quiz Expires</td>\n";
-                        echo "			</tr>\n";
-                        echo "		</thead>\n";
-                        echo "		<tbody>\n";
-
-                        if ($event_quizzes) {
-                            foreach ($event_quizzes as $quiz_record) {
-                                $quiz_attempts		= 0;
-                                $total_questions	= quiz_count_questions($quiz_record["quiz_id"]);
-
-                                $query				= "	SELECT *
-                                                FROM `quiz_progress`
-                                                WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
-                                                AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-                                $progress_record	= $db->GetAll($query);
-                                if ($progress_record) {
-                                    $quiz_attempts = count($progress_record);
-                                }
-
-                                $exceeded_attempts	= ((((int) $quiz_record["quiz_attempts"] === 0) || ($quiz_attempts < $quiz_record["quiz_attempts"])) ? false : true);
-
-                                if (isset($quiz_record["require_attendance"]) && $quiz_record["require_attendance"] && !events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getID())) {
-                                    $allow_attempt = false;
-                                } elseif (((!(int) $quiz_record["release_date"]) || ($quiz_record["release_date"] <= time())) && ((!(int) $quiz_record["release_until"]) || ($quiz_record["release_until"] >= time())) && (!$exceeded_attempts)) {
-                                    $allow_attempt = true;
-                                } else {
-                                    $allow_attempt = false;
-                                }
-
-                                echo "	<tr id=\"quiz-".$quiz_record["aquiz_id"]."\">\n";
-                                echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
-                                echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
-                                if ($allow_attempt) {
-                                    echo "		<a href=\"javascript: beginQuiz(".$quiz_record["aquiz_id"].")\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
-                                } else {
-                                    echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</span>";
-                                }
-
-                                echo "			<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
-                                if (((int) $quiz_record["release_date"]) && ($quiz_record["release_date"] > time())) {
-                                    echo "You will be able to attempt this quiz starting <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_date"])."</strong>.<br /><br />";
-                                } elseif (((int) $quiz_record["release_until"]) && ($quiz_record["release_until"] < time())) {
-                                    echo "This quiz was only available until <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>. Please contact a teacher for assistance if required.<br /><br />";
-                                }
-
-                                echo quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"], $quiz_record["require_attendance"], $event_info["course_id"]);
-                                echo "			</div>\n";
-
-                                if ($progress_record) {
-                                    echo "<strong>Your Attempts</strong>";
-                                    echo "<ul class=\"menu\">";
-                                    foreach ($progress_record as $entry) {
-                                        $quiz_start_time	= $entry["updated_date"];
-                                        $quiz_end_time		= (((int) $quiz_record["quiz_timeout"]) ? ($quiz_start_time + ($quiz_record["quiz_timeout"] * 60)) : 0);
-
-                                        /**
-                                         * Checking for quizzes that are expired, but still in progress.
-                                         */
-                                        if (($entry["progress_value"] == "inprogress") && ((((int) $quiz_record["release_until"]) && ($quiz_record["release_until"] < time())) || (($quiz_end_time) && (time() > ($quiz_end_time + 30))))) {
-                                            $quiz_progress_array	= array (
-                                                "progress_value" => "expired",
-                                                "quiz_score" => "0",
-                                                "quiz_value" => "0",
-                                                "updated_date" => time(),
-                                                "updated_by" => $ENTRADA_USER->getID()
-                                            );
-                                            if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($entry["qprogress_id"]))) {
-                                                application_log("error", "Unable to update the qprogress_id [".$qprogress_id."] to expired. Database said: ".$db->ErrorMsg());
+                                            if ($entity->getEntityType() == 1) {
+                                                $resource["type"] = "Audio / Video";
+                                            } else if ($entity->getEntityType() == 5) {
+                                                $resource["type"] = "Lecture Notes";
+                                            } else if ($entity->getEntityType() == 6) {
+                                                $resource["type"] = "Lecture Slides";
+                                            } else if ($entity->getEntityType() == 11) {
+                                                $resource["type"] = "Other";
                                             }
-                                            $entry["progress_value"] = "expired";
-                                        }
 
-                                        switch ($entry["progress_value"]) {
-                                            case "complete" :
-                                                if (($quiz_record["quiztype_code"] == "delayed" && $quiz_record["release_until"] <= time()) || ($quiz_record["quiztype_code"] == "immediate")) {
-                                                    $percentage = ((round(($entry["quiz_score"] / $entry["quiz_value"]), 2)) * 100);
-                                                    echo "<li class=\"".(($percentage >= 60) ? "correct" : "incorrect")."\">";
-                                                    echo	date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> ".$entry["quiz_score"]."/".$entry["quiz_value"]." (".$percentage."%)";
-                                                    echo "	( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=results&amp;id=".$entry["qprogress_id"]."\">review quiz</a> )";
-                                                    echo "</li>";
-                                                } elseif ($quiz_record["quiztype_code"] == "hide") {
-                                                    echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." - <strong>Completed</strong></li>";
+                                            $resource_statistic = $entity->getResource()->getViewed();
+                                            $resource["title"] = "";
+                                            $resource["description"] = "";
+
+                                            $title = ($resource["file_title"] != "" ? $resource["file_title"] : $resource["file_name"]);
+                                            if ((((!(int) $resource["release_date"]) || ($resource["release_date"] <= time())) && ((!(int) $resource["release_until"]) || ($resource["release_until"] >= time())))) {
+                                                $resource["title"] = "<a class=\"resource-link\" href=\"".ENTRADA_RELATIVE."/file-event.php?id=".html_encode($resource["efile_id"])."\" title=\"Click to download ".html_encode($title)."\"".(((int) $resource["access_method"]) ? " target=\"_blank\"" : "").">".html_encode($title)."</a>";
+                                            } else {
+                                                $resource["title"] = "<p class=\"resource-title\">". html_encode($title) ."</p>";
+                                            }
+
+                                            if ($resource_statistic) {
+                                                $resource["title"] .= (((int) $resource_statistic->getTimestamp()) ? (((int) $resource_statistic->getTimestamp() >= (int) $resource["updated_date"]) ? "<span class=\"resource-viewed pull-right\" title=\"You have already downloaded the latest version of this file.\"><i class=\"icon-ok icon-white\"></i></span>" : "<span class=\"resource-updated pull-right\" title=\"This file has been updated since you have last downloaded it.\"><i class=\"icon-exclamation-sign icon-white\"></i></span>") : "");
+                                            }
+
+                                            if (((int) $resource["release_date"]) && ($resource["release_date"] > time())) {
+                                                $resource["description"] .=  "<p class=\"muted resource-description\">This file will be available for downloading <strong>".date(DEFAULT_DATE_FORMAT, $resource["release_date"])."</strong>.</p>";
+                                            } elseif (((int) $resource["release_until"]) && ($resource["release_until"] < time())) {
+                                                $resource["description"] .= "<p class=\"muted resource-description\">This file was only available for download until <strong>".date(DEFAULT_DATE_FORMAT, $resource["release_until"])."</strong>. Please contact the primary teacher for assistance if required.</p>";
+                                            }
+
+                                            $resource["description"] .= "<p class=\"muted resource-description\">" . html_encode($resource["file_notes"]) . "</p>";
+                                            $resource["type"] =  html_encode($resource["type"] . " " . readable_size($resource["file_size"]));
+                                            $resource["resource_id"] = $entity->getEntityValue();
+                                            $resource["type_id"] = $entity->getEntityType();
+                                            $resource["viewed"] = $entity->getResource()->getViewed();
+                                        break;
+                                        case 2 :
+                                            $resource["title"] = "<p class=\"resource-title\">Class Work</p>";
+                                            $resource["description"] = "<p class=\"muted resource-description\">" . html_encode($resource["resource_class_work"]) . "</p>";
+                                            $resource["type"] = "Class Work";
+                                            $resource["type_id"] = $entity->getEntityType();
+                                        break;
+                                        case 3 :
+                                            $resource["title"] = "";
+                                            $resource["description"] = "";
+                                            $resource_statistic = $entity->getResource()->getViewed();
+
+                                            if ((((!(int) $resource["release_date"]) || ($resource["release_date"] <= time())) && ((!(int) $resource["release_until"]) || ($resource["release_until"] >= time())))) {
+                                                $resource["title"] = "<a class=\"resource-link\" href=\"".ENTRADA_RELATIVE."/link-event.php?id=".html_encode($resource["elink_id"])."\" title=\"Click to visit ".html_encode($resource["link"])."\"  target=\"_blank\">".(($resource["link_title"] != "") ? html_encode($resource["link_title"]) : html_encode($resource["link"]))."</a>\n";
+                                            } else {
+                                                $resource["title"] = "<p class=\"resource-title\">" . ($resource["link_title"] != "" ? html_encode($resource["link_title"]) : html_encode($resource["link"])) . "</p>";
+                                            }
+
+                                            if ($resource_statistic) {
+                                                $resource["title"] .= (((int) $resource_statistic->getTimestamp()) ? (((int) $resource_statistic->getTimestamp() >= (int) $resource["updated_date"]) ? "<span class=\"resource-viewed pull-right\" title=\"You have previously visited this link..\"><i class=\"icon-ok icon-white\"></i></span>" : "<span class=\"resource-updated pull-right\" title=\"An update to this link has been made, please re-visit it.\"><i class=\"icon-exclamation-sign icon-white\"></i></span>") : "");
+                                            }
+
+                                            if (((int) $resource["release_date"]) && ($resource["release_date"] > time())) {
+                                                $resource["description"] .=  "<p class=\"muted resource-description\">This link will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $resource["release_date"])."</strong>.</p>";
+                                            } elseif (((int) $resource["release_until"]) && ($resource["release_until"] < time())) {
+                                                $resource["description"] .= "<p class=\"muted resource-description\">This link was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $resource["release_until"])."</strong>. Please contact the primary teacher for assistance if required.</p>";
+                                            }
+
+                                            $resource["description"] .= "<p class=\"muted resource-description\">" . html_encode($resource["link_notes"]) . "</p>";
+                                            $resource["type"] = "Link";
+                                            $resource["type_id"] = $entity->getEntityType();
+                                            $resource["viewed"] = $entity->getResource()->getViewed();
+                                        break;
+                                        case 4 :
+                                            $resource["title"] = "<p class=\"resource-title\">Homework</p>";
+                                            $resource["description"] = "<p class=\"muted resource-description\">" . html_encode($resource["resource_homework"]) . "</p>";
+                                            $resource["type"] = "Homework";
+                                            $resource["type_id"] = $entity->getEntityType();
+                                        break;
+                                        case 7 :
+                                            $resource["description"] = "";
+                                            $resource_statistic = $entity->getResource()->getViewed();
+
+                                            if ((((!(int) $resource["release_date"]) || ($resource["release_date"] <= time())) && ((!(int) $resource["release_until"]) || ($resource["release_until"] >= time())))) {
+                                                $resource["title"] = "<a class=\"resource-link\" href=\"".ENTRADA_RELATIVE."/link-event.php?id=".html_encode($resource["elink_id"])."\" title=\"Click to visit ".html_encode($resource["link"])."\"  target=\"_blank\">".(($resource["link_title"] != "") ? html_encode($resource["link_title"]) : html_encode($resource["link"]))."</a>\n";
+                                            } else {
+                                                $resource["title"] = "<p class=\"resource-title\">". (($resource["link_title"] != "") ? html_encode($resource["link_title"]) : html_encode($resource["link"])) ."</p>";
+                                            }
+
+                                            if ($resource_statistic) {
+                                                $resource["title"] .= (((int) $resource_statistic->getTimestamp()) ? (((int) $resource_statistic->getTimestamp() >= (int) $resource["updated_date"]) ? "<span class=\"resource-viewed pull-right\" title=\"You have previously visited this learning module\"><i class=\"icon-ok icon-white\"></i></span>" : "<span class=\"resource-updated pull-right\" title=\"An update to this learning module has been made, please re-visit it.\"><i class=\"icon-exclamation-sign icon-white\"></i></span>") : "");
+                                            }
+
+                                            if (((int) $resource["release_date"]) && ($resource["release_date"] > time())) {
+                                                $resource["description"] .=  "<p class=\"muted resource-description\">This learning module will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $resource["release_date"])."</strong>.</p>";
+                                            } elseif (((int) $resource["release_until"]) && ($resource["release_until"] < time())) {
+                                                $resource["description"] .= "<p class=\"muted resource-description\">This learning module was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $resource["release_until"])."</strong>. Please contact the primary teacher for assistance if required.</p>";
+                                            }
+
+                                            $resource["description"] .= "<p class=\"muted resource-description\">" . html_encode($resource["link_notes"]) . "</p>";
+                                            $resource["type"] = "Online Learning Module";
+                                            $resource["type_id"] = $entity->getEntityType();
+                                        break;
+                                        case 8 :
+                                            $quiz = $entity->getResource();
+                                            $total_questions = quiz_count_questions($quiz->getQuizID());
+                                            $resource_statistic = $entity->getResource()->getViewed();
+                                            $resource["title"] = "";
+                                            $resource["description"] = "";
+                                            $resource["attempts_history"] = "";
+
+                                            $attempts = 0;
+                                            $quiz_progress_records = Models_Quiz_Progress::fetchAllByAquizIDProxyID($entity->getEntityValue(), $ENTRADA_USER->getActiveID());
+
+                                            if ($quiz_progress_records) {
+                                                $attempts = count($quiz_progress_records);
+                                            }
+
+                                            $exceeded_attempts    = ((((int) $quiz->getQuizAttempts() === 0) || ($attempts < $quiz->getQuizAttempts())) ? false : true);
+
+                                            if (isset($quiz) && $quiz->getRequireAttendance() && !events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getID())) {
+                                                $allow_attempt = false;
+                                            } elseif (((!(int) $quiz->getReleaseDate()) || ($quiz->getReleaseDate() <= time())) && ((!(int) $quiz->getReleaseUntil()) || ($quiz->getReleaseUntil() >= time())) && (!$exceeded_attempts)) {
+                                                $allow_attempt = true;
+                                            } else {
+                                                $allow_attempt = false;
+                                            }
+
+                                            if ($allow_attempt) {
+                                                $resource["title"] = "<a class=\"resource-link\" href=\"javascript: beginQuiz(".html_encode($resource["aquiz_id"]).")\" title=\"Take ".html_encode($resource["quiz_title"])."\">".html_encode($resource["quiz_title"])."</a>";
+                                            } else {
+                                                $resource["title"] = "<p class=\"resource-title\">". html_encode($resource["quiz_title"]) ."</p>";
+                                            }
+
+                                            if ($resource_statistic) {
+                                                $resource["title"] .= (((int) $resource_statistic->getTimestamp()) ? (((int) $resource_statistic->getTimestamp() >= (int) $resource["updated_date"]) ? "<span class=\"resource-viewed pull-right\" title=\"You have previously completed this quiz.\"><i class=\"icon-ok icon-white\"></i></span>" : "<span class=\"resource-updated pull-right\" title=\"This attached quiz has been updated since you last completed it.\"><i class=\"icon-exclamation-sign icon-white\"></i></span>") : "");
+                                            }
+
+                                            if ((int) $quiz->getReleaseDate() && (int) $quiz->getReleaseUntil()) {
+                                                $resource["description"] .= "<p class=\"muted resource-description\">This quiz " . ($quiz->getReleaseUntil() > time() ? "is" : "was only") .  " available from <strong>".date(DEFAULT_DATE_FORMAT, html_encode($quiz->getReleaseDate()))."</strong> to <strong>".date(DEFAULT_DATE_FORMAT, html_encode($quiz->getReleaseUntil()))."</strong>.</p>";
+                                            } elseif ((int) $quiz->getReleaseDate()) {
+                                                if ($quiz->getReleaseDate() > time()) {
+                                                    $resource["description"] .= "<p class=\"muted resource-description\">You will be able to attempt this quiz starting <strong>".date(DEFAULT_DATE_FORMAT, html_encode($quiz->getReleaseDate()))."</strong>.</p>";
                                                 } else {
-                                                    echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> To Be Released ".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</li>";
+                                                    $resource["description"] .= "<p class=\"muted resource-description\">This quiz has been available since <strong>".date(DEFAULT_DATE_FORMAT, html_encode($quiz->getReleaseDate()))."</strong>.</p>";
                                                 }
+                                            } elseif ((int) $quiz->getReleaseUntil()) {
+                                                if ($quiz->getReleaseUntil() > time()) {
+                                                    $resource["description"] .= "<p class=\"muted resource-description\">You will be able to attempt this quiz until <strong>".date(DEFAULT_DATE_FORMAT, html_encode($quiz->getReleaseUntil()))."</strong>.</p>";
+                                                } else {
+                                                    $resource["description"] .= "<p class=\"muted resource-description\">This quiz was only available until <strong>".date(DEFAULT_DATE_FORMAT, html_encode($quiz->getReleaseUntil()))."</strong>. Please contact a teacher for assistance if required.</p>";
+                                                }
+                                            } else {
+                                                $resource["description"] .= "<p class=\"muted resource-description\">This quiz is available indefinitely.</p>";
+                                            }
+
+                                            switch ($quiz->getQuiztypeID()) {
+                                                case "1" :
+                                                    $quiz_type_code = "delayed";
+                                                break;
+                                                case "2" :
+                                                    $quiz_type_code = "immediate";
+                                                break;
+                                                case "3" :
+                                                    $quiz_type_code = "hide";
+                                                break;
+                                            }
+
+                                            $resource["description"] .= "<p class=\"muted resource-description\">" . quiz_generate_description($quiz->getRequired(), $quiz_type_code, $quiz->getQuizTimeout(), $total_questions, $quiz->getQuizAttempts(), $quiz->getTimeframe(), $quiz->getRequireAttendance(), $event_info["course_id"]) . "</p>";
+                                            $resource["description"] .= "<p class=\"muted resource-description\">" . html_encode($resource["quiz_notes"]) . "</p>";
+
+                                            if ($quiz_progress_records) {
+                                                $resource["description"] .= "<br><p class=\"muted resource-description\"><strong>Your Attempts</strong></p>";
+                                                $resource["description"] .= "<ul class=\"menu\">";
+                                                foreach ($quiz_progress_records as $entry) {
+                                                    $quiz_start_time	= $entry->getUpdatedDate();
+                                                    $quiz_end_time		= (((int) $quiz->getQuizTimeout()) ? ($quiz_start_time + ($quiz->getQuizTimeout() * 60)) : 0);
+
+                                                    /**
+                                                     * Checking for quizzes that are expired, but still in progress.
+                                                     */
+                                                    if (($entry->getProgressValue() == "inprogress") && ((((int) $quiz->getReleaseUntil()) && ($quiz->getReleaseUntil() < time())) || (($quiz_end_time) && (time() > ($quiz_end_time + 30))))) {
+                                                        $quiz_progress_array	= array (
+                                                            "qprogress_id" => $entry->getQprogressID(),
+                                                            "aquiz_id" => $entry->getAquizID(),
+                                                            "content_type" => $entry->getContentType(),
+                                                            "content_id" => $entry->getContentID(),
+                                                            "quiz_id" => $entry->getQuizID(),
+                                                            "proxy_id" => $entry->getProxyID(),
+                                                            "progress_value" => "expired",
+                                                            "quiz_score" => "0",
+                                                            "quiz_value" => "0",
+                                                            "updated_date" => time(),
+                                                            "updated_by" => $ENTRADA_USER->getID()
+                                                        );
+
+                                                        $entry = new Models_Quiz_Progress($quiz_progress_array);
+
+                                                        if ($entry) {
+                                                            if (!$entry->update()) {
+                                                                application_log("error", "Unable to update the qprogress_id [".$entry->getQprogressID()."] to expired. Database said: ".$db->ErrorMsg());
+                                                            }
+                                                        }
+
+                                                        $entry->setProgressValue("expired");
+                                                    }
+
+                                                    switch ($entry->getProgressValue()) {
+                                                        case "complete" :
+                                                            if (($quiz_type_code == "delayed" && $quiz->getReleaseUntil() <= time()) || ($quiz_type_code == "immediate")) {
+                                                                $percentage = ((round(($entry->getQuizScore() / $entry->getQuizValue()), 2)) * 100);
+                                                                $resource["description"] .= "<li class=\"".(($percentage >= 60) ? "correct" : "incorrect")."\">";
+                                                                $resource["description"] .=	date(DEFAULT_DATE_FORMAT, $entry->getUpdatedDate())." <strong>Score:</strong> ".$entry->getQuizScore()."/".$entry->getQuizValue()." (".$percentage."%)";
+                                                                $resource["description"] .= "	( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=results&amp;id=".html_encode($entry->getQprogressID())."\">review quiz</a> )";
+                                                                $resource["description"] .= "</li>";
+                                                            } elseif ($quiz_type_code == "hide") {
+                                                                $resource["description"] .= "<li>".date(DEFAULT_DATE_FORMAT, $entry->getUpdatedDate())." - <strong>Completed</strong></li>";
+                                                            } else {
+                                                                $resource["description"] .= "<li>".date(DEFAULT_DATE_FORMAT, $entry->getUpdatedDate())." <strong>Score:</strong> To Be Released ".date(DEFAULT_DATE_FORMAT, $quiz->getReleaseUntil())."</li>";
+                                                            }
+                                                        break;
+                                                        case "expired" :
+                                                            $resource["description"] .= "<li class=\"incorrect\">".date(DEFAULT_DATE_FORMAT, $entry->getUpdatedDate())." <strong>Expired Attempt</strong>: not completed.</li>";
+                                                        break;
+                                                        case "inprogress" :
+                                                            $resource["description"] .= "<li>".date(DEFAULT_DATE_FORMAT, $entry->getUpdatedDate())." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=attempt&amp;id=".html_encode($quiz->getAquizID())."\">continue quiz</a> )</li>";
+                                                        break;
+                                                        default :
+                                                            continue;
+                                                        break;
+                                                    }
+                                                }
+                                                $resource["description"] .= "</ul>";
+                                            }
+
+                                            $resource["type"] = "Quiz";
+                                            $resource["type_id"] = $entity->getEntityType();
+                                            $resource["viewed"] = $quiz->getViewed();
+                                        break;
+                                        case 9 :
+                                            $resource["title"] = "<p class=\"resource-title\">Textbook Reading</p>";
+                                            $resource["description"] = "<p class=\"muted resource-description\">" . html_encode($resource["resource_textbook_reading"]) . "</p>";
+                                            $resource["type"] = "Textbook Reading";
+                                            $resource["type_id"] = $entity->getEntityType();
+                                        break;
+                                        case 10 :
+                                            $resource["title"] = "<p class=\"resource-title\">" . html_encode($resource["lti_title"]) . "</p>";
+                                            $resource["description"] = html_encode($resource["lti_notes"]);
+                                            $resource["type"] = "LTI Provider";
+                                            $resource["type_id"] = $entity->getEntityType();
+                                        break;
+                                    }
+
+                                    if ($resource) {
+                                        switch ($resource["timeframe"]) {
+                                            case "pre" :
+                                                $entity_timeframe_pre[] = $resource;
                                             break;
-                                            case "expired" :
-                                                echo "<li class=\"incorrect\">".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Expired Attempt</strong>: not completed.</li>";
+                                            case "during" :
+                                                $entity_timeframe_during[] = $resource;
                                             break;
-                                            case "inprogress" :
-                                                echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
+                                            case "post" :
+                                                $entity_timeframe_post[] = $resource;
                                             break;
-                                            default :
-                                                continue;
+                                            case "none" :
+                                                $entity_timeframe_none[] = $resource;
                                             break;
                                         }
                                     }
-                                    echo "</ul>";
                                 }
-
-                                echo "		</td>\n";
-                                echo "		<td class=\"date\" style=\"vertical-align: top\">".(((int) $quiz_record["release_until"]) ? date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"]) : "No Expiration")."</td>\n";
-                                echo "	</tr>\n";
                             }
-                        } else {
-                            echo "		<tr>\n";
-                            echo "			<td colspan=\"3\">\n";
-                            echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There are no online quizzes currently attached to this learning event.</div>\n";
-                            echo "			</td>\n";
-                            echo "		</tr>\n";
-                        }
-                        echo "		</tbody>\n";
-                        echo "		</table>\n";
-                        echo "	</div>\n";
-
-                        echo "	<div class=\"section-holder\">\n";
-                        echo "		<h3>Attached LTI Providers</h3><a name=\"event-resources-lti\"></a>\n";
-                        echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of LTI Providers\">\n";
-                        echo "		<colgroup>\n";
-                        echo "			<col class=\"modified\" />\n";
-                        echo "			<col class=\"title\" />\n";
-                        echo "			<col class=\"date\" />\n";
-                        echo "		</colgroup>\n";
-                        echo "		<thead>\n";
-                        echo "			<tr>\n";
-                        echo "				<td class=\"modified\">&nbsp;</td>\n";
-                        echo "				<td class=\"title sortedASC\"><div class=\"noLink\">LTI Provider Title</div></td>\n";
-                        echo "				<td class=\"date\">Update date</td>\n";
-                        echo "			</tr>\n";
-                        echo "		</thead>\n";
-                        echo "		<tbody>\n";
-
-                        if ($event_lti) {
-                            foreach ($event_lti as $result) { ?>
-                                <tr style="vertical-align: top;">
-                                    <td class="modified"></td>
-                                    <td class="title" style="vertical-align: top; white-space: normal; overflow: visible">
-                                        <?php
-                                        if (((!(int) $result["valid_from"]) || ($result["valid_from"] <= time())) && ((!(int) $result["valid_until"]) || ($result["valid_until"] >= time()))) { ?>
-                                            <a href="javascript:void(0)"
-                                               onclick="openLTIDialog('<?php echo ENTRADA_URL;?>/api/lti-consumer-runner.api.php?ltiid=<?php echo $result["id"];?>&event=1')"
-                                               title="Click to visit <?php echo $result["lti_title"];?>">
-                                                <strong>
-                                                    <?php echo (($result["lti_title"] != "") ? html_encode($result["lti_title"]) : '');?>
-                                                </strong>
-                                            </a>
-                                        <?php
-                                        } else { ?>
-                                            <span style="color: #666666;">
-                                                <strong>
-                                                    <?php echo (($result["lti_title"] != "") ? html_encode($result["lti_title"]) : '');?>
-                                                </strong>
-                                            </span>
-                                        <?php
-                                        } ?>
-
-                                        <div class="content-small">
+                            ?>
+                            <div id="event-resources-container">
+                            <?php
+                            if ($entity_timeframe_pre) { ?>
+                                <div id="event-resource-timeframe-pre-container" class="resource-list">
+                                    <div class="resource-container-pre">
+                                        <p class="timeframe-heading">Before Class</p>
+                                        <ul class="timeframe-pre timeframe">
                                             <?php
-                                            if (((int) $result["valid_from"]) && ($result["valid_from"] > time())) { ?>
-                                                This resource will become accessible <strong><?php echo date(DEFAULT_DATE_FORMAT, $result["valid_from"]);?></strong>.<br /><br />
-                                            <?php
-                                            } elseif (((int) $result["valid_until"]) && ($result["valid_until"] < time())) { ?>
-                                                This resource was only accessible until <strong><?php echo date(DEFAULT_DATE_FORMAT, $result["valid_until"]);?></strong>. Please contact the primary teacher for assistance if required.<br /><br />
+                                            foreach ($entity_timeframe_pre as $entity) {
+                                            ?>
+                                            <li>
+                                                <div>
+                                                    <?php echo $entity["title"]; ?>
+                                                    <?php echo $entity["description"]; ?>
+                                                </div>
+                                                <div>
+                                                    <?php
+                                                    if ($entity["required"] ==  "1") { ?>
+                                                        <span class="label label-important event-resource-stat-label">Required</span>
+                                                    <?php
+                                                    } else { ?>
+                                                        <span class="label label-default event-resource-stat-label">Optional</span>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                    <span class="label label-info event-resource-stat-label"><?php echo html_encode($entity["type"]); ?></span>
+                                                    <?php
+                                                    switch ($entity["type_id"]) {
+                                                        case 1 :
+                                                        case 5 :
+                                                        case 6 :
+                                                        case 11 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/file-event.php?id=".html_encode($entity["efile_id"])."\" title=\"Click to download ".html_encode($title)."\"".(((int) $entity["access_method"]) ? " target=\"_blank\"" : "")."><span class=\"icon-download-alt\"></span></a>";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                        case 3 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".html_encode($entity["elink_id"])."\" title=\"Click to visit ".html_encode($entity["link"])."\"  target=\"_blank\"><span class=\"icon-globe\"></span></a>\n";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                        case 7 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".html_encode($entity["elink_id"])."\" title=\"Click to visit ".html_encode($entity["link"])."\"  target=\"_blank\"><span class=\"icon-globe\"></span></a>\n";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                    }
+                                                    ?>
+                                                </div>
+                                            </li>
                                             <?php
                                             }
-
-                                            if (clean_input($result["link_notes"], array("notags", "nows")) != "") {
-                                                echo "<div class=\"clearfix\">".trim(strip_selected_tags($result["link_notes"], array("font")))."</div>";
-                                            } ?>
-                                        </div>
-                                    </td>
-                                    <td class="date">
-                                        <?php echo (((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown");?>
-                                    </td>
-                                </tr>
+                                            ?>
+                                        </ul>
+                                    </div>
+                                </div>
                             <?php
                             }
-                        } else {
-                            echo "		<tr>\n";
-                            echo "			<td colspan=\"3\">\n";
-                            echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no LTI Providers added to this event.</div>\n";
-                            echo "			</td>\n";
-                            echo "		</tr>\n";
-                        }
-                        echo "		</tbody>\n";
-                        echo "		</table>\n";
-                        echo "	</div>\n";
-                        echo "</div>\n";
 
+                            if ($entity_timeframe_during) { ?>
+                                <div id="event-resource-timeframe-during-container" class="resource-list">
+                                    <div class="resource-container-during">
+                                        <p class="timeframe-heading">During Class</p>
+                                        <ul class="timeframe-during timeframe">
+                                            <?php
+                                            foreach ($entity_timeframe_during as $entity) {
+                                            ?>
+                                            <li>
+                                                <div>
+                                                    <?php echo $entity["title"]; ?>
+                                                    <?php echo  $entity["description"]; ?>
+                                                </div>
+                                                <div>
+                                                    <?php
+                                                    if ($entity["required"] ==  "1") { ?>
+                                                        <span class="label label-important event-resource-stat-label">Required</span>
+                                                    <?php
+                                                    } else { ?>
+                                                        <span class="label label-default event-resource-stat-label">Optional</span>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                    <span class="label label-info event-resource-stat-label"><?php echo html_encode($entity["type"]); ?></span>
+                                                    <?php
+                                                    switch ($entity["type_id"]) {
+                                                        case 1 :
+                                                        case 5 :
+                                                        case 6 :
+                                                        case 11 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/file-event.php?id=".html_encode($entity["efile_id"])."\" title=\"Click to download ".html_encode($title)."\"".(((int) $entity["access_method"]) ? " target=\"_blank\"" : "")."><span class=\"icon-download-alt\"></span></a>";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                        case 3 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".html_encode($entity["elink_id"])."\" title=\"Click to visit ".html_encode($entity["link"])."\"  target=\"_blank\"><span class=\"icon-globe\"></span></a>\n";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                        case 7 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".html_encode($entity["elink_id"])."\" title=\"Click to visit ".html_encode($entity["link"])."\"  target=\"_blank\"><span class=\"icon-globe\"></span></a>\n";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                    }
+                                                    ?>
+                                                </div>
+                                            </li>
+                                            <?php
+                                            }
+                                            ?>
+                                        </ul>
+                                    </div>
+                                </div>
+                            <?php
+                            }
+
+                            if ($entity_timeframe_post) { ?>
+                                <div id="event-resource-timeframe-post-container" class="resource-list">
+                                    <div class="resource-container-post">
+                                        <p class="timeframe-heading">After Class</p>
+                                        <ul class="timeframe-post timeframe">
+                                            <?php
+                                            foreach ($entity_timeframe_post as $entity) {
+                                            ?>
+                                            <li>
+                                                <div>
+                                                    <?php echo $entity["title"]; ?>
+                                                    <?php echo $entity["description"]; ?>
+                                                </div>
+                                                <div>
+                                                    <?php
+                                                    if ($entity["required"] ==  "1") { ?>
+                                                        <span class="label label-important event-resource-stat-label">Required</span>
+                                                    <?php
+                                                    } else { ?>
+                                                        <span class="label label-default event-resource-stat-label">Optional</span>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                    <span class="label label-info event-resource-stat-label"><?php echo html_encode($entity["type"]); ?></span>
+                                                    <?php
+                                                    switch ($entity["type_id"]) {
+                                                        case 1 :
+                                                        case 5 :
+                                                        case 6 :
+                                                        case 11 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/file-event.php?id=".html_encode($entity["efile_id"])."\" title=\"Click to download ".html_encode($title)."\"".(((int) $entity["access_method"]) ? " target=\"_blank\"" : "")."><span class=\"icon-download-alt\"></span></a>";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                        case 3 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".html_encode($entity["elink_id"])."\" title=\"Click to visit ".html_encode($entity["link"])."\"  target=\"_blank\"><span class=\"icon-globe\"></span></a>\n";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                        case 7 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".html_encode($entity["elink_id"])."\" title=\"Click to visit ".html_encode($entity["link"])."\"  target=\"_blank\"><span class=\"icon-globe\"></span></a>\n";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                    }
+                                                    ?>
+                                                </div>
+                                            <?php
+                                            }
+                                            ?>
+                                        </ul>
+                                    </div>
+                                </div>
+                            <?php
+                            }
+
+                            if ($entity_timeframe_none) { ?>
+                                <div id="event-resource-timeframe-none-container" class="resource-list">
+                                    <div class="resource-container-none">
+                                        <p class="timeframe-heading">No Timeframe</p>
+                                        <ul class="timeframe-none timeframe">
+                                            <?php
+                                            foreach ($entity_timeframe_none as $entity) {
+                                            ?>
+                                            <li>
+                                                <div>
+                                                    <?php echo $entity["title"]; ?>
+                                                    <?php echo $entity["description"]; ?>
+                                                </div>
+                                                <div>
+                                                    <?php
+                                                    if ($entity["required"] ==  "1") { ?>
+                                                        <span class="label label-important event-resource-stat-label">Required</span>
+                                                    <?php
+                                                    } else { ?>
+                                                        <span class="label label-default event-resource-stat-label">Optional</span>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                    <span class="label label-info event-resource-stat-label"><?php echo html_encode($entity["type"]); ?></span>
+                                                    <?php
+                                                    switch ($entity["type_id"]) {
+                                                        case 1 :
+                                                        case 5 :
+                                                        case 6 :
+                                                        case 11 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/file-event.php?id=".html_encode($entity["efile_id"])."\" title=\"Click to download ".html_encode($title)."\"".(((int) $entity["access_method"]) ? " target=\"_blank\"" : "")."><span class=\"icon-download-alt\"></span></a>";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                        case 3 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".html_encode($entity["elink_id"])."\" title=\"Click to visit ".html_encode($entity["link"])."\"  target=\"_blank\"><span class=\"icon-globe\"></span></a>\n";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                        case 7 :
+                                                            if ((((!(int) $entity["release_date"]) || ($entity["release_date"] <= time())) && ((!(int) $entity["release_until"]) || ($entity["release_until"] >= time())))) {
+                                                                echo "<span>";
+                                                                echo "<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".html_encode($entity["elink_id"])."\" title=\"Click to visit ".html_encode($entity["link"])."\"  target=\"_blank\"><span class=\"icon-globe\"></span></a>\n";
+                                                                echo "</span>";
+                                                            }
+                                                        break;
+                                                    }
+                                                    ?>
+                                                </div>
+                                            </li>
+                                            <?php
+                                            }
+                                            ?>
+                                        </ul>
+                                    </div>
+                                </div>
+                            <?php
+                            }
+                            ?>
+                        </div>
+                    </div>
+                    <?php
+                    }
+                    ?>
+                    
+                    <div>
+                        <?php
                         echo "<a name=\"event-comments-section\"></a>\n";
                         echo "<h2 title=\"Event Comments Section\">Discussions &amp; Comments</h2>\n";
                         echo "<div id=\"event-comments-section\" class=\"section-holder\">\n";
@@ -1262,6 +1507,7 @@ if (!defined("PARENT_INCLUDED")) {
                             <?php
                             $ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?record_id=".$EVENT_ID."&content_type=event_discussion&action=view')";
                         }
+
                         $editable	= false;
                         $edit_ajax	= array();
                         if ($event_discussions) {
@@ -1276,11 +1522,11 @@ if (!defined("PARENT_INCLUDED")) {
 
                                 $poster_name = get_account_data("firstlast", $result["proxy_id"]);
 
-                                echo "<div id=\"event_comment_".$result["ediscussion_id"]."\" class=\"discussion\"".(($i % 2) ? " style=\"background-color: #F3F3F3\"" : "").">\n";
-                                echo "	<span class=\"discussion-title\">".html_encode($result["discussion_title"])."</span>".(($editable) ? " ( <span id=\"edit_mode_".$result["ediscussion_id"]."\" style=\"cursor: pointer\">edit</span> )" : "")."<br />\n";
-                                echo "	<div class=\"content-small\"><strong>".get_account_data("firstlast", $result["proxy_id"])."</strong>, ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</div>\n";
+                                echo "<blockquote id=\"event_comment_" . (int) $result["ediscussion_id"]."\">\n";
+                                echo " " . html_encode($result["discussion_title"]) . "<br />";
                                 echo "	<div class=\"discussion-comment\" id=\"discussion_comment_".$result["ediscussion_id"]."\">".nl2br(html_encode($result["discussion_comment"]))."</div>\n";
-                                echo "</div>\n";
+                                echo "	<small><strong>".get_account_data("firstlast", $result["proxy_id"])."</strong>, ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." ".($editable ? " ( <span id=\"edit_mode_" . (int) $result["ediscussion_id"] . "\">edit</span> )" : "") . "</small>\n";
+                                echo "</blockquote>\n";
 
                                 $i++;
                             }
@@ -1288,7 +1534,7 @@ if (!defined("PARENT_INCLUDED")) {
                             if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
                                 echo "<script type=\"text/javascript\">\n";
                                 foreach ($edit_ajax as $discussion_id) {
-                                    echo "var editor_".$discussion_id." = new Ajax.InPlaceEditor('discussion_comment_".$discussion_id."', '".ENTRADA_RELATIVE."/api/discussions.api.php', { rows: 7, cols: 75, okText: \"Save Changes\", cancelText: \"Cancel Changes\", externalControl: \"edit_mode_".$discussion_id."\", callback: function(form, value) { return 'action=edit&sid=".session_id()."&id=".$discussion_id."&discussion_comment='+escape(value) } });\n";
+                                    echo "var editor_".$discussion_id." = new Ajax.InPlaceEditor('discussion_comment_".$discussion_id."', '".ENTRADA_RELATIVE."/api/discussions.api.php', { rows: 7, cols: 150, okText: 'Save Changes', cancelText: 'Cancel Changes', externalControl: 'edit_mode_".$discussion_id."', callback: function(form, value) { return 'action=edit&sid=".session_id()."&id=".$discussion_id."&discussion_comment='+escape(value) } });\n";
                                 }
                                 echo "</script>\n";
                             }
@@ -1315,7 +1561,7 @@ if (!defined("PARENT_INCLUDED")) {
 						$sidebar_html .= "	<li class=\"link\"><a href=\"#event-details-section\" onclick=\"$('event-details-section').scrollTo(); return false;\" title=\"Event Details\">Event Details</a></li>\n";
 					}
                     
-                    if ($include_keywords) {
+                    if (isset($include_keywords) && $include_keywords) {
                         $sidebar_html .= "  <li class=\"link\"><a href=\"#event-keywords-section\" onclick=\"$('event-keywords-section').scrollTo(); return false;\" title=\"Event Keywords\">Event Keywords</a></li>\n";
                     }
 
@@ -1334,8 +1580,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 					new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "You are not permitted to access this event. This error has been logged.";
+					add_error("You are not permitted to access this event. This error has been logged.");
 
 					echo display_error($errorstr);
 					application_log("error", "User [".$_SESSION['details']['username']."] tried to access the event [".$EVENT_ID."] and was denied access.");

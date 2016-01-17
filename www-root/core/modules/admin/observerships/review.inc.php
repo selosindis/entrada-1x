@@ -48,7 +48,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 	
 	if ($observership) {
 			
-		$student = User::get($observership->getStudentID());
+		$student = User::fetchRowByID($observership->getStudentID());
 
 		$BREADCRUMB = array();
 		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users", "title" => "Manage Users");
@@ -172,7 +172,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 					<div class="span1">
 						<input type="button" class="btn" value="Back" onclick="window.location = '<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=observerships&id=<?php echo $observership->getStudentID(); ?>'" />
 					</div>
-					<?php if ($ENTRADA_USER->getGroup() == "medtech" || $ENTRADA_USER->getGroup() == "staff") { ?>
+					<?php if ($ENTRADA_USER->getActiveRole() == "admin") { ?>
 					<div class="span1">
 						<input type="button" class="btn" value="Edit" onclick="window.location = '<?php echo ENTRADA_URL; ?>/admin/observerships?section=edit&id=<?php echo $observership->getID(); ?>'" />
 					</div>

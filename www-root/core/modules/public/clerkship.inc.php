@@ -226,7 +226,7 @@ if(!defined("PARENT_INCLUDED")) {
 		
 		if ((isset($clerkship_schedule[0]) && $clerkship_schedule[0]["event_start"] <= time()) || (isset($clerkship_past_schedule) && $clerkship_past_schedule)) {
 			$ROTATION_ID = (isset($clerkship_schedule[0]) && $clerkship_schedule[0]["rotation_id"] ? $clerkship_schedule[0]["rotation_id"] : $clerkship_past_schedule[(count($clerkship_past_schedule) - 1)]["rotation_id"]); 
-			$SHOW_LOGBOOK = ((((int)$_SESSION["details"]["role"]) <= date("Y", strtotime("+1 year"))) ? true : false);
+			$SHOW_LOGBOOK = ((((int)$ENTRADA_USER->getGradYear()) <= date("Y", strtotime("+1 year"))) ? true : false);
 		
 			$clinical_rotation	 	= clerkship_get_rotation(($rotation ? $rotation : ($ROTATION_ID ? $ROTATION_ID : 0)));
 			$rotation				= $clinical_rotation["id"];
@@ -296,6 +296,84 @@ if(!defined("PARENT_INCLUDED")) {
 					new_sidebar_item("Logbook Entries", $sidebar_html, "page-clerkship", "open");
 				}
 			}
+		}
+
+		$sidebar_html = "";
+		$query = "SELECT a.*, b.`rotation_title` FROM `".CLERKSHIP_DATABASE."`.`logbook_overdue` AS a
+					JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS b
+					ON a.`rotation_id` = b.`rotation_id`
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+		if (($overdue = $db->GetRow($query))) {
+			$query = "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+						JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+						ON a.`event_id` = b.`event_id`
+						LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_deficiency_plans` AS c
+						ON c.`proxy_id` = b.`etype_id`
+						AND c.`rotation_id` = a.`rotation_id`
+						WHERE a.`rotation_id` = ".$db->qstr($overdue["rotation_id"])."
+						AND b.`etype_id` = ".$db->qstr($overdue["proxy_id"])."
+						AND (a.`event_finish` > ".$db->qstr(time())." OR (c.`clerk_accepted` = 1))";
+			$deficient_current_events = $db->GetAll($query);
+			if (!$deficient_current_events) {
+				$sidebar_html  = "<a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$overdue["rotation_id"]."\"><img src=\"".ENTRADA_URL."/images/icon-important.gif\" width=\"48\" height=\"48\" alt=\"Clerkship Deficiency Plan Submission\" title=\"Clerkship Deficiency Plan Submission\" border=\"0\"  border=\"0\" align=\"right\" hspace=\"3\" vspace=\"5\" /></a>\n";
+				$sidebar_html .= "Due to reported deficiencies in your clerkship logging for the <strong>".$overdue["rotation_title"]."</strong> rotation, it is asked that you submit a plan detailing how you intend to attain the deficient requirements at a later date. <br/><br/>To submit your plan for this rotation, please <a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$overdue["rotation_id"]."\" style=\"font-size: 11px; font-weight: bold\">click here</a>.\n";
+			}
+		}
+		$query = "SELECT a.*, b.`rotation_title` FROM `".CLERKSHIP_DATABASE."`.`logbook_deficiency_plans` AS a
+					JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS b
+					ON a.`rotation_id` = b.`rotation_id`
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+		$deficiency_plans = $db->GetAll($query);
+		if ($deficiency_plans) {
+			$plans_accepted = false;
+			$plans_pending = false;
+			$plans_rejected = false;
+			if ($overdue && !$deficient_current_events) {
+				$sidebar_html .= "<hr/>\n";
+			}
+			
+			foreach ($deficiency_plans as $plan) {
+				if ($plan["clerk_accepted"] && $plan["administrator_accepted"]) {
+					$plans_accepted = true;
+				} elseif ($plan["clerk_accepted"]) {
+					$plans_pending = true;
+				} elseif ($plan["administrator_comments"]) {
+					$plans_rejected = true;
+				}
+			}
+			if ($plans_accepted) {
+				$sidebar_html .= "<center>Accepted Plans:</center>\n";
+				$sidebar_html .= "<ul class=\"menu\">";
+				foreach ($deficiency_plans as $plan) {
+					if ($plan["clerk_accepted"] && $plan["administrator_accepted"]) {
+						$sidebar_html .= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$plan["rotation_id"]."\"><strong>".$plan["rotation_title"]."</strong></a></li>\n";
+					}
+				}
+				$sidebar_html .= "</ul>";
+			}
+			if ($plans_pending) {
+				$sidebar_html .= "<center>Plans Pending Approval:</center>\n";
+				$sidebar_html .= "<ul class=\"menu\">";
+				foreach ($deficiency_plans as $plan) {
+					if ($plan["clerk_accepted"] && !$plan["administrator_accepted"]) {
+						$sidebar_html .= "	<li><a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$plan["rotation_id"]."\"><strong>".$plan["rotation_title"]."</strong></a></li>\n";
+					}
+				}
+				$sidebar_html .= "</ul>";
+			}
+			if ($plans_rejected) {
+				$sidebar_html .= "<center>Rejected Plans:</center>\n";
+				$sidebar_html .= "<ul class=\"menu\">";
+				foreach ($deficiency_plans as $plan) {
+					if ($plan["administrator_comments"] && !$plan["clerk_accepted"]) {
+						$sidebar_html .= "	<li class=\"incorrect\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$plan["rotation_id"]."\"><strong>".$plan["rotation_title"]."</strong></a></li>\n";
+					}
+				}
+				$sidebar_html .= "</ul>";
+			}
+		}
+		if ($deficiency_plans || ($overdue && !$deficient_current_events)) {
+			new_sidebar_item("Deficiency Plans", $sidebar_html, "page-clerkship", "open");
 		}
 	}
 

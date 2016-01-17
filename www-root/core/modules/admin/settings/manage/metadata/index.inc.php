@@ -22,12 +22,12 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read",false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read", false)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -35,80 +35,63 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	?>
-	<h1>Manage Meta Data</h1>
+	<h1>User Meta Data</h1>
 
-	<div class="clearfix">
-		<div class="pull-right">
-			<a href="<?php echo ENTRADA_URL; ?>/admin/settings/manage/metadata?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="btn btn-primary">Add New Meta Data</a>
-		</div>
-
+	<div class="row-fluid">
+		<span class="pull-right">
+			<a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/settings/manage/metadata?section=add&amp;org=<?php echo $ORGANISATION_ID;?>"><i class="icon-plus-sign icon-white"></i> Add Meta Data</a>
+		</span>
 	</div>
+	<br />
 	<?php
-
-	/*
-	 * To change this template, choose Tools | Templates
-	 * and open the template in the editor.
-	 */
-
-
-	$query = "	SELECT DISTINCT a.`meta_type_id`, a.`label`,a.`parent_type_id` 
+	$query = "	SELECT DISTINCT a.`meta_type_id`, a.`label`,a.`parent_type_id`
 				FROM `meta_types` AS a 
 				JOIN `meta_type_relations` AS b 
 				ON a.`meta_type_id` = b.`meta_type_id` 
 				AND b.`entity_value` LIKE '".$ORGANISATION_ID.":%'";
 	$metadata_types = $db->GetAll($query);
-
-	if($metadata_types){
-	?>
-	<form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/metadata?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
-	<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Organisations">
-		<colgroup>
-			<col class="modified" />
-			<col class="title" />
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="modified">&nbsp;</td>
-				<td class="title">Event Type</td>
-			</tr>
-		</thead>
-		<tbody>
-			<?php
-				foreach($metadata_types as $type){
-					if($type["parent_type_id"] == null){
-						echo "<tr><td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$type["meta_type_id"]."\" id=\"parent-".$type["meta_type_id"]."\" onclick=\"selectChildren(".$type["meta_type_id"].")\"/></td>";
-						echo"<td><a href=\"".ENTRADA_URL."/admin/settings/manage/metadata?section=edit&amp;org=".$ORGANISATION_ID."&amp;meta=".$type["meta_type_id"]."\">".$type["label"]."</a></td></tr>";
-						foreach($metadata_types as $child){
-							if($child["parent_type_id"] == $type["meta_type_id"]){
-								echo "<tr><td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$child["meta_type_id"]."\" class=\"child-".$type["meta_type_id"]."\"/></td>";
-								echo"<td><a href=\"".ENTRADA_URL."/admin/settings/manage/metadata?section=edit&amp;org=".$ORGANISATION_ID."&amp;meta=".$child["meta_type_id"]."\">".$type["label"]." → ".$child["label"]."</a></td></tr>";							
+	if ($metadata_types) {
+		?>
+		<form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/metadata?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
+			<table class="table table-striped" summary="User Meta Data">
+				<colgroup>
+					<col style="width: 3%" />
+					<col style="width: 97%" />
+				</colgroup>
+				<tbody>
+					<?php
+					foreach ($metadata_types as $type) {
+						if ($type["parent_type_id"] == null){
+							echo "<tr>";
+							echo "	<td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$type["meta_type_id"]."\" id=\"parent-".$type["meta_type_id"]."\" onclick=\"selectChildren(".$type["meta_type_id"].")\"/></td>";
+							echo"	<td><a href=\"".ENTRADA_URL."/admin/settings/manage/metadata?section=edit&amp;org=".$ORGANISATION_ID."&amp;meta=".$type["meta_type_id"]."\">".$type["label"]."</a></td>";
+							echo "</tr>";
+							foreach ($metadata_types as $child) {
+								if ($child["parent_type_id"] == $type["meta_type_id"]) {
+									echo "<tr>";
+									echo "	<td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$child["meta_type_id"]."\" class=\"child-".$type["meta_type_id"]."\"/></td>";
+									echo "	<td><a href=\"".ENTRADA_URL."/admin/settings/manage/metadata?section=edit&amp;org=".$ORGANISATION_ID."&amp;meta=".$child["meta_type_id"]."\">".$type["label"]." → ".$child["label"]."</a></td>";
+									echo "</tr>";
+								}
 							}
 						}
 					}
-				}
-			?>
-		</tbody>
-		<script type="text/javascript">
-			function selectChildren(id){
-				$$('.child-'+id).each(function(checkbox){
-					checkbox.checked = $('parent-'+id).checked;
-					checkbox.disabled = checkbox.checked;
-				});
-			}
-		</script>
-	</table>
-	<br />
-	<input type="submit" class="btn btn-danger" value="Delete Selected" />
-	</form>
-	<?php
-
+					?>
+				</tbody>
+				<script type="text/javascript">
+					function selectChildren(id){
+						$$('.child-'+id).each(function(checkbox){
+							checkbox.checked = $('parent-'+id).checked;
+							checkbox.disabled = checkbox.checked;
+						});
+					}
+				</script>
+			</table>
+			<input type="submit" class="btn btn-danger" value="Delete Selected" />
+		</form>
+		<?php
+	} else {
+		add_notice("There are currently no User Meta Data types assigned to this organization.");
+		echo display_notice();
 	}
-	else{
-		$NOTICE++;
-		$NOTICESTR[] = "There are currently no Meta Data types assigned to this Organisation";
-		echo "<br />".display_notice();
-
-	}
-
 }
-

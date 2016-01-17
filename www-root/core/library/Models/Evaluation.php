@@ -819,7 +819,9 @@ class Models_Evaluation {
                                 }
 								echo "				<div style=\"position: relative; top: 50%;\">\n";
                                 echo "                  <strong>".$question["question_text"]."</strong>\n";
-                                echo "                  <div class=\"space-above content-small\">".nl2br($question["question_description"])."</div>";
+                                if (isset($question["question_description"]) && $question["question_description"]) {
+                                    echo "                  <div class=\"space-above content-small\">".nl2br($question["question_description"])."</div>";
+                                }
                                 echo "              </div>\n";
 								echo "			</div>\n";
 								echo "		</td>\n";
@@ -3883,6 +3885,7 @@ class Models_Evaluation {
 					switch ($evaluation["target_shortname"]) {
 						case "preceptor" :
 							$permissions[] = array("preceptor_proxy_id" => $ENTRADA_USER->getActiveId(), "target_type" => "rotation_id", "contact_type" => "preceptor");
+                        break;
 						case "rotation_core" :
 						case "rotation_elective" :
 							foreach ($evaluation_targets as $evaluation_target) {

@@ -23,7 +23,7 @@ define("IN_ANNOUNCEMENTS", true);
 communities_build_parent_breadcrumbs();
 
 $BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL, "title" => $MENU_TITLE);
-$ALLOWED_HTML_TAGS = "<span><a><ol><ul><li><strike><br><p><div><strong><em><h1><h2><h3><small>";
+$ALLOWED_HTML_TAGS = "<span><a><ol><ul><li><strike><br><p><div><em><h1><h2><h3><small>";
 
 $RECORD_AUTHOR = $db->GetOne("SELECT `proxy_id` FROM `community_announcements` WHERE `cannouncement_id` = ".$db->qstr($RECORD_ID));
 
@@ -32,8 +32,9 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, $SECTION)) {
 		/**
 		 * Add the RSS feed version of the page to the <head></head> tags.
 		 */
-		$HEAD[] = "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"%TITLE% ".$MENU_TITLE." RSS 2.0\" href=\"".COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss20\" />";
-		$HEAD[] = "<link rel=\"alternate\" type=\"text/xml\" title=\"%TITLE% ".$MENU_TITLE." RSS 0.91\" href=\"".COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss\" />";
+		$PRIVATE_HASH = (isset($_SESSION["details"]["private_hash"]) ? "private-".html_encode($_SESSION["details"]["private_hash"]) : "");
+		$HEAD[] = "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"%TITLE% ".$MENU_TITLE." RSS 2.0\" href=\"".COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss20:".$PRIVATE_HASH."\" />";
+		$HEAD[] = "<link rel=\"alternate\" type=\"text/xml\" title=\"%TITLE% ".$MENU_TITLE." RSS 0.91\" href=\"".COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss:".$PRIVATE_HASH."\" />";
 	
 		require_once($section_to_load);
 	} else {

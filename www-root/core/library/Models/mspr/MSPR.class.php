@@ -54,7 +54,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 	 * @return User
 	 */
 	function getUser() {
-		return User::get($this->user_id);
+		return User::fetchRowByID($this->user_id);
 	}
 	
 	/**

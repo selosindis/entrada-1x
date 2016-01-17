@@ -94,7 +94,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                 $modal_onload[]	= "closeWizard()";
 
                 $ERROR++;
-                $ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.";
+                $ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact us for assistance.";
 
                 echo display_error();
 
@@ -594,7 +594,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                         <div style="font-size: 14px">Is the use of this resource required or optional by the learner?</div>
                                                         <div style="padding-left: 65px">
                                                             <input type="radio" id="required_no" name="required" value="no"<?php echo (((!isset($PROCESSED["required"])) || (!$PROCESSED["required"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">optional</label><br />
-                                                            <input type="radio" id="required_yes" name="required" value="yes"<?php echo (($PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">required</label><br />
+                                                            <input type="radio" id="required_yes" name="required" value="yes"<?php echo ((isset($PROCESSED["required"]) && $PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">required</label><br />
                                                         </div>
                                                     </div>
 

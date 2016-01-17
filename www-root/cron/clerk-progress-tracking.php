@@ -57,6 +57,7 @@ if ($rotations) {
 					ON b.`etype_id` = g.`proxy_id`
 					AND a.`rotation_id` = g.`rotation_id`
 					WHERE b.`econtact_type` = 'student'
+                    AND a.`event_status` != 'trash'
 					AND a.`event_start` > ".$db->qstr(strtotime("December 25th, 2009"))."
 					AND f.`group` >= 'student'
 					AND f.`role` >= ".$db->qstr(CLERKSHIP_FIRST_CLASS)."

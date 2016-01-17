@@ -56,8 +56,6 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	exit;
 } else {
 
-	global $translate;
-
 	$ENCODED_INFORMATION = "";
 
 	if((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
@@ -111,10 +109,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
 	$feedback_form = $translate->_("global_feedback_widget");
 
-	if ($feedback_form["global"][$WHO]["form"]) {
+	if (isset($feedback_form["global"][$WHO]["form"])) {
 		$form_content = $feedback_form["global"][$WHO]["form"];
-	} else if ($feedback_form[$ENTRADA_USER->getGroup()][$WHO]["form"]) {
+	} else if (isset($feedback_form[$ENTRADA_USER->getGroup()][$WHO]["form"])) {
 		$form_content = $feedback_form[$ENTRADA_USER->getGroup()][$WHO]["form"];
+	} else if (isset($feedback_form["clerkship"][$WHO]["form"])) {
+		$form_content = $feedback_form["clerkship"][$WHO]["form"];
 	} else {
 		add_error("There was a problem loading the feedback form for the contact you selected. A system administrator has been informed, please try again later.");
 	}
@@ -141,7 +141,14 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						unset($tmp_information);
 					}
 
-					$message  = "Attention ".$AGENT_CONTACTS["agent-anonymous-feedback"]["name"]."\n";
+                    $recipient_name = (isset($AGENT_CONTACTS["agent-anonymous-feedback"]["name"]) ? $AGENT_CONTACTS["agent-anonymous-feedback"]["name"] : APPLICATION_NAME." Administrator");
+                    if (isset($form_content["recipients"]) && @count($form_content["recipients"]) == 1) {
+                        foreach ($form_content["recipients"] as $recipient) {
+                            $recipient_name = $recipient;
+                        }
+                    }
+
+					$message  = "Attention ".$recipient_name."\n";
 					$message .= "The following student feedback information has been submitted:\n";
 					$message .= "=======================================================\n\n";
 					$message .= "Submitted At:\t\t".date("r", time())."\n";
@@ -168,7 +175,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						$mail->addTo($email, $name);
 					}
 
-					$message = "The following feedback information has been submitted:\n";
+					$message = "The following ".($WHO == "clerkship_professionalism" ? "Clerkship Professionalism Narrative" : "feedback information")." has been submitted:\n";
 					$message .= "=======================================================\n\n";
 					$message .= "Submitted At:\t\t".date("r", time())."\n";
 					$message .= "Submitted By:\t\t".$fullname." [".((isset($_POST["hide_identity"])) ? "withheld" : $_SESSION["details"]["username"])."]\n";
@@ -176,16 +183,17 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					$message .= "Comments / Feedback:\n";
 					$message .= "-------------------------------------------------------\n";
 					$message .= clean_input($_POST["feedback"], array("trim", "emailcontent"))."\n\n";
+                    if ($WHO == "system") {
 					$message .= "Web-Browser / OS:\n";
 					$message .= "-------------------------------------------------------\n";
 					$message .= clean_input($_SERVER["HTTP_USER_AGENT"], array("trim", "emailcontent"))."\n\n";
 					$message .= "URL Sent From:\n";
 					$message .= "-------------------------------------------------------\n";
 					$message .= ((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input($extracted_information["url"], array("trim", "emailcontent"))."\n\n";
+                    }
 					$message .= "=======================================================";
 
 					$mail->setBodyText($message);
-
 					if($mail->Send()) {
 						echo "<h4>Feedback Submission Successful</h4>";
 						add_success("Thank-you for providing us with your valuable feedback.<br /><br />Once again, thank-you for using our automated anonymous feedback system and feel free to submit comments any time.");
@@ -234,7 +242,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					<?php } ?>
 					<div class="control-group">
 						<label for="feedback" class="form-required control-label">Feedback or Comments:</label>
-						<div class="controls"><textarea id="feedback" name="feedback" maxlength="750"></textarea></div>
+						<div class="controls"><textarea id="feedback" class="resize-vertical" name="feedback"></textarea></div>
 					</div>
 					<div class="row-fluid">
 						<input type="button" class="btn" value="Close" />

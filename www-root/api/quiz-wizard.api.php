@@ -127,7 +127,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					$modal_onload[]	= "closeWizard()";
 
 					$ERROR++;
-					$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.";
+					$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact us for assistance.";
 
 					echo display_error();
 
@@ -532,22 +532,27 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
 														<div class="wizard-question">
 															<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Time Release Information">
-															<colgroup>
-																<col style="width: 3%" />
-																<col style="width: 30%" />
-																<col style="width: 67%" />
-															</colgroup>
-															<tr>
-																<td colspan="3"><h2>Time Release Options</h2></td>
-															</tr>
-															<?php
-																if (isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
-																	$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
-																	$quiztype = $db->GetOne($query);
-																	$quiz_results_delayed = ($quiztype == "delayed" ? true : false);
-																}
-																echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $quiz_results_delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
-															?>
+																<colgroup>
+																	<col style="width: 20%" />
+																	<col style="width: 80%" />
+																</colgroup>
+																<tr>
+																	<td colspan="2"><h2>Time Release Options</h2></td>
+																</tr>
+																<tr>
+																	<td colspan="2">
+																		<table class="date-time">
+																<?php
+																	if (isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
+																		$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
+																		$quiztype = $db->GetOne($query);
+																		$quiz_results_delayed = ($quiztype == "delayed" ? true : false);
+																	}
+																	echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $quiz_results_delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
+																?>
+																		</table>
+																	</td>
+																</tr>
 															</table>
 														</div>
 													</div>
@@ -1478,7 +1483,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					$modal_onload[]	= "closeWizard()";
 
 					$ERROR++;
-					$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.";
+					$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact us for assistance.";
 
 					echo display_error();
 
@@ -2589,7 +2594,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													}
 													?>
 													<div class="wizard-question">
-														<table class="tableList" cellspacing="0" summary="List of Quizzes">
+														<table class="table table-striped table-bordered" cellspacing="0" summary="List of Quizzes">
 														<colgroup>
 															<col class="modified" />
 															<col class="title" />
@@ -2597,24 +2602,23 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														</colgroup>
 														<thead>
 															<tr>
-																<td class="modified">&nbsp;</td>
-																<td class="title sortedASC"><div class="noLink">Quiz Title</div></td>
-																<td class="completed">Questions</td>
+																<td colspan="2" class="title sortedASC" style="border-left:none;"><div class="noLink">Quiz Title</div></td>
+																<td class="completed" style="border-left:none;">Questions</td>
 															</tr>
 														</thead>
 														<tbody>
 															<?php
 															foreach ($results as $result) {
 																echo "<tr id=\"quiz-".$result["quiz_id"]."\">\n";
-																echo "	<td style=\"vertical-align: top\"><input type=\"radio\" id=\"quiz_id_".$result["quiz_id"]."\" name=\"quiz_id\" value=\"".$result["quiz_id"]."\"".(((isset($PROCESSED["quiz_id"])) && ($PROCESSED["quiz_id"] == $result["quiz_id"])) ? " checked=\"checked\"" : "")." /></td>\n";
-																echo "	<td style=\"vertical-align: top\">\n";
+																echo "	<td class=\"center\" style=\"vertical-align: middle\"><input type=\"radio\" id=\"quiz_id_".$result["quiz_id"]."\" name=\"quiz_id\" value=\"".$result["quiz_id"]."\"".(((isset($PROCESSED["quiz_id"])) && ($PROCESSED["quiz_id"] == $result["quiz_id"])) ? " checked=\"checked\"" : "")." /></td>\n";
+																echo "	<td style=\"vertical-align: middle\">\n";
 																echo "		<label for=\"quiz_id_".$result["quiz_id"]."\" class=\"form-nrequired\" style=\"font-weight: bold\">".html_encode($result["quiz_title"])."</label>\n";
 																echo "		<div class=\"content-small\" style=\"white-space: normal\">".clean_input(limit_chars($result["quiz_description"], 150), "allowedtags")."</div>\n";
 																if (in_array($result["quiz_id"], $existing_quiz_relationship)) {
 																	echo "<div class=\"display-notice-inline\"><img src=\"".ENTRADA_URL."/images/list-notice.gif\" width=\"11\" height=\"11\" alt=\"Notice\" title=\"Notice\" style=\"margin-right: 10px\" />This quiz is already attached to this community page.</div>";
 																}
 																echo "	</td>\n";
-																echo "	<td style=\"vertical-align: top\" class=\"completed\">".html_encode($result["question_total"])."</td>\n";
+																echo "	<td class=\"center\" style=\"vertical-align: middle\" class=\"completed\">".html_encode($result["question_total"])."</td>\n";
 																echo "</tr>\n";
 															}
 															?>

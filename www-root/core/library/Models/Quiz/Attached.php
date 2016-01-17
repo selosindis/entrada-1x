@@ -62,6 +62,40 @@ class Models_Quiz_Attached extends Models_Base {
         return $db->GetRow();
     }
     
+    public function getViewed() {
+        global $db;
+        global $ENTRADA_USER;
+        
+        $query = "  SELECT `statistic_id`, `proxy_id`, `module`, `action`, `action_field`, `action_value`, `prune_after`, MAX(`timestamp`) AS `timestamp`
+                    FROM `statistics`
+                    WHERE `module` = 'events'
+                    AND `proxy_id` = ?
+                    AND `action` = 'quiz_complete'
+                    AND `action_field` = 'aquiz_id'
+                    AND `action_value` = ?";
+        
+        $result = $db->GetRow($query, array($ENTRADA_USER->getActiveId(), $this->aquiz_id));
+        if ($result) {
+            return new Models_Statistic($result);
+        } else {
+            return false;
+        }
+    }
+    
+    public static function fetchRowByID($id = null) {
+        $self = new self();
+        
+        $constraints = array(
+            array(
+               "key" => "aquiz_id",
+               "value" => $id,
+               "method" => "="
+            )
+        );
+        
+        return $self->fetchRow($constraints);
+    }
+    
     public function getAquizID() {
         return $this->aquiz_id;
     }
@@ -154,6 +188,31 @@ class Models_Quiz_Attached extends Models_Base {
         } else {
             return false;
         }
+    }
+    
+    public function delete() {
+        global $db;
+        
+        $query = "DELETE FROM `".$this->table_name."` WHERE `aquiz_id` = ?";
+        if ($db->Execute($query, $this->aquiz_id)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public static function getCurrentContact($quiz_id, $proxy_id) {
+        global $db;
+        $query	= "SELECT b.`proxy_id`
+                    FROM `attached_quizzes` AS a
+                    LEFT JOIN `event_contacts` AS b
+                    ON a.`content_type` = 'event'
+                    AND a.`content_id` = b.`event_id`
+                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+                    ON b.`proxy_id` = c.`id`
+                    WHERE a.`quiz_id` = ".$db->qstr($quiz_id)."
+                    AND b.`proxy_id` = ".$db->qstr($proxy_id);
+        return $db->getRow($query);
     }
     
 }

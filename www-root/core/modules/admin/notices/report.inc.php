@@ -45,7 +45,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			"timestamp" => array()
 		);
 
-		$query = "SELECT * FROM `statistics` WHERE `module` = 'notices' AND `action` = 'read' AND `action_field` = 'notice_id' AND `action_value` = ".$db->qstr($NOTICE_ID);
+		$query = "SELECT *, MIN(`timestamp`) AS `timestamp` FROM `statistics` 
+            WHERE `module` = 'notices' 
+            AND `action` = 'read' 
+            AND `action_field` = 'notice_id' 
+            AND `action_value` = ".$db->qstr($NOTICE_ID)."
+            GROUP BY `proxy_id`";
 		$reads = $db->GetAll($query);
 
 		if ($reads) {

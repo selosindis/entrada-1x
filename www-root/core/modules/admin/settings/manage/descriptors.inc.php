@@ -23,7 +23,7 @@
 
 if ((!defined("PARENT_INCLUDED"))) {
     exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
     header("Location: ".ENTRADA_URL);
     exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read", false)) {
@@ -35,7 +35,7 @@ if ((!defined("PARENT_INCLUDED"))) {
 } else {
     define(("IN_DESCRIPTORS"),	true);
 
-    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/descriptors?org=".$ORGANISATION_ID, "title" => "Manage Evaluation Response Descriptors");
+    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/descriptors?org=".$ORGANISATION_ID, "title" => "Response Descriptors");
 
     if (($router) && ($router->initRoute())) {
         $PREFERENCES = preferences_load($MODULE);

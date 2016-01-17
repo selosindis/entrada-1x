@@ -27,7 +27,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	require_once("Models/users/User.class.php");
 	require_once("Models/mspr/DisciplinaryActions.class.php");
 		
-	$user = User::get($user_record["id"]);
+	$user = User::fetchRowByID($user_record["id"]);
 	
 	$PAGE_META["title"]			= "Disciplinary Actions";
 	$PAGE_META["description"]	= "";

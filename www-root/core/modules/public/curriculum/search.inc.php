@@ -40,31 +40,31 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
     /**
      * Meta information for this page.
      */
-	$PAGE_META["title"]			= "Curriculum Search";
-	$PAGE_META["description"]	= "Allowing you to search the curriculum for specific key words and events.";
-	$PAGE_META["keywords"]		= "";
+	$PAGE_META["title"] = "Curriculum Search";
+	$PAGE_META["description"] = "Allowing you to search the curriculum for specific key words and events.";
+	$PAGE_META["keywords"] = "";
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/curriculum/search", "title" => "Search");
 
-	$SEARCH_QUERY				= "";
-	$SEARCH_MODE				= "standard";
-	$SEARCH_CLASS				= 0;
-	$SEARCH_YEAR				= 0;
-	$SEARCH_DURATION			= array();
-	$SEARCH_ORGANISATION		= $ENTRADA_USER->getActiveOrganisation();
-	$RESULTS_PER_PAGE			= 10;
+	$SEARCH_QUERY = "";
+	$SEARCH_MODE = "standard";
+	$SEARCH_CLASS = 0;
+	$SEARCH_YEAR = 0;
+	$SEARCH_DURATION = array();
+	$SEARCH_ORGANISATION = $ENTRADA_USER->getActiveOrganisation();
+	$RESULTS_PER_PAGE = 25;
 
 	/**
 	 * The query that is actually be searched for.
 	 */
-	if ((isset($_GET["q"])) && ($tmp_input = clean_input($_GET["q"]))) {
+	if (isset($_GET["q"]) && ($tmp_input = clean_input($_GET["q"]))) {
 		$SEARCH_QUERY = $tmp_input;
 	}
 
 	/**
 	 * The mode that results are displayed in.
 	 */
-	if ((isset($_GET["m"])) && (trim($_GET["m"]) == "timeline")) {
+	if (isset($_GET["m"]) && (trim($_GET["m"]) == "timeline")) {
 		$SEARCH_MODE = "timeline";
 	}
 
@@ -72,57 +72,30 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
         /**
          * Check if c variable is set for Class of.
          */
-		if ((isset($_GET["c"])) && ($tmp_input = clean_input($_GET["c"], array("nows", "int")))) {
+		if (isset($_GET["c"]) && ($tmp_input = clean_input($_GET["c"], array("nows", "int")))) {
 			$SEARCH_CLASS = $tmp_input;
 		}
 
 		/**
 		 * Check if o variable is set for Organisation
 		 */
-		if (isset($_GET["o"])) {
-			if ($_GET["o"] == 'all') {
-				$SEARCH_ORGANISATION = 'all';
-			} else if ($tmp_input = clean_input($_GET["o"], array("nows", "int"))) {
-				$SEARCH_ORGANISATION = $tmp_input;
-			}
+		if (isset($_GET["o"]) && ($tmp_input = clean_input($_GET["o"], array("nows", "int")))) {
+			$SEARCH_ORGANISATION = $tmp_input;
 		}
+
 		/**
 		 * Check if y variable is set for Academic year.
 		 */
-		if ((isset($_GET["y"])) && ($tmp_input = clean_input($_GET["y"], array("nows", "int")))) {
-			$SEARCH_YEAR				= $tmp_input;
-
-			$SEARCH_DURATION["start"]	= mktime(0, 0, 0, 9, 1, $SEARCH_YEAR);
-			$SEARCH_DURATION["end"]		= strtotime("+1 year", $SEARCH_DURATION["start"]);
+		if (isset($_GET["y"]) && ($tmp_input = clean_input($_GET["y"], array("nows", "int")))) {
+			$SEARCH_YEAR = $tmp_input;
 		}
 
 		if ($SEARCH_MODE == "standard") {
-			$query_counter = "	SELECT COUNT(DISTINCT(a.`event_id`)) AS `total_rows`
-								FROM `events` AS a
-								LEFT JOIN `event_audience` AS b
-								ON b.`event_id` = a.`event_id`
-								LEFT JOIN `courses` AS c
-								ON a.`course_id` = c.`course_id`
-								WHERE (a.`parent_id` IS NULL OR a.`parent_id` = '0')
-								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'cohort' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
-								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
-								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
-								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)";
 
-			$query_search = "	SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_cohort`, MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE) AS `rank`
-								FROM `events` AS a
-								LEFT JOIN `event_audience` AS b
-								ON b.`event_id` = a.`event_id`
-								LEFT JOIN `courses` AS c
-								ON a.`course_id` = c.`course_id`
-								WHERE (a.`parent_id` IS NULL OR a.`parent_id` = '0')
-								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'cohort' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
-								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
-								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
-								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)
-								GROUP BY a.`event_id`
-								ORDER BY `rank` DESC, `event_start` DESC
-								LIMIT %s, %s";
+            $queries = Entrada_Curriculum_Search::prepare($SEARCH_QUERY, $SEARCH_ORGANISATION, $SEARCH_CLASS, $SEARCH_YEAR);
+
+            $query_counter = $queries["counter"];
+			$query_search = $queries["search"];
 
 			/**
 			 * Get the total number of results using the generated queries above and calculate the total number
@@ -141,7 +114,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 				}
 			} else {
 				$TOTAL_ROWS	= 0;
-				$TOTAL_PAGES	= 1;
+				$TOTAL_PAGES = 1;
 			}
 
 			/**
@@ -157,12 +130,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 				$PAGE_CURRENT = 1;
 			}
 
-			$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
-			$PAGE_NEXT	= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
+			$PAGE_PREVIOUS = (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
+			$PAGE_NEXT = (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
 		}
 	}
     search_subnavigation("search");
 	?>
+
 	<h1>Curriculum Search</h1>
 	<form action="<?php echo ENTRADA_RELATIVE; ?>/curriculum/search" method="get" class="form-horizontal">
 		<?php
@@ -184,7 +158,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 			</div>
 		</div>
 		<div class="control-group">
-			<label class="control-label">Graduating Class:</label>
+			<label class="control-label">Cohort:</label>
 			<div class="controls">
 				<select id="c" name="c">
                     <option value="0"<?php echo ((!$SEARCH_CLASS) ? " selected=\"selected\"" : ""); ?>>-- All Cohorts --</option>
@@ -375,7 +349,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 					}
 				}
 
-				new_sidebar_item("Class Result Totals", "<div id=\"class-result-totals\"></div>", "result-totals", "open");
+				new_sidebar_item("Cohort Result Totals", "<div id=\"class-result-totals\"></div>", "result-totals", "open");
 			break;
 			case "standard" :
 			default :
@@ -419,18 +393,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 					echo "	<tbody>\n";
 					echo "		<tr>\n";
 					echo "			<td style=\"font-size: 14px; font-weight: bold; color: #003366\">Search Results:</td>\n";
-					echo "			<td style=\"text-align: right; font-size: 10px; color: #666666; overflow: hidden; white-space: nowrap\">".$TOTAL_ROWS." Result".(($TOTAL_ROWS != 1) ? "s" : "")." Found. Results ".($limit_parameter + 1)." - ".((($RESULTS_PER_PAGE + $limit_parameter) <= $TOTAL_ROWS) ? ($RESULTS_PER_PAGE + $limit_parameter) : $TOTAL_ROWS)." for &quot;<strong>".html_encode($SEARCH_QUERY)."</strong>&quot; shown below.</td>\n";
+					echo "			<td style=\"text-align: right; font-size: 10px; color: #666666; overflow: hidden; white-space: nowrap\">".$TOTAL_ROWS." Result".(($TOTAL_ROWS != 1) ? "s" : "")." Found. Results ".($limit_parameter + 1)." - ".((($RESULTS_PER_PAGE + $limit_parameter) <= $TOTAL_ROWS) ? ($RESULTS_PER_PAGE + $limit_parameter) : $TOTAL_ROWS)." for &quot;<strong>".html_encode(limit_chars($SEARCH_QUERY, 65))."</strong>&quot; shown below.</td>\n";
 					echo "		</tr>\n";
 					echo "	</tbody>\n";
 					echo "	</table>\n";
 					echo "</div>";
 
 					foreach ($results as $result) {
-						$description = search_description($result["event_objectives"]." ".$result["event_goals"]);
+						$description = search_description($SEARCH_QUERY, $result["event_description"]);
 
-						echo "<div id=\"result-".$result["event_id"]."\" style=\"width: 100%; margin-bottom: 10px; line-height: 16px;\">\n";
-						echo "	<a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"font-weight: bold\">".html_encode($result["event_title"])."</a> <span class=\"content-small\">Event on ".date(DEFAULT_DATE_FORMAT, $result["event_start"])."; ".(($result["audience_type"] == "cohort") ? html_encode(groups_get_name($result["event_cohort"])) : "Group Activity")."</span><br />\n";
-						echo 	(($description) ? $description : "Description not available.")."\n";
+						echo "<div id=\"result-".$result["event_id"]."\" class=\"space-below\">\n";
+						echo "	<a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"font-weight: bold\">".html_encode($result["event_title"])."</a> <span class=\"muted\"> on ".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</span><br />\n";
+						echo 	(($description) ? clean_input($description, array("decode", "notags")) : "")."\n";
 						echo "	<div style=\"white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"color: green; font-size: 11px\" target=\"_blank\">".ENTRADA_URL."/events?id=".$result["event_id"]."</a></div>\n";
 						echo "</div>\n";
 					}
@@ -441,7 +415,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 						echo "	There are no teaching events found which contain matches to &quot;<strong>".html_encode($SEARCH_QUERY)."</strong>&quot;.";
 						if (($SEARCH_CLASS) || ($SEARCH_YEAR) || ($SEARCH_ORGANISATION)) {
 							echo "<br /><br />\n";
-							echo "You may wish to try modifying or removing the Graduating Class, Academic Year, or Organisation limiters.\n";
+							echo "You may wish to try modifying or removing the Cohort or Academic Year limiters.\n";
 						}
 						echo "</div>\n";
 					} else {

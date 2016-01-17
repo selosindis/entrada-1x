@@ -195,65 +195,74 @@ if ($RECORD_ID) {
 					}
 					?>
 					<a name="top"></a>
-					<div id="photo-<?php echo $RECORD_ID; ?>" style="padding-top: 10px; clear: both">
 						<?php
 						if ($NAVIGATION) {
-							echo "	<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
+							echo "	<table>\n";
 							echo "	<tbody>\n";
 							echo "		<tr>\n";
-							echo "			<td style=\"text-align: left\">\n".(((int) $NAVIGATION["back"]) ? "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&amp;id=".(int) $NAVIGATION["back"]."\">&laquo; Previous Photo</a>" : "&nbsp;")."</td>";
-							echo "			<td style=\"text-align: right\">\n".(((int) $NAVIGATION["next"]) ? "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&amp;id=".(int) $NAVIGATION["next"]."\">Next Photo &raquo;" : "&nbsp;")."</td>";
+							echo "			<td style=\"text-align: left\">\n".(((int) $NAVIGATION["back"]) ? "<a class=\"btn btn-success\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&amp;id=".(int) $NAVIGATION["back"]."\"><i class=\"icon-chevron-left icon-white\"></i> Previous Photo</a>" : "&nbsp;")."</td>";
+							echo "			<td style=\"text-align: right\">\n".(((int) $NAVIGATION["next"]) ? "<a class=\"btn btn-success\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&amp;id=".(int) $NAVIGATION["next"]."\">Next Photo <i class=\"icon-chevron-right icon-white\"></a>" : "&nbsp;")."</td>";
 							echo "		</tr>\n";
 							echo "	</tbody>\n";
 							echo "	</table>\n";
 						}
 						?>
-						<table class="galleries" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-						<colgroup>
-							<col style="width: 30%" />
-							<col style="width: 70%" />
-						</colgroup>
-						<tbody>
-							<tr>
-								<td colspan="2" class="content" style="padding-top: 15px">
-									<?php
+						<table>
+							<colgroup>
+								<col style="width: 20%" />
+								<col style="width: 80%" />
+							</colgroup>
+							<tbody>
+								<tr>
+									<td colspan="2" style="padding-top: 15px; text-align: center;">
+										<?php
 
-									if ((@file_exists(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID)) && (@is_readable(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID))) {
-										$photo_url	= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&amp;id=".$RECORD_ID."&amp;render=image";
-										list($width, $height) = @getimagesize(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID);
-									} else {
-										$photo_url	= COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE."/images/galleries-no-photo.gif";
-										$width		= 150;
-										$height		= 150;
-									}
-									?>
-									<div style="text-align: center">
+										if ((@file_exists(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID)) && (@is_readable(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID))) {
+											$photo_url	= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&amp;id=".$RECORD_ID."&amp;render=image";
+											list($width, $height) = @getimagesize(COMMUNITY_STORAGE_GALLERIES."/".$RECORD_ID);
+										} else {
+											$photo_url	= COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE."/images/galleries-no-photo.gif";
+											$width		= 150;
+											$height		= 150;
+										}
+										?>
 										<img src="<?php echo $photo_url; ?>" width="<?php echo (int) $width; ?>" height="<?php echo (int) $height; ?>" alt="<?php echo html_encode($photo_record["photo_title"]); ?>" title="<?php echo html_encode($photo_record["photo_title"]); ?>" />
-									</div>
-									<div style="margin: 15px">
+									</td>
+								</tr>
+								<tr>
+									<td  colspan="2">
 										<h2 id="photo-<?php echo $RECORD_ID; ?>-title"><?php echo html_encode($photo_record["photo_title"]); ?></h2>
-										<?php echo nl2br(html_encode($photo_record["photo_description"])); ?>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<td style="border-right: none"><span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($photo_record["uploader_username"]); ?>" style="font-size: 10px"><?php echo html_encode($photo_record["uploader_fullname"]); ?></a></td>
-								<td>
-									<div style="float: left">
-										<span class="content-small"><strong>Uploaded:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $photo_record["updated_date"]); ?></span>
-									</div>
-									<div style="float: right">
-									<?php
-									echo ((galleries_photo_module_access($RECORD_ID, "edit-photo")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-photo&amp;id=".$RECORD_ID."\">edit</a>)" : "");
-									echo ((galleries_photo_module_access($RECORD_ID, "delete-photo")) ? " (<a class=\"action\" href=\"javascript:photoDelete('".$RECORD_ID."')\">delete</a>)" : "");
-									if ($community_galleries_select != "") {
-										echo ((galleries_photo_module_access($RECORD_ID, "move-photo")) ? " (<a class=\"action\" href=\"javascript:photoMove('".$RECORD_ID."')\">move</a>)" : "");
-									}
-									?>
-									</div>
-								</td>
-							</tr>
-						</tbody>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<table class="table" style="margin-bottom: 0;">
+											<tr>
+												<td style="border-right: none"><span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($photo_record["uploader_username"]); ?>" style="font-size: 10px"><?php echo html_encode($photo_record["uploader_fullname"]); ?></a></td>
+												<td>
+													<div style="float: left">
+														<span class="content-small"><strong>Uploaded:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $photo_record["updated_date"]); ?></span>
+													</div>
+													<div style="float: right">
+														<?php
+														echo ((galleries_photo_module_access($RECORD_ID, "edit-photo")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-photo&amp;id=".$RECORD_ID."\">edit</a>)" : "");
+														echo ((galleries_photo_module_access($RECORD_ID, "delete-photo")) ? " (<a class=\"action\" href=\"javascript:photoDelete('".$RECORD_ID."')\">delete</a>)" : "");
+														if ($community_galleries_select != "") {
+															echo ((galleries_photo_module_access($RECORD_ID, "move-photo")) ? " (<a class=\"action\" href=\"javascript:photoMove('".$RECORD_ID."')\">move</a>)" : "");
+														}
+														?>
+													</div>
+												</td>
+											</tr>
+											<tr>
+												<td colspan="2">
+													<?php echo nl2br(html_encode($photo_record["photo_description"])); ?>
+												</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</tbody>
 						</table>
 						<?php
 						$query		= "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `commenter_fullname`, b.`username` AS `commenter_username`
@@ -271,70 +280,66 @@ if ($RECORD_ID) {
 						if ($results) {
 							if ($ADD_COMMENT) {
 								?>
-
 								<ul class="page-action">
-									<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Photo Comment</a></li>
+									<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Add Photo Comment</a></li>
 								</ul>
 								<?php
 							}
 							?>
 							<h2 style="margin-bottom: 0px">Photo Comments</h2>
-							<table class="discussions posts" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-							<colgroup>
-								<col style="width: 30%" />
-								<col style="width: 70%" />
-							</colgroup>
-							<tbody>
-							<?php
-							foreach($results as $result) {
-								$comments++;
-								?>
-								<tr>
-									<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($result["commenter_username"]); ?>" style="font-size: 10px"><?php echo html_encode($result["commenter_fullname"]); ?></a></td>
-									<td style="border-bottom: none">
-										<div style="float: left">
-											<span class="content-small"><strong>Commented:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
-										</div>
-										<div style="float: right">
+							<tr>
+								<td>
+									<table class="table">
 										<?php
-										echo ((galleries_comment_module_access($result["cgcomment_id"], "edit-comment")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-comment&amp;id=".$result["cgcomment_id"]."\">edit</a>)" : "");
-										echo ((galleries_comment_module_access($result["cgcomment_id"], "delete-comment")) ? " (<a class=\"action\" href=\"javascript:commentDelete('".$result["cgcomment_id"]."')\">delete</a>)" : "");
-										?>
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2" class="content">
-									<a name="comment-<?php echo (int) $result["cgcomment_id"]; ?>"></a>
-									<?php
-										echo ((trim($result["comment_title"])) ? "<div style=\"font-weight: bold\">".html_encode(trim($result["comment_title"]))."</div>" : "");
-										echo $result["comment_description"];
+										foreach($results as $result) {
+											$comments++;
+											?>
+											<tr>
+												<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($result["commenter_username"]); ?>" style="font-size: 10px"><?php echo html_encode($result["commenter_fullname"]); ?></a></td>
+												<td style="border-bottom: none">
+													<div style="float: left">
+														<span class="content-small"><strong>Commented:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
+													</div>
+													<div style="float: right">
+														<?php
+														echo ((galleries_comment_module_access($result["cgcomment_id"], "edit-comment")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-comment&amp;id=".$result["cgcomment_id"]."\">edit</a>)" : "");
+														echo ((galleries_comment_module_access($result["cgcomment_id"], "delete-comment")) ? " (<a class=\"action\" href=\"javascript:commentDelete('".$result["cgcomment_id"]."')\">delete</a>)" : "");
+														?>
+													</div>
+												</td>
+											</tr>
+											<tr>
+												<td colspan="2" class="content">
+												<a name="comment-<?php echo (int) $result["cgcomment_id"]; ?>"></a>
+												<?php
+													echo ((trim($result["comment_title"])) ? "<div style=\"font-weight: bold\">".html_encode(trim($result["comment_title"]))."</div>" : "");
+													echo $result["comment_description"];
 
-										if ($result["release_date"] != $result["updated_date"]) {
-											echo "<div class=\"content-small\" style=\"margin-top: 15px\">\n";
-											echo "	<strong>Last updated:</strong> ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".(($result["proxy_id"] == $result["updated_by"]) ? html_encode($result["commenter_fullname"]) : html_encode(get_account_data("firstlast", $result["updated_by"]))).".";
-											echo "</div>\n";
+													if ($result["release_date"] != $result["updated_date"]) {
+														echo "<div class=\"content-small\" style=\"margin-top: 15px\">\n";
+														echo "	<strong>Last updated:</strong> ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".(($result["proxy_id"] == $result["updated_by"]) ? html_encode($result["commenter_fullname"]) : html_encode(get_account_data("firstlast", $result["updated_by"]))).".";
+														echo "</div>\n";
+													}
+												?>
+												</td>
+											</tr>
+											<?php
 										}
-									?>
-									</td>
-								</tr>
-								<?php
-							}
-							?>
-							</tbody>
-							</table>
+										?>
+									</table>
+								</td>
+							</tr>
 							<?php
 						}
 						if ($ADD_COMMENT) {
 							?>
 							<ul class="page-action">
-								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Photo Comment</a></li>
-								<li class="top"><a href="#top">Top Of Page</a></li>
+								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Add Photo Comment</a></li>
+								<li><a href="#top" class="btn btn-success pull-right"><i class="icon-chevron-up icon-white"></i></a></li>
 							</ul>
 							<?php
 						}
 						?>
-					</div>
 					<?php
 				} else {
 					if ($ERROR) {

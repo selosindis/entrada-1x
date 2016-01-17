@@ -26,7 +26,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 	
 	$PROXY_ID					= $user_record["id"];
-	$user = User::get($user_record["id"]);
+	$user = User::fetchRowByID($user_record["id"]);
 	
 	$PAGE_META["title"]			= "MSPR";
 	$PAGE_META["description"]	= "";

@@ -42,7 +42,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_course.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/keywords_course.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add")), "title" => "Adding " . $module_singular_name);
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add")), "title" => "Adding " . $translate->_("course"));
 
 	/**
 	* Fetch the Clinical Presentation details.
@@ -78,7 +78,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		}
 	}
 
-	echo "<h1>Adding " . $module_singular_name . "</h1>\n";
+	echo "<h1>Adding " . $translate->_("course") . "</h1>\n";
 
 	// Error Checking
 	switch ($STEP) {
@@ -105,7 +105,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			if ((isset($_POST["course_name"])) && ($course_name = clean_input($_POST["course_name"], array("notags", "trim")))) {
 				$PROCESSED["course_name"] = $course_name;
 			} else {
-				add_error("The <strong>" . $module_singular_name .  " Name</strong> field is required.");
+				add_error("The <strong>" . $translate->_("course") .  " Name</strong> field is required.");
 			}
 
 			/**
@@ -114,7 +114,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			if ((isset($_POST["course_code"])) && ($course_code = clean_input($_POST["course_code"], array("notags", "trim")))) {
 				$PROCESSED["course_code"] = $course_code;
 			} else {
-				add_error("The <strong>" . $module_singular_name . " Code</strong> field is required and must be provided.");
+				add_error("The <strong>" . $translate->_("course") . " Code</strong> field is required and must be provided.");
 			}
 
 			/**
@@ -345,7 +345,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							foreach ($associated_directors as $proxy_id) {
 								if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 									if (!$db->AutoExecute("course_contacts", array("course_id" => $COURSE_ID, "proxy_id" => $proxy_id, "contact_type" => "director", "contact_order" => $order), "INSERT")) {
-										add_error("There was an error when trying to insert a &quot;" . $module_singular_name . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
+										add_error("There was an error when trying to insert a &quot;" . $translate->_("course") . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
 
 										application_log("error", "Unable to insert a new course_contact to the database when updating an event. Database said: ".$db->ErrorMsg());
 									} else {
@@ -522,6 +522,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                 $syllabus_data["active"] = $PROCESSED["syllabus"]["syllabus_enabled"];
                                 $syllabus_data["syllabus_start"] = $syllabus_start;
                                 $syllabus_data["syllabus_finish"] = $syllabus_finish;
+								
                                 if (!$db->AutoExecute("course_syllabi", $syllabus_data, $mode, $where)) {
                                     add_error("An error ocurred while attempting to update the course syllabus, an administrator has been informed, please try again later.");
                                     application_log("error", "Error on course syllabus ".$mode.", DB said: ".$db->ErrorMsg());
@@ -722,7 +723,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			}
 			?>
 			<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm">
-                <h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
+                <h2 title="Course Details Section"><?php echo $translate->_("course"); ?> Details</h2>
                 <div id="course-details-section">
                     <div class="control-group">
                         <label for="curriculum_type_id" class="control-label form-nrequired">Curriculum Category</label>
@@ -748,16 +749,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                     </div>
 
                     <div class="control-group">
-                        <label for="course_name" class="form-nrequired control-label"><?php echo $module_singular_name; ?> Name</label>
+                        <label for="course_name" class="form-nrequired control-label"><?php echo $translate->_("course"); ?> Name</label>
                         <div class="controls">
-                            <input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" maxlength="85" class="span7">
+                            <input type="text" id="course_name" name="course_name" value="<?php echo html_encode((isset($PROCESSED["course_name"]) && $PROCESSED["course_name"] ? $PROCESSED["course_name"] : "")); ?>"maxlength="85" class="span7" />
                         </div>
                     </div>
 
                     <div class="control-group">
-                        <label for="course_code" class="form-nrequired control-label"><?php echo $module_singular_name; ?> Code</label>
+                        <label for="course_code" class="form-nrequired control-label"><?php echo $translate->_("course"); ?> Code</label>
                         <div class="controls">
-                            <input type="text" id="course_code" name="course_code" value="<?php echo html_encode($PROCESSED["course_code"]); ?>" maxlength="16" class="span7">
+                        <input type="text" id="course_code" name="course_code" value="<?php echo html_encode((isset($PROCESSED["course_code"]) && $PROCESSED["course_code"] ? $PROCESSED["course_code"] : "")); ?>"/>
                         </div>
                     </div>
 
@@ -766,25 +767,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         <div class="controls">
                             <label for="notification_on" class="radio">
                               <input type="radio" name="notifications" id="notification_on" value="1"<?php echo (((!isset($PROCESSED["notifications"])) || ((isset($PROCESSED["notifications"])) && ($PROCESSED["notifications"]))) ? " checked=\"checked\"" : ""); ?> />
-                               Send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.
+                               Send e-mail notifications to faculty for events under this <?php echo strtolower($translate->_("course")); ?>.
                             </label>
                             <label for="notification_off" class="radio">
                               <input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> />
-                              <strong>Do not</strong> send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.
+                              <strong>Do not</strong> send e-mail notifications to faculty for events under this <?php echo strtolower($translate->_("course")); ?>.
                             </label>
                         </div>
                     </div>
 
                     <div class="control-group">
-                        <label class="control-label form-nrequired"><?php echo $module_singular_name; ?> Permissions</label>
+                        <label class="control-label form-nrequired"><?php echo $translate->_("course"); ?> Permissions</label>
                         <div class="controls">
                             <label for="visibility_on" class="radio">
                                 <input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> />
-                                This <?php echo strtolower($module_singular_name); ?> is <strong>open</strong> and visible to all logged in users.
+                                This <?php echo strtolower($translate->_("course")); ?> is <strong>open</strong> and visible to all logged in users.
                             </label>
                             <label for="visibility_off" class="radio">
                                 <input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> />
-                                This <?php echo strtolower($module_singular_name); ?> is <strong>private</strong> and only visible to logged in users enrolled in the <?php echo strtolower($module_singular_name); ?>.
+                                This <?php echo strtolower($translate->_("course")); ?> is <strong>private</strong> and only visible to logged in users enrolled in the <?php echo strtolower($translate->_("course")); ?>.
                             </label>
                         </div>
                     </div>
@@ -904,10 +905,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                 }
                 </script>
 
-                <h2 title="Course Contacts Section"><?php echo $module_singular_name; ?> Contacts</h2>
+                <h2 title="Course Contacts Section"><?php echo $translate->_("course"); ?> Contacts</h2>
 					<div id="course-contacts-section">
                         <div class="control-group">
-                            <label for="director_name" class="control-label form-nrequired"><?php echo $module_singular_name; ?> Directors</label>
+                            <label for="director_name" class="control-label form-nrequired"><?php echo $translate->_("course_directors"); ?></label>
                             <div class="controls">
                                 <input type="text" id="director_name" name="fullname" class="span5" autocomplete="off" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
                                 <div class="autocomplete" id="director_name_auto_complete"></div>
@@ -916,7 +917,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                 <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
                                 <ul id="director_list" class="menu" style="margin-top: 15px">
                                     <?php
-                                    if (is_array($chosen_course_directors) && count($chosen_course_directors)) {
+                                    if (is_array($chosen_course_directors) && count($chosen_course_directors) && isset($DIRECTOR_LIST) && !empty($DIRECTOR_LIST)) {
                                         foreach ($chosen_course_directors as $director) {
                                             if ((array_key_exists($director, $DIRECTOR_LIST)) && is_array($DIRECTOR_LIST[$director])) {
                                                 ?>
@@ -933,7 +934,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         </div>
 
                         <div class="control-group">
-                            <label for="coordinator_name" class="control-label form-nrequired">Curriculum Coordinators</label>
+                            <label for="coordinator_name" class="control-label form-nrequired"><?php echo $translate->_("curriculum_coordinators"); ?></label>
                             <div class="controls">
                                 <input type="text" id="coordinator_name" name="fullname" class="span5" autocomplete="off" onkeyup="checkItem('coordinator')" onblur="addItemNoError('coordinator')" />
                                 <div class="autocomplete" id="coordinator_name_auto_complete"></div>
@@ -942,7 +943,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                 <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
                                 <ul id="coordinator_list" class="menu" style="margin-top: 15px">
                                     <?php
-                                    if (isset($chosen_ccoordinators) && is_array($chosen_ccoordinators) && $chosen_ccoordinators) {
+                                    if (isset($chosen_ccoordinators) && is_array($chosen_ccoordinators) && $chosen_ccoordinators && isset($COORDINATOR_LIST) && !empty($COORDINATOR_LIST)) {
                                         foreach ($chosen_ccoordinators as $coordinator) {
                                             if ((array_key_exists($coordinator, $COORDINATOR_LIST)) && is_array($COORDINATOR_LIST[$coordinator])) {
                                                 ?>
@@ -959,7 +960,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         </div>
 
                         <div class="control-group">
-                            <label for="programcoodinator_id" class="control-label form-nrequired">Program Coordinator</label>
+                            <label for="programcoodinator_id" class="control-label form-nrequired"><?php echo $translate->_("program_coordinator"); ?></label>
                             <div class="controls">
                                 <?php
                                 if ((is_array($programcoodinators)) && (count($programcoodinators))) {
@@ -971,17 +972,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     echo "</select>\n";
                                 } else {
                                     echo "<input type=\"hidden\" id=\"pcoord_id\" name=\"pcoord_id\" value=\"0\" />\n";
-                                    echo "<p class=\"info-not-available\">Program Coordinator Information Not Available</p>\n";
+                                    echo "<p class=\"info-not-available\">".$translate->_("program_coordinator")." Information Not Available</p>\n";
                                 }
                                 ?>
                                 <div class="well well-small content-small space-above">
-                                    <strong>Important:</strong> Program Coordinators will be able to add, edit or remove learning events in this <?php echo strtolower($module_singular_name); ?>.
+                                    <strong>Important:</strong> <?php echo $translate->_("program_coordinators"); ?> will be able to add, edit or remove learning events in this <?php echo strtolower($translate->_("course")); ?>.
                                 </div>
                             </div>
                         </div>
 
                         <div class="control-group">
-                            <label for="evaluationrep_id" class="control-label form-nrequired">Evaluation Rep.</label>
+                            <label for="evaluationrep_id" class="control-label form-nrequired"><?php echo $translate->_("evaluation_rep"); ?></label>
                             <div class="controls">
                                 <?php
                                 if ((is_array($evaluationreps)) && (count($evaluationreps))) {
@@ -993,14 +994,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     echo "</select>\n";
                                 } else {
                                     echo "<input type=\"hidden\" id=\"evalrep_id\" name=\"evalrep_id\" value=\"0\" />\n";
-                                    echo "<p class=\"info-not-available\">Evaluation Representative Information Not Available</p>\n";
+                                    echo "<p class=\"info-not-available\">".$translate->_("evaluation_rep")." Information Not Available</p>\n";
                                 }
                                 ?>
                             </div>
                         </div>
 
                         <div class="control-group">
-                            <label for="studentrep_id" class="control-label form-nrequired">Student Rep.</label>
+                            <label for="studentrep_id" class="control-label form-nrequired"><?php echo $translate->_("student_rep"); ?></label>
                             <div class="controls">
                                 <?php
                                 if ((is_array($studentreps)) && (count($studentreps))) {
@@ -1012,7 +1013,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     echo "</select>\n";
                                 } else {
                                     echo "<input type=\"hidden\" id=\"studrep_id\" name=\"studrep_id\" value=\"0\" />\n";
-                                    echo "<p class=\"info-not-available\">Student Representative Information Not Available</p>\n";
+                                    echo "<p class=\"info-not-available\">".$translate->_("student_rep")." Information Not Available</p>\n";
                                 }
                                 ?>
                             </div>
@@ -1046,7 +1047,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                     if ($db->GetRow($query)) {
                         ?>
                         <a name="course-keywords-section"></a>
-                        <h2 title="Course Keywords Section"><?php echo $module_singular_name; ?> Keywords</h2>
+                        <h2 title="Course Keywords Section"><?php echo $translate->_("course"); ?> Keywords</h2>
                         <div id="course-keywords-section">
                             <div class="keywords half left">
                                 <h3>Keyword Search</h3>
@@ -1130,7 +1131,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         $hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
 						?>
                         <a name="course-objectives-section"></a>
-                        <h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
+                        <h2 title="Course Objectives Section"><?php echo $translate->_("course"); ?> Objectives</h2>
                         <div id="course-objectives-section">
                         <div class="objectives half left">
                             <h3>Objective Sets</h3>
@@ -1351,7 +1352,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                 }
                 ?>
 
-				<h2 title="Course Reports Section"><?php echo $module_singular_name; ?> Reports</h2>
+				<h2 title="Course Reports Section"><?php echo $translate->_("course"); ?> Reports</h2>
 				<div id="course-reports-section">
 					<div class="control-group">
 						<label for="course_report_ids" class="control-label form-nrequired">Report Types:</label>
@@ -1379,7 +1380,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<?php
 							} 
 
-							if (is_array($PROCESSED["course_reports"])) {
+							if (isset($PROCESSED["course_reports"]) && is_array($PROCESSED["course_reports"])) {
 								foreach ($PROCESSED["course_reports"] as $course_report) {
 									echo "<li id=\"type_".$course_report[0]."\" class=\"\">" . $course_report[2] . "<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\"></a></li>";
 								}
@@ -1390,7 +1391,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				</div>
 
                 <!-- Course Enrolment-->
-                <h2 title="Course Enrolment Section"><?php echo $module_singular_name; ?> Enrolment</h2>
+                <h2 title="Course Enrolment Section"><?php echo $translate->_("course"); ?> Enrolment</h2>
 				<div id="course-enrolment-section">
                     <div class="control-group">
                         <label for="period" class="control-label form-nrequired">Enrolment Periods</label>

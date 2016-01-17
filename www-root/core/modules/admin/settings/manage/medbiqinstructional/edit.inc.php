@@ -23,9 +23,9 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_MEDBIQINSTRUCTIONAL")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "update",false)) {
@@ -130,10 +130,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 					if (!$ERROR) {
 						$url = ENTRADA_URL . "/admin/settings/manage/medbiqinstructional?org=".$ORGANISATION_ID;
 						$SUCCESS++;
-						$SUCCESSSTR[]  = "You have successfully edited <strong>".html_decode($PROCESSED["instructional_method"])."</strong> in the system.<br /><br />You will now be redirected to the Medbiquitos Instructional Methods index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						$SUCCESSSTR[]  = "You have successfully edited <strong>".html_decode($PROCESSED["instructional_method"])."</strong> in the system.<br /><br />You will now be redirected to the Medbiquitous Instructional Methods index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000);";
 	
-						application_log("success", "Edited Medbiquitos Instructional Method [".$instructional_method_id."] in the system.");			
+						application_log("success", "Edited Medbiquitous Instructional Method [".$instructional_method_id."] in the system.");
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "There was a problem mapping event types. The system administrator was informed of this error; please try again later.";
@@ -142,9 +142,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 					}
 				} else {				
 					$ERROR++;
-					$ERRORSTR[] = "There was a problem inserting this Medbiquitos Instructional Method into the system. The system administrator was informed of this error; please try again later.";
+					$ERRORSTR[] = "There was a problem inserting this Medbiquitous Instructional Method into the system. The system administrator was informed of this error; please try again later.";
 
-					application_log("error", "There was an error inserting an Medbiquitos Instructional Method. Database said: ".$db->ErrorMsg());
+					application_log("error", "There was an error inserting an Medbiquitous Instructional Method. Database said: ".$db->ErrorMsg());
 				}
 			}
 

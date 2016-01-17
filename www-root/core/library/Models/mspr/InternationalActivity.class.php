@@ -29,7 +29,7 @@ class InternationalActivity implements Editable {
 	}
 	
 	public function getUser() {
-		return User::get($this->student_id);
+		return User::fetchRowByID($this->student_id);
 	}
 
 	public function getSite() {

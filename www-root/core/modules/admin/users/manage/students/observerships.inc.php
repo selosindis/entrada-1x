@@ -23,13 +23,12 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
-//	require_once(dirname(__FILE__)."/includes/functions.inc.php");
-//	
+
 	require_once("Models/mspr/Observership.class.php");
 	require_once("Models/mspr/Observerships.class.php");
 	
 	$PROXY_ID	= $user_record["id"];
-	$user		= User::get($PROXY_ID);
+	$user		= User::fetchRowByID($PROXY_ID);
 	$pending_observerships = Observerships::get(array("student_id" => $user->getID(), "status" => "pending"));
 	$approved_observerships = Observerships::get(array("student_id" => $user->getID(), "status" => "approved"));
 	$rejected_observerships = Observerships::get(array("student_id" => $user->getID(), "status" => "rejected"));

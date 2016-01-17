@@ -111,7 +111,13 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					}
 					
 					if (isset($_FILES) && $_FILES["file"]["name"] && $tmp_input = clean_input($_FILES["file"]["name"], array("trim", "striptags"))) {
+                        if ($PROCESSED["filename"]) {
+                            $PROCESSED["filename"] = preg_replace('/[^a-zA-Z0-9-_\.]/', '', str_replace(" ", "-", trim($PROCESSED["filename"])));
+                        } else if ($tmp_input) {
 						$PROCESSED["filename"] = preg_replace('/[^a-zA-Z0-9-_\.]/', '', str_replace(" ", "-", trim($tmp_input)));
+                        } else {
+                            add_error("An error ocurred while attempting to clean the name of this file. Please try again.");
+                        }
 						
 						$allowed_mime_types = array(
 							"image/jpeg", "image/png", "application/pdf", 
@@ -128,9 +134,6 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						
 						$mime_type = explode("; ", $type);
 						
-						if (!in_array($mime_type[0], $allowed_mime_types)) {
-							add_error("Invalid file type. ".$mime_type[0]);
-						}
 					}
 					
 					if (isset($PROCESSED["pfartifact_id"]) && !$ERROR) {
@@ -164,6 +167,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								echo json_encode(array("status" => "error", "data" => "fail"));
 							}
 						} else {
+                            $allowed_types = array("url", "reflection");
+                            if (!empty($PROCESSED["filename"]) || in_array($PROCESSED["type"], $allowed_types)) {
 							$pentry = new Models_Eportfolio_Entry();
 							if ($pentry->fromArray($PROCESSED)->insert()) {
 								if ($PROCESSED["filename"]) {
@@ -190,7 +195,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									echo json_encode(array("error" => "error", "data" => "Unable to create portfolio entry."));
 								}
 							}
-							
+                            } else {
+                                add_error("An error occured while attempting to upload the file. Please try again.");
+                                error_log("User [".$PROCESSED["proxy_id"]."] attempted to create portfolio entry but filename was invalid. Files: [".  serialize($_FILES)."], PROCESSED: [".serialize($PROCESSED)."]");
+                            }
 						}	
 					} else {
 						echo json_encode(array("status" => "error", "data" => $ERRORSTR));
@@ -382,7 +390,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						
 						if ($comment->insert()) {
 							$comment_data = $comment->toArray();
-							$commentor = User::get($comment->getProxyID());
+							$commentor = User::fetchRowByID($comment->getProxyID());
 							$comment_data["commentor"] = $commentor->getFullname(false);
 							$comment_data["submitted_date"] = date("Y-m-d H:i", $comment_data["submitted_date"]);
 							echo json_encode(array("status" => "success", "data" => $comment_data));
@@ -565,7 +573,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						$i = 0;
 						foreach ($s as $student_id) {
 							if (Models_Eportfolio_Advisor::addRelation($PROCESSED["advisor_id"], $student_id)) {
-                                $tmp_student = User::get($student_id);
+                                $tmp_student = User::fetchRowByID($student_id);
                                 $students[$i]["advisor"]	= $PROCESSED["advisor_id"];
                                 $students[$i]["id"]			= $student_id;
                                 $students[$i]["firstname"]	= $tmp_student->getFirstname();
@@ -891,7 +899,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								if ($comments) {
 									$j = 0;
 									foreach ($comments as $comment) {
-										$commentor = User::get($comment->getProxyID());
+										$commentor = User::fetchRowByID($comment->getProxyID());
 										$comments_array[$j] = $comment->toArray();
 										$comments_array[$j]["submitted_date"] = date("Y-m-d H:i", $comments_array[$j]["submitted_date"]);
 										$comments_array[$j]["commentor"] = $commentor->getFullname(false);
@@ -940,7 +948,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								$users = array();
 								$i = 0;
 								foreach ($related_users as $user) {
-									$u = User::get($user["to"]);
+									$u = User::fetchRowByID($user["to"]);
 									$users[$i]["fullname"] = $u->getFullname(false);
 									$users[$i]["proxy_id"] = $user["to"];
 									$i++;

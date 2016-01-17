@@ -57,8 +57,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
 		if($result) {
 			if ($ENTRADA_ACL->amIAllowed(new CourseResource($result['course_id'], $result['organisation_id']), 'read')) {
+
+                $is_administrator = false;
+
+                if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), "update")) {
+                    $is_administrator = true;
+                }
+
 				$accesses = $result["accesses"];
-				if(($result["valid_from"]) && ($result["valid_from"] > time())) {
+				if(!$is_administrator && ($result["valid_from"]) && ($result["valid_from"] > time())) {
 					$TITLE	= "Not Available";
 					$BODY	= display_notice(array("The link that you are trying to access is not available until <strong>".date(DEFAULT_DATE_FORMAT, $result["valid_from"])."</strong>.<br /><br />For further information or to contact the course director, please see the <a href=\"".ENTRADA_URL."/courses?id=".$result["course_id"]."\" style=\"font-weight: bold\">course website</a>."));
 
@@ -68,7 +75,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					}
 					exit;
 				} else {
-					if(($result["valid_until"]) && ($result["valid_until"] < time())) {
+					if(!$is_administrator && ($result["valid_until"]) && ($result["valid_until"] < time())) {
 						$TITLE	= "Not Available";
 						$BODY	= display_notice(array("The link that you are trying to access was only available until <strong>".date(DEFAULT_DATE_FORMAT, $result["valid_from"])."</strong>.<br /><br />For further information or to contact the course director, please see the <a href=\"".ENTRADA_URL."/courses?id=".$result["course_id"]."\" style=\"font-weight: bold\">course website</a>."));
 

@@ -65,8 +65,8 @@ if (!defined("PARENT_INCLUDED")) {
 		$GROUP_ID	= (int) trim($_GET["gid"]);
 	}
 	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false)), "title" => "Edit " . $module_singular_name." Content");
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."/enrolment?".replace_query(array("section" => "false", "id" => $COURSE_ID, "step" => false)), "title" => "Edit " . $module_singular_name." Enrolment");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false)), "title" => "Edit " . $translate->_("course")." Content");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."/enrolment?".replace_query(array("section" => "false", "id" => $COURSE_ID, "step" => false)), "title" => "Edit " . $translate->_("course")." Enrolment");
 	
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();

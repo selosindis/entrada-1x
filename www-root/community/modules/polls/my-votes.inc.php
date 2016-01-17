@@ -90,23 +90,24 @@ if ($RECORD_ID) {
 					
 					$count = 1;
 					if (count($questions) > 1) {
-						echo "<div id=\"pagination-links\" style=\"position: relative; text-align: right;\">\n";
-						echo "Pages:";
-						echo " <span class=\"active\" >1</span>";
-						echo " <a href=\"javascript:displayChart('1','2');\" >2</a>";
+						echo "<div class=\"pagination\" style=\"position: relative; text-align: right;\">\n";
+						echo "	<ul>";
+						echo "		<li class=\"active\"><a>1</a></li>";
+						echo "		<li><a href=\"javascript:displayChart('1','2');\">2</a></li>";
 							if (count($questions) > 2) {
-								echo " <a href=\"javascript:displayChart('1','3');\" >3</a>";
+								echo "		<li><a href=\"javascript:displayChart('1','3');\">3</a></li>";
 								if (count($questions) > 3) {
-									echo " <a href=\"javascript:displayChart('1','4');\" >4</a>";
+									echo "		<li><a href=\"javascript:displayChart('1','4');\">4</a></li>";
 									if (count($questions) > 4) {
-										echo " <a href=\"javascript:displayChart('1','5');\" >5</a>";
+										echo "		<li><a href=\"javascript:displayChart('1','5');\">5</a></li>";
 										if (count($questions) > 5) {
-											echo " <a href=\"javascript:displayChart('1','".count($questions)."');\">...".count($questions)."</a>";
+											echo "		<li><a href=\"javascript:displayChart('1','".count($questions)."');\">...".count($questions)."</a></li>";
 										}
 									}
 								}
 							}
-							echo " <a href=\"javascript:displayChart('1','2');\">&raquo;</a>";
+							echo "		<li><a style=\"height: 20px;\" href=\"javascript:displayChart('1','2');\"><i class=\"icon-chevron-right\" style=\"margin-top: 3px;\"></i></a></li>";
+							echo "	</ul>";
 							echo "</div>\n";
 							echo "<span id=\"no-questions\" style=\"display: none;\">".count($questions)."</span>";
 					}
@@ -115,132 +116,147 @@ if ($RECORD_ID) {
 						?>
 						
 						<form name="options" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>" method="post" <?php echo ($count != 1 ? "style=\"display: none;\"" : "")." id=\"question-".$count."\""; ?>>
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="<?php echo $terminology; ?> Results">
-						<colgroup>
-							<col style="width: 100%" />
-						</colgroup>
-						<tbody>
-							<tr>
-								<td><h2><?php echo html_encode($poll_record["poll_title"]); ?></h2></td>
-							</tr>
-							<tr>
-								<td class="form-nrequired"><strong>Question:</strong> <?php echo html_encode($question["poll_question"]); ?></td>
-							</tr>
-							<tr>
-								<td style="padding-top: 10px">&nbsp;</td>
-							</tr>
-							<tr>
-								<td>
-									<div>
-									 	<div style="float: left; vertical-align: middle;">
-											<label for="polling-type-list-<?php echo $count; ?>" class="form-nrequired">Chart Style:</label> 
-											
-											<span id="polling-type-list-<?php echo $count; ?>">
-												<img id="polling-type-1" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/polling-type-bar.gif"; ?>" width="16" height="16" alt="Bar" title="Bar" onclick="updatePollTypeIcon('<?php echo $count; ?>', '1');" />
-												<img id="polling-type-2" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/polling-type-line.gif"; ?>" width="16" height="16" alt="Line" title="Line" onclick="updatePollTypeIcon('<?php echo $count; ?>', '2');" />
-												<img id="polling-type-3" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/polling-type-pie.gif"; ?>" width="16" height="16" alt="Pie" title="Pie" onclick="updatePollTypeIcon('<?php echo $count; ?>', '3');" />
-												<img id="polling-type-4" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/polling-type-list.gif"; ?>" width="16" height="16" alt="List" title="List" onclick="updatePollTypeIcon('<?php echo $count; ?>', '4');" />
-											</span>
-											
-											<input type="hidden" id="polling-type-<?php echo $count; ?>" name="polling-type-<?php echo $count; ?>" value="1" />
-										</div>
-							            
-							            <div id="display-colours-<?php echo $count; ?>" style="float: right; vertical-align: middle; margin-bottom: 15px">
-								            <label id="label_colors-<?php echo $count; ?>" class="form-nrequired" style="vertical-align: middle">Chart Colours:</label> 
-								            
-								            <span id="color-icon-list-<?php echo $count; ?>">
-												<img id="color-icon-1" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-1.gif"; ?>" width="16" height="16" alt="Blue" title="Blue" onclick="updateColorIcon('<?php echo $count; ?>', '1');" />
-												<img id="color-icon-2" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-2.gif"; ?>" width="16" height="16" alt="Red" title="Red" onclick="updateColorIcon('<?php echo $count; ?>', '2');" />
-												<img id="color-icon-3" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-3.gif"; ?>" width="16" height="16" alt="Green" title="Green" onclick="updateColorIcon('<?php echo $count; ?>', '3');" />
-												<img id="color-icon-4" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-4.gif"; ?>" width="16" height="16" alt="Purple" title="Purple" onclick="updateColorIcon('<?php echo $count; ?>', '4');" />
-												<img id="color-icon-5" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-5.gif"; ?>" width="16" height="16" alt="Cyan" title="Cyan" onclick="updateColorIcon('<?php echo $count; ?>', '5');" />
-												<img id="color-icon-6" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-6.gif"; ?>" width="16" height="16" alt="Orange" title="Orange" onclick="updateColorIcon('<?php echo $count; ?>', '6');" />
-											</span>
-											
-											<input type="hidden" id="color-icon-<?php echo $count; ?>" name="color-icon-<?php echo $count; ?>" value="1" />
-										</div>
-	
-										<div id="display-graph-<?php echo $count; ?>" style="clear: both; height: 600px">
-											<canvas id="graph-<?php echo $count; ?>" height="300" width="550"></canvas>
-										</div>
-										
-										<div id="display-list-<?php echo $count; ?>" style="clear: both; display: none">
-											<table style="padding: 10px" class="tableList" cellspacing="0" summary="Vote Report">
-											<colgroup>
-												<col class="general" style="width: 75%;" />
-												<col class="report-hours" />
-											</colgroup>
-											<thead>
-												<tr>
-													<td class="general" style="width: 75%; padding-left: 5px; border-left: 1px solid #999999">Responses</td>
-													<td class="report-hours">Votes</td>
-												</tr>
-											</thead>
-											<tbody>
-												<?php
-												$voteResponsesQuery		= "	SELECT * FROM `community_polls_responses`
-																			WHERE `cpquestion_id` = ".$db->qstr($question["cpquestion_id"])."
-																			ORDER BY `response_index` ASC";
-												
-												$voteResponsesResults	= $db->GetAll($voteResponsesQuery);
-												
-												$phpOutPutArray			= array();
-												$javaResultString 		= "";
-												$xTicks					= "";
-												
-												foreach($voteResponsesResults as $values)
-												{
-													if ($values["cpquestion_id"] == $question["cpquestion_id"]) {
-														$getVotesQuery 	= "SELECT count(cpresponses_id) AS `total_count` 
-														FROM `community_polls_results`
-														WHERE `cpresponses_id` = ".$db->qstr($values["cpresponses_id"])."
-														AND `proxy_id` = ".$db->qstr($PROXY_ID);
-														
-														if (!$voteResults = $db->GetRow($getVotesQuery))
-														{
-															$voteResults["total_count"] = 0;
-														}
-														
-														if ($values["response_index"] > 1)
-														{
-															// The following comment is an example of what to pass to PlotKit.
-															//[{label: '01', v: 0}, {label: '02', v: 1}, {label: '03', v: 2}, {label: '04', v: 3}, {label: '05', v: 4}, {label: '06', v: 5}, {label: '07', v: 6}, {label: '08', v: 7}, {label: '09', v: 8}, {label: '10', v: 9}, {label: '11', v: 10}, {label: '12', v: 11}, {label: '13', v: 12}, {label: '14', v: 13}, {label: '15', v: 14}, {label: '16', v: 15}, {label: '17', v: 16}, {label: '18', v: 17}, {label: '19', v: 18}, {label: '20', v: 19}, {label: '21', v: 20}, {label: '22', v: 21}, {label: '23', v: 22}, {label: '24', v: 23}, {label: '25', v: 24}, {label: '26', v: 25}, {label: '27', v: 26}, {label: '28', v: 27}, {label: '29', v: 28}, {label: '30', v: 29}, {label: '31', v: 30}]
-															$xTicks				.= ", {label: '".addslashes($values["response"])."', v: ".((int)$values["response_index"])."}";
-															$javaResultString	.= ", [".$values["response_index"].", ".$voteResults["total_count"]."]";
-														}
-														else 
-														{
-															$xTicks				= "[{label: '".addslashes($values["response"])."', v: ".((int)$values["response_index"])."}";
-															$javaResultString	= "[[".$values["response_index"].", ".$voteResults["total_count"]."]";
-														}
-														
-														$phpOutPutArray[$values["response"]] = $voteResults["total_count"];
-													}
-												}
-												
-												$javaResultString		.= "]";
-												$xTicks					.= "]";
-												$i						= 0;
-												
-												foreach($phpOutPutArray as $key => $value)
-												{
-													?>
-													<tr<?php echo (($i % 2) ? " class=\"odd\"" : ""); ?>>
-														<td class="general" style="width: 75%; padding-left: 5px"><?php echo $key; ?></td>
-														<td class="report-hours"><?php echo ((int)$value == 0 || !isset($value) ? "0" : $value); ?></td>
+							<table summary="<?php echo $terminology; ?> Results">
+								<tbody>
+									<td><h2><?php echo html_encode($poll_record["poll_title"]); ?></h2></td>
+									<tr>
+										<td>
+											<table class="table table-striped table-bordered">
+												<thead>
+													<tr>
+														<td>Question</td>
 													</tr>
-													<?php
-													$i++;
-												}
-												?>
-											</tbody>
+												</thead>
+												<tbody>
+													<tr>
+														<td><?php echo html_encode($question["poll_question"]); ?></td>
+													</tr>
+												</tbody>
 											</table>
-										</div>
-									</div>
-								</td>
-							</tr>
-						</tbody>
-						</table>
+										</td>
+									</tr>
+
+
+									<tr>
+										<td>
+											<table class="table table-striped table-bordered" summary="Vote Report">
+												<colgroup>
+													<col class="general" style="width: 75%;" />
+													<col class="report-hours" />
+												</colgroup>
+												<thead>
+													<tr>
+														<td class="general" style="width: 75%; border-left: none;">Responses</td>
+														<td class="report-hours" style="border-left: none;">Votes</td>
+													</tr>
+												</thead>
+												<tbody>
+													<?php
+													$voteResponsesQuery		= "	SELECT * FROM `community_polls_responses`
+																				WHERE `cpquestion_id` = ".$db->qstr($question["cpquestion_id"])."
+																				ORDER BY `response_index` ASC";
+													
+													$voteResponsesResults	= $db->GetAll($voteResponsesQuery);
+													
+													$phpOutPutArray			= array();
+													$javaResultString 		= "";
+													$xTicks					= "";
+													
+													foreach($voteResponsesResults as $values)
+													{
+														if ($values["cpquestion_id"] == $question["cpquestion_id"]) {
+															$getVotesQuery 	= "SELECT count(cpresponses_id) AS `total_count` 
+															FROM `community_polls_results`
+															WHERE `cpresponses_id` = ".$db->qstr($values["cpresponses_id"])."
+															AND `proxy_id` = ".$db->qstr($PROXY_ID);
+															
+															if (!$voteResults = $db->GetRow($getVotesQuery))
+															{
+																$voteResults["total_count"] = 0;
+															}
+															
+															if ($values["response_index"] > 1)
+															{
+																// The following comment is an example of what to pass to PlotKit.
+																//[{label: '01', v: 0}, {label: '02', v: 1}, {label: '03', v: 2}, {label: '04', v: 3}, {label: '05', v: 4}, {label: '06', v: 5}, {label: '07', v: 6}, {label: '08', v: 7}, {label: '09', v: 8}, {label: '10', v: 9}, {label: '11', v: 10}, {label: '12', v: 11}, {label: '13', v: 12}, {label: '14', v: 13}, {label: '15', v: 14}, {label: '16', v: 15}, {label: '17', v: 16}, {label: '18', v: 17}, {label: '19', v: 18}, {label: '20', v: 19}, {label: '21', v: 20}, {label: '22', v: 21}, {label: '23', v: 22}, {label: '24', v: 23}, {label: '25', v: 24}, {label: '26', v: 25}, {label: '27', v: 26}, {label: '28', v: 27}, {label: '29', v: 28}, {label: '30', v: 29}, {label: '31', v: 30}]
+																$xTicks				.= ", {label: '".addslashes($values["response"])."', v: ".((int)$values["response_index"])."}";
+																$javaResultString	.= ", [".$values["response_index"].", ".$voteResults["total_count"]."]";
+															}
+															else 
+															{
+																$xTicks				= "[{label: '".addslashes($values["response"])."', v: ".((int)$values["response_index"])."}";
+																$javaResultString	= "[[".$values["response_index"].", ".$voteResults["total_count"]."]";
+															}
+															
+															$phpOutPutArray[$values["response"]] = $voteResults["total_count"];
+														}
+													}
+													
+													$javaResultString		.= "]";
+													$xTicks					.= "]";
+													$i						= 0;
+													
+													foreach($phpOutPutArray as $key => $value)
+													{
+														?>
+														<tr<?php echo (($i % 2) ? " class=\"odd\"" : ""); ?>>
+															<td class="general" style="width: 75%;"><?php echo $key; ?></td>
+															<td class="report-hours"><?php echo ((int)$value == 0 || !isset($value) ? "0" : $value); ?></td>
+														</tr>
+														<?php
+														$i++;
+													}
+													?>
+												</tbody>
+											</table>
+											<!--<div>-->
+
+												<!-- Chart Style
+												 	<div style="float: left; vertical-align: middle;">
+														<label for="polling-type-list-<?php echo $count; ?>" class="form-nrequired">Chart Style:</label>
+														<span id="polling-type-list-<?php echo $count; ?>">
+															<img id="polling-type-1" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/polling-type-bar.gif"; ?>" width="16" height="16" alt="Bar" title="Bar" onclick="updatePollTypeIcon('<?php echo $count; ?>', '1');" />
+															<img id="polling-type-2" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/polling-type-line.gif"; ?>" width="16" height="16" alt="Line" title="Line" onclick="updatePollTypeIcon('<?php echo $count; ?>', '2');" />
+															<img id="polling-type-3" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/polling-type-pie.gif"; ?>" width="16" height="16" alt="Pie" title="Pie" onclick="updatePollTypeIcon('<?php echo $count; ?>', '3');" />
+															<img id="polling-type-4" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/polling-type-list.gif"; ?>" width="16" height="16" alt="List" title="List" onclick="updatePollTypeIcon('<?php echo $count; ?>', '4');" />
+														</span>
+														<input type="hidden" id="polling-type-<?php echo $count; ?>" name="polling-type-<?php echo $count; ?>" value="1" />
+													</div>
+												-->
+
+									            <!-- Chart Colors
+									            <div id="display-colours-<?php echo $count; ?>" style="float: right; vertical-align: middle; margin-bottom: 15px">
+										            <label id="label_colors-<?php echo $count; ?>" class="form-nrequired" style="vertical-align: middle">Chart Colours:</label> 
+										            
+										            <span id="color-icon-list-<?php echo $count; ?>">
+														<img id="color-icon-1" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-1.gif"; ?>" width="16" height="16" alt="Blue" title="Blue" onclick="updateColorIcon('<?php echo $count; ?>', '1');" />
+														<img id="color-icon-2" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-2.gif"; ?>" width="16" height="16" alt="Red" title="Red" onclick="updateColorIcon('<?php echo $count; ?>', '2');" />
+														<img id="color-icon-3" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-3.gif"; ?>" width="16" height="16" alt="Green" title="Green" onclick="updateColorIcon('<?php echo $count; ?>', '3');" />
+														<img id="color-icon-4" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-4.gif"; ?>" width="16" height="16" alt="Purple" title="Purple" onclick="updateColorIcon('<?php echo $count; ?>', '4');" />
+														<img id="color-icon-5" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-5.gif"; ?>" width="16" height="16" alt="Cyan" title="Cyan" onclick="updateColorIcon('<?php echo $count; ?>', '5');" />
+														<img id="color-icon-6" src="<?php echo COMMUNITY_URL."/templates/".$COMMUNITY_TEMPLATE."/images/list-color-6.gif"; ?>" width="16" height="16" alt="Orange" title="Orange" onclick="updateColorIcon('<?php echo $count; ?>', '6');" />
+													</span>
+													
+													<input type="hidden" id="color-icon-<?php echo $count; ?>" name="color-icon-<?php echo $count; ?>" value="1" />
+												</div>
+
+												-->
+
+												<!--
+													<div id="display-graph-<?php echo $count; ?>" style="clear: both; height: 600px">
+														<canvas id="graph-<?php echo $count; ?>" height="300" width="550"></canvas>
+													</div>
+													
+													<div id="display-list-<?php echo $count; ?>" style="clear: both; display: none">
+														
+													</div>
+												-->
+
+											<!--</div>-->
+										</td>
+									</tr>
+								</tbody>
+							</table>
 						</form>
 						<script type="text/javascript">
 						function chartReload<?php echo $count; ?>(question_id) {

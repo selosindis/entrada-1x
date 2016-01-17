@@ -16,7 +16,7 @@
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
  * A model to handle gradebook assessments.
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Ryan Warner <rw65@queensu.ca>
@@ -24,18 +24,19 @@
  */
 class Models_Gradebook_Assessment extends Models_Base {
 
-    protected $assessment_id, $course_id, $cohort, $name, $description, $type, 
-              $marking_scheme_id, $numeric_grade_points_total, $grade_weighting = 0,
-              $narrative = 0, $required = 1, $characteristic_id, $show_learner = 0, 
-              $release_date = 0, $release_until = 0, $order, $grade_threshold = 0, $active = 1;
-    
+    protected $assessment_id, $course_id, $cohort, $name, $description, $type,
+        $marking_scheme_id, $numeric_grade_points_total, $grade_weighting = 0,
+        $narrative = 0, $required = 1, $characteristic_id, $show_learner = 0,
+        $release_date = 0, $release_until = 0, $order, $grade_threshold = 0, $active = 1,
+        $created_date, $created_by, $updated_date, $updated_by;
+
     protected $table_name          = "assessments";
     protected $default_sort_column = "order";
-    
+
     public function __construct($arr = NULL) {
         parent::__construct($arr);
     }
-    
+
     public static function fetchRowByID($assessment_id, $active = 1) {
         $self = new self();
         return $self->fetchRow(array(
@@ -45,7 +46,7 @@ class Models_Gradebook_Assessment extends Models_Base {
         );
     }
 
-    public static function fetchAllRecords($group_id = NULL, $course_id = NULL, $active = 1) {
+    public static function fetchAllRecords($group_id = NULL, $course_id = NULL, $active = 1, $sort_col = NULL, $sort_order = NULL) {
         $self = new self();
 
         $constraints = array(
@@ -56,7 +57,7 @@ class Models_Gradebook_Assessment extends Models_Base {
                 "method"    => "="
             )
         );
-        
+
         if (!is_null($group_id)) {
             $constraints[] = array(
                 "mode"      => "AND",
@@ -74,7 +75,7 @@ class Models_Gradebook_Assessment extends Models_Base {
                 "method"    => "="
             );
         }
-        
+
         $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
         $output = array();
 
@@ -86,7 +87,7 @@ class Models_Gradebook_Assessment extends Models_Base {
 
         return $output;
     }
-    
+
     public function getAssessmentID() {
         return $this->assessment_id;
     }
@@ -158,10 +159,26 @@ class Models_Gradebook_Assessment extends Models_Base {
     public function getActive() {
         return $this->active;
     }
-    
+
+    public function getCreatedDate() {
+        return $this->created_date;
+    }
+
+    public function getCreatedBy() {
+        return $this->created_by;
+    }
+
+    public function getUpdatedDate() {
+        return $this->updated_date;
+    }
+
+    public function getUpdatedBy() {
+        return $this->updated_by;
+    }
+
     public static function fetchNextOrder($course_id, $group_id = NULL, $active = 1) {
         global $db;
-        
+
         $query = "SELECT MAX(`order`) + 1
                     FROM `assessments`
                     WHERE `course_id` = ?
@@ -173,32 +190,32 @@ class Models_Gradebook_Assessment extends Models_Base {
         } else {
             return "0";
         }
-        
+
     }
 
     public function insert() {
         global $db;
-        
+
         if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
             $this->assessment_id = $db->Insert_ID();
             return $this;
         } else {
             return false;
         }
-        
+
     }
 
     public function update() {
         global $db;
-        
+
         if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`assessment_id` = ".$this->assessment_id)) {
             return $this;
         } else {
             return false;
         }
-        
+
     }
-    
+
 }
 
 ?>

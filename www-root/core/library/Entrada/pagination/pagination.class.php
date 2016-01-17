@@ -117,11 +117,10 @@ class Pagination {
                         $pageNum = 1;
                     }
 
-                    $strLinks .= '<a href="'.$this->linksHref.$queryString.$pageNum.'">';
-                    $strLinks .= $this->pageJumpBack.'</a>'.$this->pageSeparator;
+                    $strLinks .= '<li><a href="'.$this->linksHref.$queryString.$pageNum.'">'.$this->pageJumpBack.'</a></li>'.$this->pageSeparator;
                 }
 
-                $strLinks .= '<a href="'.$this->linksHref.$queryString.'1">1&hellip;</a>'.$this->pageSeparator;
+                $strLinks .= '<li><a href="'.$this->linksHref.$queryString.'1">1&hellip;</a></li>'.$this->pageSeparator;
             }
 
 
@@ -135,11 +134,10 @@ class Pagination {
 
             for($i = $start; $i <= $end; $i ++){
                 if($i != $this->currentPage){
-                    $strLinks .= '<a href="'.$this->linksHref.$queryString.($i).'">';
-                    $strLinks .= ($i).'</a>'.$this->pageSeparator;
+                    $strLinks .= '<li><a href="'.$this->linksHref.$queryString.($i).'">'.($i).'</a></li>'.$this->pageSeparator;
                 }
                 else {
-                    $strLinks .= '<span class="active">'.$i.'</span>'.$this->pageSeparator;
+                    $strLinks .= '<li class="active"><a href="#">'.$i.'</a></li>'.$this->pageSeparator;
                 }
             }
             $strLinks = substr($strLinks, 0, -strlen($this->pageSeparator));
@@ -147,8 +145,7 @@ class Pagination {
 
             if($this->currentPage < $pageCount){
             	if($start + $this->linksToDisplay - 1 < $pageCount) {
-	                $strLinks .= $this->pageSeparator.'<a href="'.$this->linksHref.$queryString.$pageCount.'">';
-	                $strLinks .= '&hellip;'.$pageCount.'</a>'.$this->pageSeparator;
+	                $strLinks .= $this->pageSeparator.'<li><a href="'.$this->linksHref.$queryString.$pageCount.'">&hellip;'.$pageCount.'</a></li>'.$this->pageSeparator;
             	} else {
 	                $strLinks .= $this->pageSeparator;
             	}
@@ -158,12 +155,10 @@ class Pagination {
                         $pageNum = $pageCount;
                     }
 
-                    $strLinks .= '<a href="'.$this->linksHref.$queryString.$pageNum.'">';
-                    $strLinks .= $this->pageJumpNext.'</a>';
+                    $strLinks .= '<li><a href="'.$this->linksHref.$queryString.$pageNum.'">'.$this->pageJumpNext.'</a></li>';
                 }
             }
         }
-
 
         return $strLinks;
     }
@@ -221,4 +216,3 @@ class Pagination {
         }
     }
 }
-?>

@@ -112,7 +112,7 @@ if ($RECORD_ID) {
 			}
 		}
 	}
-	if ($evaluation && $ENTRADA_ACL->amIAllowed(new EvaluationResource(null, null, true), 'update')) {
+	if ($evaluation && $ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], $evaluation["organisation_id"], true), "update", true)) {
 		array_unshift($permissions, array("contact_type" => "reviewer"));
 	}
 	if ($evaluation && isset($permissions) && $permissions) {
@@ -124,8 +124,8 @@ if ($RECORD_ID) {
 			if (!isset($progress_id) || !$progress_id || $completed_attempt["eprogress_id"] == $progress_id) {
                 if (isset($completed_attempt["preceptor_proxy_id"]) && $completed_attempt["preceptor_proxy_id"]) {
                     $target_id = $completed_attempt["preceptor_proxy_id"];
-                } elseif (isset($completed_attempt["event_id"]) && ((int)$completed_attempt["event_id"])) {
-                    $target_id = ((int)$completed_attempt["event_id"]);
+                } elseif (isset($completed_attempt["event_id"]) && ((int)$completed_attempt["event_id"]) && isset($completed_attempt["target_record_id"]) && $completed_attempt["target_record_id"]) {
+                    $target_id = ((int)$completed_attempt["target_record_id"]);
                 } elseif (isset($completed_attempt["target_record_id"]) && ((int)$completed_attempt["target_record_id"])) {
                     $target_id = ((int)$completed_attempt["target_record_id"]);
                 } else {
@@ -156,6 +156,7 @@ if ($RECORD_ID) {
 						break;
 						case "proxy_id" :
 						case "cgroup_id" :
+						case "cohort" :
 						case "self" :
 							$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data`
 										WHERE `id` = ".$db->qstr($target_id);
@@ -228,7 +229,7 @@ if ($RECORD_ID) {
 										$clerkship_event["responses"][$response["equestion_id"]]["responses"][$response["eqresponse_id"]] = 0;
 									}
 									$clerkship_event["eprogress_id"] = $completed_attempt["eprogress_id"];
-									$clerkship_event["target_title"] = $clerkship_event["event_title"].($clerkship_event["event_title"] != $clerkship_event["rotation_title"] ? " [".$clerkship_event["rotation_title"]."]" : "");
+									$clerkship_event["target_title"] = $clerkship_event["rotation_title"];
 									$clerkship_event["sort_title"] = $clerkship_event["rotation_title"].", ".$clerkship_event["event_title"];
 									$available_targets[$target_id] = $clerkship_event;
 								}
@@ -307,8 +308,8 @@ if ($RECORD_ID) {
                     if (!isset($progress_id) || !$progress_id || $completed_attempt["eprogress_id"] == $progress_id) {
                         if (isset($completed_attempt["preceptor_proxy_id"]) && $completed_attempt["preceptor_proxy_id"]) {
                             $target_id = $completed_attempt["preceptor_proxy_id"];
-                        } elseif (isset($completed_attempt["event_id"]) && ((int)$completed_attempt["event_id"])) {
-                            $target_id = ((int)$completed_attempt["event_id"]);
+                        } elseif (isset($completed_attempt["event_id"]) && ((int)$completed_attempt["event_id"]) && isset($completed_attempt["target_record_id"]) && $completed_attempt["target_record_id"]) {
+                            $target_id = ((int)$completed_attempt["target_record_id"]);
                         } elseif (isset($completed_attempt["target_record_id"]) && ((int)$completed_attempt["target_record_id"])) {
                             $target_id = ((int)$completed_attempt["target_record_id"]);
                         } else {
@@ -337,6 +338,7 @@ if ($RECORD_ID) {
                                         $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["comments"][$evaluation_response["eresponse_id"]]["text"] = $evaluation_response["comments"];
                                         $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["comments"][$evaluation_response["eresponse_id"]]["eqresponse_id"] = $evaluation_response["eqresponse_id"];
                                         $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["comments"][$evaluation_response["eresponse_id"]]["equestion_id"] = $evaluation_response["equestion_id"];
+                                        $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["comments"][$evaluation_response["eresponse_id"]]["proxy_id"] = $evaluation_response["proxy_id"];
                                     }
                                     if ($evaluation_response["eqresponse_id"] && !isset($available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["responses"][$evaluation_response["eqresponse_id"]])) {
                                         $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["responses"][$evaluation_response["eqresponse_id"]] = 0;
@@ -421,14 +423,15 @@ if ($RECORD_ID) {
 											$temp_responses[$response_id]["comments"] = array();
 										}
 										$temp_responses[$response_id]["comments"][] = $comment["text"];
+										$temp_responses[$response_id]["proxy_ids"][] = $comment["proxy_id"];
 									}
 								}
 							}
 							foreach ($temp_responses as $response) {
 								echo "      <li>".$response["response"].":\n";
                                 echo "          <ul>\n";
-								foreach ($response["comments"] as $comment) {
-									echo "              <li>".$comment."</li>\n";
+								foreach ($response["comments"] as $index => $comment) {
+									echo "              <li>".($evaluation["identify_comments"] ? "<strong>".get_account_data("wholename", $response["proxy_ids"][$index])."</strong>: " : "").$comment."</li>\n";
 								}
 								echo "          </ul>\n";
                                 echo "      </li>\n";
@@ -444,9 +447,9 @@ if ($RECORD_ID) {
 					echo "<div class=\"row-fluid comments-row\">\n";
                     echo "  <ul>";
 					$temp_responses = array();
-					foreach ($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["comments"] as $comment) {
+					foreach ($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["comments"] as $eresponse_id => $comment) {
 						if ($comment["equestion_id"] == $question["equestion_id"]) {
-							echo "      <li>".$comment["text"]."</li>\n";
+							echo "      <li>".($evaluation["identify_comments"] ? "<strong>".get_account_data("wholename", $comment["proxy_id"])."</strong>: " : "").$comment["text"]."</li>\n";
 						}
 					}
 					echo "	</ul>\n";

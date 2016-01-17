@@ -50,7 +50,7 @@ class Models_Event_Draft_Creator extends Models_Base {
     }
     
     public function getCreator() {
-        return User::get($this->proxy_id);
+        return User::fetchRowByID($this->proxy_id);
     }
     
     public static function fetchRowByID($create_id = 0) {

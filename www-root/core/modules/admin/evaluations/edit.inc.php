@@ -378,7 +378,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 														AND b.`account_active` = 'true'
 														AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 														AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-														AND a.`id` IN (".implode(", ", $evaluator_values).")";
+														AND a.`id` IN (".implode(", ", $evaluator_values).")
+														GROUP BY a.`id`";
 											$results = $db->GetAll($query);
 											if ($results) {
 												foreach ($results as $result) {
@@ -846,7 +847,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							multiselect[target_type].container.show();
 						} else {
 							if (target_type) {
-								new Ajax.Request('<?php echo ENTRADA_RELATIVE; ?>/admin/evaluations?section=api-form-options', {
+								new Ajax.Request('<?php echo ENTRADA_RELATIVE; ?>/admin/evaluations?section=api-target-selector', {
 									evalScripts : true,
 									parameters: {
 										'options_for' : target_type,

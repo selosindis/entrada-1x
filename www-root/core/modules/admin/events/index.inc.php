@@ -60,6 +60,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			"teacher_names" => "Teacher Names",			
 			"objectives_release_date" => "Objectives Release Date"
 	);
+
 	$objective_name = $translate->_("events_filter_controls");
 	$curriculum_objectives_name = $objective_name["co"]["global_lu_objectives_name"];
 	$clinical_presentations_name = $objective_name["cp"]["global_lu_objectives_name"];

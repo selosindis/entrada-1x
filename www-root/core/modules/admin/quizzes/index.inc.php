@@ -39,12 +39,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } else { 
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js"."\"></script>";
 
-    if ($ENTRADA_USER->getActiveRole() != "admin") {
+    if ($ENTRADA_USER->getActiveRole() != "admin" || $ENTRADA_USER->getActiveGroup() != "medtech") {
         $quizzes = Models_Quiz::fetchAllRecordsByProxyID($ENTRADA_USER->getID());
     } else {
         $quizzes = Models_Quiz::fetchAllRecords();
     }
-    
+    $quiz_data = array();
     $i = 0;
     foreach ($quizzes as $quiz) {
         $quiz_data[$i]["quiz_id"]           = $quiz->getQuizID();
@@ -133,10 +133,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						{ 'mDataProp': 'quiz_title' },
 						{ 'mDataProp': 'author' },
 						{ 'mDataProp': 'question_total' },
-						{ 'mDataProp': 'updated_date' },
+						{ 'mDataProp': 'updated_date' }
 					],
 					'aoColumnDefs': [ {
-						'aTargets': [0,1,2,3,4,],
+						'aTargets': [0,1,2,3,4],
 						'fnCreatedCell': function (nTd, sData, oData, iRow, iCol) {
 							if (iCol == 0) {
 								jQuery(nTd).addClass('modified')
@@ -144,9 +144,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								jQuery(nTd).addClass('title')
 							} else if ( iCol == 2 ) {
 								jQuery(nTd).addClass('author')
-							} else if ( iCol == 4 ) {
+							} else if ( iCol == 3 ) {
 								jQuery(nTd).addClass('questions')
-							} else if ( iCol == 5 ) {
+							} else if ( iCol == 4 ) {
 								jQuery(nTd).addClass('updated')
 							}
 						}
@@ -157,7 +157,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						return nRow;
 					},
 					'oLanguage': {
-						'sEmptyTable': 'There are currently quizzes in the system.',
+						'sEmptyTable': 'There are currently no quizzes in the system.',
 						'sZeroRecords': 'No quizzes found.'
 					}
 

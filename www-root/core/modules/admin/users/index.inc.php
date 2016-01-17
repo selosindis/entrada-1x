@@ -217,30 +217,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			}
 		break;
 		case "browse-newest" :
-			if ((isset($_GET["n"])) && ($number = clean_input($_GET["n"], array("trim", "int"))) && ($number > 0) && ($number <= 100)) {
-				$browse_number = $number;
-				$results_per_page = $browse_number;
-			}
+            if ((isset($_GET["n"])) && ($number = clean_input($_GET["n"], array("trim", "int"))) && ($number > 0) && ($number <= 100)) {
+                $browse_number = $number;
+                $results_per_page = $browse_number;
+            }
 
-			if (!$ERROR) {
-				$search_query_text = "Newest ".(int) $browse_number." User".(($browse_number != 1) ? "s" : "");
-
-				$query_counter = "	SELECT COUNT(DISTINCT(a.`id`)) AS `total_rows`
+            if (!$ERROR) {
+                $search_query_text = "Newest ".(int) $browse_number." User".(($browse_number != 1) ? "s" : "");
+                $query_counter = "	SELECT
+				                        IF(
+				                            COUNT(DISTINCT(a.`id`)) <= ".((int)$browse_number).",
+				                                COUNT(DISTINCT(a.`id`)),
+				                                ".$db->qstr((int)$browse_number)."
+                                        ) AS `total_rows`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
 									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									ORDER BY a.`id` DESC
-									LIMIT 0, ".(int) $browse_number;
-				$query_search = "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+									LIMIT 0, ".((int)$browse_number);
+                $query_search = "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
 									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
                                     GROUP BY a.`id`
 									ORDER BY a.`id` DESC
-									LIMIT 0, ".(int) $browse_number;
-			}
+									LIMIT 0, ".((int)$browse_number);
+            }
 		break;
 		case "search" :
 		default :
@@ -696,7 +700,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				foreach ($results as $result) {
 					$can_login	= true;
 					$url		= ENTRADA_URL."/admin/users/manage?id=".$result["id"];
-					$add_url		= ENTRADA_URL."/admin/users?section=add&amp;id=".$result["id"];
+                    $add_url	= ENTRADA_URL."/admin/users?section=add&amp;id=".$result["id"];
+
+                    $permission_to_delete = false;
 
 					if ($result["account_active"] == "false") {
 						$can_login = false;
@@ -709,8 +715,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$can_login = false;
 					}
 					if ($result["account_active"]) {
+                        $query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access`
+                                    WHERE `user_id` = ".$db->qstr($result["id"])."
+                                    AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
+                                    AND `account_active` = 'true'";
+                        $access_records = $db->getAll($query);
+                        if ($access_records) {
+                            $permission_to_delete = true;
+                            foreach ($access_records as $access_record) {
+                                if (!$ENTRADA_ACL->amIAllowed(new UserResource($result["id"], $access_record["organisation_id"]), 'delete')) {
+                                    $permission_to_delete = false;
+                                    break;
+                                }
+                            }
+                        }
 						echo "<tr class=\"user".((!$can_login) ? " na" : "")."\">\n";
-						echo "	<td class=\"modified\">".($ENTRADA_ACL->amIAllowed(new UserResource($result["id"], $result['organisation_id']), 'delete') ? "<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["id"]."\" />" : '')."</td>\n";
+						echo "	<td class=\"modified\">".($permission_to_delete ? "<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["id"]."\" />" : '')."</td>\n";
 						echo "	<td class=\"title\">".(($url) ? "<a href=\"".$url."\" title=\"Edit Account: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
 						echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Edit Account: ".html_encode($result["fullname"])."\">" : "").html_encode($result["username"]).(($url) ? "</a>" : "")."</td>\n";
 						echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Edit Account: ".html_encode($result["fullname"])."\">" : "").ucwords($result["group"])." &rarr; ".ucwords($result["role"]).(($url) ? "</a>" : "")."</td>\n";
@@ -725,11 +745,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						echo "</tr>\n";
 					} else {
 						echo "<tr class=\"user disabled\">\n";
-						echo "	<td class=\"modified\">".($ENTRADA_ACL->amIAllowed(new UserResource($result["id"], $result['organisation_id']), 'create') ? "<a class=\"strong-green\" href=\"".$add_url."\" ><img style=\"border: none;\" src=\"".ENTRADA_URL."/images/btn_add.gif\" /></a>" : '')."</td>\n";
+						echo "	<td class=\"modified\">".($ENTRADA_ACL->amIAllowed(new UserResource($result["id"], $ENTRADA_USER->getActiveOrganisation()), 'create') ? "<a class=\"strong-green\" href=\"".$add_url."\" ><img style=\"border: none;\" src=\"".ENTRADA_URL."/images/btn_add.gif\" /></a>" : '')."</td>\n";
 						echo "	<td class=\"title content-small\">".html_encode($result["fullname"])."</td>\n";
 						echo "	<td class=\"general content-small\">".html_encode($result["username"])."</td>\n";
 						echo "	<td class=\"general\">&nbsp;</td>\n";
 						echo "	<td class=\"date\">&nbsp;</td>\n";
+                        if ($ENTRADA_ACL->amIAllowed("masquerade", "read")) {
+                            echo "	<td>&nbsp;</td>\n";
+                        }
 						echo "</tr>\n";
 					}
 				}

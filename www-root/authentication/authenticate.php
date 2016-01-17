@@ -262,13 +262,13 @@ if (!$ERROR) {
 				$ldap->debug = false;
 
 				if ($ldap->Connect(LDAP_HOST, LDAP_SEARCH_DN, LDAP_SEARCH_DN_PASS, LDAP_BASE_DN)) {
-					if (($result = $ldap->GetRow("uid=".$user_username)) && (is_array($result)) && (isset($result[LDAP_MEMBER_ATTR]))) {
+					if (($result = $ldap->GetRow(LDAP_QUERYMEMBER_ATTR."=".$user_username)) && (is_array($result)) && (isset($result[LDAP_MEMBER_ATTR]))) {
 						$ldap->Close();
 
 						$user_dn = LDAP_MEMBER_ATTR."=".$result[LDAP_MEMBER_ATTR].",".LDAP_BASE_DN;
 
 						if ($ldap->Connect(LDAP_HOST, $user_dn, $user_password, LDAP_BASE_DN)) {
-							$ldap_result = $ldap->GetRow("uid=".$user_username);
+							$ldap_result = $ldap->GetRow(LDAP_QUERYMEMBER_ATTR."=".$user_username);
 
 							if ($ldap_result) {
 								$ldap->Close();

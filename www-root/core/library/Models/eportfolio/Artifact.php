@@ -144,7 +144,7 @@ class Models_Eportfolio_Artifact {
 	}
 	
 	public function getUpdatedBy() {
-		$user = User::get($this->updated_by);
+		$user = User::fetchRowByID($this->updated_by);
 		return $user;
 	}
 	

@@ -59,95 +59,65 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		if ($event_info) {
 			if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
 				application_log("error", "Someone attempted to modify content for an event [".$EVENT_ID."] that they were not the coordinator for.");
-				echo 'here';
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
 				exit;
 			} else {
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $EVENT_ID)), "title" => "Event Content");
+
 				switch ($STEP) {
 					case 2:			
-						ob_clean();						
+						ob_clear_open_buffers();
 						
-						if (!isset($_POST["attending"])) {
-							echo htmlspecialchars(json_encode(array('error'=>'No value supplied for attending.')), ENT_NOQUOTES);
-							exit;
+                        $proxy_id = 0;
+
+						if (isset($_POST["proxy_id"]) && $tmp_input = (int) $_POST["proxy_id"]) {
+							$query = "SELECT `id` FROM `" . AUTH_DATABASE . "`.`user_data` WHERE `id` = ?";
+							$proxy_id = (int) $db->GetOne($query, array($tmp_input));
+						} elseif (isset($_POST["number"]) && $tmp_input = (int) $_POST["number"]) {
+							$query = "SELECT `id` FROM `" . AUTH_DATABASE . "`.`user_data` WHERE `number` = ?";
+							$proxy_id = (int) $db->GetOne($query, array($tmp_input));
 						}
-						
-						if (isset($_POST["proxy_id"]) && $tmp_input = (int)$_POST["proxy_id"]) {
-							$query = "	SELECT `id` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($tmp_input);
-							$proxy_id = (int)$db->GetOne($query);
-						} elseif(isset($_POST["number"]) && $tmp_input = (int)$_POST["number"]) {
-							$query = "	SELECT `id` FROM `".AUTH_DATABASE."`.`user_data` WHERE `number` = ".$db->qstr($tmp_input);
-							$proxy_id = (int)$db->GetOne($query);
-						}
-												
-						$attending = (int)$_POST["attending"];						
-						
+
 						if ($proxy_id) {
-							
-							if (!events_fetch_event_audience_for_user($EVENT_ID,$proxy_id)) {
-								echo htmlspecialchars(json_encode(array('error'=>'This user is not an audience member for this event.')), ENT_NOQUOTES);
-								exit;									
-							}
-							
-							/**
-							 * When using the student number, there's no reference to a checkbox to get the attending value. 
-							 * If 2 is passed it will just set the value of attending to the opposite of what it currentlty is. 
-							 */
-							if ($attending == 2) {
-								$query = "SELECT * FROM `event_attendance` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `proxy_id` = ".$db->qstr($proxy_id);
-								$attending = !(int)$db->GetRow($query);
-							}				
-							
-							if ($attending) {
-								$attendance_record = array(
-															"event_id"=>$EVENT_ID,
-															"proxy_id"=>$proxy_id,
-															"updated_date"=>time(),
-															"updated_by"=>$ENTRADA_USER->getID()
-															);
-								if ($db->AutoExecute("event_attendance",$attendance_record,"INSERT")) {
-									$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($proxy_id);
-									$user_details = $db->GetRow($query);
-									echo htmlspecialchars(json_encode(array('success'=>'Successfully added attendance'.($user_details?' for '.$user_details["firstname"].' '.$user_details["lastname"]:'').'.','proxy_id'=>$proxy_id)), ENT_NOQUOTES);
-									exit;												
-								} else {
-									echo htmlspecialchars(json_encode(array('error'=>'Error occurred updating record.')), ENT_NOQUOTES);
-									exit;												
-								}
-							} else {
-								$query = "DELETE FROM `event_attendance` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `proxy_id` = ".$db->qstr($proxy_id);
-								if ($db->Execute($query)) {
-									$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($proxy_id);
-									$user_details = $db->GetRow($query);
-									echo htmlspecialchars(json_encode(array('success'=>'Successfully removed attendance'.($user_details?' for '.$user_details["firstname"].' '.$user_details["lastname"]:'').'.','proxy_id'=>$proxy_id)), ENT_NOQUOTES);
-									exit;												
-								} else {
-									echo htmlspecialchars(json_encode(array('error'=>'Error occurred updating record.')), ENT_NOQUOTES);
-									exit;												
-								}								
-							}
+                            $audience = new Models_Event_Audience();
+                            if (!$audience->isAudienceMember($proxy_id, $event_info["event_id"], $event_info["event_start"])) {
+                                echo json_encode(array("error" => "This user is not an audience member for this event."));
+                                exit;
+                            }
+
+							$attendance = new Models_Event_Attendance();
+                            $toggle = $attendance->toggleAttendance($proxy_id, $event_info["event_id"]);
+                            if ($toggle) {
+                                echo json_encode(array("success" => "Successfully marked proxy_id [".$proxy_id."] as ".$toggle."."));
+                                exit;
+                            } else {
+                                echo json_encode(array("error" => "Error occurred updating record for proxy_id [".$proxy_id."]."));
+                                exit;
+                            }
 						} else {
-							echo htmlspecialchars(json_encode(array('error'=>'Unable to locate user.')), ENT_NOQUOTES);
-							exit;														
+							echo json_encode(array("error" => "Unable to locate proxy_id."));
+                            exit;
 						}
-						exit;
-						break;
+					break;
 					default:
-						break;
+                        continue;
+					break;
 				}
 				
-				$audience = events_fetch_event_audience_attendance($EVENT_ID);
-				
+                $audience = Models_Event_Attendance::fetchAllByEventID($EVENT_ID, $event_info["event_start"]);
+
 				if (isset($_GET["download"]) && trim($_GET["download"]) == "csv") {
 					if ($audience) {
-						ob_clean();
+						ob_clear_open_buffers();
+
 						$output = "";
-						foreach($audience as $learner) {
-							$output .= $learner["number"].','.$learner["lastname"].','.$learner["firstname"].','.($learner["has_attendance"]?'Present':'Absent')."\n";
+						foreach ($audience as $learner) {
+							$output .= $learner["number"].','.$learner["lastname"].','.$learner["firstname"] . ','.($learner["has_attendance"] ? "Present" : "Absent")."\n";
 						}
-						$file_title = "attendance-for-event-".$event_info["event_id"]."-".time().".csv";
-						header("Pragma: public");
+
+                        $file_title = "attendance-for-event-".$event_info["event_id"]."-".time().".csv";
+
+                        header("Pragma: public");
 						header("Expires: 0");
 						header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 						header("Content-Type: text/csv");
@@ -156,13 +126,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						header("Content-Transfer-Encoding: binary\n");
 
 						echo $output;
-						exit;						
-						
+						exit;
 					}
 				}
-				events_subnavigation($event_info,'attendance');
-				echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
-				echo "<h1 class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
+
+				events_subnavigation($event_info, "attendance");
+
+                echo "<div class=\"content-small\">" . fetch_course_path($event_info["course_id"]) . "</div>\n";
+				echo "<h1 class=\"event-title\">" . html_encode($event_info["event_title"]) . "</h1>\n";
 
 				if ($SUCCESS) {
 					fade_element("out", "display-success-box");
@@ -177,50 +148,55 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					echo display_error();
 				}
 				?>
-
-					<div class="pull-right">
-						<a href="#" onclick="javascript:openDialog('http://google.com');" class="btn btn-primary">Kiosk Mode</a>
-					</div>
+                <div class="pull-right">
+                    <a href="#" onclick="javascript:openDialog('http://google.com');" class="btn btn-primary">Kiosk Mode</a>
+                </div>
 				<a name="event-attendance-section"></a>
 				<h2 title="Event Resources Section">Event Attendance</h2>
 				<div id="event-attendance-section">					
-						<div class="row-fluid">
-							<label for="number">Student Number:</label> <input type="text" name="number" id="number"/>
-						</div>
-						<table class="tableList" cellspacing="0" summary="List of Attached Files">
-							<colgroup>
-								<col class="modified"/>
-								<col class="title"/>
-								<col class="title"/>
-							</colgroup>
-							<thead>
-								<tr>
-									<td class="modified">&nbsp;</td>
-									<td class="title">Last Name</td>
-									<td class="title">First Name</td>
-								</tr>
-							</thead>
-							<tbody>
-								<?php	if ($audience) {
-											foreach ($audience as $learner) {?>
-								<tr>
-									<td><input type="checkbox" class="attendance-check" value="<?php echo $learner["id"];?>" id="learner-<?php echo $learner["id"];?>"<?php echo $learner["has_attendance"]?' checked="checked"':'';?>/></td>
-									<td><?php echo $learner["lastname"];?></td>
-									<td><?php echo $learner["firstname"];?></td>
-								</tr>
-									<?php	} 										
-									}else { ?>
-								<tr>
-									<td colspan="3"><?php echo display_notice(array("There is no audience associated with this event."));?></td>
-								</tr>										
-							<?php	}
-										?>
-							</tbody>
-						</table>
+                    <div class="row-fluid">
+                        <label for="number">Student Number:</label> <input type="text" name="number" id="number"/>
+                    </div>
+                    <table class="tableList" cellspacing="0" summary="List of Attached Files">
+                        <colgroup>
+                            <col class="modified"/>
+                            <col class="title"/>
+                            <col class="title"/>
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <td class="modified">&nbsp;</td>
+                                <td class="title">Last Name</td>
+                                <td class="title">First Name</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            if ($audience) {
+                                foreach ($audience as $proxy_id => $learner) {
+                                    ?>
+                                    <tr>
+                                        <td><input type="checkbox" class="attendance-check" value="<?php echo $proxy_id; ?>" id="learner-<?php echo $learner["id"]; ?>"<?php echo ($learner["has_attendance"] ? " checked=\"checked\"" : "");?> /></td>
+                                        <td><?php echo $learner["lastname"]; ?></td>
+                                        <td><?php echo $learner["firstname"]; ?></td>
+                                    </tr>
+                                    <?php
+                                }
+                            } else {
+                                ?>
+                                <tr>
+                                    <td colspan="3"><?php echo display_notice(array("There is no audience associated with this event."));?></td>
+                                </tr>
+                                <?php
+                            }
+                            ?>
+                        </tbody>
+                    </table>
 					<div style="margin-top:10px">
 						<input type="button" class="btn" value="Download CSV" onclick="window.location = '<?php echo ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $EVENT_ID,"download"=>"csv"));?>'"/>
 					</div>
 				</div>
+
 				<div class="kiosk-modal" style="display:none;">
 						<div id="modal_message">You can now swipe student card.</div>
 						<div id="modal_icon"><img src="<?php echo ENTRADA_URL."/images/large_check.png";?>" id="modal_icon_img" title="Success" alt ="Success" style="height:400px;"/></div>
@@ -358,7 +334,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 					jQuery.ajax({
 						type: "POST",
-						url: "<?php echo ENTRADA_URL;?>/admin/events?section=attendance&id=<?php echo $EVENT_ID;?>&step=2",
+						url: "<?php echo ENTRADA_URL; ?>/admin/events?section=attendance&id=<?php echo $EVENT_ID;?>&step=2",
 						data: "proxy_id="+proxy_id+"&attending="+attending,
 						success: function(data){
 							try{

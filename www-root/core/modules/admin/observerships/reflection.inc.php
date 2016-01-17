@@ -50,7 +50,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 	
 	if ($observership_reflection) {
 		$observership = $observership_reflection->getObservership();
-		$student = User::get($observership->getStudentID());
+		$student = User::fetchRowByID($observership->getStudentID());
 
 		$BREADCRUMB = array();
 		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users", "title" => "Manage Users");

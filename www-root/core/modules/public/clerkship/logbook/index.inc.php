@@ -110,6 +110,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				ON a.`rotation_id` = d.`event_id`
 				LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS e
 				ON d.`rotation_id` = e.`rotation_id`
+				LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_agerange` AS f
+				ON a.`agerange_id` = f.`agerange_id`
 				WHERE a.`proxy_id` = ".$db->qstr($PROXY_ID)."
 				ORDER BY ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]." ASC";
 	$results = $db->GetAll($query);
@@ -231,7 +233,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<li class="logbook-entry<?php echo (!$result["entry_active"] ? " flagged" : ""); ?>">
 								<a id="entry-<?php echo $result["lentry_id"]; ?>" onclick="loadEntry(<?php echo $result["lentry_id"]; ?>)" class="logbook-entry">
 									<?php
-									if (in_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"], Array("b.`location`", "c.`site_name`", "a.`patient_info`", "e.`rotation_title`"))) {
+									if (in_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"], Array("b.`location`", "c.`site_name`", "a.`patient_info`", "e.`rotation_title`", "f.`agerange_id`"))) {
 										echo ($result["sort_by"] ? $result["sort_by"] : "No ".ucfirst($_GET["sb"])." Set");
 									} elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "a.`encounter_date`") {
 										echo date(DEFAULT_DATE_FORMAT, $result["sort_by"]);

@@ -27,7 +27,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MANAGE_USER_DATA"))) {
 require_once("Entrada/metadata/functions.inc.php");
 
 
-$eUser = User::get($PROXY_ID);
+$eUser = User::fetchRowByID($PROXY_ID);
 $SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/meta_data.js\"></script>";
 $ONLOAD[] = "api_url = \"".ENTRADA_URL."/admin/users/manage/metadata?section=api-metadata&id=".$PROXY_ID."\";page_init();";
 ?>

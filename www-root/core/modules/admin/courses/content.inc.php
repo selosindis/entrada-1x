@@ -28,6 +28,7 @@
  *
  * $Id: content.inc.php 1169 2010-05-01 14:18:49Z simpson $
 */
+
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	exit;
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -44,7 +45,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if($COURSE_ID) {
-		if(!$ORGANISATION_ID){
+		if(!isset($ORGANISATION_ID) || !$ORGANISATION_ID){
 			$query = "SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 			$result = $db->GetOne($query);
 			if($result)
@@ -66,7 +67,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
 				exit;
 			} else {
-				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID)), "title" => $module_singular_name . " Content");
+				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID)), "title" => $translate->_("course") . " Content");
 
 				$query	= "	SELECT a.*, b.`community_url`
 							FROM `community_courses` AS a
@@ -97,7 +98,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							/**
 							 * Not-Required: course_description | Course Description
 							 */
-							if((isset($_POST["course_description"])) && (clean_input($_POST["course_description"], array("notags", "nows")))) {
+							if((isset($_POST["course_description"])) && (clean_input($_POST["course_description"], array("allowedtags", "nows")))) {
 								$PROCESSED["course_description"] = clean_input($_POST["course_description"], array("allowedtags"));
 							} else {
 								$PROCESSED["course_description"] = "";
@@ -106,7 +107,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							/**
 							 * Not-Required: course_objectives | Course Objectives
 							 */
-							if((isset($_POST["course_objectives"])) && (clean_input($_POST["course_objectives"], array("notags", "nows")))) {
+							if((isset($_POST["course_objectives"])) && (clean_input($_POST["course_objectives"], array("allowedtags", "nows")))) {
 								$PROCESSED["course_objectives"] = clean_input($_POST["course_objectives"], array("allowedtags"));
 							} else {
 								$PROCESSED["course_objectives"] = "";
@@ -115,7 +116,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							/**
 							 * Not-Required: course_message | Director's Message
 							 */
-							if((isset($_POST["course_message"])) && (clean_input($_POST["course_message"], array("notags", "nows")))) {
+							if((isset($_POST["course_message"])) && (clean_input($_POST["course_message"], array("allowedtags", "nows")))) {
 								$PROCESSED["course_message"] = clean_input($_POST["course_message"], array("allowedtags"));
 							} else {
 								$PROCESSED["course_message"] = "";
@@ -124,7 +125,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							if($db->AutoExecute("courses", $PROCESSED, "UPDATE", "`course_id` = ".$db->qstr($COURSE_ID))) {
 
 								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> " . $module_singular_name . " details section.";
+								$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> " . $translate->_("course") . " details section.";
 
 								application_log("success", "Successfully updated course_id [".$COURSE_ID."] course details.");
 							} else {
@@ -170,7 +171,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 
 							$SUCCESS++;
-							$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> " . $module_singular_name . " objectives section.";
+							$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> " . $translate->_("course") . " objectives section.";
 
 							application_log("success", "Successfully updated course_id [".$COURSE_ID."] course objectives.");
 						break;
@@ -317,8 +318,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				 */
 				load_rte();
 
-				$LASTUPDATED		= $course_details["updated_date"];
-
 				$OTHER_DIRECTORS	= array();
 
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>";
@@ -446,10 +445,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				if($ERROR) {
 					echo display_error();
 				}
-
 				?>
 				<a name="course-details-section"></a>
-				<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
+				<h2 title="Course Details Section"><?php echo $translate->_("course"); ?> Details</h2>
 				<div id="course-details-section" class="clearfix">
 					<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
 						<input type="hidden" name="type" value="text" />
@@ -458,11 +456,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<div class="controls">
 								<?php
 								if (!$course_community) { ?>
-									<input type="text" id="course_url" name="course_url" value="<?php echo ((isset($PROCESSED["course_url"]) && ($PROCESSED["course_url"] != "")) ? html_encode($PROCESSED["course_url"]) : "http://");?>"/>
-									<p class="well well-small space-above content-small">
-										<strong>Example:</strong> http://meds.queensu.ca<br/>
-										<strong>Please Note:</strong> If you have an external <?php echo  strtolower($module_singular_name);?> website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.
-									</p>
+									<input type="text" id="course_url" name="course_url" value="<?php echo ((isset($PROCESSED["course_url"]) && ($PROCESSED["course_url"] != "")) ? html_encode($PROCESSED["course_url"]) : "http://"); ?>" class="span11"/>
 									<?php
 								} else { ?>
 									<a href="<?php echo ENTRADA_URL."/community" . $course_community["community_url"];?>">
@@ -474,7 +468,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</div>
 
 						<div class="control-group">
-							<label for="course_directors" class="form-nrequired control-label"><?php echo $module_singular_name . " Directors";?></label>
+							<label for="course_directors" class="form-nrequired control-label"><?php echo $translate->_("course_directors"); ?></label>
 							<div class="controls">
 								<?php
 									$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
@@ -498,7 +492,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</div>
 
 						<div class="control-group">
-							<label for="curriculum_coordinators" class="form-nrequired control-label">Curriculum Coordinators</label>
+							<label for="curriculum_coordinators" class="form-nrequired control-label"><?php echo $translate->_("curriculum_coordinators"); ?></label>
 							<div class="controls">
 								<?php
 									$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
@@ -524,10 +518,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<?php
 						if (isset($course_details["pcoord_id"]) && (int)$course_details["pcoord_id"]) { ?>
 						<div class="control-group">
-							<label for="program_coordinator" class="form-nrequired control-label">Program Coordinator</label>
+							<label for="program_coordinator" class="form-nrequired control-label"><?php echo $translate->_("program_coordinator"); ?></label>
 							<div class="controls">
 								<a href="mailto: <?php echo get_account_data("email", $course_details["pcoord_id"]);?>">
-									<?php echo get_account_data("fullname", $course_details["pcoord_id"]);?>
+									<?php echo get_account_data("wholename", $course_details["pcoord_id"]);?>
 								</a>
 							</div>
 						</div>
@@ -536,10 +530,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 						if (isset($course_details["evalrep_id"]) && (int)$course_details["evalrep_id"]) { ?>
 						<div class="control-group">
-							<label for="evaluation_rep" class="form-nrequired control-label">Evaluation Rep</label>
+							<label for="evaluation_rep" class="form-nrequired control-label"><?php echo $translate->_("evaluation_rep"); ?></label>
 							<div class="controls">
 								<a href="mailto: <?php echo get_account_data("email", $course_details["evalrep_id"]);?>">
-									<?php echo get_account_data("fullname", $course_details["evalrep_id"]);?>
+									<?php echo get_account_data("wholename", $course_details["evalrep_id"]);?>
 								</a>
 							</div>
 						</div>
@@ -548,10 +542,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 						if (isset($course_details["studrep_id"]) && (int)$course_details["studrep_id"]) { ?>
 						<div class="control-group">
-							<label for="evaluation_rep" class="form-nrequired control-label">Student Rep</label>
+							<label for="evaluation_rep" class="form-nrequired control-label"><?php echo $translate->_("student_rep"); ?></label>
 							<div class="controls">
 								<a href="mailto: <?php echo get_account_data("email", $course_details["studrep_id"]);?>">
-									<?php echo get_account_data("fullname", $course_details["studrep_id"]);?>
+									<?php echo get_account_data("wholename", $course_details["studrep_id"]);?>
 								</a>
 							</div>
 						</div>
@@ -559,7 +553,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						} ?>
 
 						<div class="control-group">
-							<label for="course_description" class="form-nrequired control-label"><?php echo $module_singular_name . " Description";?></label>
+							<label for="course_description" class="form-nrequired control-label"><?php echo $translate->_("course") . " Description";?></label>
 							<div class="controls">
 								<textarea id="course_description" name="course_description" cols="70" rows="10"><?php echo ((isset($PROCESSED["course_description"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_description"], array("font")))) : "");?></textarea>
 							</div>
@@ -585,7 +579,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				if ($result) {
 					?>
 				<a name="course-objectives-section"></a>
-				<h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
+				<h2 title="Course Objectives Section"><?php echo $translate->_("course"); ?> Objectives</h2>
 				<div id="course-objectives-section">
 					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
 					<input type="hidden" name="type" value="objectives" />
@@ -602,19 +596,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						}
 
-						$query = "	SELECT b.*
-									FROM `course_objectives` AS a
-									JOIN `global_lu_objectives` AS b
-									ON a.`objective_id` = b.`objective_id`
-									JOIN `objective_organisation` AS c
-									ON b.`objective_id` = c.`objective_id`
-									WHERE a.`objective_type` = 'event'
-									AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-									AND b.`objective_active` = '1'
-									AND a.`course_id` = ".$db->qstr($COURSE_ID)."
-									GROUP BY b.`objective_id`
-									ORDER BY b.`objective_order`";
-						$results = $db->GetAll($query);
+						$results = Models_Course_Objective::fetchAllByOrganisationIDCourseID($ENTRADA_USER->getActiveOrganisation(), $COURSE_ID);
 
 					if ($results) { ?>
 						<h3>Clinical Presentations</h3>
@@ -654,7 +636,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				?>
                 <div class="clearfix"></div>
 				<a name="course-resources-section"></a>
-				<h2 title="Course Resources Section"><?php echo $module_singular_name; ?> Resources</h2>
+				<h2 title="Course Resources Section"><?php echo $translate->_("course"); ?> Resources</h2>
 				<div id="course-resources-section">
 					<div class="space-bottom medium">
 						<div class="clearfix">
@@ -756,7 +738,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<tr>
 										<td colspan="6">
 											<div class="well well-small content-small">
-												There have been no files added to this <?php echo strtolower($module_singular_name);?>. To <strong>add a new file</strong>, simply click the Add File button.
+												There have been no files added to this <?php echo strtolower($translate->_("course"));?>. To <strong>add a new file</strong>, simply click the Add File button.
 											</div>
 										</td>
 									</tr>
@@ -858,7 +840,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<tr>
 										<td colspan="5">
 											<div class="well well-small content-small">
-												There have been no links added to this <?php echo strtolower($module_singular_name);?>. To <strong>add a new link</strong>, simply click the Add Link button.
+												There have been no links added to this <?php echo strtolower($translate->_("course"));?>. To <strong>add a new link</strong>, simply click the Add Link button.
 											</div>
 										</td>
 									</tr>
@@ -951,7 +933,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     <tr>
                                         <td colspan="5">
                                             <div class="well well-small content-small">
-                                                There have been no LTI Providers added to this <?php echo strtolower($module_singular_name);?>. To <strong>add a new LTI Provider</strong>, simply click the Add LTI Provider button.
+                                                There have been no LTI Providers added to this <?php echo strtolower($translate->_("course"));?>. To <strong>add a new LTI Provider</strong>, simply click the button.
                                             </div>
                                         </td>
                                     </tr>
@@ -967,9 +949,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				 * Sidebar item that will provide the links to the different sections within this page.
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
-				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" onclick=\"$('course-details-section').scrollTo(); return false;\" title=\"Course Details\">" . $module_singular_name . " Details</a></li>\n";
-				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" onclick=\"$('course-objectives-section').scrollTo(); return false;\" title=\"Course Objectives\">" . $module_singular_name . " Objectives</a></li>\n";
-				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" onclick=\"$('course-resources-section').scrollTo(); return false;\" title=\"Course Resources\">" . $module_singular_name . " Resources</a></li>\n";
+				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" onclick=\"$('course-details-section').scrollTo(); return false;\" title=\"Course Details\">" . $translate->_("course") . " Details</a></li>\n";
+				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" onclick=\"$('course-objectives-section').scrollTo(); return false;\" title=\"Course Objectives\">" . $translate->_("course") . " Objectives</a></li>\n";
+				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" onclick=\"$('course-resources-section').scrollTo(); return false;\" title=\"Course Resources\">" . $translate->_("course") . " Resources</a></li>\n";
 				$sidebar_html .= "</ul>\n";
 
 				new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");
@@ -978,26 +960,23 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				 * Sidebar item that will provide link to reports.
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
-				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/courses?id=".$COURSE_ID."&section=course-eventtype-report\" title=\"Event Types Report\">Event Types Report</a></li>\n";
+				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/courses?section=course-eventtype-report&amp;id=".$COURSE_ID."\" title=\"Event Types Report\">Event Types Report</a></li>\n";
 				$sidebar_html .= "</ul>\n";
 
 				new_sidebar_item("Reports", $sidebar_html, "reports", "open", "1.9");
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "In order to edit a course you must provide a valid course identifier. The provided ID does not exist in this system.";
+			add_error("In order to edit a course you must provide a valid course identifier. The provided ID does not exist in this system.");
 
 			echo display_error();
 
-			application_log("notice", "Failed to provide a valid course identifer when attempting to edit a course.");
+			application_log("notice", "Failed to provide a valid course identifier when attempting to edit a course.");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "In order to edit a course you must provide the course identifier.";
+		add_error("In order to edit a course you must provide the course identifier.");
 
 		echo display_error();
 
-		application_log("notice", "Failed to provide course identifer when attempting to edit a course.");
+		application_log("notice", "Failed to provide course identifier when attempting to edit a course.");
 	}
 }
-?>

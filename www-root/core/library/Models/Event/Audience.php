@@ -1,15 +1,27 @@
 <?php
-
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
- * Description of Audience
+ * Entrada [ http://www.entrada-project.org ]
  *
- * @author rw65
+ * Entrada is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Entrada is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @author Organization: Queen's University
+ * @author Unit: Health Sciences Education Technology Unit
+ * @author Developer: Ryan Warner <rw65@queensu.ca>
+ * @copyright Copyright 2013 Queen's University. All Rights Reserved.
+ *
  */
+
 class Models_Event_Audience {
 
     private $eaudience_id,
@@ -18,7 +30,7 @@ class Models_Event_Audience {
             $audience_value,
             $updated_date,
             $updated_by;
-    
+
     /**
      * It's a constructor...
      * @param type $arr
@@ -88,6 +100,39 @@ class Models_Event_Audience {
         
         return $event_audience;
     }
+
+    /**
+     * This method searches the audience of the specified event to see if the proxy_id
+     * provided should be an active audience member.
+     *
+     * @param $proxy_id
+     * @param $event_id
+     * @param int $event_start
+     * @return bool
+     */
+    public function isAudienceMember($proxy_id, $event_id, $event_start = 0) {
+        $audience = array();
+
+        $event_audience = $this->fetchAllByEventID($event_id);
+        if ($event_audience) {
+            foreach ($event_audience as $event) {
+                $a = $event->getAudience($event_start);
+
+                $members = $a->getAudienceMembers();
+                if ($members) {
+                    foreach ($members as $member) {
+                        $audience[] = $member["id"];
+                    }
+                }
+            }
+
+            if ($audience && in_array($proxy_id, $audience)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
     
     public function getEventAudienceID() {
         return $this->eaudience_id;
@@ -96,11 +141,13 @@ class Models_Event_Audience {
     public function getAudienceType() {
         return $this->audience_type;
     }
-    
-    public function getAudience() {
+
+    public function getAudience($event_start = 0) {
         global $db;
         
         $audience = false;
+
+        $event_start = (int) $event_start;
 
         switch ($this->audience_type) {
             case "proxy_id" :
@@ -124,7 +171,7 @@ class Models_Event_Audience {
                                 ON a.`proxy_id` = b.`id`
                                 WHERE a.`group_id` = ?
                                 AND a.`member_active` = '1'";
-                    $results = $db->GetAssoc($query, array($this->audience_value));
+                    $results = $db->GetAll($query, array($this->audience_value));
                     if ($results) {
                         $audience_data["audience_members"] = $results;
                     }
@@ -146,7 +193,7 @@ class Models_Event_Audience {
                                 ON a.`proxy_id` = b.`id`
                                 WHERE a.`cgroup_id` = ?
                                 AND a.`active` = '1'";
-                    $results = $db->GetAssoc($query, array($this->audience_value));
+                    $results = $db->GetAll($query, array($this->audience_value));
                     if ($results) {
                         $audience_data["audience_members"] = $results;
                     }
@@ -157,11 +204,15 @@ class Models_Event_Audience {
                 }
             break;
             case "course_id" :
-                $query = "SELECT * FROM `course_audience` WHERE `course_id` = ?";
-                $course_audiences = $db->GetAll($query, array($this->audience_value));
-                
+                $query = "SELECT *
+                            FROM `course_audience` AS a
+                            JOIN `curriculum_periods` AS b
+                            ON a.`cperiod_id` = b.`cperiod_id`
+                            WHERE a.`course_id` = ?
+                            AND (? BETWEEN b.`start_date` AND b.`finish_date`)
+                            AND b.`active` = '1'";
+                $course_audiences = $db->GetAll($query, array($this->audience_value, $event_start));
                 if ($course_audiences) {
-                    
                     $query = "SELECT `course_name` FROM `courses` WHERE `course_id` = ?";
                     $result = $db->GetRow($query, array($this->audience_value));
                     if ($result) {
@@ -172,38 +223,32 @@ class Models_Event_Audience {
                     $members = array();
                     foreach ($course_audiences as $course_audience) {
                         if ($course_audience && $course_audience["audience_type"] == "group_id") {
-                            $query = "SELECT `cgroup_id`, `group_name` FROM `course_groups` WHERE `cgroup_id` = ?";
-                            $result = $db->GetRow($query, array($course_audience["audience_value"]));
-                            if ($result) {
-                                $query = "SELECT b.`id`, b.`firstname`, b.`lastname` 
-                                            FROM `course_group_audience` AS a
-                                            JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                            ON a.`proxy_id` = b.`id`
-                                            WHERE a.`cgroup_id` = ?
-                                            AND a.`active` = '1'";
-                                $results = $db->GetAssoc($query, array($course_audience["audience_value"]));
-                                if ($results) {
-                                    $members = array_merge($members, $results);
-                                }
+                            
+                            $query = "SELECT b.`id`, b.`firstname`, b.`lastname`
+                                        FROM `group_members` AS a 
+                                        JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                        ON a.`proxy_id` = b.`id`
+                                        WHERE a.`group_id` = ?
+                                        AND a.`member_active` = '1'";
+                            $results = $db->GetAll($query, array($course_audience["audience_value"]));
+                            if ($results) {
+                                $members = array_merge($members, $results);
                             }
                         }
                     }
                     
                     $audience_data["audience_members"] = $members;
-                    
+
                     if (!empty($audience_data)) {
                         $audience = new Models_Audience($audience_data);
                     }
-                    
                 }
             break;
             default:
+                continue;
             break;
         }
         
         return $audience;
     }
-
 }
-
-?>

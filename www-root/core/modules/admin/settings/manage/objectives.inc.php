@@ -25,11 +25,11 @@
  *
 */
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/objectives?org=".$ORGANISATION['organisation_id'], "title" => "Manage Objective Sets");
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/objectives?org=".$ORGANISATION['organisation_id'], "title" => "Curriculum Tags");
 
 if (!defined("PARENT_INCLUDED")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("objective", "update", false)) {

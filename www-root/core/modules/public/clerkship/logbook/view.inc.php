@@ -337,6 +337,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							GROUP BY a.`objective_id`".(CLERKSHIP_SETTINGS_REQUIREMENTS ? ", h.`lltype_id`" : "");
 				$results = $db->GetAll($query);
 			    if ($results) {
+                    $tooltip_locations_array = array();
 					?>
 					<br />
 					<table class="tableList" cellspacing="0" summary="Clinical Presentations for <?php echo $clinical_rotation["title"]; ?> encountered in other rotations">
@@ -370,14 +371,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					    <tbody>
 					    <?php
 						foreach ($results as $result) {
+                            $result["logged_location"] = (!isset($result["logged_location"]) || !$result["logged_location"] ? $result["backup_logged_location"] : $result["logged_location"]);
+                            $query = "SELECT c.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS a
+						    			JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS b
+						    			ON a.`lmobjective_id` = b.`lmobjective_id`
+						    			JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types` AS c
+						    			ON b.`lltype_id` = c.`lltype_id`
+						    			WHERE a.`objective_id` = ".$db->qstr($result["objective_id"])."
+						    			AND a.`rotation_id` = ".$db->qstr($rotation_id)."
+										AND a.`grad_year_min` <= ".$db->qstr($grad_year)."
+										AND (a.`grad_year_max` = 0 OR a.`grad_year_max` >= ".$db->qstr($grad_year).")
+										GROUP BY c.`lltype_id`";
+                            $locations = $db->GetAll($query);
+                            $locations_array = array();
+                            $location_string = "";
+                            $location_string_long = "";
+                            $count = 1;
+                            foreach ($locations as $location) {
+                                $locations_array[] = $location["location_type_short"];
+                                $location_string .= ($location_string ? "/" : "").html_encode($location["location_type_short"]);
+                                $location_string_long .= ($location_string_long ? ($count < count($locations) ? ", " : " or ") : "").html_encode($location["location_type"]);
+                                $count++;
+                            }
+
+                            $correct_location = (CLERKSHIP_SETTINGS_REQUIREMENTS && array_search($result["logged_location"], $locations_array) === false && $location_string ? false : true);
+                            if (!$correct_location) {
+                                $tooltip_locations_array[$result["objective_id"]."-".$result["llocation_id"]] = array("required" => $location_string_long, "logged" => $LOCATIONS[$result["llocation_id"]]["location_types_string_long"]);
+                            }
 							echo "<tr>";
 							echo "<td>&nbsp;</td>";
 						    echo "<td>".$result["objective"]."</td>";
 							echo "<td>".$result["count"]."</td>";
                             if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
-                                echo "<td>".$LOCATIONS[$result["llocation_id"]]["location_types_string"]."</td>";
+                                echo "<td".($correct_location ? "" : " class=\"incorrect-setting setting-tooltip\" id=\"tooltip-".$result["objective_id"]."-".$result["llocation_id"]."\" href=\"#locations-cp-".$result["objective_id"]."-".$result["llocation_id"]."\"").">".$LOCATIONS[$result["llocation_id"]]["location_types_string"].($correct_location ? "" : "")."</td>";
                             }
-							echo "<td>".$result["required"]."</td>";
+                            echo "<td>".(!$correct_location ? "0" : $result["required"])."</td>";
 						    echo "</tr>";
 						}
 					    ?>
@@ -385,6 +413,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					</table>
 				    <br />
 				    <?php
+                    if ($tooltip_locations_array && count($tooltip_locations_array)) {
+                        $show_legend = true;
+                        foreach ($tooltip_locations_array as $key => $tooltip_locations) {
+                            ?>
+                            <div id="locations-cp-<?php echo $key; ?>" style="display: none;">
+								<span class="content-small">
+									<strong style="font-size: 9pt;">Setting mismatch:</strong>
+									<p>
+                                        This Clinical Procedure was logged in a <strong><?php echo $tooltip_locations["logged"]; ?></strong> Setting, but was required to be logged in a <strong><?php echo $tooltip_locations["required"]; ?></strong> Setting for this Rotation.
+                                    </p>
+								</span>
+                            </div>
+                        <?php
+                        }
+                    }
 			    }
 			    $query = "SELECT COUNT(DISTINCT a.`leprocedure_id`) AS `count`, a.`lprocedure_id`, b.`llocation_id`, e.`number_required` AS `required`, f.`procedure`, i.`location_type_short` AS `required_location`, k.`location_type_short` AS `logged_location`, a.`level`
 							FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` AS a

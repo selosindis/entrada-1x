@@ -54,7 +54,8 @@ class Models_Quiz extends Models_Base {
             )
         );
 
-        $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
+        $objs = $self->fetchAll($constraints, "=", "AND");
+
         $output = array();
 
         if (!empty($objs)) {
@@ -82,7 +83,32 @@ class Models_Quiz extends Models_Base {
         if ($results) {
             $output = array();
             foreach ($results as $result) {
-                $output = new self($result);
+                $output[] = new self($result);
+            }
+        }
+        
+        return $output;
+        
+    }
+    
+    public static function fetchAllRecordsByProxyIDQuizID($proxy_id, $quiz_id, $quiz_active = 1) {
+        global $db;
+        
+        $output = false;
+        
+        $query = "SELECT a.*
+					FROM `quizzes` AS a
+					JOIN `quiz_contacts` AS b
+					ON a.`quiz_id` = b.`quiz_id`
+					WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+                    OR a.`quiz_id` = ".$db->qstr($quiz_id)."
+					AND a.`quiz_active` = 1
+					GROUP BY a.`quiz_id`";
+        $results = $db->GetAll($query);
+        if ($results) {
+            $output = array();
+            foreach ($results as $result) {
+                $output[] = new self($result);
             }
         }
         
@@ -119,7 +145,7 @@ class Models_Quiz extends Models_Base {
     }
     
     public function getQuizAuthor() {
-        $author = User::get($this->created_by);
+        $author = User::fetchRowByID($this->created_by);
         if ($author) {
             return $author;
         } else {
@@ -138,7 +164,6 @@ class Models_Quiz extends Models_Base {
             $this->quiz_id = $db->Insert_ID();
             return $this;
         } else {
-            echo $db->ErrorMsg();
             return false;
         }
     }

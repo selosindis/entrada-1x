@@ -87,7 +87,7 @@ function add_student_management_sidebar () {
 
 function add_mspr_management_sidebar () {
 	global $ENTRADA_ACL, $PROXY_ID;
-	$user = User::get($PROXY_ID);
+	$user = User::fetchRowByID($PROXY_ID);
 	$year = $user->getGradYear();
 	$sidebar_html  = "<ul class=\"menu\">";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/users/manage/students?section=mspr-options&id=".$PROXY_ID."\">MSPR Options</a></li>\n";

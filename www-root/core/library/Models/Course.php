@@ -230,7 +230,7 @@ class Models_Course extends Models_Base {
         $query = "  SELECT a.`event_id`, b.*, c.`firstname`, c.`lastname`, c.`email` FROM `events` AS a 
                     JOIN `event_contacts` AS b
                     ON a.`event_id` = b.`event_id`
-                    LEFT JOIN `entrada_auth`.`user_data` AS c
+                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
                     ON b.`proxy_id` = c.`id`
                     WHERE a.`course_id` = ? 
                     AND a.`event_start` >= ?

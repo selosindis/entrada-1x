@@ -37,67 +37,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AAMC_CI"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	?>
-
 	<h1>AAMC Curriculum Inventory Reports</h1>
-	<div style="float: right">
-		<ul class="page-action">
-			<li><a href="<?php echo ENTRADA_URL; ?>/admin/reports/aamc?section=add" class="strong-green">Create New Report</a></li>
-		</ul>
+
+	<div class="alert alert-info">
+		<p class="lead">This feature is available in both the <strong>Consortium</strong> and <strong>Cloud</strong> editions of Entrada ME only at this time. Please feel free to <a href="http://www.entrada.org/contact" target="_blank"><strong>contact us</strong></a> to arrange a demo.</p>
+		<p class="pull-right">
+			<a class="btn btn-primary btn-large" href="http://www.entrada.org" target="_blank">
+				<i class="fa fa-info-circle"></i> Learn More
+			</a>
+		</p>
+		<div class="clearfix"></div>
 	</div>
-	<div style="clear: both"></div>
-
-	<?php
-	$query = "SELECT * FROM `reports_aamc_ci` WHERE `report_active` = '1' ORDER BY `report_date` DESC";
-	$results = $db->GetAll($query);
-	if ($results) {
-		?>
-		<form action="<?php echo ENTRADA_URL; ?>/admin/reports/aamc?section=delete" method="post">
-		<table class="tableList" cellspacing="0" summary="List of AAMC Curriculum Inventory Reports">
-			<colgroup>
-				<col class="modified" />
-				<col class="date" />
-				<col class="title" />
-				<col class="general" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td class="modified">&nbsp;</td>
-					<td class="date sortedDESC">Report Date</td>
-					<td class="title">Report Title</td>
-					<td class="general">Status</td>
-				</tr>
-			</thead>
-			<tfoot>
-				<tr>
-					<td></td>
-					<td colspan="3" style="padding-top: 10px">
-						<input type="submit" class="btn btn-danger" value="Delete Selected" />
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-			<?php
-			foreach ($results as $result) {
-				$url = ENTRADA_RELATIVE . "/admin/reports/aamc/manage?id=".$result["raci_id"];
-
-				echo "<tr>\n";
-				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["raci_id"]."\" /></td>\n";
-				echo "	<td class=\"date\"><a href=\"".$url."\">".date("Y-m-d", $result["report_date"])."</a></td>\n";
-				echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($result["report_title"])."</a></td>\n";
-				echo "	<td class=\"general\"><a href=\"".$url."\">".ucwords(strtolower($result["report_status"]))."</a></td>\n";
-				echo "</tr>\n";
-			}
-			?>
-			</tbody>
-		</table>
-		</form>
-		<?php
-	} else {
-		?>
-		<div class="display-notice">
-			<h3>No Available AAMC Curriculum Inventory Reports</h3>
-			<p>There are currently no AAMC Curriculum Inventory reports in the system. To create a new report, click the <strong>Create New Report</strong> link above.</p>
-		</div>
-		<?php
-	}
+    <?php
 }

@@ -48,17 +48,20 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 
 						unset($pages_html);
 
-						$course = $syllabus->getCourse();
-						$course_contacts = $course->getContacts();
-
 						$query = "SELECT c.`curriculum_period_title` AS `curriculum_type_name`, c.`start_date`, c.`finish_date`
 									FROM `courses` AS a 
 									JOIN `course_audience` AS b
 									ON a.`course_id` = b.`course_id`
 									JOIN `curriculum_periods` AS c
 									ON b.`cperiod_id` = c.`cperiod_id`
-									WHERE a.`course_id` = ".$db->qstr($result["course_id"]);
+									WHERE a.`course_id` = ".$db->qstr($result["course_id"])."
+                                    AND UNIX_TIMESTAMP(NOW()) > c.`start_date` - 1209600 
+                                    AND UNIX_TIMESTAMP(NOW()) < c.`finish_date`
+                                    AND c.`active` = 1";
 						$eperiod_data = $db->GetRow($query);
+                        if ($eperiod_data) {
+                            $course = $syllabus->getCourse();
+                            $course_contacts = $course->getContacts();
 						$enrolment_period = !empty($eperiod_data["curriculum_type_name"]) ? $eperiod_data["curriculum_type_name"] : date("F jS, Y", $eperiod_data["start_date"]) . " to " . date("F jS, Y", $eperiod_data["finish_date"]);
 						
 						if(file_exists($ENTRADA_TEMPLATE->absolute()."/syllabus/cover.html")) {
@@ -381,6 +384,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 						exec ($command);
 
 						application_log("success", "Generated syllabus: ".clean_input($course->getCourseCode(), "alphanumeric"). " - " . $course->getCourseName() . " syllabus in ".(time() - $g_start)." seconds.");
+					}
 					}
 
 					if (file_exists(CACHE_DIRECTORY."/generate_syllabi.lck")) {

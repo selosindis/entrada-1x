@@ -25,6 +25,24 @@
 
 class Models_Notice {
     /**
+     * This method returns the organisations that use this application.
+     * 
+     * @global object $db
+     * @global object $config
+     * @return string CSV organisation IDs
+     */
+    private static function getAppOrganisations() {
+        global $db, $config;
+        
+        $query = "SELECT DISTINCT b.`organisation_id`
+                    FROM `".AUTH_DATABASE."`.`registered_apps` AS a
+                    JOIN `".AUTH_DATABASE."`.`organisations` AS b
+                    ON a.`id` = b.`app_id`
+                    WHERE a.`script_id` = ?";
+        return $db->CacheGetAll($query, array($config->auth_username));
+    }
+    
+    /**
      * This method returns the top 5 public notices for use on the
      * Entrada login page (primarily).
      *
@@ -37,6 +55,17 @@ class Models_Notice {
         $start = (int) $start;
         $limit = (int) $limit;
 
+        $PROCESSED["org_ids"] = array();
+        $org_ids = self::getAppOrganisations();
+        if ($org_ids) {
+            foreach ($org_ids as $org_id) {
+                $tmp_input = clean_input($org_id["organisation_id"], "int");
+                if ($tmp_input) {
+                    $PROCESSED["org_ids"][] = $db->qstr($tmp_input);
+                }
+            }
+        }
+        
         $query = "SELECT a.*
                     FROM `notices` AS a
                     JOIN `notice_audience` AS b
@@ -44,6 +73,7 @@ class Models_Notice {
                     WHERE b.`audience_type` = 'public'
                     AND (a.`display_from` = 0 OR a.`display_from` <= UNIX_TIMESTAMP())
                     AND (a.`display_until` = 0 OR a.`display_until` > UNIX_TIMESTAMP())
+                    AND (a.`organisation_id` IN (".implode(",", $PROCESSED["org_ids"])."))
                     GROUP BY a.`notice_id`
                     ORDER BY a.`updated_date` DESC, a.`display_until` ASC
                     LIMIT ?, ?";
@@ -190,11 +220,31 @@ class Models_Notice {
 		}
 		return $output;
 	}
+
+	public static function fetchAuthorNotices () {
+		global $db, $ENTRADA_USER;
+		$output = array();
+		$query = "	SELECT a.*, b.`organisation_title`, CONCAT(c.`firstname`, ' ', c.`lastname`) AS notice_author
+					FROM `notices` AS a
+					JOIN `".AUTH_DATABASE."`.`organisations` AS b
+					ON b.`organisation_id` = a.`organisation_id`
+					JOIN `".AUTH_DATABASE."`.`user_data` AS c
+					ON a.`created_by` = c.`id`
+					WHERE a.`created_by` = ".$db->qstr($ENTRADA_USER->getActiveID())."
+					ORDER BY a.`display_until` ASC";
+		$results = $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				$output[] = $result;
+			}
+		}
+		return $output;
+	}
 	
 	public static function UserPushNotificationsInfo ($proxy_id = 0, $max_notice_id = 0) {
 		global $db;
 		$i = 0;
-		$user = User::get($proxy_id);
+		$user = User::fetchRowByID($proxy_id);
 		$total_organisations = count($user->getOrganisationGroupRole());
 		$query = "  SELECT COUNT(*) AS `notice_count`, MAX(a.`notice_id`) AS `max_notice_id`
 					FROM `notices` AS a

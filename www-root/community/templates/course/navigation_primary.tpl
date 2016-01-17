@@ -1,4 +1,4 @@
-<div id="sidebar" class="sidebar">
+<div id="sidebar" class="sidebar no-printing">
 	<div class="panel-head"><h3>Course Navigation</h3></div>
 
 	<ul class="navigation">

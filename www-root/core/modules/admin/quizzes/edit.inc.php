@@ -233,7 +233,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                         <?php
                                         if (is_array($PROCESSED["associated_proxy_ids"]) && !empty($PROCESSED["associated_proxy_ids"])) {
                                             foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-                                                $u = User::get($proxy_id);
+                                                $u = User::fetchRowByID($proxy_id);
                                                 if ($u->getID()) {
                                                     ?>
                                                     <li class="user" id="author_<?php echo $u->getID(); ?>" style="cursor: move;"><?php echo $u->getFullName(false); ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="author_list.removeItem('<?php echo $u->getID(); ?>');" class="list-cancel-image" /></li>
@@ -397,21 +397,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                             
                                             if ($(this).hasClass("ungroup")) {
                                                 var questions = new Array();
-                                                var group_id = 0;
+                                                var counter = 0;
                                                 $("input.question-ids").each(function(i, input) {
-                                                    if ($(input).is(":checked")) {
-                                                        questions[i] = $(input).closest("li.question").clone();
-                                                        $(input).closest("li.question").remove();
-                                                        if ($(input).closest("ol.questions").children("li.question").length <= 0) {
+                                                    if ($(input).closest("ol.questions").children("li.question").length > 1 && !$(input).is(":checked")) {
+                                                        if ($(".question-ids[value=" + $(input).val() + "]").length > 0) {
+                                                            questions[counter] = $(input).closest("ol.questions").clone();
                                                             $(input).closest("ol.questions").remove();
+                                                            counter++;
                                                         }
                                                     } else {
-                                                        if ($(input).data("qquestion-group-id") != group_id || $(input).data("qquestion-group-id") == 0) {
-                                                            questions[i] = $(input).closest("ol.questions").clone();
-                                                            $(input).closest("ol.questions").remove();
-                                                        }
+                                                        questions[counter] = $(input).closest("li.question").clone();
+                                                        $(input).closest("li.question").remove();
+                                                        counter++;
                                                     }
-                                                    group_id = $(input).data("qquestion-group-id");
+                                                    
+                                                    if ($(input).closest("ol.questions").children("li.question").length <= 0) {
+                                                        $(input).closest("ol.questions").remove();
+                                                    }
                                                 });
                                                 
                                                 if (questions.length >= 1) {
@@ -499,7 +501,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                             e.preventDefault();
                                         });
                                         
-                                        $("input.question-ids").on("change", function(e) {
+                                        $(".quiz-questions").on("change", "input.question-ids", function(e) {
                                             var group = $(this).closest("ol.questions");
                                             
                                             if (!$(this).prop("checked")) {
@@ -593,7 +595,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                                 });
                                             });
                                         }
-                                        
                                     });
                                 </script>
                                 <?php

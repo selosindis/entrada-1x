@@ -217,7 +217,7 @@ class Observership extends ModelBase {
 	}
 	
 	public function getUser() {
-		return User::get($this->student_id);
+		return User::fetchRowByID($this->student_id);
 	}
 
 	public function getSite() {
@@ -315,7 +315,7 @@ class Observership extends ModelBase {
 	
 	public function getPreceptor() {
 		if ($this->preceptor_proxy_id) {
-			$this->LOADED_PRECEPTOR = User::get($this->preceptor_proxy_id);
+			$this->LOADED_PRECEPTOR = User::fetchRowByID($this->preceptor_proxy_id);
 			return $this->LOADED_PRECEPTOR;
 		}
 	}
@@ -340,7 +340,7 @@ class Observership extends ModelBase {
 		
 		$elements = array();
 		$elements[] = ucwords($this->title);
-		$elements[] = (!is_null($this->site) ? $this->site : $this->organisation) . ", " . (!is_null($this->location) ? $this->location : (!is_null($this->city) ? $this->city . ", " : "") . (!is_null($this->prov) ? $this->prov . ", " : ""). (!is_null($this->country) ? $this->country : ""));
+		$elements[] = (!empty($this->site) ? $this->site : $this->organisation) . ", " . (!empty($this->location) ? $this->location : (!empty($this->city) ? $this->city . ", " : "") . (!empty($this->prov) ? $this->prov . ", " : ""). (!empty($this->country) ? $this->country : ""));
 		$elements[] = $preceptor;
 		$details = implode("\n", $elements);
 		return $details;

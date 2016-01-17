@@ -107,49 +107,51 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
         ?>
 		<div class="row pull-right margin-bottom">
             <a href="<?php echo ENTRADA_URL."/clerkship/electives?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i>Add Elective</a>
+        <?php
+        if ($SHOW_LOGBOOK) {
+            ?>
             <a href="<?php echo ENTRADA_URL."/clerkship/logbook?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i>Log Encounter</a>
+            <?php
+        }
+        ?>
         </div>
 		<div class="clearfix"></div>
 
 		<?php
-		$query = "	SELECT a.*, c.`region_name`, d.`aschedule_id`, d.`apartment_id`, e.`rotation_title`
+		if ($SHOW_LOGBOOK || time() >= CLERKSHIP_SCHEDULE_RELEASE) {
+			$query		= "	SELECT a.*, c.*, d.`category_name`
 					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 					LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 					ON b.`event_id` = a.`event_id`
 					LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
 					ON c.`region_id` = a.`region_id`
-					LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS d
-					ON d.`event_id` = a.`event_id`
-					AND d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-					AND d.`aschedule_status` = 'published'
-					LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS e
-					ON e.`rotation_id` = a.`rotation_id`
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` AS d
+							ON a.`category_id` = d.`category_id`
 					WHERE b.`econtact_type` = 'student'
 					AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					ORDER BY a.`event_start` ASC";
 		$results = $db->GetAll($query);
+	
 		if($results) {
 			?>
 			<input type="hidden" id="selected-event" value="0" />
-			<table class="tableList" cellspacing="0" summary="List of Clerkship Schedule">
+				<table class="tableList" cellspacing="0" summary="List of Clerkship Schedule" style="border-collapse: separate;">
 				<colgroup>
 					<col class="modified" />
-					<col class="type" />
+					<col class="type" style="width: 90px;" />
+					<col class="date" />
+					<col class="date" />
+					<col class="region" style="width: 60px;" />
 					<col class="title" />
-					<col class="region" />
-					<col class="date-smallest" />
-					<col class="date-smallest" />
-					<col class="modified" />
 				</colgroup>
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
 						<td class="type">Event Type</td>
-						<td class="title">Rotation Name</td>
-						<td class="region">Region</td>
 						<td class="date-smallest">Start Date</td>
 						<td class="date-smallest">Finish Date</td>
-						<td class="modified" style="border-left: 0">&nbsp;</td>
+						<td class="region">Region</td>
+						<td class="title">Event Title</td>
 					</tr>
 				</thead>
 				<tbody>
@@ -163,11 +165,6 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 						$is_here = false;
 					}
 
-					if ((int) $result["aschedule_id"]) {
-						$apartment_available = true;
-					} else {
-						$apartment_available = false;
-					}
 					if ($apartment_available) {
 						$apartment_url	= ENTRADA_URL."/clerkship?section=details&id=".$result["event_id"];
 					} else {
@@ -182,6 +179,8 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 						$result["city"] = "";
 					}
 
+					$event_title = clean_input($result["event_title"], array("htmlbrackets", "trim"));
+					
 					$cssclass = "";
 					$skip = false;
 
@@ -217,16 +216,44 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 						$skip = false;
 					}
 
+                    $apartment_available = false;
+                    $apartment_message = false;
+					if ((bool) $result["manage_apartments"]) {
+                        if (!$elective) {
+                            $apartment_available = true;
+                        } else {
+                            $apartment_message = true;
+                        }
+					}
+                    
 					if (!$skip) {
+						echo "<tbody>\n";
 						echo "<tr".(($is_here) && $cssclass != " class=\"in_draft\"" ? " class=\"current\"" : $cssclass).">\n";
-						echo "	<td class=\"modified\">".(($apartment_available) ? "<a href=\"".$apartment_url."\">" : "")."<img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" />".(($apartment_available) ? "</a>" : "")."</td>\n";
-						echo "	<td class=\"type\">".($elective ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").(($elective) ? "Elective".(($elective_word != "") ? " (".$elective_word.")" : "") : "Core Rotation").($elective ? "</a>" : "")."</td>\n";
-						echo "	<td class=\"title\">".($elective ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").html_encode($result["rotation_title"]).($elective ? "</a>" : "")."</td>\n";
-						echo "	<td class=\"region\">".(($apartment_available) ? "<a href=\"".$apartment_url."\" style=\"font-size: 11px\">" : "").html_encode((($result["city"] == "") ? limit_chars(($result["region_name"]), 30) : $result["city"])).(($apartment_available) ? "</a>" : "")."</td>\n";
-						echo "	<td class=\"date-smallest\">".($elective ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").date("D M d/y", $result["event_start"]).($elective ? "</a>" : "")."</td>\n";
-						echo "	<td class=\"date-smallest\">".($elective ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").date("D M d/y", $result["event_finish"]).($elective ? "</a>" : "")."</td>\n";
-						echo "	<td class=\"modified\">".($SHOW_LOGBOOK ? "<a href=\"".ENTRADA_URL."/clerkship/logbook?section=add&event=".$result["event_id"]."\"><img src=\"".ENTRADA_URL."/images/icon-lecture-notes-on.gif\" width=\"15px\" height=\"15px\" alt=\"Log Patient Encounter\" title=\"Log Patient Encounter\" border=\"0\" /></a>" : "&nbsp;")."</td>\n";
+						echo "		<td class=\"modified\" ".($SHOW_LOGBOOK ? "onclick=\"showEventDetails(".$result["event_id"].")\"><img src=\"".ENTRADA_URL."/images/tree/".(($is_here) && $cssclass != " class=\"in_draft\"" ? "minus" : "plus")."0.gif\" id=\"rotation-img-".$result["event_id"]."\"/>" : "/>".(($apartment_available) ? "<a href=\"".$apartment_url."\">" : "")."<img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" />".(($apartment_available) ? "</a>" : ""))."</td>\n";
+						echo "		<td class=\"type\">".(($elective) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").(($elective) ? "Elective".(($elective_word != "") ? " (".$elective_word.")" : "") : "Core Rotation").(($elective) ? "</a>" : "")."</td>\n";
+						echo "		<td class=\"date-smallest\">".(($elective) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").date("D M d/y", $result["event_start"]).(($elective) ? "</a>" : "")."</td>\n";
+						echo "		<td class=\"date-smallest\">".(($elective) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").date("D M d/y", $result["event_finish"]).(($elective) ? "</a>" : "")."</td>\n";
+						echo "		<td class=\"region\">".(($apartment_available) ? "<a href=\"".$apartment_url."\" style=\"font-size: 11px\">" : "").html_encode((($result["city"] == "") ? limit_chars(($result["region_name"]), 15) : limit_chars(($result["city"]), 15))).(($apartment_available) ? "</a>" : "")."</td>\n";
+						echo "		<td class=\"title\">";
+						echo "			".(($elective) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "")."<span title=\"".$event_title."\">".limit_chars(html_decode($event_title), 50)."</span>".(($elective) ? "</a>" : "");
+						echo "		</td>\n";
+						$rotation_id = $db->GetOne("SELECT `rotation_id` FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_id` = ".$db->qstr($result["category_id"]));
+						echo "	</tr>\n";
+						echo "</tbody>\n";
+						if ($SHOW_LOGBOOK) {
+							echo "<tbody id=\"event-".$result["event_id"]."\"".(($is_here) && $cssclass != " class=\"in_draft\"" ? "" : " style=\"display: none;\"")." class=\"event-details\">\n";
+							echo "	<tr>\n";
+							echo "		<td class=\"modified\">&nbsp;</td>\n";
+							if ($SHOW_LOGBOOK) {
+								echo "		<td colspan=\"3\"><img width=\"15px\" height=\"15px\" src=\"".ENTRADA_URL."/images/icon-lecture-notes-on.gif\" style=\"padding-right: 5px; vertical-align: bottom;\" /><strong>".($cssclass == " class=\"in_draft\"" ? "<span class=\"content-small\">Awaiting Approval</span>" : "<a style=\"font-size: 11px;\" href=\"".ENTRADA_URL."/clerkship/logbook?section=add&event=".$result["event_id"]."\">Log Patient Encounter</a>")."</strong></td>\n";
+							} else {
+								echo "		<td colspan=\"3\"><img width=\"15px\" height=\"15px\" src=\"".ENTRADA_URL."/images/icon-lecture-notes-on.gif\" style=\"padding-right: 5px; vertical-align: bottom;\" /><strong><span class=\"content-small\">Logging Not Yet Active</span></strong></td>\n";
+							}
+							echo "		<td colspan=\"2\">".(($apartment_available) ? "<a href=\"".$apartment_url."\"><strong>Housing Details</strong><img src=\"".ENTRADA_URL."/images/housing-icon-small.gif\" width=\"16\" height=\"16\" alt=\"Detailed apartment information available.\" title=\"Detailed apartment information available.\" style=\"border: 0px; padding-left: 5px; vertical-align: bottom;\" />" : ($apartment_message ? "Contact <a href=\"mailto:regional@queensu.ca\">Regional Education</a> to arrange housing." : "No Housing Available")).($apartment_available ? "</a>" : "")."</td>\n";
+		//					echo "		<td colspan=\"2\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=checklist&id=$result[event_id]\"/>Rotation Checklist</a></td>\n";
 						echo "</tr>\n";
+							echo "</tbody>\n";
+						}
 					}
 				}
 				?>
@@ -239,6 +266,12 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 
 			echo display_notice();
 		}
+		} else {
+				$NOTICE++;
+				$NOTICESTR[] = "You currently have no scheduled clerkship core rotations or electives in the system.<br /><br />Your core rotation schedule will be released on ".date(DEFAULT_DATE_FORMAT, CLERKSHIP_SCHEDULE_RELEASE).", please check back then.";
+	
+				echo display_notice();
+        }
 	break;
 	default :
 		$HEAD[] = "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";

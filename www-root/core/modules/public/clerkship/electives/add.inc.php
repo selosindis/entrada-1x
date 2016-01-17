@@ -353,13 +353,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							$ELECTIVE["event_id"]   = $EVENT_ID;
 							
 							if ($db->AutoExecute(CLERKSHIP_DATABASE.".electives", $ELECTIVE, "INSERT")) {
-								
+                                add_statistic("clerkship_electives", "create", "event_id", $EVENT_ID, $ENTRADA_USER->getID());
 								// If International email UGE now or wait for cronjob?
 								$SUCCESS++;
 								$SUCCESSSTR[]  	= "You have successfully added this <strong>".html_encode($PROCESSED["geo_location"])."</strong> elective to the system.<br /><br />Please <a href=\"".$url."\">click here</a> to proceed to the index page or you will be automatically forwarded in 5 seconds.";
 								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 			
-								application_log("success", "New elective [".$EVENT["event_title"]."] added to the system.");
+                                application_log("success", "New elective [".$EVENT_ID."] added to the system.");
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "There was a problem inserting this elective into the system. The MEdTech Unit was informed of this error; please try again later.";

@@ -76,7 +76,7 @@ if ($RECORD_ID) {
 						$PROCESSED["topic_description"] = $description;
 					} else {
 						$ERROR++;
-						$ERRORSTR[] = "The <strong>Post Body</strong> field is required, this is your reply to the post.";
+						$ERRORSTR[] = "The Post Body</strong> field is required, this is your reply to the post.";
 					}
 					
 					/**
@@ -117,7 +117,7 @@ if ($RECORD_ID) {
 								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully replied to ".html_encode($topic_record["topic_title"]).".<br /><br />You will now be redirected back to this thread now; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$SUCCESSSTR[]	= "You have successfully replied to ".html_encode($topic_record["topic_title"]).".<br /><br />You will now be redirected back to this thread now; this will happen automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								add_statistic("community:".$COMMUNITY_ID.":discussions", "post_add", "cdtopic_id", $TOPIC_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $TOPIC_ID, "community_history_add_reply", 1, $RECORD_ID);
 							}
@@ -164,67 +164,87 @@ if ($RECORD_ID) {
 					}
 					?>
 					<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=reply-post&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post">
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Reply To Post">
-					<tfoot>
-						<tr>
-							<td style="padding-top: 15px; text-align: right">
-                                <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                        
+					<table summary="Reply To Post">
+						<tfoot>
+							<tr>
+								<td style="padding-top: 15px; text-align: right">
+	                                <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
+								</td>
+							</tr>
+						</tfoot>
+						<tbody>
+							<tr>
+								<td><h2>Your Reply To: <?php echo html_encode($topic_record["topic_title"]); ?></h2></td>
+							</tr>
+							<tr>
+								<td>
+									<textarea id="topic_description" name="topic_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
+								</td>
+							</tr>
+							<tr>
+							<td>
+								<table class="table table-bordered no-thead">
+									<colgroup>
+										<col style="width: 5%" />
+										<col style="width: auto" />
+									</colgroup>
+									<tbody>
+                                    <?php
+                                    if (defined("COMMUNITY_DISCUSSIONS_ANON") && COMMUNITY_DISCUSSIONS_ANON) {
+                                        ?>
+										<tr>
+											<td>
+												<input type="checkbox" id="anonymous" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/>
+											</td>
+											<td>
+												<label for="anonymous" class="form-nrequired">Hide my name from other community members.</label>
+											</td>
+										</tr>								
+										<?php
+                                    }
+									if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
+                                        ?>
+										<tr>
+											<td>
+												<input type="checkbox" id="enable_notifications" name="enable_notifications" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>
+											</td>
+											<td>
+												<label for="enable_notifications" class="form-nrequired">Receive e-mail notification when people reply to this thread.</label>
+											</td>
+										</tr>
+										<?php
+                                    }
+                                    ?>
+									</tbody>
+								</table>
 							</td>
 						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-							<td><h2>Your Reply To: <small><?php echo html_encode($topic_record["topic_title"]); ?></small></h2></td>
-						</tr>
-						<tr>
-							<td>
-								<textarea id="topic_description" name="topic_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
-							</td>
-						</tr>
-						<?php if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON) { ?>
-						<tr>
-							<td>&nbsp;</td>
-						</tr>
-						<tr>
-							<td><input type="checkbox" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/><label for="anonymous" class="form-nrequired">Hide name from non-administrator users</label></td>
-						</tr>								
-						<?php } ?>
-						<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) { ?>
-						<tr>
-							<td>&nbsp;</td>
-						</tr>
-						<tr>
-							<td>
-								<input type="checkbox" name="enable_notifications" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>
-								<label for="enable_notifications" class="form-nrequired">Receieve notifications when this users reply to this thread</label></td>
-						</tr>
-						<?php } ?>
-					</tbody>
+						</tbody>
 					</table>
 					</form>
 					<?php
 					if (discussion_topic_module_access($RECORD_ID, "view-post")) {
 						?>
 						<br />
-						<h2>Original Post: <small><?php echo html_encode($topic_record["topic_title"]); ?></small></h2>
-						<table class="discussions posts" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-						<colgroup>
-							<col style="width: 30%" />
-							<col style="width: 70%" />
-						</colgroup>
-						<tr>
-							<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span>  <?php if(defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && !$COMMUNITY_ADMIN && isset($topic_record["anonymous"]) && $topic_record["anonymous"]){?><span style="font-size: 10px">Anonymous</span><?php } else {?><a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($topic_record["poster_username"]); ?>" style="font-size: 10px"><?php echo html_encode($topic_record["poster_fullname"]); ?></a><?php } ?></td>
-							<td style="border-bottom: none">
-								<div style="float: left">
-									<span class="content-small"><strong>Posted:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $topic_record["updated_date"]); ?></span>
-								</div>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="2" class="content">
-								<?php echo $topic_record["topic_description"]; ?>
-							</td>
-						</tr>
+						<h2>Original Post: <?php echo html_encode($topic_record["topic_title"]); ?></h2>
+						<table class="table">
+							<colgroup>
+								<col style="width: 20%" />
+								<col style="width: 80%" />
+							</colgroup>
+							<tr>
+								<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span>  <?php if(defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && !$COMMUNITY_ADMIN && isset($topic_record["anonymous"]) && $topic_record["anonymous"]){?><span style="font-size: 10px">Anonymous</span><?php } else {?><a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($topic_record["poster_username"]); ?>" style="font-size: 10px"><?php echo html_encode($topic_record["poster_fullname"]); ?></a><?php } ?></td>
+								<td style="border-bottom: none">
+									<div style="float: left">
+										<span class="content-small">Posted:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $topic_record["updated_date"]); ?></span>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2" class="content">
+									<?php echo $topic_record["topic_description"]; ?>
+								</td>
+							</tr>
 						</table>
 						<?php
 					}

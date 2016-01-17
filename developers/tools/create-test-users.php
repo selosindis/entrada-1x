@@ -23,8 +23,6 @@
  *
  */
 
-set_include_path(get_include_path().PATH_SEPARATOR.dirname(__FILE__)."/includes");
-
 if((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
 	echo "<html>\n";
 	echo "<head>\n";
@@ -37,17 +35,15 @@ if((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
 	exit;
 }
 
-require_once("config.inc.php");
-
-date_default_timezone_set("America/Toronto");
-
+/*
+ * This is based on the same logic that is in the installer entrada.sql file.
+ */
 $cohorts = array(
-	"2012" => 1,
-	"2013" => 2,
-	"2014" => 3,
-	"2015" => 4,
-	"2016" => 5,
-	"2017" => 6,
+    (date("Y")) => 1,
+	(date("Y") + 1) => 2,
+	(date("Y") + 2) => 3,
+	(date("Y") + 3) => 4,
+	(date("Y") + 4) => 5,
 );
 
 $student_roles = array_keys($cohorts);
@@ -71,24 +67,103 @@ if (!isset($_SERVER["argv"][1]) || (count($_SERVER["argv"]) != 6)) {
 	$role =  ((isset($_SERVER["argv"][3])) ? trim($_SERVER["argv"][5]) : $student_roles[(count($student_roles) - 1)]);
 
 	foreach	(range($proxy_id_starting_value, ($proxy_id_starting_value + $number_of_users)) as $proxy_id) {
-		$user_data[] = "(".$proxy_id.", 0, '".$group.$proxy_id."', MD5('password'), '".$organisation_id."', NULL, '', '".$firstnames[array_rand($firstnames)]."', '".$lastnames[array_rand($lastnames)]."', '".$group.$proxy_id."@demo.entrada-project.org', '', NULL, NULL, '', '', '', 'Edmonton', '', '', '', 39, 1, '', '', 0, 0, NULL, NULL, 0, 1, 0, 0)";
+        $salt = hash("sha256", (uniqid(rand(), 1) . time()));
 
-		$user_access[] = "(NULL, ".$proxy_id.", 1, '".$organisation_id."', 'true', ".time().", 0, 0, '', NULL, NULL, '".$role."', '".$group."', '', MD5(CONCAT(rand(), CURRENT_TIMESTAMP, ".$proxy_id.")), '')";
+		$user_data_row = array (
+            "id" => $proxy_id,
+            "number" => 0,
+            "username" => $group.$proxy_id,
+            "password" => sha1("password".$salt),
+            "salt" => $salt,
+            "organisation_id" => $organisation_id,
+            "department" => "",
+            "prefix" => "",
+            "firstname" => $firstnames[array_rand($firstnames)],
+            "lastname" => $lastnames[array_rand($lastnames)],
+            "email" => $group.$proxy_id."@demo.entrada-project.org",
+            "email_alt" => "",
+            "email_updated" => 0,
+            "google_id" => "",
+            "telephone" => "",
+            "fax" => "",
+            "address" => "",
+            "city" => "Calgary",
+            "province" => "",
+            "postcode" => "T2N4N1",
+            "country" => "",
+            "country_id" => 39,
+            "province_id" => 1,
+            "notes" => "",
+            "office_hours" => "",
+            "privacy_level" => 0,
+            "copyright" => 0,
+            "notifications" => 1,
+//          "entry_year" => NULL,
+//          "grad_year" => NULL,
+            "gender" => 0,
+            "clinical" => 0,
+            "updated_date" => time(),
+            "updated_by" => 1,
+        );
 
-		if ($group == "student" && array_key_exists($role, $cohorts)) {
-			$group_members[] = "(NULL, ".$cohorts[$role].", ".$proxy_id.", ".strtotime("September 1 ".($role - 4). "00:00:00").", ".strtotime("May 31 ".$role. "23:59:59").", 1, 0, 0, 0)";
-		}
+		$user_access_row = array (
+//          "id" => NULL,
+            "user_id" => $proxy_id,
+            "app_id" => 1,
+            "organisation_id" => 1,
+            "account_active" => 1,
+            "access_starts" => time(),
+            "access_expires" => 0,
+            "last_login" => 0,
+            "last_ip" => "",
+//          "login_attempts" => NULL,
+//          "locked_out_until" => NULL,
+            "role" => $role,
+            "group" => $group,
+            "extras" => "",
+            "private_hash" => md5(hash("sha256", (uniqid(rand(), 1) . time()))),
+            "notes" => "",
+        );
+
+        if ($group == "student" && array_key_exists($role, $cohorts)) {
+            $user_data_row["entry_year"] = ($role - 4);
+            $user_data_row["grad_year"] = $role;
+
+            $group_members_row = array (
+//              "gmember_id" => NULL,
+                "group_id" => $cohorts[$role],
+                "proxy_id" => $proxy_id,
+                "start_date" => strtotime("September 1 ".$user_data_row["entry_year"]. "00:00:00"),
+                "finish_date" => strtotime("May 31 ".$user_data_row["grad_year"]. "23:59:59"),
+                "member_active" => 1,
+                "entrada_only" => 1,
+                "updated_date" => time(),
+                "updated_by" => 1,
+            );
+
+            $group_members[] = "('" . implode("','", $group_members_row) . "')";
+        }
+
+        $user_data[] = "('" . implode("','", $user_data_row) . "')";
+        $user_access[] = "('" . implode("','", $user_access_row) . "')";
 	}
 
-	echo "\n";
-	echo "INSERT INTO `".AUTH_DATABASE."`.`user_data` (`id`, `number`, `username`, `password`, `organisation_id`, `department`, `prefix`, `firstname`, `lastname`, `email`, `email_alt`, `email_updated`, `google_id`, `telephone`, `fax`, `address`, `city`, `province`, `postcode`, `country`, `country_id`, `province_id`, `notes`, `office_hours`, `privacy_level`, `notifications`, `entry_year`, `grad_year`, `gender`, `clinical`, `updated_date`, `updated_by`) VALUES\n";
-	echo implode(",\n", $user_data).";\n\n";
+    if (!empty($user_data) && !empty($user_access)) {
+        $user_data_fields = array_keys($user_data_row);
+        $user_access_fields = array_keys($user_access_row);
 
-	echo "INSERT INTO `".AUTH_DATABASE."`.`user_access` (`id`, `user_id`, `app_id`, `organisation_id`, `account_active`, `access_starts`, `access_expires`, `last_login`, `last_ip`, `login_attempts`, `locked_out_until`, `role`, `group`, `extras`, `private_hash`, `notes`) VALUES\n";
-	echo implode(",\n", $user_access).";\n\n";
+        echo "\n";
+        echo "INSERT INTO `entrada_auth`.`user_data` (`".implode("`,`", $user_data_fields)."`) VALUES\n";
+        echo implode(",\n", $user_data) . ";\n\n";
 
-	if ($group == "student" && array_key_exists($role, $cohorts)) {
-		echo "INSERT INTO `".DATABASE_NAME."`.`group_members` (`gmember_id`, `group_id`, `proxy_id`, `start_date`, `finish_date`, `member_active`, `entrada_only`, `updated_date`, `updated_by`) VALUES\n";
-		echo implode(",\n", $group_members).";\n\n";
+        echo "INSERT INTO `entrada_auth`.`user_access` (`".implode("`,`", $user_access_fields)."`) VALUES\n";
+        echo implode(",\n", $user_access) . ";\n\n";
+
+        if ($group == "student" && array_key_exists($role, $cohorts)) {
+            $group_members_fields = array_keys($group_members_row);
+
+            echo "INSERT INTO `entrada`.`group_members` (`".implode("`,`", $group_members_fields)."`) VALUES\n";
+            echo implode(",\n", $group_members).";\n\n";
+        }
 	}
 }

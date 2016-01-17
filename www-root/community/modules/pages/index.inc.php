@@ -58,35 +58,58 @@ if ($COMMUNITY_ID) {
 			$result	= $db->GetRow($query);
 			if (($result) && ($result["total_pages"] > 0)) {
 				?>
-				<form action="<?php echo COMMUNITY_URL.$community_details["community_url"].":pages?".replace_query(array("action" => "delete", "step" => 1)); ?>" method="post">
-				<table class="tableList" cellspacing="0" summary="List of Pages">
-				<thead>
-					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="title">Community Pages</td>
-					</tr>
-				</thead>
-				</table>
-				<div class="community-page-list home">
-						<a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":pages?".replace_query(array("action" => "edit", "step" => 1, "page" => "home"))?>" style="font-weight: bold">
-						<?php
-							$home_title = $db->GetOne("SELECT `menu_title` FROM `community_pages` WHERE `community_id` =".$db->qstr($COMMUNITY_ID)." AND `page_url` = ''");
-							echo (isset($home_title) && ($home_title != "") ? $home_title : "Home");
-						?>
-						</a>
-				</div>
-				<?php echo communities_pages_inlists(0, 0, array('id'=>'pagelists'), (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS) ? $COMMUNITY_LOCKED_PAGE_IDS : array()); ?>
-
-				<input type="submit" id="delete_pages_button" class="btn btn-danger" value="Delete Selected" />
-				<input type="button" id="reorder_pages_button" class="btn" onclick="toggleSorting();" value="Reorder Pages">
+				<form class="manage-pages-wrap" action="<?php echo COMMUNITY_URL.$community_details["community_url"].":pages?".replace_query(array("action" => "delete", "step" => 1)); ?>" method="post">
+					<table class="table manage-pages " summary="List of Pages">
+						<colgroup>
+							<col style="width: 22px" />
+							<col style="width: 100%" />
+						</colgroup>
+						<tfoot>
+							<tr>
+								<td colspan="2" style="border-top: 0;" class="manage-page-controls">
+									<input type="submit" id="delete_pages_button" class="btn btn-danger" value="Delete Selected" />
+									<input type="button" id="reorder_pages_button" class="btn" onclick="toggleSorting();" value="Reorder Pages">
+								</td>
+							</tr>
+						</tfoot>
+						<!--<thead>
+							<tr>
+								<td colspan="2">Community Pages</td>
+							</tr>
+						</thead>-->
+						<tbody>
+							<tr>
+								<td class="community-page-list home">
+										<a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":pages?".replace_query(array("action" => "edit", "step" => 1, "page" => "home"))?>" style="font-weight: bold">
+										<?php
+											$home_title = $db->GetOne("SELECT `menu_title` FROM `community_pages` WHERE `community_id` =".$db->qstr($COMMUNITY_ID)." AND `page_url` = ''");
+											echo (isset($home_title) && ($home_title != "") ? $home_title : "Home");
+										?>
+										</a>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2" class="page-lists-style">
+							<?php echo communities_pages_inlists(0, 0, array('id'=>'pagelists'), (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS) ? $COMMUNITY_LOCKED_PAGE_IDS : array()); ?>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</form>
-				<form action="<?php echo COMMUNITY_URL.$community_details["community_url"].":pages?".replace_query(array("action" => "reorder", "step" => 1)); ?>" method="post">
+				<form class="managae-pages-wrap" action="<?php echo COMMUNITY_URL.$community_details["community_url"].":pages?".replace_query(array("action" => "reorder", "step" => 1)); ?>" method="post">
 					<div id="reorder-info" style="display: none;">
 						<textarea id="pageorder" name="pageorder" style="display: none;"></textarea>
 						<p class="content-small">Rearrange the pages in the table above by dragging them, and then press the <strong>Save Ordering</strong> button.</p>
 						<input type="submit" id="save_pages_order_button" class="btn btn-primary" value="Save Ordering" style="display:none;"/>
 					</div>
 				</form>
+
+
+
+
+
+
+
 				<script type="text/javascript">
 					var tree;
 					function updatePageOrderBox(container) {

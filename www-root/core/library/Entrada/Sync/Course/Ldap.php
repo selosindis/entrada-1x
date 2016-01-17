@@ -35,6 +35,8 @@ class Entrada_Sync_Course_Ldap {
             $course_audience_id, $course_audience,
             $ldap_audience = array();
     
+    protected $sync_offset = "1209600";
+    
     /**
      * Synchronize a single course ID.
      * @global type $db
@@ -60,21 +62,41 @@ class Entrada_Sync_Course_Ldap {
         $this->ldap_connection = NewADOConnection("ldap");
         $this->ldap_connection->SetFetchMode(ADODB_FETCH_ASSOC);
         
-        $query = "SELECT a.`course_code`, a.`course_id`, a.`organisation_id`, b.`cperiod_id`, b.`audience_value` AS `group_id`, c.`curriculum_type_id`, c.`start_date`, c.`finish_date`, a.`sync_ldap_courses`, a.`sync_groups`
+        $query = "SELECT DISTINCT a.`course_id`, a.`course_code`, a.`organisation_id`, a.`curriculum_type_id`, b.`cperiod_id`, b.`start_date`, b.`finish_date`, c.`caudience_id`, d.`group_id`, a.`sync_ldap_courses`, a.`sync_groups`
                     FROM `courses` AS a
-                    JOIN `course_audience` AS b
-                    ON a.`course_id` = b.`course_id`
-                    JOIN `curriculum_periods` AS c
+                    JOIN `curriculum_periods` AS b
+                    ON a.`curriculum_type_id` = b.`curriculum_type_id`
+                    LEFT JOIN `course_audience` AS c
                     ON b.`cperiod_id` = c.`cperiod_id`
+                    AND c.`course_id` = a.`course_id`
+                    LEFT JOIN `groups` AS d
+                    ON c.`audience_value` = d.`group_id`
                     WHERE a.`course_id` = ?
                     AND a.`sync_ldap` = '1'
                     AND a.`course_active` = '1'
-                    AND b.`audience_active` = '1'
-                    AND c.`active` = '1'
-                    AND UNIX_TIMESTAMP(NOW()) > c.`start_date` - 1209600 
-                    AND UNIX_TIMESTAMP(NOW()) < c.`finish_date`";
-        $results = $db->GetAll($query, array($course_id));
+                    AND b.`active` = '1'
+                    AND UNIX_TIMESTAMP(NOW()) > b.`start_date` - ? 
+                    AND UNIX_TIMESTAMP(NOW()) < b.`finish_date`
+                    AND (d.`group_active` = '1' OR d.`group_active` IS NULL)
+                    ORDER BY b.`start_date` DESC";
+        $results = $db->GetAll($query, array($course_id, $this->sync_offset));
         if ($results) {
+            
+            $this->course["course_id"] = $course_id;
+            
+            if (!$this->fetchGroupID()) {
+                // $this->createCourseGroup();
+                // if a group ID can't be found then don't attempt to sync. 
+                $skip = true;
+                application_log("notice", "Skipped syncronization of [".$this->course["course_code"]."], no group found.");
+            }
+            
+            if ($this->fetchCommunityID()) {
+                $this->fetchCommunityAudience();
+            }
+            
+            $this->fetchCourseAudienceMembers();
+            
             foreach ($results as $result) {
                 $this->ldap_audience = array();
                 $this->course = $result;
@@ -84,36 +106,44 @@ class Entrada_Sync_Course_Ldap {
 
                 $this->fetchCourseCodes();
 
-                if (!$this->fetchGroupID()) {
-                    $this->createCourseGroup();
-                }
-
-                $this->fetchCourseAudienceMembers();
-
-                if ($this->fetchCommunityID()) {
-                    $this->fetchCommunityAudience();
-                }
-
-                if (!empty($this->course_codes)) {
-                    if ($this->fetchLdapAudience()) {
-                        foreach ($this->ldap_audience as $course_audience_member) {
-                            $member_ldap_data = $this->fetchLdapAudienceMemberDetails($course_audience_member);
-                            $this->handleUser($member_ldap_data);
-                        }
-                        if (!empty($this->community_audience)) {
-                            // The audience members remaining were not in the ldap sync, they need to be deactiviated.
-                            foreach ($this->community_audience as $audience_member => $cmember) {
-                                $this->removeCommunityAudienceMember($audience_member);
+                $skip = false;
+               
+                if ($skip == false) {
+                    if (!empty($this->course_codes)) {
+                        if ($this->fetchLdapAudience()) {
+                            foreach ($this->ldap_audience as $course_audience_member) {
+                                $member_ldap_data = $this->fetchLdapAudienceMemberDetails($course_audience_member);
+                                $this->handleUser($member_ldap_data);
                             }
                         }
-                    }
 
-                } else {
-                    application_log("error", "There were no course codes attached to this course. That should be impossible.");
+                    } else {
+                        application_log("error", "There were no course codes attached to this course. That should be impossible.");
+                    }
                 }
                 
                 if ($this->course["sync_groups"] == "1") {
                     $this->syncCourseGroups();
+                }
+            }
+            
+            if (!empty($this->course_audience)) {
+                // The audience members remaining were not in the ldap sync, they need to be deactiviated.
+                foreach ($this->course_audience as $audience_member_proxy_id => $member) {
+                    if ($member["entrada_only"] != "1") {
+                        if (!$db->AutoExecute("group_members", array("member_active" => "0"), "UPDATE", "`gmember_id` = " . $db->qstr($member["gmember_id"]))) {
+                            application_log("error", "Failed to deactivate `group_members` record [".$member["gmember_id"]."], DB said: " . $db->ErrorMsg());
+                        }
+                    } else {
+                        // Audience member was manually added to enrollment, should not be removed from community.
+                        unset($this->community_audience[$audience_member_proxy_id]);
+                    }
+                }
+            }
+            if (!empty($this->community_audience)) {
+                // The audience members remaining were not in the ldap sync, they need to be deactiviated.
+                foreach ($this->community_audience as $audience_member => $cmember) {
+                    $this->removeCommunityAudienceMember($audience_member);
                 }
             }
         } else {
@@ -234,15 +264,15 @@ class Entrada_Sync_Course_Ldap {
     }
     
     /**
-     * Deactivates an community audience member.
+     * Deletes a community audience member.
      * @global type $db
      * @param int $audience_member
      * @return boolean
      */
     private function removeCommunityAudienceMember($audience_member) {
         global $db;
-        
-        if ($db->AutoExecute("`community_members`", array("member_active" => "0"), "UPDATE", "`community_id` = ".$db->qstr($this->community_id)." AND `proxy_id` = ".$db->qstr($audience_member))) {
+        $query = "DELETE FROM `community_members` WHERE `community_id` = ? AND `proxy_id` = ?";
+        if ($db->Execute($query, array($this->community_id, $audience_member))) {
             return true;
         } else {
             return false;
@@ -258,136 +288,148 @@ class Entrada_Sync_Course_Ldap {
     private function handleUser($member_ldap_data) {
         global $db;
         $number = str_replace("S", "", $member_ldap_data[LDAP_USER_QUERY_FIELD]);
-        $GRAD = date("Y", time()) + 4;
-        $user_id = "";
-        
-        $query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `number` = ?";
-        $result = $db->GetRow($query, array($number));
-        if (!$result) {
-            if(isset($member_ldap_data["sn"]) && isset($member_ldap_data["givenName"]) && $member_ldap_data["sn"] && $member_ldap_data["givenName"]){
-                $names[0] = $member_ldap_data["givenName"];
-                $names[1] = $member_ldap_data["sn"];
-            }else{
-                $names = explode(" ", $member_ldap_data["cn"]);	
-            }
-            $student = array(	
-                "number"			=> $number,
-                "username"			=> strtolower($member_ldap_data[LDAP_MEMBER_ATTR]),
-                "password"			=> md5(generate_password(8)),
-                "organisation_id"	=> $this->course["organisation_id"],
-                "firstname"			=> trim($names[0]),
-                "lastname"			=> trim($names[1]),
-                "prefix"			=> "",
-                "email"				=> isset($member_ldap_data["mail"]) ? $member_ldap_data["mail"] : strtolower($member_ldap_data[LDAP_MEMBER_ATTR]) . "@queensu.ca",
-                "email_alt"			=> "",
-                "email_updated"		=> time(),
-                "telephone"			=> "",
-                "fax"				=> "",
-                "address"			=> "",
-                "city"				=> DEFAULT_CITY,
-                "postcode"			=> DEFAULT_POSTALCODE,
-                "country"			=> "",
-                "country_id"		=> DEFAULT_COUNTRY_ID,
-                "province"			=> "",
-                "province_id"		=> DEFAULT_PROVINCE_ID,
-                "notes"				=> "",
-                "privacy_level"		=> "0",
-                "notifications"		=> "0",
-                "entry_year"		=> date("Y", time()),
-                "grad_year"			=> $GRAD,
-                "gender"			=> "0",
-                "clinical"			=> "0",
-                "updated_date"		=> time(),
-                "updated_by"		=> "1"
-            );
-            if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_data`", $student, "INSERT")) {
-                $user_id = $db->Insert_ID();
-                $access = array(
-                    "user_id"			=> $user_id,
-                    "app_id"			=> $this->app_id,
+        if ($number && $number > 0) {
+            $GRAD = date("Y", time()) + 4;
+            $user_id = "";
+            $query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `number` = ?";
+            $result = $db->GetRow($query, array($number));
+            if (!$result) {
+                if(isset($member_ldap_data["sn"]) && isset($member_ldap_data["givenName"]) && $member_ldap_data["sn"] && $member_ldap_data["givenName"]){
+                    $names[0] = $member_ldap_data["givenName"];
+                    $names[1] = $member_ldap_data["sn"];
+                }else{
+                    $names = explode(" ", $member_ldap_data["cn"]);	
+                }
+                $student = array(	
+                    "number"			=> $number,
+                    "username"			=> strtolower($member_ldap_data[LDAP_MEMBER_ATTR]),
+                    "password"			=> md5(generate_password(8)),
                     "organisation_id"	=> $this->course["organisation_id"],
-                    "account_active"	=> "true",
-                    "access_starts"		=> time(),
-                    "access_expires"	=> "0",
-                    "last_login"		=> "0",
-                    "last_ip"			=> "",
-                    "role"				=> $GRAD,
-                    "group"				=> "student",
-                    "extras"			=> "",
-                    "private_hash"		=> generate_hash(32),
-                    "notes"				=> ""
+                    "firstname"			=> trim($names[0]),
+                    "lastname"			=> trim($names[1]),
+                    "prefix"			=> "",
+                    "email"				=> isset($member_ldap_data["mail"]) ? $member_ldap_data["mail"] : strtolower($member_ldap_data[LDAP_MEMBER_ATTR]) . "@queensu.ca",
+                    "email_alt"			=> "",
+                    "email_updated"		=> time(),
+                    "telephone"			=> "",
+                    "fax"				=> "",
+                    "address"			=> "",
+                    "city"				=> DEFAULT_CITY,
+                    "postcode"			=> DEFAULT_POSTALCODE,
+                    "country"			=> "",
+                    "country_id"		=> DEFAULT_COUNTRY_ID,
+                    "province"			=> "",
+                    "province_id"		=> DEFAULT_PROVINCE_ID,
+                    "notes"				=> "",
+                    "privacy_level"		=> "0",
+                    "notifications"		=> "0",
+                    "entry_year"		=> date("Y", time()),
+                    "grad_year"			=> $GRAD,
+                    "gender"			=> "0",
+                    "clinical"			=> "0",
+                    "updated_date"		=> time(),
+                    "updated_by"		=> "1"
                 );
-                if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_access`", $access, "INSERT")) {
-                    application_log("error", "Failed to create user access record, DB said: ".$db->ErrorMsg());
-                }   
+                if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_data`", $student, "INSERT")) {
+                    $user_id = $db->Insert_ID();
+                    $access = array(
+                        "user_id"			=> $user_id,
+                        "app_id"			=> $this->app_id,
+                        "organisation_id"	=> $this->course["organisation_id"],
+                        "account_active"	=> "true",
+                        "access_starts"		=> time(),
+                        "access_expires"	=> "0",
+                        "last_login"		=> "0",
+                        "last_ip"			=> "",
+                        "role"				=> $GRAD,
+                        "group"				=> "student",
+                        "extras"			=> "",
+                        "private_hash"		=> generate_hash(32),
+                        "notes"				=> ""
+                    );
+                    if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_access`", $access, "INSERT")) {
+                        application_log("error", "Failed to create user access record, DB said: ".$db->ErrorMsg());
+                    }   
+                } else {
+                    application_log("error", "Failed to create user data record, DB said: ".$db->ErrorMsg());
+                }
             } else {
-                application_log("error", "Failed to create user data record, DB said: ".$db->ErrorMsg());
-            }
-        } else {
-            $user_id = $result["id"];
-            $query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access`
-                        WHERE `user_id` = ".$db->qstr($result["id"])." AND `organisation_id` = ".$db->qstr($this->course["organisation_id"]);
-            $access_record = $db->GetRow($query);
-            if (!$access_record) {
-                $access = array(
-                    "user_id"			=> $user_id,
-                    "app_id"			=> $this->app_id,
-                    "organisation_id"	=> $this->course["organisation_id"],
-                    "account_active"	=> "true",
-                    "access_starts"		=> time(),
-                    "access_expires"	=> "0",
-                    "last_login"		=> "0",
-                    "last_ip"			=> "",
-                    "role"				=> $GRAD,
-                    "group"				=> "student",
-                    "extras"			=> "",
-                    "private_hash"		=> generate_hash(32),
-                    "notes"				=> ""
-                );
-                if (!$db->AutoExecute("`".AUTH_DATABASE."`.`user_access`", $access, "INSERT")) {
-                    application_log("error", "Failed to create user access record, DB said: ".$db->ErrorMsg());
+                $user_id = $result["id"];
+                $query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access`
+                            WHERE `user_id` = ".$db->qstr($result["id"])." AND `organisation_id` = ".$db->qstr($this->course["organisation_id"]);
+                $access_record = $db->GetRow($query);
+                if (!$access_record) {
+                    $access = array(
+                        "user_id"			=> $user_id,
+                        "app_id"			=> $this->app_id,
+                        "organisation_id"	=> $this->course["organisation_id"],
+                        "account_active"	=> "true",
+                        "access_starts"		=> time(),
+                        "access_expires"	=> "0",
+                        "last_login"		=> "0",
+                        "last_ip"			=> "",
+                        "role"				=> $GRAD,
+                        "group"				=> "student",
+                        "extras"			=> "",
+                        "private_hash"		=> generate_hash(32),
+                        "notes"				=> ""
+                    );
+                    if (!$db->AutoExecute("`".AUTH_DATABASE."`.`user_access`", $access, "INSERT")) {
+                        application_log("error", "Failed to create user access record, DB said: ".$db->ErrorMsg());
+                    }
                 }
             }
-        }
-        
-        $query = "SELECT * FROM `group_members` 
-                    WHERE `proxy_id` = ".$db->qstr($user_id)."
-                    AND `group_id` = ".$db->qstr($this->group_id);
-        $group_member = $db->GetRow($query);
-        if (!$group_member) {
-            $values = array(
-                "group_id"		=> $this->group_id,
-                "proxy_id"		=> $user_id,
-                "start_date"	=> $this->course["start_date"],
-                "expire_date"	=> $this->course["end_date"],
-                "member_active" => "1",
-                "entrada_only"	=> "0",
-                "updated_date"	=> time(),
-                "updated_by"	=> "1"
-            );
-            if (!$db->AutoExecute("group_members",$values,"INSERT")) {												
-                application_log("error", "User was not added to group_members table, DB said: ".$db->ErrorMsg());
-            }
-        }
-        
-        if ($this->community_id) {
-            $query = "SELECT * FROM `community_members` WHERE `proxy_id` = ? AND `community_id` = ?";
-            $community_membership = $db->GetRow($query, array($user_id, $this->community_id));
-            if (!$community_membership) {
+
+            $query = "SELECT * FROM `group_members` 
+                        WHERE `proxy_id` = ".$db->qstr($user_id)."
+                        AND `group_id` = ".$db->qstr($this->group_id);
+            $group_member = $db->GetRow($query);
+            if (!$group_member) {
                 $values = array(
-                    "community_id" => $this->community_id,
-                    "proxy_id" => $user_id,
+                    "group_id"		=> $this->group_id,
+                    "proxy_id"		=> $user_id,
+                    "start_date"	=> $this->course["start_date"],
+                    "expire_date"	=> $this->course["end_date"],
                     "member_active" => "1",
-                    "member_joined" => time(),
-                    "member_acl" => "0"
+                    "entrada_only"	=> "0",
+                    "updated_date"	=> time(),
+                    "updated_by"	=> "1"
                 );
-                if (!$db->AutoExecute("`community_members`", $values, "INSERT")) {
-                    application_log("error", "Failed to add user to community, DB said: ".$db->ErrorMsg());
+                if (!$db->AutoExecute("group_members",$values,"INSERT")) {												
+                    application_log("error", "User was not added to group_members table, DB said: ".$db->ErrorMsg());
+                }
+            } else if ($group_member["member_active"] == 0) {
+                // group member has been deactivated, but is in the ldap results; reactivate the group membership.
+                if (!$db->AutoExecute("group_members", array("member_active" => "1"), "UPDATE", "`gmember_id` = ".$db->qstr($group_member["gmember_id"]))) {
+                    application_log("error", "group_members record [".$group_member["gmember_id"]."] was unable to be updated, DB said: ".$db->ErrorMsg());
                 }
             }
+            unset($this->course_audience[$user_id]);
+
+            if ($this->community_id) {
+                $query = "SELECT * FROM `community_members` WHERE `proxy_id` = ? AND `community_id` = ?";
+                $community_membership = $db->GetRow($query, array($user_id, $this->community_id));
+                if (!$community_membership) {
+                    $values = array(
+                        "community_id" => $this->community_id,
+                        "proxy_id" => $user_id,
+                        "member_active" => "1",
+                        "member_joined" => time(),
+                        "member_acl" => "0"
+                    );
+                    if (!$db->AutoExecute("`community_members`", $values, "INSERT")) {
+                        application_log("error", "Failed to add user to community, DB said: ".$db->ErrorMsg());
+                    }
+                } else if ($community_membership["member_active"] == 0) {
+                    if (!$db->AutoExecute("community_members", array("member_active" => "1"), "UPDATE", "`cmember_id` = " . $db->qstr($community_membership["cmember_id"]))) {
+                        application_log("error", "community_members record [".$community_membership["cmember_id"]."] was unable to be updated, DB said: ".$db->ErrorMsg());
+                    }
+                }
+            }
+            unset($this->community_audience[$user_id]);
+        } else {
+            return false;
         }
-        
-        unset($this->community_audience[$user_id]);
     }
     
     /**
@@ -412,28 +454,7 @@ class Entrada_Sync_Course_Ldap {
             return false;
         }
     }
-    
-    /**
-     * Fetch the course audience
-     * @global type $db
-     * @return boolean
-     */
-    private function fetchCourseAudience() {
-        global $db;
         
-        $query = "SELECT * FROM `course_audience` 
-                    WHERE `course_id` = ".$db->qstr($this->course["course_id"])." 
-                    AND `audience_type` = 'group_id' 
-                    AND `audience_value` = ".$db->qstr($this->group_id);
-        $results = $db->GetAll($query);
-        if ($results) {
-            $this->course_audience = $results;
-            return true;
-        } else {
-            return false;
-        }
-    }
-    
     /**
      * Fetch the user's details from the LDAP server.
      * @param type $member
@@ -564,7 +585,7 @@ class Entrada_Sync_Course_Ldap {
         /**
          * Fetch current audience that's attached to the course
          */
-        $query = "	SELECT a.`id`, a.`number`, b.`member_active`
+        $query = "	SELECT a.`id`, a.`number`, b.`member_active`, b.`entrada_only`, b.`gmember_id`
                     FROM `".AUTH_DATABASE."`.`user_data` AS a 
                     JOIN `group_members` AS b	
                     ON a.`id` = b.`proxy_id` 
@@ -572,19 +593,10 @@ class Entrada_Sync_Course_Ldap {
                     ON b.`group_id` = c.`group_id`
                     WHERE c.`group_type` = 'course_list' 
                     AND c.`group_value` = ".$db->qstr($this->course["course_id"])."
-                    AND b.`entrada_only` = 0
                     AND c.`group_id` = ".$db->qstr($this->group_id);
-        $audience = $db->GetAll($query);
+        $audience = $db->GetAssoc($query);
         if ($audience) {
-            foreach ($audience as $key => $audience_member) {
-                $this->course_audience[$key]["id"]		= $audience_member["id"];
-                $this->course_audience[$key]["number"]	= $audience_member["number"];
-                if ($audience_member["member_active"] == 1) {
-                    $this->course_audience[$key]["active"]      = $audience_member["number"];
-                } else {
-                    $this->course_audience[$key]["inactive"]	= $audience_member["number"];
-                }
-            }
+            $this->course_audience = $audience;
             return true;
         } else {
             return false;

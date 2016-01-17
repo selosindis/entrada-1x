@@ -10,7 +10,7 @@ The discussion topic can be found here:
 Unsubscribing:
 --------------
 
-You can unsubscribe at any time by logging into the system, visiting %UNSUBSCRIBE_URL%, visiting the "edit" section of any post in the thread and unselecting "Receieve notifications when this users reply to this thread" then pressing the "Save" button.
+You can unsubscribe at any time by logging into the system, visiting %UNSUBSCRIBE_URL%, visiting the "edit" section of any post in the thread and unselecting "Receive e-mail notification when people reply to this thread." then pressing the "Save" button.
 
 Regards,
 

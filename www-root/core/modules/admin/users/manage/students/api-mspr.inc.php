@@ -16,7 +16,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	
 		require_once(dirname(__FILE__)."/includes/functions.inc.php");
 		
-		$user = User::get($user_record["id"]);
+		$user = User::fetchRowByID($user_record["id"]);
 		$controller = new MSPRAdminController($translate, $user);
 		$controller->process();		
 	}

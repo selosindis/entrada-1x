@@ -1,9 +1,9 @@
 <section>
     <div class="panel-content">
-        <h1>Join Community</h1>
+        <h1>{translate}Join Community{/translate}</h1>
         <ul>
-            <li><span class="content-small">Join this community to access more community features.</span></li>
-            <li><a href="{$sys_website_url}/communities?section=join&community={$community_id}">Join Community</a></li>
+            <li><span class="content-small">{translate}Join this community to access more features.{/translate}</span></li>
+            <li><a href="{$sys_website_url}/communities?section=join&community={$community_id}">{translate}Join Community{/translate}</a></li>
         </ul>
     </div>
 </section>

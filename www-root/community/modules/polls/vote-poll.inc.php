@@ -189,22 +189,39 @@ if ($RECORD_ID) {
 							if (($questions = $db->GetAll($query))) {
 								$count = 1;
 								foreach ($questions as $question) {
-									echo "	<h2>".$count.". ".html_encode($question["poll_question"])."</h2>".($question["maximum_responses"] > 1 ? "<div class=\"content-small\" style=\"width: 100%; text-align: right; margin-right: 10px;\">".($question["maximum_responses"] == $question["minimum_responses"] ? "Choose ".$question["minimum_responses"]." responses." : "Choose between ".$question["minimum_responses"]." and ".$question["maximum_responses"]." responses.")."</div>" : "<br />");
-									$count++;
+									echo "	<h3 style=\"line-height:30px;\">".$count.". ".html_encode($question["poll_question"])."</h3>".($question["maximum_responses"] > 1 ? "<div class=\"content-small\" style=\"width: 100%; text-align: right; margin-right: 10px;\">".($question["maximum_responses"] == $question["minimum_responses"] ? "Choose ".$question["minimum_responses"]." responses." : "Choose between ".$question["minimum_responses"]." and ".$question["maximum_responses"]." responses.")."</div>" : "<div></div>");
 		    						$query 		= "SELECT * FROM `community_polls_responses` WHERE `cpolls_id` = ".$db->qstr($RECORD_ID)." AND `cpquestion_id` = ".$question["cpquestion_id"]." ORDER BY `response_index` ASC";
 		    						$results 	= $db->GetAll($query);
 									if ($results) {
-										echo "<div style=\"padding-left: 25px\">\n";
+										echo "<table class=\"table table-bordered no-thead\">\n";
+										echo "	<colgroup>";
+										echo "		<col style=\"width: 5%\" />";
+										echo "		<col style=\"width: auto\" />";
+										echo "	</colgroup>";
 										if ($question["maximum_responses"] == 1) {
 			    					        foreach($results as $key => $value) {
-			                                    echo "<input type=\"radio\" style=\"margin-right: 5px; vertical-align: top;\" id=\"cpresponses_id_".(int) $key."\" name=\"cpresponses_id[".$question["cpquestion_id"]."]\" value=\"".html_encode($value['cpresponses_id'])."\" ".($_POST["cpresponses_id"][$question["cpquestion_id"]] == $value['cpresponses_id'] ? "checked=\"checked\"" : "")."/> <label for=\"cpresponses_id_".(int) $key."\" class=\"form-nrequired\">".$value['response']."</label><br />";
+			    					        	echo "<tr>";
+			    					        	echo "	<td class=\"center\">";
+			    					        	echo "		<input type=\"radio\" id=\"cpresponses_id_".$count."_".(int) $key."\" name=\"cpresponses_id[".$question["cpquestion_id"]."]\" value=\"".html_encode($value['cpresponses_id'])."\" ".($_POST["cpresponses_id"][$question["cpquestion_id"]] == $value['cpresponses_id'] ? "checked=\"checked\"" : "")."/>";
+			    					        	echo "	</td>";
+			    					        	echo "	<td>";
+			    					        	echo "		<label for=\"cpresponses_id_".$count."_".(int) $key."\" class=\"form-nrequired\">".$value['response']."</label>";
+			    					        	echo "	</td>";
+			    					        	echo "</tr>";
 			                                }
 										} else {
 			    					        foreach($results as $key => $value) {
-			                                    echo "<input type=\"checkbox\" style=\"margin-right: 5px; vertical-align: top;\" id=\"cpresponses_id_".(int) $key."\" name=\"cpresponses_id[".$question["cpquestion_id"]."][".(int) $key."]\" value=\"".html_encode($value['cpresponses_id'])."\" ".($_POST["cpresponses_id"][$question["cpquestion_id"]][$key] ? "checked=\"checked\"" : "")."/> <label for=\"cpresponses_id_".(int) $key."\" class=\"form-nrequired\">".$value['response']."</label><br />";
+			    					        	echo "<tr>";
+			    					        	echo "	<td class=\"center\">";
+			    					        	echo "		<input type=\"checkbox\" id=\"cpresponses_id_".$count."_".(int) $key."\" name=\"cpresponses_id[".$question["cpquestion_id"]."][".(int) $key."]\" value=\"".html_encode($value['cpresponses_id'])."\" ".($_POST["cpresponses_id"][$question["cpquestion_id"]][$key] ? "checked=\"checked\"" : "")."/>";
+			    					        	echo "	</td>";
+			    					        	echo "	<td>";
+			    					        	echo "		<label for=\"cpresponses_id_".$count."_".(int) $key."\" class=\"form-nrequired\">".$value['response']."</label>";
+			    					        	echo "	</td>";
+			    					        	echo "</tr>";
 			                                }
 										}
-										echo "</div>\n";
+										echo "</table>\n";
 									} else {
 										$ERROR++;
 										$ERRORSTR[] = "There are currently no responses available for this question, we apologize for the inconvenience.";
@@ -213,6 +230,7 @@ if ($RECORD_ID) {
 										
 										application_log("error", "There are no responses available for question id [".$question["cpquestion_id"]."] in community_id [".$COMMUNITY_ID."].");
 									}
+                                    $count++;
 								}
 								
 								echo "		<div style=\"padding-top: 15px; text-align: right\">\n";

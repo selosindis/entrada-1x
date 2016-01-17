@@ -39,7 +39,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					$excluded_valid = false;
 					break;
 				} else {
-					$excluded_clean .= ($excluded_clean ? ",".((int)$excluded_category_id) : ((int)$excluded_category_id));
+					$excluded_clean .= ($excluded_clean ? "," : "").$db->qstr(((int)$excluded_category_id));
 				}
 			}
 			if ($excluded_valid && $excluded_clean) {
@@ -146,31 +146,22 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$count = 1;
 			}
 			if ($category_id) {
-				echo "<input type=\"hidden\" name=\"delete[".$category_id."]['category_parent']\" value=\"".$parent_id."\" />\n";
+				echo "<input type=\"hidden\" name=\"delete[".$category_id."][category_parent]\" id=\"children_".$category_id."_move\" value=\"".$parent_id."\" />\n";
 			}
 			$last_title = false;
 			$margin = 0;
 			for ($level = 1; $level <= $count; $level++) {
 				if ($category_selected[$level]["parent"] !== false) {
-					if($category_selected[$level]["parent"] == 0){
-						$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
-									WHERE `category_parent` = '0' 
-									AND `category_status` != 'trash'
-									AND (`organisation_id` = ".$db->qstr($organisation_id)." OR `organisation_id` IS NULL)
-									ORDER BY `category_order` ASC";
-					}
-					else{
-						$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
-									WHERE `category_parent` = ".$db->qstr($category_selected[$level]["parent"])."
-									AND (`organisation_id` = ".$db->qstr($organisation_id)." OR `organisation_id` IS NULL)
-									AND `category_status` != 'trash'".
-								($excluded ? " AND `category_id` NOT IN (".$excluded.")" : ($category_id ? " AND `category_id` != ".$db->qstr($category_id) : ""));
-					}
+                    $query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
+                                WHERE `category_parent` = ".$db->qstr($category_selected[$level]["parent"])."
+                                AND (`organisation_id` = ".$db->qstr($organisation_id)." OR `organisation_id` IS NULL)
+                                AND `category_status` != 'trash'".
+                                ($excluded ? " AND `category_id` NOT IN (".$excluded.")" : ($category_id ? " AND `category_id` != ".$db->qstr($category_id) : ""));
 					$results = $db->GetAll($query);
 					if ($results) {
 						echo "<div style=\"padding: 0px; margin-left: ".$margin."px;\">\n";
 						echo "\t<img height=\"20\" width=\"15\" src=\"".ENTRADA_URL."/images/tree/minus".($margin ? "2" : "5").".gif\" alt=\"Level\" title=\"Level\" style=\"position: relative; top: 6px;\"/>";
-						echo "\t<select id=\"category-".$category_selected[$level]["parent"]."\" name=\"category-".$category_selected[$level]["parent"]."\" onChange=\"selectcategory(this.options[this.selectedIndex].value".($category_id ? ", ".$category_id : "").($excluded ? ", '".$excluded."'" : "")."); selectOrder(".($category_id ? $category_id.", " : "")."this.options[this.selectedIndex].value);\">\n";
+						echo "\t<select id=\"category-".$category_selected[$level]["parent"]."\" name=\"category-".$category_selected[$level]["parent"]."\" onChange=\"selectCategory(this.options[this.selectedIndex].value".($category_id ? ", ".$category_id : "").($excluded ? ", ".$excluded : "")."); selectOrder(".($category_id ? $category_id.", " : "")."this.options[this.selectedIndex].value);\">\n";
 							if ($last_title) {
 								echo "\t\t<option value=\"".$category_selected[$level]["parent"]."\">-- Under ".clean_input($last_title, array("notags"))." --</option>\n";
 							} else {
@@ -184,7 +175,9 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 						}
 						echo "\t</select>\n";
 						echo "</div>\n";
-					}
+					} elseif ($category_selected[$level]["parent"] === 0) {
+                        echo display_notice("No other categories were found.");
+                    }
 					$margin += 20;
 				}
 			}

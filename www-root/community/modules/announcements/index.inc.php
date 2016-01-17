@@ -84,14 +84,13 @@ if (!$RECORD_ID) {
 	 * Get the total number of results using the generated queries above and calculate the total number
 	 * of pages that are available based on the results per page preferences.
 	 */
-	$query	= "
-			SELECT COUNT(*) AS `total_rows`
-			FROM `community_announcements`
-			WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
-			AND `announcement_active` = '1'
-			".( $PAGE_OPTIONS["moderate_posts"] == 1 ? "AND `pending_moderation` = '0'" : "")."
-			".((!$COMMUNITY_ADMIN) ? " AND (`release_date` = '0' OR `release_date` <= ".$db->qstr(time()).") AND (`release_until` = '0' OR `release_until` > ".$db->qstr(time()).")" : "")."
-			AND `cpage_id` = ".$db->qstr($PAGE_ID);
+	$query	= "SELECT COUNT(*) AS `total_rows`
+                FROM `community_announcements`
+                WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
+                AND `announcement_active` = '1'
+                ".( $PAGE_OPTIONS["moderate_posts"] == 1 ? "AND `pending_moderation` = '0'" : "")."
+                ".((!$COMMUNITY_ADMIN) ? " AND (`release_date` = '0' OR `release_date` <= ".$db->qstr(time()).") AND (`release_until` = '0' OR `release_until` > ".$db->qstr(time()).")" : "")."
+                AND `cpage_id` = ".$db->qstr($PAGE_ID);
 	$result	= $db->GetRow($query);
 	if ($result) {
 		$total_rows	= $result["total_rows"];
@@ -104,8 +103,8 @@ if (!$RECORD_ID) {
 			$total_pages = (int) ($total_rows / $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]) + 1;
 		}
 	} else {
-		$total_rows		= 0;
-		$total_pages	= 1;
+		$total_rows = 0;
+		$total_pages = 1;
 	}
 
 	/**
@@ -136,13 +135,13 @@ if (!$RECORD_ID) {
  */
 if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 	?>
-	<script type="text/javascript">
+	<script>
 		function announcementDelete(id) {
 			Dialog.confirm('Do you really wish to delete '+ $('announcement-' + id + '-title').innerHTML +' from this community?',
 				{
 					id:				'requestDialog',
 					width:			350,
-					height:			75,
+					height:			100,
 					title:			'Delete Confirmation',
 					className:		'medtech',
 					okLabel:		'Yes',
@@ -163,76 +162,81 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 
 <div id="module-header">
 	<?php
-	if (isset($total_pages) && $total_pages > 1) {
-		echo "<div id=\"pagination-links\">\n";
-		echo "Pages: ".$pagination->GetPageLinks();
-		echo "</div>\n";
-	}
+    if (isset($total_pages) && $total_pages > 1) {
+        echo "<div class=\"pagination pagination-right\">";
+        echo "    <ul>";
+        echo        $pagination->GetPageLinks();
+        echo "    </ul>\n";
+        echo "</div>\n";
+    }
 	?>
-	<a href="<?php echo COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss"; ?>" class="feeds rss">Subscribe to RSS</a>
-	<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
-		<div id="notifications-toggle" style="display: inline; padding-top: 4px;"></div>
-		<script type="text/javascript">
-		function promptNotifications(enabled) {
-			Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications for new announcements in this community?',
-				{
-					id:				'requestDialog',
-					width:			350,
-					height:			75,
-					title:			'Notification Confirmation',
-					className:		'medtech',
-					okLabel:		'Yes',
-					cancelLabel:	'No',
-					closable:		'true',
-					buttonClass:	'btn',
-					destroyOnClose:	true,
-					ok:				function(win) {
-										new Window(	{
-														id:				'resultDialog',
-														width:			350,
-														height:			75,
-														title:			'Notification Result',
-														className:		'medtech',
-														okLabel:		'close',
-														buttonClass:	'btn',
-														resizable:		false,
-														draggable:		false,
-														minimizable:	false,
-														maximizable:	false,
-														recenterAuto:	true,
-														destroyOnClose:	true,
-														url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$COMMUNITY_ID; ?>&type=announcement&action=edit&active='+(enabled == 1 ? '0' : '1'),
-														onClose:			function () {
-																			new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$COMMUNITY_ID; ?>&type=announcement&action=view');
-																		}
-													}
-										).showCenter();
-										return true;
-									}
-				}
-			);
-		}
 
-		</script>
+	<div class="pull-left">
+		<a href="<?php echo COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss:".$PRIVATE_HASH; ?>" title="Subscribe to RSS"><i class="fa fa-rss-square fa-lg fa-fw"></i></a>
+		<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
+			<div id="notifications-toggle"></div>
+			<script type="text/javascript">
+			function promptNotifications(enabled) {
+				Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications for new announcements in this community?',
+					{
+						id:				'requestDialog',
+						width:			350,
+						height:			100,
+						title:			'Notification Confirmation',
+						className:		'medtech',
+						okLabel:		'Yes',
+						cancelLabel:	'No',
+						closable:		'true',
+						buttonClass:	'btn',
+						destroyOnClose:	true,
+						ok:				function(win) {
+											new Window(	{
+															id:				'resultDialog',
+															width:			350,
+															height:			100,
+															title:			'Notification Result',
+															className:		'medtech',
+															okLabel:		'close',
+															buttonClass:	'btn',
+															resizable:		false,
+															draggable:		false,
+															minimizable:	false,
+															maximizable:	false,
+															recenterAuto:	true,
+															destroyOnClose:	true,
+															url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$COMMUNITY_ID; ?>&type=announcement&action=edit&active='+(enabled == 1 ? '0' : '1'),
+															onClose:			function () {
+																				new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$COMMUNITY_ID; ?>&type=announcement&action=view');
+																			}
+														}
+											).showCenter();
+											return true;
+										}
+					}
+				);
+			}
+
+			</script>
+			<?php
+			$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$COMMUNITY_ID."&type=announcement&action=view')";
+		}
+		?>
+	</div>
+	<div class="pull-right">
 		<?php
-		$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$COMMUNITY_ID."&type=announcement&action=view')";
-	}
-	?>
+		if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "add")) {
+			?>
+            <ul class="page-action">
+                <li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add" class="btn btn-success">Add Announcement</a></li>
+            </ul>
+			<?php
+		}
+		?>
+	</div>
 </div>
 
-<div style="padding-top: 10px; clear: both">
+<div style="padding-top: 10px; clear: both;">
 	<?php
-	if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "add")) {
-		?>
-		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Announcement</a></li>
-			</ul>
-		</div>
-		<div style="clear: both"></div>
-		<?php
-	}
-
 	if ($RECORD_ID) {
 		$query	= "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`username`
 					FROM `community_announcements` AS a
@@ -255,14 +259,12 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 						 * If you need to add more checks, this is there they would go.
 						 */
 					} else {
-						$NOTICE++;
-						$NOTICESTR[]	= "This announcement was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.<br /><br />Please contact your community administrators for further assistance.";
+						add_notice("This announcement was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.<br /><br />Please contact your community administrators for further assistance.");
 
 						$allow_to_load	= false;
 					}
 				} else {
-					$NOTICE++;
-					$NOTICESTR[]	= "This announcement will not be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.<br /><br />Please check back at this time, thank-you.";
+					add_notice("This announcement will not be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.<br /><br />Please check back at this time, thank-you.");
 
 					$allow_to_load	= false;
 				}
@@ -277,18 +279,15 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 				 * If there is time release properties, display them to the browsing users.
 				 */
 				if (($release_date = (int) $result["release_date"]) && ($release_date > time())) {
-					$NOTICE++;
-					$NOTICESTR[] = "This discussion post will not be accessible to others until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.";
+					add_notice("This announcement will not be accessible to others until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.");
 				} elseif ($release_until = (int) $result["release_until"]) {
 					if ($release_until > time()) {
-						$NOTICE++;
-						$NOTICESTR[] = "This announcement will be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.";
+						add_notice("This announcement will be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.");
 					} else {
 						/**
 						 * Only administrators or people who wrote the post will get this.
 						 */
-						$NOTICE++;
-						$NOTICESTR[] = "This announcement was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong> by others.";
+						add_notice("This announcement was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong> by others.");
 					}
 				}
 
@@ -299,21 +298,20 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 				$RECORD_AUTHOR = $result["proxy_id"];
 
 				echo "<div id=\"announcement-".(int) $result["cannouncement_id"]."\" class=\"announcement\">\n";
-				echo "	<a name=\"announcement-".(int) $result["cannouncement_id"]."\"></a>\n";
-				echo "<h2 id=\"announcement-".(int) $result["cannouncement_id"]."-title\">".html_encode($result["announcement_title"])."</h2>\n";
-				echo "<div>\n";
-				echo "<div class=\"tagline\">\n";
-				echo "	Released ".date("F dS, Y", $result["release_date"])." by <strong>".html_encode($result["fullname"])."</strong>";
-				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cannouncement_id"]."\">edit</a>)" : "");
-				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:announcementDelete('".$result["cannouncement_id"]."')\">delete</a>)" : "");
-				echo "</div>\n";
-				echo strip_tags($result["announcement_description"], $ALLOWED_HTML_TAGS);
-				echo "</div>\n";
+				echo "    <a name=\"announcement-".(int) $result["cannouncement_id"]."\"></a>\n";
+				echo "    <h2 id=\"announcement-".(int) $result["cannouncement_id"]."-title\">".html_encode($result["announcement_title"])."</h2>\n";
+				echo "    <div>\n";
+				echo "        <div class=\"tagline\">\n";
+				echo "	          Released ".date("F dS, Y", $result["release_date"])." by <strong>".html_encode($result["fullname"])."</strong>";
+				echo 	          ((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cannouncement_id"]."\">edit</a>)" : "");
+				echo 	          ((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:announcementDelete('".$result["cannouncement_id"]."')\">delete</a>)" : "");
+				echo "        </div>\n";
+				echo          strip_tags($result["announcement_description"], $ALLOWED_HTML_TAGS);
+				echo "    </div>\n";
 				echo "</div>";
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "The announcement that you are looking for does not exist on this page.";
+			add_error("The announcement that you are looking for does not exist on this page.");
 
 			echo display_error();
 		}
@@ -328,27 +326,27 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 
 			$pending_moderation = $db->GetOne($query);
 			if ($pending_moderation) {
-				$NOTICE++;
-				$NOTICESTR[] = (($pending_moderation > 1) ? ((int)$pending_moderation)." announcements are" : ((int)$pending_moderation)." announcement is")." pending moderation. Click <a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=moderate\">here</a> to begin moderating.";
+				add_notice((($pending_moderation > 1) ? ((int)$pending_moderation)." announcements are" : ((int)$pending_moderation)." announcement is")." pending moderation. Click <a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=moderate\">here</a> to begin moderating.");
 				echo display_notice();
-				$NOTICE--;
+
+                $NOTICE--;
 				array_pop($NOTICESTR);
 			}
 		}
 
-		$query		= "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`username`
-						FROM `community_announcements` AS a
-						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-						ON a.`proxy_id` = b.`id`
-						WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-						AND a.`announcement_active` = '1'
-						".( $PAGE_OPTIONS["moderate_posts"] == 1 ? "AND a.`pending_moderation` = '0'" : "")."
-						".((!$COMMUNITY_ADMIN) ? " AND (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")" : "")."
-						AND a.`cpage_id` = ".$db->qstr($PAGE_ID)."
-						ORDER BY %s
-						LIMIT %s, %s";
-		$query		= sprintf($query, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]);
-		$results	= $db->GetAll($query);
+		$query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`username`
+                    FROM `community_announcements` AS a
+                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                    ON a.`proxy_id` = b.`id`
+                    WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+                    AND a.`announcement_active` = '1'
+                    ".( $PAGE_OPTIONS["moderate_posts"] == 1 ? "AND a.`pending_moderation` = '0'" : "")."
+                    ".((!$COMMUNITY_ADMIN) ? " AND (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")" : "")."
+                    AND a.`cpage_id` = ".$db->qstr($PAGE_ID)."
+                    ORDER BY %s
+                    LIMIT %s, %s";
+		$query = sprintf($query, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]);
+		$results = $db->GetAll($query);
 		if ($results) {
 			foreach ($results as $result) {
 				$accessible = true;
@@ -361,27 +359,26 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 				echo "<div id=\"announcement-".(int) $result["cannouncement_id"]."\" class=\"announcement".((!$accessible) ? " na" : "")."\">\n";
 				echo "	<a name=\"announcement-".(int) $result["cannouncement_id"]."\"></a>\n";
 				echo "	<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$result["cannouncement_id"]."\" id=\"announcement-".(int) $result["cannouncement_id"]."-title\" class=\"title\">".html_encode($result["announcement_title"])."</a>\n";
-				echo "<div>\n";
-				echo "	<div class=\"tagline\">\n";
-				echo "		Released ".date("F dS, Y", $result["release_date"])." by <strong>".html_encode($result["fullname"])."</strong>";
-				echo		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cannouncement_id"]."\">edit</a>)" : "");
-				echo		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:announcementDelete('".$result["cannouncement_id"]."')\">delete</a>)" : "");
+				echo "	<div>\n";
+				echo "		<div class=\"tagline\">\n";
+				echo "			Released ".date("F dS, Y", $result["release_date"])." by <strong>".html_encode($result["fullname"])."</strong>";
+				echo			((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cannouncement_id"]."\">edit</a>)" : "");
+				echo			((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:announcementDelete('".$result["cannouncement_id"]."')\">delete</a>)" : "");
+				echo "		</div>\n";
+				echo		strip_tags($result["announcement_description"], $ALLOWED_HTML_TAGS);
 				echo "	</div>\n";
-				echo	strip_tags($result["announcement_description"], $ALLOWED_HTML_TAGS);
 				echo "</div>\n";
-				echo "</div>";
+				echo "<hr />";
+
 				if ($LOGGED_IN) {
 					add_statistic("community:".$COMMUNITY_ID.":announcements", "view", "cannouncement_id", $result["cannouncement_id"]);
 				}
-				
 			}
 		} else {
-			$NOTICE++;
-			$NOTICESTR[] = "<strong>No Announcements Available</strong><br />There have been no announcements posted by the administrators of this community, please check again later.";
+			add_notice("<strong>No Announcements Available</strong><br />There have been no announcements posted by the administrators of this community, please check again later.");
 
 			echo display_notice();
 		}
 	}
 	?>
-	
 </div>

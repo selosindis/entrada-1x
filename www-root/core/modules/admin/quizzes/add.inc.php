@@ -243,7 +243,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								$selected_authors = array();
                                 
                                 foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-                                    $u = User::get($proxy_id);
+                                    $u = User::fetchRowByID($proxy_id);
                                     if ($u->getID()) {
                                         $selected_authors[$u->getID()]["fullname"] = $u->getFullname(true);
                                     }

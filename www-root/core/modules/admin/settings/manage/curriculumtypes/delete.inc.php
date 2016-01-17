@@ -23,9 +23,9 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("configuration", "delete", false)) {
@@ -36,9 +36,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 ?>
-<h1>Delete Curriculum Types</h1>
+<h1>Delete Curriculum Layout</h1>
 <?php
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/curriculumtypes?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete Curriculum Types");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/curriculumtypes?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete Curriculum Layout");
 
 	if (isset($_POST["remove_ids"]) && is_array($_POST["remove_ids"]) && !empty($_POST["remove_ids"])) {
 		foreach ($_POST["remove_ids"] as $id) {
@@ -64,7 +64,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					}
 					if ($db->Execute($query)) {
 						$SUCCESS++;
-						$SUCCESSSTR[] = "Successfully removed Curriculum Type [".$id."] from your organisation.<br />";
+						$SUCCESSSTR[] = "Successfully removed Curriculum Layout [".$id."] from your organisation.<br />";
 					}
 					if ($num_uses == 1) {
 						$query = "	UPDATE `curriculum_lu_types` 
@@ -80,12 +80,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							$db->Execute($query);
 
 							$SUCCESS++;
-							$SUCCESSSTR[] = "Successfully removed Curriculum Type [".$id."] from your the system.<br />You will now be redirected to the Curriculum Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+							$SUCCESSSTR[] = "Successfully removed Curriculum Layout [".$id."] from your the system.<br />You will now be redirected to the Curriculum Layout index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 						}
 						else{
 							$ERROR++;
-							$ERRORSTR[] = "An error occurred while removing the Curriculum Type [".$id."] from the system. The system administrator has been notified.You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
-							application_log("error", "An error occurred while removing the Curriculum Type [".$id."] from the system. ");
+							$ERRORSTR[] = "An error occurred while removing the Curriculum Layout [".$id."] from the system. The system administrator has been notified.You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+							application_log("error", "An error occurred while removing the Curriculum Layout [".$id."] from the system. ");
 						}
 					}
 				}
@@ -103,13 +103,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			case 1:
 			default:
 				
-				add_notice("Please review the following curriculum types to ensure that you wish to <strong>permanently delete</strong> them and <strong>unlink any curriculum periods</strong> currently associated to these courses.");
+				add_notice("Please review the following Curriculum Layout to ensure that you wish to <strong>permanently delete</strong> them and <strong>unlink any curriculum periods</strong> currently associated to these courses.");
 				echo display_notice();
 			?>
 
 
 			<form action ="<?php echo ENTRADA_URL."/admin/settings/manage/curriculumtypes/?section=delete&org=".$ORGANISATION_ID."&step=2";?>" method="post">
-					<table class="tableList" cellspacing="0" summary="List of Curriculum Types">
+					<table class="tableList" cellspacing="0" summary="List of Curriculum Layout">
 						<colgroup>
 							<col class="modified"/>
 							<col class="title"/>
@@ -118,7 +118,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						<thead>
 							<tr>
 								<td class="modified">&nbsp;</td>
-								<td class="title">Curriculum Type</td>
+								<td class="title">Curriculum Layout</td>
 								<td class="general"> </td>
 							</tr>
 						</thead>
@@ -144,7 +144,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		}
 	} else {
 		$ERROR++;
-		$ERRORSTR[] = "No Curriculum Types were selected to be deleted. You will now be redirected to the Curriculum Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+		$ERRORSTR[] = "No Curriculum Layout were selected to be deleted. You will now be redirected to the Curriculum Layout index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 		echo display_error();
 	}

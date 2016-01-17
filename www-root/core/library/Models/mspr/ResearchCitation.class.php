@@ -46,7 +46,7 @@ class ResearchCitation implements Approvable, AttentionRequirable, Editable {
 	}
 	
 	public function getUser() {
-		return User::get($this->user_id);	
+		return User::fetchRowByID($this->user_id);
 	}
 	
 	/**

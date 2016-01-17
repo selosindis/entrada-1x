@@ -12,11 +12,117 @@
  *
  */
 class Models_Base {
+    protected $database_name       = DATABASE_NAME;
+
+    // Child models are required to overload these variables.
+    protected $table_name          = null;
+    protected $primary_key         = null;
+    protected $default_sort_column = null;
 
     public function __construct($arr = NULL) {
+
         if (is_array($arr)) {
+            if (!isset($this->primary_key)) {
+                $this->primary_key = $arr[0];
+            }
+
+            if (!isset($this->default_sort_column)) {
+                $this->default_sort_column = $this->primary_key;
+            }
+
             $this->fromArray($arr);
         }
+    }
+
+    /**
+     * Method returns true if the provided table exists, otherwise returns false.
+     *
+     * @param string $database
+     * @param string $table
+     * @return bool
+     */
+    public function tableExists($database = "", $table = "") {
+        global $db;
+
+        if ($database && $table) {
+            $query = "SELECT `table_name` FROM `information_schema`.`columns` WHERE `table_schema` = ? AND `table_name` = ? LIMIT 1";
+            $result = $db->GetRow($query, array($database, $table));
+            if ($result) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Method returns true if the provided column exists in the provided table and database, otherwise returns false.
+     *
+     * @param string $database
+     * @param string $table
+     * @param string $column
+     * @return bool
+     */
+    public function columnExists($database = "", $table = "", $column = "") {
+        global $db;
+
+        if ($database && $table && $column) {
+            $query = "SELECT `column_name` FROM `information_schema`.`columns` WHERE `table_schema` = ? AND `table_name` = ? AND `column_name` = ?";
+            $result = $db->GetRow($query, array($database, $table, $column));
+            if ($result) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Method returns true if the provided index exists in the provided table and database, otherwise returns false.
+     *
+     * @param string $database
+     * @param string $table
+     * @param string $index
+     * @return bool
+     */
+    public function indexExists($database = "", $table = "", $index = "") {
+        global $db;
+
+        if ($database && $table && $index) {
+            $query = "SELECT `index_name` FROM `information_schema`.`statistics` WHERE `table_schema` = ? AND `table_name` = ? AND `index_name` = ?";
+            $result = $db->GetRow($query, array($database, $table, $index));
+            if ($result) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Method returns the MySQL field meta data for the provided field.
+     *
+     * @param string $database
+     * @param string $table
+     * @param string $field
+     * @return array
+     */
+    public function fieldMetadata($database = "", $table = "", $field = "") {
+        global $db;
+
+        $result = false;
+
+        $database = preg_replace("/[^a-z0-9_]/i", "", $database);
+        $table = preg_replace("/[^a-z0-9_]/i", "", $table);
+
+        if ($table && $field) {
+            $query = "SHOW FIELDS FROM `" . $database . "`.`" . $table . "` WHERE `Field` = ?";
+            $result = $db->GetRow($query, array($field));
+
+            return $result;
+        }
+
+        return $result;
     }
 
     /**
@@ -66,9 +172,10 @@ class Models_Base {
             foreach ($constraints as $index => $constraint) {
                 $key = false;
                 $value = false;
+                $replacements_string = "";
                 if (is_array($constraint)) {
                     if (in_array($constraint["key"], $class_vars)) {
-                        $key = "`".clean_input($constraint["key"], array("trim", "striptags"))."`";
+                        $key = clean_input($constraint["key"], array("trim", "striptags"));
                     } else {
                         $key = $constraint["key"];
                         if (is_array($key)) {
@@ -78,7 +185,7 @@ class Models_Base {
                                         $return = array();
                                         foreach($keys as $k) {
                                             if ($k != " ") {
-                                                $return[] = "`".$k."`";
+                                                $return[] = $k;
                                             } else {
                                                 $return[] = "' '";
                                             }
@@ -94,28 +201,39 @@ class Models_Base {
                         }
                     }
                     $mode = (isset($constraint["mode"]) && in_array(strtoupper($constraint["mode"]), array("OR", "AND")) ? $constraint["mode"] : $default_mode);
-                    $method = (isset($constraint["method"]) && in_array(strtoupper($constraint["method"]), array("=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS")) ? $constraint["method"] : $default_method);
+                    $method = (isset($constraint["method"]) && in_array(strtoupper($constraint["method"]), array("=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS", "IN")) ? $constraint["method"] : $default_method);
                     if (strtoupper($method) == "BETWEEN" && is_array($constraint["value"]) && @count($constraint["value"]) == 2) {
                         $value = array(
                             clean_input($constraint["value"][0], array("trim", "striptags")),
                             clean_input($constraint["value"][1], array("trim", "striptags"))
                         );
+                    } elseif (strtoupper($method) == "IN" && is_array($constraint["value"]) && @count($constraint["value"]) >= 1) {
+                        $value = array();
+                        foreach ($constraint["value"] as $constraint_value) {
+                            $value[] = clean_input($constraint_value, array("trim", "striptags"));
+                            $replacements_string .= ($replacements_string ? ", " : "")."?";
+                        }
                     } elseif ($constraint["value"]) {
                         $value = clean_input($constraint["value"], array("trim", "striptags"));
                     } elseif ($constraint["value"] || $constraint["value"] === "0" || $constraint["value"] === 0) {
                         $value = clean_input($constraint["value"], array("trim", "striptags"));
+                    } elseif ($constraint["value"] === "NULL") {
+                        $value = NULL;
                     } else {
                         $value = NULL;
                     }
                 } elseif (!is_array($constraint) && (in_array($index, $class_vars))) {
-                    $key = "`".clean_input($index, array("trim", "striptags"))."`";
+                    $key = clean_input($index, array("trim", "striptags"));
                     $value = clean_input($constraint, array("trim", "striptags"));
                 }
-                if (isset($key) && $key && isset($value) && ($value || $value === 0 ||  $value === "0")) {
-                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode))." ".$key." ".(isset($method) && $method ? $method : $default_method).(isset($method) && $method == "BETWEEN" ? " ? AND ?" : " ?");
-                    if (is_array($value) && @count($value) == 2) {
-                        $where[] = $value[0];
-                        $where[] = $value[1];
+                if (isset($key) && $key && (isset($value) || is_null($value)) && ($value || $value === 0 ||  $value === "0" || is_null($value))) {
+                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode)).
+                        " `".$key."` ".(isset($method) && $method ? $method : $default_method).
+                        ($method == "BETWEEN" ? " ? AND ?" : ($method == "IN" ? " (".$replacements_string.")" : " ?"));
+                    if (is_array($value)) {
+                        foreach ($value as $v) {
+                            $where[] = $v;
+                        }
                     } else {
                         $where[] = $value;
                     }
@@ -130,7 +248,7 @@ class Models_Base {
                 } else {
                     $sort_order = "ASC";
                 }
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order;
+                $query = "SELECT * FROM `".$this->database_name."`.`".$this->table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order;
                 $results = $db->GetAll($query, $where);
                 if ($results) {
                     foreach ($results as $result) {
@@ -152,34 +270,38 @@ class Models_Base {
      * (only if it is not the first constraint), and a "method" which determines which operator will be used
      * out of the following: "=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS".
      * For an example, here is an array, and the query which it would build:
-     *
-     * Array:
-        $constraints = array(
-        array(
-        "key"       => "firstname" ,
-        "value"     => "%John%",
-        "method"    => "LIKE"
-        ),
-        array(
-        "mode"      => "AND",
-        "key"       => "lastname" ,
-        "value"     => "%Mc%",
-        "method"    => "LIKE"
-        ),
-        array(
-        "mode"      => "OR",
-        "key"       => "id" ,
-        "value"     => "1",
-        "method"    => "="
-        )
-        );
+     */
 
-     * Query:
-            SELECT * FROM `user_data`
-            WHERE `firstname` LIKE '%John%'
-            AND `lastname` LIKE '%Mc%'
-            OR `id` = '1'
-     *
+    /*
+       Array:
+       $constraints = array(
+           array(
+               "key"    => "firstname",
+               "value"  => "%John%",
+               "method" => "LIKE"
+           ),
+           array(
+               "mode"   => "AND",
+               "key"    => "lastname",
+               "value"  => "%Mc%",
+               "method" => "LIKE"
+           ),
+           array(
+               "mode"   => "OR",
+               "key"    => "id",
+               "value"  => "1",
+               "method" => "="
+           )
+       );
+
+       Query:
+       SELECT * FROM `user_data`
+       WHERE `firstname` LIKE '%John%'
+       AND `lastname` LIKE '%Mc%'
+       OR `id` = '1'
+    */
+
+    /**
      * It is possible to use the CONCAT function in the where clause of the fetchAll by passing the key as an array in the format:
      * array("function" => "CONCAT", "keys" => array("lastname", "firstname"))
      *
@@ -199,12 +321,19 @@ class Models_Base {
             foreach ($constraints as $index => $constraint) {
                 $key = false;
                 $value = false;
+                $replacements_string = "";
                 if (is_array($constraint) && in_array($constraint["key"], $class_vars)) {
                     $mode = (isset($constraint["mode"]) && in_array(strtoupper($constraint["mode"]), array("OR", "AND")) ? $constraint["mode"] : $default_mode);
                     $key = clean_input($constraint["key"], array("trim", "striptags"));
-                    $method = (isset($constraint["method"]) && in_array(strtoupper($constraint["method"]), array("=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS")) ? $constraint["method"] : $default_method);
+                    $method = (isset($constraint["method"]) && in_array(strtoupper($constraint["method"]), array("=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS", "IN")) ? $constraint["method"] : $default_method);
                     if (strtoupper($method) == "BETWEEN" && is_array($constraint["value"]) && @count($constraint["value"]) == 2) {
                         $value = clean_input($constraint["value"][0], array("trim", "striptags"))." AND ".clean_input($constraint["value"][1], array("trim", "striptags"));
+                    } elseif (strtoupper($method) == "IN" && is_array($constraint["value"]) && @count($constraint["value"]) >= 1) {
+                        $value = array();
+                        foreach ($constraint["value"] as $constraint_value) {
+                            $value[] = clean_input($constraint_value, array("trim", "striptags"));
+                            $replacements_string .= ($replacements_string ? ", " : "")."?";
+                        }
                     } elseif ($constraint["value"]) {
                         $value = clean_input($constraint["value"], array("trim", "striptags"));
                     } elseif ($constraint["value"] || $constraint["value"] === "0" || $constraint["value"] === 0) {
@@ -217,16 +346,21 @@ class Models_Base {
                     $value = clean_input($constraint, array("trim", "striptags"));
                 }
                 if (isset($key) && $key && isset($value) && ($value || $value === "0" || $value === 0)) {
-                    $replacements .= "\n ".(empty($where) ?
-                            "WHERE " : (isset($mode) && $mode ?
-                                $mode : $default_mode))." `".$key."` ".(isset($method) && $method ?
-                            $method : $default_method)." ?";
-                    $where[] = $value;
+                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode)).
+                        " `".$key."` ".(isset($method) && $method ? $method : $default_method).
+                        (isset($method) && $method == "BETWEEN" ? " ? AND ?" : (isset($method) && $method == "IN" ? " (".$replacements_string.")" : " ?"));
+                    if (is_array($value)) {
+                        foreach ($value as $v) {
+                            $where[] = $v;
+                        }
+                    } else {
+                        $where[] = $value;
+                    }
                 }
             }
 
             if (!empty($where)) {
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements;
+                $query = "SELECT * FROM `".$this->database_name."`.`".$this->table_name."` ".$replacements;
                 $result = $db->GetRow($query, $where);
                 if ($result) {
                     $class = get_called_class();
@@ -237,4 +371,24 @@ class Models_Base {
         return $self;
     }
 
+    public function insert () {
+        global $db;
+        if ($db->AutoExecute("`".$this->database_name."`.`". $this->table_name ."`", $this->toArray(), "INSERT")) {
+            $this->{$this->primary_key} = $db->Insert_ID();
+            return $this;
+        } else {
+            application_log("error", "Error inserting a ".get_called_class().". DB Said: " . $db->ErrorMsg());
+            return false;
+        }
+    }
+
+    public function update () {
+        global $db;
+        if ($db->AutoExecute("`".$this->database_name."`.`". $this->table_name ."`", $this->toArray(), "UPDATE", "`". $this->primary_key ."` = ".$db->qstr($this->getID()))) {
+            return true;
+        } else {
+            application_log("error", "Error updating  ".get_called_class()." id[" . $this->getID() . "]. DB Said: " . $db->ErrorMsg());
+            return false;
+        }
+    }
 }

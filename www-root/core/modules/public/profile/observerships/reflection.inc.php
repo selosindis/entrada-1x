@@ -37,6 +37,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 	
 	$observership = Observership::get($OBSERVERSHIP_ID);
 	
+	$status = $observership->getStatus();
+
+	echo "<h1>".$observership->getTitle()." Reflection</h1>";
+	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/observerships?section=review&id=".$OBSERVERSHIP_ID, "title" => $observership->getTitle() );
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/observerships?section=reflection&id=".$OBSERVERSHIP_ID, "title" => $observership->getTitle() . " Reflection");
 	
@@ -147,45 +151,27 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 							<input type="hidden" name="step" value="2" />
 							
 							<div class="row-fluid">
-								<p><strong>What was the Physicians Role?</strong></p>
+								<p><strong>What was the physician's intrinsic role (Advocate, Collaborator, Communicator, Manager, Professional, Scholar) that you observed most in this observership?</strong></p>
 								<?php if ($status == "confirmed") { echo "<p>".$observership_reflection->getPhysiciansRole()."</p>"; } else { ?>
 								<textarea class="input-xxlarge" name="physicians_role"><?php echo ($observership_reflection ? html_encode($observership_reflection->getPhysiciansRole()) : ""); ?></textarea>
 								<?php } ?>
 							</div>
 							<div class="row-fluid">
-								<p><strong>How was the physicians role enacted?</strong></p>
+								<p><strong>Give examples of how this was enacted:</strong></p>
 								<?php if ($status == "confirmed") { echo "<p>".$observership_reflection->getPhysicianReflection()."</p>"; } else { ?>
 								<textarea class="input-xxlarge" name="physician_reflection"><?php echo ($observership_reflection ? html_encode($observership_reflection->getPhysicianReflection()) : "") ; ?></textarea>
 								<?php } ?>
 							</div>
 							<div class="row-fluid">
-								<p><strong>Consider other aspects of this role that you did not see, but would want to be a part of your own practice:</strong></p>
-								<?php if ($status == "confirmed") { echo "<p>".$observership_reflection->getRolePractice()."</p>"; } else { ?>
-								<textarea class="input-xxlarge" name="role_practice"><?php echo ($observership_reflection ? html_encode($observership_reflection->getRolePractice()) : "") ; ?></textarea>
-								<?php } ?>
-							</div>
-							<div class="row-fluid">
-								<p><strong>If there were challenges during the observership within this role, write how you might have solved them.</strong></p>
+								<p><strong>What challenges do you see for yourself in your future practice of medicine around this role?  What can you start to do now to learn more about this?</strong></p>
 								<?php if ($status == "confirmed") { echo "<p>".$observership_reflection->getObservershipChallenge()."</p>"; } else { ?>
 								<textarea class="input-xxlarge" name="observership_challenge"><?php echo ($observership_reflection ? html_encode($observership_reflection->getObservershipChallenge()) : "") ; ?></textarea>
 								<?php } ?>
 							</div>
 							<div class="row-fluid">
-								<p><strong>You may feel that this discipline (medical specialty) lends itself to this role.  If so, please analyze how this might occur.</strong></p>
+								<p><strong>What questions do you have about this experience or what would you like to learn more about?  What additional comments do you have about the observership?</strong></p>
 								<?php if ($status == "confirmed") { echo "<p>".$observership_reflection->getDisciplineReflection()."</p>"; } else { ?>
 								<textarea class="input-xxlarge" name="discipline_reflection"><?php echo ($observership_reflection ? html_encode($observership_reflection->getDisciplineReflection()) : "") ; ?></textarea>
-								<?php } ?>
-							</div>
-							<div class="row-fluid">
-								<p><strong>Can you predict if there will be challenges for you in your practice, based on your self-assessment?  What can you do to meet these challenges, starting now?</strong></p>
-								<?php if ($status == "confirmed") { echo "<p>".$observership_reflection->getChallengePredictions()."</p>"; } else { ?>
-								<textarea class="input-xxlarge" name="challenge_predictions"><?php echo ($observership_reflection ? html_encode($observership_reflection->getChallengePredictions()) : "") ; ?></textarea>
-								<?php } ?>
-							</div>
-							<div class="row-fluid">
-								<p><strong>Are there questions you have about this role or areas you still want to explore?</strong></p>
-								<?php if ($status == "confirmed") { echo "<p>".$observership_reflection->getQuestions()."</p>"; } else { ?>
-								<textarea class="input-xxlarge" name="questions"><?php echo ($observership_reflection ? html_encode($observership_reflection->getQuestions()) : "") ; ?></textarea>
 								<?php } ?>
 							</div>
 							<div class="row-fluid">

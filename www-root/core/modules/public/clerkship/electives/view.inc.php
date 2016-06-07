@@ -372,7 +372,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			</colgroup>
 			<thead>
 				<tr>
-					<td class="type borderl">Event Type</td>
+					<td class="type borderl"><?php echo $translate->_("Event Type"); ?></td>
 					<td class="date-smallest">Start Date</td>
 					<td class="date-smallest">Finish Date</td>
 					<td class="region">Region</td>

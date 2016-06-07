@@ -17,23 +17,41 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_SHARES"))) {
 } elseif (!$COMMUNITY_LOAD) {
 	exit;
 }
-
+    //checks the role of the user and sets hidden to true if they're not a facluty, staff, or medtech memeber
+    //used to control access to files if they're marked hidden from students
+    $group = $ENTRADA_USER->getActiveGroup();
+    if ($group == 'faculty' || $group == 'staff'  || $group == 'medtech') {
+        $hidden = false;
+    } else {
+        $hidden = true;
+    }    
 if ($RECORD_ID) {
-	$query = "SELECT a.*, b.`folder_title`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `uploader_fullname`, c.`username` AS `uploader_username`
-                FROM `community_share_files` AS a
-                LEFT JOIN `community_shares` AS b
-                ON a.`cshare_id` = b.`cshare_id`
-                LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-                ON a.`proxy_id` = c.`id`
-                WHERE a.`proxy_id` = c.`id`
-                AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-                AND a.`csfile_id` = ".$db->qstr($RECORD_ID)."
-                AND b.`cpage_id` = ".$db->qstr($PAGE_ID)."
-                AND a.`file_active` = '1'
-                AND b.`folder_active` = '1'";
-	$file_record = $db->GetRow($query);
+	$query			= "
+					SELECT a.*, b.`folder_title`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `uploader_fullname`, c.`username` AS `uploader_username`
+					FROM `community_share_files` AS a
+					LEFT JOIN `community_shares` AS b
+					ON a.`cshare_id` = b.`cshare_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+					ON a.`proxy_id` = c.`id`
+					WHERE a.`proxy_id` = c.`id`
+					AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+					AND a.`csfile_id` = ".$db->qstr($RECORD_ID)."
+					AND b.`cpage_id` = ".$db->qstr($PAGE_ID)."
+					AND a.`file_active` = '1'
+					AND b.`folder_active` = '1'".
+                    ($hidden ? "AND a.`student_hidden` = '0' AND b.`student_hidden` = '0'" : "");
+	$file_record	= $db->GetRow($query);
 	if ($file_record) {
-		if (isset($DOWNLOAD) && $DOWNLOAD) {
+        //checks if a folders parent is hidden
+        $parent_folder_hidden = Models_Community_Share::parentFolderHidden($file_record['cshare_id']);
+        if ($parent_folder_hidden && $hidden) {
+            application_log("error", "An attempt to view a file with a parent folder hidden was made. cshare_id: [".$RECORD_ID."]");
+
+            header("Location: ".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL);
+            exit;
+        }              
+        
+		if ((isset($DOWNLOAD)) && ($DOWNLOAD)) {
 			/**
 			 * Check for valid permissions before checking if the file really exists.
 			 */
@@ -149,7 +167,7 @@ if ($RECORD_ID) {
 				$MOVE_FILE		= shares_file_module_access($file_record["csfile_id"], "move-file");
 				$NAVIGATION		= shares_file_navigation($file_record["cshare_id"], $RECORD_ID);
 
-				$community_shares_select = community_shares_in_select($file_record["cshare_id"]);
+                $community_shares_select = community_shares_in_select_hierarchy($file_record["cshare_id"], $file_record["parent_folder_id"], $PAGE_ID);
 				?>
 				<script>
 				function commentDelete(id) {
@@ -174,26 +192,26 @@ if ($RECORD_ID) {
 				<?php
 				if ($community_shares_select != "") {
                     ?>
-                    function fileMove(id) {
-                        Dialog.confirm('Do you really wish to move the '+ $('file-' + id + '-title').innerHTML +' file?<br /><br />If you confirm this action, you will be moving the file and all comments to the selected folder.<br /><br /><?php echo $community_shares_select; ?>',
-                            {
-                                id:				'requestDialog',
-                                width:			350,
-                                height:			205,
-                                title:			'Delete Confirmation',
-                                className:		'medtech',
-                                okLabel:		'Yes',
-                                cancelLabel:	'No',
-                                closable:		'true',
-                                buttonClass:	'btn',
-                                ok:				function(win) {
-                                                    window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=move-file&id='+id+'&share_id='+$F('share_id');
-                                                    return true;
-                                                }
-                            }
-                        );
-                    }
-                    <?php
+				function fileMove(id) {
+					Dialog.confirm('Do you really wish to move the '+ $('file-' + id + '-title').innerHTML +' file?<br /><br />If you confirm this action, you will be moving the file and all comments to the selected folder.<br /><br /><?php echo $community_shares_select; ?>',
+						{
+							id:				'requestDialog',
+							width:			350,
+							height:			205,
+							title:			'Move File',
+							className:		'medtech',
+							okLabel:		'Yes',
+							cancelLabel:	'No',
+							closable:		'true',
+							buttonClass:	'btn',
+							ok:				function(win) {
+												window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=move-file&id='+id+'&share_id='+$F('share_id');
+												return true;
+											}
+						}
+					);
+				}
+				<?php
 				}
 				if (shares_file_module_access($RECORD_ID, "delete-revision")) {
 					?>
@@ -349,6 +367,9 @@ if ($RECORD_ID) {
 								<?php if ($ADD_REVISION) : ?>
 								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Upload Revised File</a></li>
 								<?php endif; ?>
+								<?php if (($MOVE_FILE) && ($community_shares_select != "")) : ?>
+								<li><a href="javascript:fileMove(<?php echo $RECORD_ID; ?>)">Move File</a></li>
+								<?php endif; ?>								
 							</ul>
                             <div class="clearfix"></div>
 							<?php
@@ -362,11 +383,13 @@ if ($RECORD_ID) {
 						</colgroup>
 						<tbody>
 						<?php
-						foreach($results as $result) {
+						foreach ($results as $result) {
 							$comments++;
 							?>
 							<tr>
-								<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($result["commenter_username"]); ?>" style="font-size: 10px"><?php echo html_encode($result["commenter_fullname"]); ?></a></td>
+								<td style="border-bottom: none; border-right: none">
+									<span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($result["commenter_username"]); ?>" style="font-size: 10px"><?php echo html_encode($result["commenter_fullname"]); ?></a>
+								</td>
 								<td style="border-bottom: none">
 									<div style="float: left">
 										<span class="content-small"><strong>Commented:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
@@ -410,6 +433,9 @@ if ($RECORD_ID) {
 							<?php if ($ADD_REVISION) : ?>
 							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Upload Revised File</a></li>
 							<?php endif; ?>
+							<?php if ($MOVE_FILE) : ?>
+							<li><a href="javascript:fileMove(<?php echo $RECORD_ID; ?>)" class="btn btn-success">Move File</a></li>
+							<?php endif; ?>					
 							<li><a class="btn btn-success" href="#top"><i class="icon-chevron-up icon-white"></i></a></li>
 						</ul>
                         <div class="clearfix"></div>

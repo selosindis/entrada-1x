@@ -36,9 +36,9 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 ?>
-<h1>Delete Event Types</h1>
+<h1>Delete <?php echo $translate->_("Event Type"); ?></h1>
 <?php
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete Event Types");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete " . $translate->_("Event Type"));
 
 	if (isset($_POST["remove_ids"]) && is_array($_POST["remove_ids"]) && !empty($_POST["remove_ids"])) {
 		foreach ($_POST["remove_ids"] as $id){
@@ -60,21 +60,21 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 						$query .= " AND	`organisation_id` = ".$db->qstr($ORGANISATION_ID);
 					if($db->Execute($query)){
 						$SUCCESS++;
-						$SUCCESSSTR[] = "Successfully removed Event Type [".$id."] from your organisation.<br />";
+						$SUCCESSSTR[] = "Successfully removed " . $translate->_("Event Type") . " [".$id."] from your organisation.<br />";
 					}
 					if($num_uses > 1){
 						$NOTICE++;
-						$NOTICESTR[] = "This Event Type still exists in the system because other Organisations were using it.<br />You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+						$NOTICESTR[] = "This " . $translate->_("Event Type") . " still exists in the system because other Organisations were using it.<br />You will now be redirected to the " . $translate->_("Learning Event Types") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 					}
 					else{
 						$query = "UPDATE `events_lu_eventtypes` SET	`eventtype_active`=0 WHERE `eventtype_id` = ".$db->qstr($id);
 						if($db->Execute($query)){
 							$SUCCESS++;
-							$SUCCESSSTR[] = "Successfully removed Event Type [".$id."] from your the system.<br />You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+							$SUCCESSSTR[] = "Successfully removed " . $translate->_("Event Type") . " [".$id."] from your the system.<br />You will now be redirected to the " . $translate->_("Event Type") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 						}
 						else{
 							$ERROR++;
-							$ERRORSTR[] = "An error occurred while removing the Event Type [".$id."] from the system. The system administrator has been notified.You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+							$ERRORSTR[] = "An error occurred while removing the " . $translate->_("Event Type") . " [".$id."] from the system. The system administrator has been notified.You will now be redirected to the " . $translate->_("Learning Event Types") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 							application_log("error", "An error occurred while removing the Event Type [".$id."] from the system. ");
 						}
 					}
@@ -91,7 +91,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 			default:
 
 						
-				add_notice("Please review the following event types to ensure that you wish to <strong>permanently delete</strong> them.");
+				add_notice("Please review the following " . $translate->_("Learning Event Types") . " to ensure that you wish to <strong>permanently delete</strong> them.");
 				echo display_notice();
 			?>
 
@@ -105,7 +105,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 						<thead>
 							<tr>
 								<td class="modified">&nbsp;</td>
-								<td class="title">Event Type</td>
+								<td class="title"><?php echo $translate->_("Event Type"); ?></td>
 							</tr>
 						</thead>
 						<tbody>
@@ -136,7 +136,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	}
 	else{
 		$ERROR++;
-		$ERRORSTR[] = "No Event Types were selected to be deleted. You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+		$ERRORSTR[] = "No " . $translate->_("Learning Event Types") . " were selected to be deleted. You will now be redirected to the " . $translate->_("Learning Event Types") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 		echo display_error();
 	}

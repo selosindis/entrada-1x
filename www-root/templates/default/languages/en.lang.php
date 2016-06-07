@@ -60,12 +60,16 @@ return array (
     "global_button_save" => "Save",
     "global_button_cancel" => "Cancel",
     "global_button_proceed" => "Proceed",
+    "global_button_post" => "Post",
+    "global_button_update" => "Update",
+    "global_button_reply" => "Reply",    
     "login" => "Login",
     "logout" => "Logout",
-	"selected_courses" => "Selected Courses",
+    "selected_courses" => "Selected Courses",
 	"available_courses" => "Available Courses",
 	"all_courses" => "All Courses",
 	"no_courses" => "No Courses",
+	"SSO Login" => "SSO Login",
 
 	/*
 	 * Feedback
@@ -283,6 +287,7 @@ return array (
     "course_directors" => "Course Directors",
     "curriculum_coordinator" => "Curriculum Coordinator",
     "curriculum_coordinators" => "Curriculum Coordinators",
+	"faculty" => "Faculty",
     "program_coordinator" => "Program Coordinator",
     "program_coordinators" => "Program Coordinators",
     "evaluation_rep" => "Evaluation Rep",
@@ -325,5 +330,17 @@ return array (
         <p>The details provided for this assignment are as follows:</p>
         <p>Due Date: %due_date%</p>
         <p>Title: %assignment_title%</p>
-        <p>Description:<br />%assignment_description%</p>"
+        <p>Description:<br />%assignment_description%</p>",
+
+	/**
+	 * Community Text
+	 *
+	 */
+	"community" => array(
+		"discussion" => array(
+			"error_open"	=> "Error updating Discussion Boards Open.",
+			"error_request" => "Invalid request method."
+
+		)
+	)
 );

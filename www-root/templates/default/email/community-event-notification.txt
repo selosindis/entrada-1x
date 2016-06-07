@@ -7,12 +7,10 @@
 The event can be found here: 
 %URL%
 
-Unsubscribing:
---------------
-
-You can unsubscribe at any time by logging into the system, visiting %UNSUBSCRIBE_URL%, and selecting "Unsubscribe to E-Mail".
+Please be sure to add this event to your calendar.
 
 Regards,
 
-The %APPLICATION_NAME% team,
-%ENTRADA_URL%
+%SENDER_NAME%,
+
+You can unsubscribe at any time by logging into the system, visiting %UNSUBSCRIBE_URL%, and selecting "Unsubscribe to E-Mail".

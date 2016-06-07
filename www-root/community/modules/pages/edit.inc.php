@@ -998,6 +998,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</colgroup>
 									<tfoot>
 										<tr>
+											<td colspan="1" style="padding-top: 15px; text-align: left">
+												<a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>" class="btn button-left"><?php echo $translate->_("global_button_cancel"); ?></a>
+											</td>
 											<td colspan="2" style="padding-top: 15px; text-align: right">
 		                                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
 											</td>

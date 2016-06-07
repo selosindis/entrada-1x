@@ -107,12 +107,12 @@ class Models_Syllabus {
 		
 		return $syllabus;
     }
-	
+
 	public static function fetchRowByCourseID($course_id, $active = NULL) {
 		global $db;
-		
+
 		$syllabus = new self();
-		
+
 		$query = "	SELECT a.*, b.`course_name`, b.`course_code`, c.`start_date` AS `syllabus_start`, c.`finish_date` AS `syllabus_finish`
 					FROM `course_syllabi` AS a
 					JOIN `courses` AS b
@@ -124,11 +124,19 @@ class Models_Syllabus {
 					AND UNIX_TIMESTAMP(NOW()) BETWEEN c.`start_date` AND c.`finish_date` ".
 					(!is_null($active) ? "AND a.`active` = ?" : "")."
                     ORDER BY c.`start_date` DESC";
-		$course_details = $db->GetRow($query, array($course_id, $active));
+
+		$constraints = array($course_id);
+
+		if (!is_null($active)) {
+			$constraints[] = $active;
+		}
+
+		$course_details = $db->GetRow($query, $constraints);
+
 		if ($course_details) {
 			$syllabus->fromArray($course_details);
 		}
-		
+
 		return $syllabus;
 	}
 

@@ -83,7 +83,12 @@ if ($ASSIGNMENT_ID) {
                             if ($version_result) {
                                 $file_path = FILE_STORAGE_PATH."/A".$version_result['afversion_id'];
                                 if (file_exists($file_path) && is_readable($file_path)) {
-                                    $zip->addFile($file_path, $zip_prefix."/".$version_result['file_filename']);
+                                    $extension = pathinfo($version_result['file_filename'], PATHINFO_EXTENSION);
+                                    if ($assignment["anonymous_marking"]) {
+                                        $zip->addFile($file_path, $zip_prefix . "/" . $version_result['afversion_id'] . "." . $extension);
+                                    } else {
+                                        $zip->addFile($file_path, $zip_prefix . "/" . $version_result['file_filename']);
+                                    }
                                 }
                             }
                         }

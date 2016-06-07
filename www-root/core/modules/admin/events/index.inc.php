@@ -34,9 +34,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>\n";
-	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/events_exporter.js\"></script>\n";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_timestamp.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/events_exporter.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 
 	$default_csv_headings = array(
 			"event_id" => "Original Event",
@@ -126,11 +126,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"],
 			0,
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"],
-			true,
-			(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
-			$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"],
-            false,
-            false);
+			false, //pagination
+			(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1), //current page
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"], //results per page, not necessary
+            false, //community id
+            false); //respect time release
+    
+    //Filter events by whether the user has update rights
+    $learning_events["events"] = array_filter(
+        $learning_events["events"],
+        function($item) use ($ENTRADA_ACL) {
+            return $ENTRADA_ACL->amIAllowed(new EventResource($item["event_id"], $item["course_id"], $item["organisation_id"]), "update") ||
+                   $ENTRADA_ACL->amIAllowed(new EventContentResource($item["event_id"], $item["course_id"], $item["organisation_id"]), "update");
+        }
+    );
+    //Fix total_rows and total_pages for pagination and get the slice of events for this page
+    $learning_events["total_rows"] = count($learning_events["events"]);
+    $learning_events["events"] = array_slice($learning_events["events"], ((isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1) - 1) * $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
+    $learning_events["total_pages"] = ceil($learning_events["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
 
 	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
 
@@ -203,7 +216,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					<td class="attachment">&nbsp;</td>
 				</tr>
 			</thead>
-			<?php if ($ENTRADA_ACL->amIAllowed("event", "delete", false) or $ENTRADA_ACL->amIAllowed("event", "create", false)) : ?>
 			<tfoot>
 				<tr>
                     <td>&nbsp;</td>
@@ -223,7 +235,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					</td>
 					<td style="padding-top: 10px; text-align: right" colspan="2">
 						<?php
-						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
+						if ($ENTRADA_ACL->amIAllowed("eventcontent", "update", false)) {
 							?>
 							<input type="button" class="btn" id="export-results-button" value="Export Results" />
 							<?php
@@ -232,7 +244,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					</td>
 				</tr>
 			</tfoot>
-			<?php endif; ?>
 			<tbody>
 
 			<?php
@@ -262,7 +273,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 if ($url) {
                     echo "  <div class=\"btn-group\">\n";
                     echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">\n";
-                    echo "          <i class=\"icon-pencil\"></i>\n";
+                    echo "          <i class=\"icon-cog\"></i>\n";
                     echo "      </button>";
                     echo "      <ul class=\"dropdown-menu toggle-left\">\n";
                 	if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update')) {
@@ -304,7 +315,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				case "year" :
 					echo "that take place during <strong>".date("Y", $learning_events["duration_start"])."</strong>";
 				break;
-				default :
+				//default :
 				case "week" :
 					echo "from <strong>".date(DEFAULT_DATE_FORMAT, $learning_events["duration_start"])."</strong> to <strong>".date(DEFAULT_DATE_FORMAT, $learning_events["duration_end"])."</strong>";
 				break;

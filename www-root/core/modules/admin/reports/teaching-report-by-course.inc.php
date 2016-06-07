@@ -349,14 +349,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					echo "	<td colspan=\"2\">&nbsp;</td>\n";
 					echo "</tr>\n";
 					echo "<tr>\n";
-					echo "	<td colspan=\"2\"><h2>Course Objectives</h2></td>\n";
+					echo "	<td colspan=\"2\"><h2>" . $translate->_("Course Objectives") . "</h2></td>\n";
 					echo "</tr>\n";
 					echo "<tr>\n";
 					echo "	<td colspan=\"2\" style=\"text-align: justify\">\n";
 								if(clean_input($result["course_objectives"], array("notags", "nows")) != "") {
 									echo trim(strip_selected_tags($result["course_objectives"], array("font")))."\n";
 								} else {
-									echo "No course objectives have been provided.";
+									echo "No " . $translate->_("Course Objectives") . " have been provided.";
 								}
 					echo "	</td>\n";
 					echo "</tr>\n";
@@ -364,7 +364,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				echo "</table>\n";
 			}
 			?>
-				<h2>Course Event Types</h2>
+				<h2>Course <?php echo $translate->_("Event Types"); ?></h2>
 				<table style="width: 100%" cellspacing="2" cellpadding="2" border="0">
 				<colgroup>
 					<col style="width: 33%" />

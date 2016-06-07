@@ -612,7 +612,7 @@ if ($RECORD_ID) {
 												<?php
 												if ($page_counter > 1) { 
 													?>
-													<div class="row-fluid pagination pagination-mini pagination-right pagination-top">
+													<div class="row-fluid pagination pagination-right pagination-top">
 														<ul>
 															<li><a href="#" class="prev">&laquo;</a></li>
 															<?php 
@@ -635,7 +635,7 @@ if ($RECORD_ID) {
 												<?php
 												if ($page_counter > 1) { 
 													?>
-													<div class="row-fluid pagination pagination-mini pagination-right pagination-bottom">
+													<div class="row-fluid pagination pagination-right pagination-bottom">
 														<ul>
 															<li><a href="#" class="prev">&laquo;</a></li>
 															<?php 
@@ -699,6 +699,8 @@ if ($RECORD_ID) {
 													}
 													if (active_page >= total_pages) {
 														jQuery('#submit-button').show();
+													} else {
+														jQuery('#submit-button').hide();
 													}
 													return false;
 												});

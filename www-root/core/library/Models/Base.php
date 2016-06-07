@@ -1,7 +1,19 @@
 <?php
 /**
- *
  * Entrada [ http://www.entrada-project.org ]
+ *
+ * Entrada is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Entrada is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Base Model class that provides common methods and information to all Models.
  *
@@ -9,20 +21,18 @@
  * @author Unit: School of Medicine
  * @author Developer: Don Zuiker <don.zuiker@queensu.ca>
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
- *
  */
-class Models_Base {
-    protected $database_name       = DATABASE_NAME;
 
-    // Child models are required to overload these variables.
-    protected $table_name          = null;
-    protected $primary_key         = null;
+class Models_Base {
+    protected $database_name = DATABASE_NAME;
+
+    protected $table_name = null;
+    protected $primary_key = null;
     protected $default_sort_column = null;
 
     public function __construct($arr = NULL) {
-
         if (is_array($arr)) {
-            if (!isset($this->primary_key)) {
+            if (!isset($this->primary_key) && isset($arr[0])) {
                 $this->primary_key = $arr[0];
             }
 
@@ -139,6 +149,7 @@ class Models_Base {
                 }
             }
         }
+
         return $arr;
     }
 
@@ -150,6 +161,7 @@ class Models_Base {
         foreach ($arr as $class_var_name => $value) {
             $this->$class_var_name = $value;
         }
+
         return $this;
     }
 
@@ -164,15 +176,18 @@ class Models_Base {
      */
     protected function fetchAll($constraints, $default_method = "=", $default_mode = "AND", $sort_column = "use_default", $sort_order = "ASC") {
         global $db;
+
         $output = array();
         if (is_array($constraints) && !empty($constraints)) {
             $where = array();
             $replacements = "";
             $class_vars = array_keys(get_class_vars(get_called_class()));
+
             foreach ($constraints as $index => $constraint) {
                 $key = false;
                 $value = false;
                 $replacements_string = "";
+
                 if (is_array($constraint)) {
                     if (in_array($constraint["key"], $class_vars)) {
                         $key = clean_input($constraint["key"], array("trim", "striptags"));
@@ -180,9 +195,10 @@ class Models_Base {
                         $key = $constraint["key"];
                         if (is_array($key)) {
                             if (strtoupper($key["function"]) == "CONCAT") {
-                                if ($key["keys"] && is_array($key["keys"]) && count($key["keys"] > 1)) {
+                                if ($key["keys"] && is_array($key["keys"]) && (count($key["keys"]) > 1)) {
                                     $fn_key = function($keys) {
                                         $return = array();
+
                                         foreach($keys as $k) {
                                             if ($k != " ") {
                                                 $return[] = $k;
@@ -190,18 +206,23 @@ class Models_Base {
                                                 $return[] = "' '";
                                             }
                                         }
+
                                         return $return;
                                     };
+
                                     $key_str = implode(",", $fn_key($key["keys"]));
                                     $key_str = "CONCAT(" . $key_str . ")";
                                 }
+
                                 $key = $key_str;
                             }
 
                         }
                     }
+
                     $mode = (isset($constraint["mode"]) && in_array(strtoupper($constraint["mode"]), array("OR", "AND")) ? $constraint["mode"] : $default_mode);
                     $method = (isset($constraint["method"]) && in_array(strtoupper($constraint["method"]), array("=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS", "IN")) ? $constraint["method"] : $default_method);
+
                     if (strtoupper($method) == "BETWEEN" && is_array($constraint["value"]) && @count($constraint["value"]) == 2) {
                         $value = array(
                             clean_input($constraint["value"][0], array("trim", "striptags")),
@@ -227,8 +248,8 @@ class Models_Base {
                     $value = clean_input($constraint, array("trim", "striptags"));
                 }
                 if (isset($key) && $key && (isset($value) || is_null($value)) && ($value || $value === 0 ||  $value === "0" || is_null($value))) {
-                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode)).
-                        " `".$key."` ".(isset($method) && $method ? $method : $default_method).
+                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode)) .
+                        " `".$key."` ".(isset($method) && $method ? $method : $default_method) .
                         ($method == "BETWEEN" ? " ? AND ?" : ($method == "IN" ? " (".$replacements_string.")" : " ?"));
                     if (is_array($value)) {
                         foreach ($value as $v) {
@@ -239,25 +260,30 @@ class Models_Base {
                     }
                 }
             }
+
             if (!empty($where)) {
                 if (!in_array($sort_column, $class_vars)) {
                     $sort_column = $this->default_sort_column;
                 }
+
                 if ($sort_order == "DESC") {
                     $sort_order = "DESC";
                 } else {
                     $sort_order = "ASC";
                 }
-                $query = "SELECT * FROM `".$this->database_name."`.`".$this->table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order;
+
+                $query = "SELECT * FROM `" . $this->database_name . "`.`" . $this->table_name . "` " . $replacements . " ORDER BY `" . $sort_column . "` " . $sort_order;
                 $results = $db->GetAll($query, $where);
                 if ($results) {
                     foreach ($results as $result) {
                         $class = get_called_class();
+
                         $output[] = new $class($result);
                     }
                 }
             }
         }
+
         return $output;
     }
 
@@ -277,20 +303,20 @@ class Models_Base {
        $constraints = array(
            array(
                "key"    => "firstname",
-               "value"  => "%John%",
                "method" => "LIKE"
+               "value"  => "%John%",
            ),
            array(
                "mode"   => "AND",
                "key"    => "lastname",
-               "value"  => "%Mc%",
                "method" => "LIKE"
+               "value"  => "%Mc%",
            ),
            array(
                "mode"   => "OR",
                "key"    => "id",
-               "value"  => "1",
                "method" => "="
+               "value"  => "1",
            )
        );
 
@@ -318,14 +344,17 @@ class Models_Base {
             $where = array();
             $replacements = "";
             $class_vars = array_keys(get_class_vars(get_called_class()));
+
             foreach ($constraints as $index => $constraint) {
                 $key = false;
                 $value = false;
                 $replacements_string = "";
+
                 if (is_array($constraint) && in_array($constraint["key"], $class_vars)) {
                     $mode = (isset($constraint["mode"]) && in_array(strtoupper($constraint["mode"]), array("OR", "AND")) ? $constraint["mode"] : $default_mode);
                     $key = clean_input($constraint["key"], array("trim", "striptags"));
                     $method = (isset($constraint["method"]) && in_array(strtoupper($constraint["method"]), array("=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS", "IN")) ? $constraint["method"] : $default_method);
+
                     if (strtoupper($method) == "BETWEEN" && is_array($constraint["value"]) && @count($constraint["value"]) == 2) {
                         $value = clean_input($constraint["value"][0], array("trim", "striptags"))." AND ".clean_input($constraint["value"][1], array("trim", "striptags"));
                     } elseif (strtoupper($method) == "IN" && is_array($constraint["value"]) && @count($constraint["value"]) >= 1) {
@@ -360,7 +389,7 @@ class Models_Base {
             }
 
             if (!empty($where)) {
-                $query = "SELECT * FROM `".$this->database_name."`.`".$this->table_name."` ".$replacements;
+                $query = "SELECT * FROM `" . $this->database_name . "`.`" . $this->table_name . "` " . $replacements;
                 $result = $db->GetRow($query, $where);
                 if ($result) {
                     $class = get_called_class();
@@ -368,26 +397,32 @@ class Models_Base {
                 }
             }
         }
+
         return $self;
     }
 
-    public function insert () {
+    public function insert() {
         global $db;
+
         if ($db->AutoExecute("`".$this->database_name."`.`". $this->table_name ."`", $this->toArray(), "INSERT")) {
             $this->{$this->primary_key} = $db->Insert_ID();
+
             return $this;
         } else {
             application_log("error", "Error inserting a ".get_called_class().". DB Said: " . $db->ErrorMsg());
+
             return false;
         }
     }
 
-    public function update () {
+    public function update() {
         global $db;
+
         if ($db->AutoExecute("`".$this->database_name."`.`". $this->table_name ."`", $this->toArray(), "UPDATE", "`". $this->primary_key ."` = ".$db->qstr($this->getID()))) {
             return true;
         } else {
             application_log("error", "Error updating  ".get_called_class()." id[" . $this->getID() . "]. DB Said: " . $db->ErrorMsg());
+
             return false;
         }
     }

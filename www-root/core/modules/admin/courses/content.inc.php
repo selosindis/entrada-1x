@@ -515,6 +515,30 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</div>
 						</div>
 
+						<div class="control-group">
+							<label for="associated_faculty" class="form-nrequired control-label"><?php echo $translate->_("Associated Faculty"); ?></label>
+							<div class="controls">
+								<?php
+								$query		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+													FROM `course_contacts` AS a
+													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+													ON b.`id` = a.`proxy_id`
+													WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
+													AND a.`contact_type` = 'associated_faculty'
+													AND b.`id` IS NOT NULL
+													ORDER BY a.`contact_order` ASC";
+								$results	= $db->GetAll($query);
+								if($results) {
+									foreach($results as $key => $sresult) {
+										echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
+									}
+								} else {
+									echo "To Be Announced";
+								}
+								?>
+							</div>
+						</div>
+
 						<?php
 						if (isset($course_details["pcoord_id"]) && (int)$course_details["pcoord_id"]) { ?>
 						<div class="control-group">
@@ -579,7 +603,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				if ($result) {
 					?>
 				<a name="course-objectives-section"></a>
-				<h2 title="Course Objectives Section"><?php echo $translate->_("course"); ?> Objectives</h2>
+				<h2 title="<?php echo $translate->_("Course Objectives Section"); ?>"><?php echo $translate->_("course"); ?> <?php echo $translate->_("Objectives"); ?></h2>
 				<div id="course-objectives-section">
 					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
 					<input type="hidden" name="type" value="objectives" />
@@ -615,7 +639,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					} ?>
                         <div class="clear_both"></div>
 						<div id="objectives_list">
-							<h3>Curriculum Objectives</h3>
+							<h3><?php echo $translate->_("Curriculum Objectives"); ?></h3>
 							<strong>The learner will be able to:</strong>
 							<?php echo event_objectives_in_list($course_objectives, $top_level_id, $top_level_id, true, false, 1, true, true, "primary", false, $COURSE_ID); ?>
 						</div>
@@ -950,7 +974,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" onclick=\"$('course-details-section').scrollTo(); return false;\" title=\"Course Details\">" . $translate->_("course") . " Details</a></li>\n";
-				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" onclick=\"$('course-objectives-section').scrollTo(); return false;\" title=\"Course Objectives\">" . $translate->_("course") . " Objectives</a></li>\n";
+				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" onclick=\"$('course-objectives-section').scrollTo(); return false;\" title=\"" . $translate->_("Course Objectives") . "\">" . $translate->_("course") . " " . $translate->_("Objectives") . "</a></li>\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" onclick=\"$('course-resources-section').scrollTo(); return false;\" title=\"Course Resources\">" . $translate->_("course") . " Resources</a></li>\n";
 				$sidebar_html .= "</ul>\n";
 
@@ -960,7 +984,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				 * Sidebar item that will provide link to reports.
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
-				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/courses?section=course-eventtype-report&amp;id=".$COURSE_ID."\" title=\"Event Types Report\">Event Types Report</a></li>\n";
+				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/courses?section=course-eventtype-report&amp;id=".$COURSE_ID."\" title=\"" . $translate->_("Event Types") . " Report\">" . $translate->_("Event Types") . " Report</a></li>\n";
 				$sidebar_html .= "</ul>\n";
 
 				new_sidebar_item("Reports", $sidebar_html, "reports", "open", "1.9");

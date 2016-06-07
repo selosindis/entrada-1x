@@ -207,7 +207,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_MEDBIQINSTRUCTIONAL")) {
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label form-nrequired">Mapped Event Types:</label>
+                    <label class="control-label form-nrequired">Mapped <?php echo $translate->_("Learning Event Types"); ?>:</label>
                     <div class="controls">
                     <?php
                     $event_types = Models_EventType::fetchAllByOrganisationID($ORGANISATION_ID);

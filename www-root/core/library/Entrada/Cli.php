@@ -20,18 +20,20 @@
  * @author Organization: Queen's University
  * @author Unit: Health Sciences, Education Technology Unit
  * @author Developer: Matt Simpson <simpson@queensu.ca>
- * @copyright Copyright 2015 Queen's University. All Rights Reserved.
+ * @copyright Copyright 2016 Queen's University. All Rights Reserved.
  *
  */
 class Entrada_Cli {
 
-    const CLI_VERSION = "1.0";
+    const CLI_VERSION = "1.0.1";
 
     protected $commands = array(
         "migrate" => "Allows you to manage database migrations.",
         "model" => "Create blank models based on database information.",
         "help" => "The Entrada CLI help menu.",
     );
+
+    protected $quiet = false;
 
     public function gogogo() {
         /*
@@ -77,6 +79,14 @@ class Entrada_Cli {
             $opts->parse();
 
             $requested_actions = $opts->getOptions();
+
+            if ($requested_actions && ($key = array_search("quiet", $requested_actions)) !== false) {
+                $this->quiet = true;
+
+                unset($requested_actions[$key]);
+
+                $requested_actions = array_values($requested_actions);
+            }
 
             if ($requested_actions && isset($requested_actions[0])) {
                 $action = "play" . ucwords($requested_actions[0]);

@@ -29,6 +29,7 @@
     dirname(__FILE__) . "/core",
     dirname(__FILE__) . "/core/includes",
     dirname(__FILE__) . "/core/library",
+    dirname(__FILE__) . "/core/library/vendor",
     get_include_path(),
 )));
 
@@ -42,10 +43,12 @@ $ext	= false;
 
 if((isset($_GET["ext"])) && (trim($_GET["ext"]) != "")) {
 	$ext = clean_input($_GET["ext"], array("lower", "alphanumeric"));
+    $hidden = clean_input($_GET["hidden"], array("lower", "alphanumeric"));
 }
 
 if($ext) {
 	$query	= "SELECT `image` FROM `filetypes` WHERE `ext` = ".$db->qstr($ext);
+    ($hidden ? $query.= "AND `hidden` = " . $hidden : "");
 	$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
 	if($result) {
 		header("Cache-Control: max-age=2592000\n");

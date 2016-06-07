@@ -64,6 +64,16 @@ if (!defined("PARENT_INCLUDED")) {
 		$transverse = false;
 	}
 
+    $query		= "	SELECT a.*, b.`organisation_id`
+                    FROM `events` AS a
+                    LEFT JOIN `courses` AS b
+                    ON b.`course_id` = a.`course_id`
+                    WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
+    $event_info	= $db->GetRow($query);
+    if ($event_info) {
+        $COURSE_ID = $event_info["course_id"];
+    }
+
     $event = Models_Event::get($EVENT_ID);
 
 	/**
@@ -184,7 +194,7 @@ if (!defined("PARENT_INCLUDED")) {
 					add_statistic($MODULE, "view", "event_id", $EVENT_ID);
 
 					$event_contacts = events_fetch_event_contacts($EVENT_ID);
-                    
+
                     $event_audience = $event->getEventAudience();
 
 					$associated_cohorts = array("all");
@@ -289,7 +299,7 @@ if (!defined("PARENT_INCLUDED")) {
                                     <?php
                                     if (isset($transversal_ids["prev"])) {
                                         $back_click = ENTRADA_RELATIVE . "/events?" . replace_query(array((isset($_GET["drid"]) ? "drid" : "rid") => $transversal_ids["prev"]));
-    
+
                                         echo "<a class=\"btn\" id=\"back_event\" href=\"".$back_click."\" title=\"Previous Event\"><i class=\"icon-chevron-left\"></i></a>";
                                     } else {
                                         echo "<a class=\"btn disabled\" id=\"back_event\" href=\"#\" title=\"Previous Event\"><i class=\"icon-chevron-left\"></i></a>";
@@ -299,7 +309,7 @@ if (!defined("PARENT_INCLUDED")) {
                                     <?php
                                     if (isset($transversal_ids["next"])) {
                                         $next_click = ENTRADA_RELATIVE . "/events?" . replace_query(array((isset($_GET["drid"]) ? "drid" : "rid") => $transversal_ids["next"]));
-    
+
                                         echo "<a class=\"btn\" id=\"next_event\" href=\"".$next_click."\" title=\"Next Event\"><i class=\"icon-chevron-right\"></i></a>";
                                     } else {
                                         echo "<a class=\"btn disabled\" id=\"next_event\" href=\"#\" title=\"Next Event\"><i class=\"icon-chevron-right\"></i></a>";
@@ -429,7 +439,7 @@ if (!defined("PARENT_INCLUDED")) {
                                                 <td colspan="2"><hr></td>
                                             </tr>
                                             <tr>
-                                                <th>Teacher<?php echo (($count != 1) ? "s" : ""); ?></th>
+                                                <th><?php echo ($count != 1) ? $translate->_("Teachers") : $translate->_("Teacher"); ?></th>
                                                 <td>
                                                     <?php
                                                     foreach ($event_contacts["teacher"] as $contact) {
@@ -496,7 +506,10 @@ if (!defined("PARENT_INCLUDED")) {
                                     <tr class="spacer">
                                         <td colspan="2"><hr></td>
                                     </tr>
-                                    <?php if (($ENTRADA_USER->getActiveGroup() == "student" && $event->getAudienceVisible()) || $ENTRADA_USER->getActiveGroup() != "student") { ?>
+                                    <?php
+
+
+                                    if (($ENTRADA_USER->getActiveGroup() == "student" && $event->getAudienceVisible()) || $ENTRADA_USER->getActiveGroup() != "student") { ?>
                                     <tr>
                                         <th>Audience</th>
                                         <td>
@@ -504,6 +517,11 @@ if (!defined("PARENT_INCLUDED")) {
                                             if ($event_audience) {
                                                 foreach ($event_audience as $audience) {
                                                     $a = $audience->getAudience();
+                                                    if ($audience->getCustomTime() && $audience->getCustomTime() != 0) {
+                                                        $custom_time_html = '<span class="time">' . date("g:i a", $audience->getCustomTimeStart()) . ' - ' . date("g:i a", $audience->getCustomTimeEnd()) . '</span>';
+                                                    } else {
+                                                        $custom_time_html = "";
+                                                    }
 
                                                     if ($a && method_exists($a, "getAudienceMembers") && is_array($a->getAudienceMembers())) {
                                                         $link = false;
@@ -537,6 +555,11 @@ if (!defined("PARENT_INCLUDED")) {
                                                                 <?php
                                                             } else {
                                                                 echo $a->getAudienceName();
+                                                            }
+
+                                                            if ($custom_time_html != "") {
+                                                                echo "<br />\n";
+                                                                echo $custom_time_html . "\n";
                                                             }
 
                                                             if ($a && $link && count($a->getAudienceMembers() > 0)) {
@@ -573,6 +596,10 @@ if (!defined("PARENT_INCLUDED")) {
                                                         }
                                                     } elseif (method_exists($a, "getAudienceName")) {
                                                         echo $a->getAudienceName();
+                                                        if ($custom_time_html != "") {
+                                                            echo "<br />\n";
+                                                            echo $custom_time_html . "\n";
+                                                        }
                                                     } else {
                                                         echo "Not Available";
                                                     }
@@ -632,9 +659,9 @@ if (!defined("PARENT_INCLUDED")) {
 
                     <div>
                         <?php
-                        $query = "  SELECT ek.`keyword_id`, d.`descriptor_name` 
+                        $query = "  SELECT ek.`keyword_id`, d.`descriptor_name`
                                     FROM `event_keywords` AS ek
-                                    JOIN `mesh_descriptors` AS d 
+                                    JOIN `mesh_descriptors` AS d
                                     ON ek.`keyword_id` = d.`descriptor_ui`
                                     AND ek.`event_id` = " . $db->qstr($EVENT_ID) . "
                                     ORDER BY `descriptor_name`";
@@ -714,12 +741,12 @@ if (!defined("PARENT_INCLUDED")) {
                                 }
                             }
                         }
-						if (isset($event_info["objectives_release_date"]) && time() >= $event_info["objectives_release_date"]) {
+						if (isset($event_info["objectives_release_date"]) && (($event_info["objectives_release_date"] == 0) || (time() >= $event_info["objectives_release_date"]))) {
 							if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
 								$include_objectives = true;
 
 								echo "<a name=\"event-objectives-section\"></a>\n";
-								echo "<h2 title=\"Event Objectives Section\">Event Objectives</h2>\n";
+								echo "<h2 title=\"" . $translate->_("Event Objectives Section") . "\">" . $translate->_("Event Objectives") . "</h2>\n";
 								echo "<div id=\"event-objectives-section\">\n";
 
 								if ($show_event_objectives) {
@@ -731,7 +758,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 								if ($show_clinical_presentations) { ?>
 									<div class="section-holder mapped">
-                                        <h2 title="Clinical Presentation List" class="list-heading">Clinical Presentations</h2>
+                                        <h2 title="<?php echo $translate->_("Clinical Presentation List"); ?>" class="list-heading"><?php echo $translate->_("Clinical Presentations"); ?></h2>
                                         <ul class="objective-list mapped-list">
                                         <?php
                                         foreach ($clinical_presentations as $key => $result) {
@@ -739,7 +766,7 @@ if (!defined("PARENT_INCLUDED")) {
                                             ?>
                                             <li>
                                                 <strong><?php echo $result["objective_name"]; ?></strong>
-                                                <div class="objective-description">From the Objective Set: <strong><?php echo $set->getName(); ?></strong></div>
+                                                <div class="objective-description">From the <?php echo $translate->_("Objective Set"); ?>: <strong><?php echo $set->getName(); ?></strong></div>
                                             </li>
                                             <?php
                                         }
@@ -768,13 +795,16 @@ if (!defined("PARENT_INCLUDED")) {
 									</script>
 									<?php
 									echo "<div class=\"section-holder\">\n";
-									echo "	<h3>Curriculum Objectives</h3>\n";
+									echo "	<h3>" . $translate->_("Curriculum Objectives") . "</h3>\n";
 									echo "	<strong>The learner will be able to:</strong>";
 									echo	course_objectives_in_list($curriculum_objectives, $top_level_id,$top_level_id, false, false, 1, true)."\n";
 									echo "</div>\n";
 								}
 							}
-
+                            $c_objectives = array();
+                            foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
+                                $c_objectives[] = $objective_id;
+                            }
 							$COURSE_ID = $event_info["course_id"];
                             $query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`,
                                     b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`,
@@ -793,34 +823,48 @@ if (!defined("PARENT_INCLUDED")) {
                                     ORDER BY a.`objective_id` ASC";
                             $mapped_objectives = $db->GetAll($query);
 
-                            $explicit_event_objectives = false;
-                            if ($mapped_objectives) {
-                                foreach ($mapped_objectives as $objective) {
-                                    //if its mapped to the event, but not the course, then it belongs in the event objective list
-                                    if ($objective["mapped"] && !$objective["mapped_to_course"]) {
-                                        $objective_name = $translate->_("events_filter_controls");
-                                        $clinical_presentations_name = $objective_name["cp"]["global_lu_objectives_name"];
-                                        
-                                        $objective_set = Models_Objective::fetchObjectiveSet($objective["objective_id"]);
-                                        
-                                        if ($objective_set->getName() != $clinical_presentations_name) {
-                                            if (!event_objective_parent_mapped_course($objective["objective_id"], $EVENT_ID, true)) {
-                                                $explicit_event_objectives[] = $objective;
-                                            }
-                                        } else {
-                                            if (Models_Objective::fetchExplicitEventObjective($objective["objective_id"], $EVENT_ID)) {
-                                                $explicit_event_objectives[] = $objective;
+                                    $explicit_event_objectives = false;
+                                    if ($mapped_objectives) {
+                                        foreach ($mapped_objectives as $objective) {
+                                            //if its mapped to the event, but not the course, then it belongs in the event objective list
+                                            if ($objective["mapped"] && !$objective["mapped_to_course"]) {
+                                                $objective_name = $translate->_("events_filter_controls");
+                                                $clinical_presentations_name = $objective_name["cp"]["global_lu_objectives_name"];
+                                                if (!event_objective_parent_mapped_course($objective["objective_id"],$EVENT_ID)) {
+                                                    $query = "SELECT b.`objective_id`, b.`objective_name`
+                                                        FROM `event_objectives` AS a
+                                                        LEFT JOIN `global_lu_objectives` AS b
+                                                        ON b.`objective_id` = a.`objective_id`
+                                                        JOIN `objective_organisation` AS c
+                                                        ON b.`objective_id` = c.`objective_id`
+                                                        AND c.`organisation_id` = ".$db->qstr($event->getOrganisationID())."
+                                                        WHERE a.`objective_type` = 'event'
+                                                        AND b.`objective_active` = '1'
+                                                        AND a.`event_id` = ".$db->qstr($EVENT_ID)."
+                                                        AND a.`objective_id` =".$db->qstr($objective["objective_id"])."
+                                                        ORDER BY b.`objective_name` ASC;";
+                                                    $results = $db->GetRow($query);
+                                                    if (!$results) {
+                                                        if (!in_array($objective["objective_id"], $c_objectives)) {
+                                                            $explicit_event_objectives[] = $objective;
+                                                        } else{
+															$query = "SELECT * `course_objectives` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `objective_id` = ".$db->qstr($objective["objective_id"])."";
+															$results = $db->getRow($query);
+															if($result) {
+																$explicit_event_objectives[] = $objective;
+															}
+														}
+                                                    }
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            }
                             ?>
                             <div class="section-holder">
                                 <div id="mapped_objectives" class="mapped">
                                     <div id="event-list-wrapper" <?php echo ($explicit_event_objectives)?'':' style="display:none;"';?>>
                                         <a name="event-objective-list"></a>
-                                        <h2 id="event-toggle"  title="Event Objective List" class="list-heading">Event Specific Objectives</h2>
+                                        <h2 id="event-toggle"  title="<?php echo $translate->_("Event Objective List"); ?>" class="list-heading"><?php echo $translate->_("Event Specific Objectives"); ?></h2>
                                         <div id="event-objective-list">
                                             <ul class="objective-list mapped-list" id="mapped_event_objectives" data-importance="event">
                                                 <?php
@@ -839,7 +883,7 @@ if (!defined("PARENT_INCLUDED")) {
                                                                 <?php
                                                                 $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
                                                                 if ($set) {
-                                                                    echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                                    echo "From the " . $translate->_("Objective Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
                                                                 }
 
                                                                 echo $objective["objective_description"];
@@ -905,7 +949,7 @@ if (!defined("PARENT_INCLUDED")) {
                         }
                         ?>
 					</div>
-                    <?php 
+                    <?php
                     $event_resource_entites = Models_Event_Resource_Entity::fetchAllByEventID($EVENT_ID);
                     if ($event_resource_entites) {
                         echo "<a name=\"event-resources-section\"></a>";
@@ -1453,7 +1497,7 @@ if (!defined("PARENT_INCLUDED")) {
                     <?php
                     }
                     ?>
-                    
+
                     <div>
                         <?php
                         echo "<a name=\"event-comments-section\"></a>\n";
@@ -1560,13 +1604,13 @@ if (!defined("PARENT_INCLUDED")) {
 					if ($include_details) {
 						$sidebar_html .= "	<li class=\"link\"><a href=\"#event-details-section\" onclick=\"$('event-details-section').scrollTo(); return false;\" title=\"Event Details\">Event Details</a></li>\n";
 					}
-                    
+
                     if (isset($include_keywords) && $include_keywords) {
                         $sidebar_html .= "  <li class=\"link\"><a href=\"#event-keywords-section\" onclick=\"$('event-keywords-section').scrollTo(); return false;\" title=\"Event Keywords\">Event Keywords</a></li>\n";
                     }
 
 					if ($include_objectives) {
-						$sidebar_html .= "	<li class=\"link\"><a href=\"#event-objectives-section\" onclick=\"$('event-objectives-section').scrollTo(); return false;\" title=\"Event Objectives\">Event Objectives</a></li>\n";
+						$sidebar_html .= "	<li class=\"link\"><a href=\"#event-objectives-section\" onclick=\"$('event-objectives-section').scrollTo(); return false;\" title=\"" . $translate->_("Event Objectives") . "\">" . $translate->_("Event Objectives") . "</a></li>\n";
 					}
 
 					if ($include_resources) {

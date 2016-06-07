@@ -52,48 +52,64 @@ if ($PROCEED_TO && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_
 }
 ?>
 <div class="row-fluid">
-	<div class="span6">
-		<h2><?php echo APPLICATION_NAME; ?> Login</h2>
-		<p>Please enter your <?php echo APPLICATION_NAME; ?> username and password to log in.</p>
+    <div class="span6">
+        <?php
+        if (defined("AUTH_SSO_ENABLED") && (AUTH_SSO_ENABLED == true) && !$SSO_ERROR) {
+        ?>
+        <a href="<?php echo ENTRADA_URL; ?>/<?php echo "?action=ssologin".(($PROCEED_TO) ? "&url=".rawurlencode($PROCEED_TO) : ""); ?>">
+            <span>
+                <h2><?php echo $translate->_("SSO Login");?></h2>
+            </span>
+        </a>
+        <?php
+        }
+        if (defined("AUTH_METHOD") && !(AUTH_METHOD == "sso")) {
+        ?>
+        <h2><?php echo APPLICATION_NAME; ?> Login</h2>
+        <p>Please enter your <?php echo APPLICATION_NAME; ?> username and password to log in.</p>
 
-		<form class="form-horizontal login-form" action="<?php echo ENTRADA_URL; ?>/<?php echo (($PROCEED_TO) ? "?url=".rawurlencode($PROCEED_TO) : ""); ?>" method="post">
-			<input type="hidden" name="action" value="login" />
-			<div class="control-group">
-				<label class="control-label" for="username">Username</label>
-				<div class="controls">
-					<input type="text" id="username" name="username" value="<?php echo ((isset($_REQUEST["username"])) ? html_encode(trim($_REQUEST["username"])) : ""); ?>"/>
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label" for="password">Password</label>
-				<div class="controls">
-					<input type="password" id="password" name="password" value=""/>
-				</div>
-			</div>
-			<div class="form-actions">
-				<input type="submit" class="btn btn-primary" value="Login">
+        <form class="form-horizontal login-form" action="<?php echo ENTRADA_URL; ?>/<?php echo(($PROCEED_TO) ? "?url=" . rawurlencode($PROCEED_TO) : ""); ?>" method="post">
+            <input type="hidden" name="action" value="login"/>
+            <input type="hidden" name="ssobypass" value="1"/>
+            <div class="control-group">
+                <label class="control-label" for="username">Username</label>
+                <div class="controls">
+                    <input type="text" id="username" name="username" value="<?php echo((isset($_REQUEST["username"])) ? html_encode(trim($_REQUEST["username"])) : ""); ?>"/>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="password">Password</label>
+                <div class="controls">
+                    <input type="password" id="password" name="password" value=""/>
+                </div>
+            </div>
+            <div class="form-actions">
+                <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("login"); ?>">
                 <strong style="margin-left: 5px">or</strong> <a href="<?php echo ENTRADA_RELATIVE; ?>/password_reset">Forgot your password?</a>
-			</div>
-		</form>
-	</div>
-	<?php
+            </div>
+        </form>
+        <?php
+        }
+        ?>
+    </div>
+    <?php
     $public_notices = Models_Notice::fetchPublicNotices();
-	if ($public_notices) {
-		?>
-		<div class="span6">
-			<h2>Public Notices</h2>
-			<ul class="public-notices">
-				<?php
-				foreach ($public_notices as $notice) {
-					echo "<li>";
-					echo "	<span class=\"label label-info\">".date(DEFAULT_DATE_FORMAT, $notice["updated_date"])."</span>\n";
-					echo "	<p>".trim(strip_selected_tags(clean_input($notice["notice_summary"], "html"), "p"))."</p>";
-					echo "</li>";
-				}
-				?>
-			</ul>
-		</div>
-		<?php
-	}
-	?>
+    if ($public_notices) {
+    ?>
+    <div class="span6">
+        <h2>Public Notices</h2>
+        <ul class="public-notices">
+            <?php
+            foreach ($public_notices as $notice) {
+                echo "<li>";
+                echo "	<span class=\"label label-info\">".date(DEFAULT_DATE_FORMAT, $notice["updated_date"])."</span>\n";
+                echo "	<p>".trim(strip_selected_tags(clean_input($notice["notice_summary"], "html"), "p"))."</p>";
+                echo "</li>";
+            }
+            ?>
+        </ul>
+    </div>
+    <?php
+    }
+    ?>
 </div>

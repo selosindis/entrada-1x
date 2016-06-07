@@ -29,20 +29,20 @@
     dirname(__FILE__) . "/www-root/core",
     dirname(__FILE__) . "/www-root/core/includes",
     dirname(__FILE__) . "/www-root/core/library",
+    dirname(__FILE__) . "/www-root/core/library/vendor",
+
     get_include_path(),
 )));
 
 set_time_limit(0);
 
-require_once("Zend/Loader/Autoloader.php");
-
-$loader = Zend_Loader_Autoloader::getInstance();
-$loader->registerNamespace("Entrada_");
-$loader->registerNamespace("Models_");
+/**
+ * Register the Composer autoloader.
+ */
+require_once("autoload.php");
 
 require_once("config/settings.inc.php");
 require_once("functions.inc.php");
-require_once("Entrada/adodb/adodb.inc.php");
 require_once("dbconnection.inc.php");
 
 $cli = new Entrada_Cli();

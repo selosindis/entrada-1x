@@ -418,6 +418,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 								}
 
+								if ((isset($_POST["associated_faculty"])) && ($associated_faculties = explode(",", $_POST["associated_faculty"])) && (@is_array($associated_faculties)) && (@count($associated_faculties))) {
+									foreach ($associated_faculties as $proxy_id) {
+										if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+											if (!$db->AutoExecute("course_contacts", array("course_id" => $COURSE_ID, "proxy_id" => $proxy_id, "contact_type" => "associated_faculty"), "INSERT")) {
+												add_error("There was an error when trying to insert an &quot;Associated Faculty&quot; into the system. The system administrator was informed of this error; please try again later.");
+
+												application_log("error", "Unable to insert a new course_contact to the database when updating an event. Database said: ".$db->ErrorMsg());
+											}
+										}
+									}
+								}
+
 								if (isset($PROCESSED["pcoord_id"]) && $PROCESSED["pcoord_id"]) {
 									if ($community_id && !$db->AutoExecute("community_members", array("community_id" => $community_id, "proxy_id" => $PROCESSED["pcoord_id"], "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {
 										add_error("There was an error when trying to insert a &quot;Curriculum Coordinator&quot; into the system. The system administrator was informed of this error; please try again later.");
@@ -723,6 +735,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$course_directors = array();
 					$curriculum_coordinators = array();
 					$chosen_course_directors = array();
+					$faculty = array();
 
 					$query = "SELECT a.* FROM `course_audience` AS a
 								JOIN `curriculum_periods` AS b
@@ -798,6 +811,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						$COORDINATOR_LIST = $curriculum_coordinators;
 					}
 
+					$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+								FROM `".AUTH_DATABASE."`.`user_data`
+								LEFT JOIN `".AUTH_DATABASE."`.`user_access`
+								ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
+								LEFT JOIN `".AUTH_DATABASE."`.`organisations`
+								ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+								WHERE (`user_access`.`group` = 'faculty' OR (`user_access`.`group` = 'resident' AND `user_access`.`role` = 'lecturer'))
+								AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
+								AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+								ORDER BY `fullname` ASC";
+					$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+					if ($results) {
+						foreach ($results as $result) {
+							$faculty[$result["proxy_id"]] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"], 'organisation_id'=>$result['organisation_id']);
+						}
+						$ASSOCIATED_FACULTY_LIST = $faculty;
+					}
+
 					/**
 					 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
 					 * This is actually accomplished after the event is inserted below.
@@ -835,6 +866,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						}
 					}
+
+					if ((isset($_POST["associated_faculty"]))) {
+						$associated_faculty = explode(',',$_POST["associated_faculty"]);
+						foreach ($associated_faculty as $contact_order => $proxy_id) {
+							if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+								$chosen_associated_faculty[] = $proxy_id;
+							}
+						}
+					} else {
+						$query = "SELECT * FROM `course_contacts` WHERE `course_id`=".$db->qstr($COURSE_ID)." AND `contact_type` = 'associated_faculty'";
+						$results = $db->GetAll($query);
+						if ($results) {
+							foreach ($results as $result) {
+								$chosen_associated_faculty[] = $result["proxy_id"];
+							}
+						}
+					}
+
 
 					// Compiles Program Coordinator list
 					$programcoodinators = array();
@@ -1160,7 +1209,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                 </div>
                             </div>
 
-                            <div class="control-group">
+							<div class="control-group">
+								<label for="faculty_name" class="control-label form-nrequired"><?php echo $translate->_("Associated Faculty"); ?></label>
+								<div class="controls">
+									<input type="text" id="faculty_name" name="fullname" class="span5" autocomplete="off" onkeyup="checkItem('faculty')" onblur="addItemNoError('faculty')" />
+									<div class="autocomplete" id="faculty_name_auto_complete"></div>
+									<input type="hidden" id="associated_faculty" name="associated_faculty" />
+									<input type="button" class="btn" onclick="addItem('faculty');" value="Add" style="vertical-align: middle" />
+									<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+									<ul id="faculty_list" class="menu" style="margin-top: 15px">
+										<?php
+										if (isset($chosen_associated_faculty) && is_array($chosen_associated_faculty) && $chosen_associated_faculty && isset($ASSOCIATED_FACULTY_LIST) && !empty($ASSOCIATED_FACULTY_LIST)) {
+											foreach ($chosen_associated_faculty as $chosen_faculty) {
+												if ((array_key_exists($chosen_faculty, $ASSOCIATED_FACULTY_LIST)) && is_array($ASSOCIATED_FACULTY_LIST[$chosen_faculty])) {
+													?>
+													<li class="community" id="faculty_<?php echo $ASSOCIATED_FACULTY_LIST[$chosen_faculty]["proxy_id"]; ?>" style="cursor: move;"><?php echo $ASSOCIATED_FACULTY_LIST[$chosen_faculty]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $ASSOCIATED_FACULTY_LIST[$chosen_faculty]["proxy_id"]; ?>', 'faculty');"/></li>
+													<?php
+												}
+											}
+										}
+										?>
+									</ul>
+									<input type="hidden" id="faculty_ref" name="faculty_ref" value="" />
+									<input type="hidden" id="faculty_id" name="faculty_id" value="" />
+								</div>
+							</div>
+
+
+							<div class="control-group">
                                 <label for="programcoodinator_id" class="control-label form-nrequired"><?php echo $translate->_("program_coordinator"); ?></label>
                                 <div class="controls">
                                     <?php
@@ -1224,6 +1300,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         <script type="text/javascript">
                             new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=director&organisation_id=<?php echo $course_details["organisation_id"]; ?>', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});
                             new Ajax.Autocompleter('coordinator_name', 'coordinator_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=coordinator&organisation_id=<?php echo $course_details["organisation_id"]; ?>', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'coordinator'); copyItem('coordinator');}});
+							new Ajax.Autocompleter('faculty_name', 'faculty_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=faculty', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'faculty'); copyItem('faculty');}});
 
                             $('director_name').observe('keypress', function(event) {
                                 if (event.keyCode == Event.KEY_RETURN) {
@@ -1237,7 +1314,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     Event.stop(event);
                                 }
                             });
-                        </script>
+							$('faculty_name').observe('keypress', function(event) {
+								if (event.keyCode == Event.KEY_RETURN) {
+									addItem('faculty');
+									Event.stop(event);
+								}
+							});
+						</script>
 
                         <?php
                         /**
@@ -1311,8 +1394,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         $ONLOAD[] = "$('associated_director').value = Sortable.sequence('director_list')";
                         $ONLOAD[] = "Sortable.create('coordinator_list', {onUpdate : function() {updateOrder('coordinator')}})";
                         $ONLOAD[] = "$('associated_coordinator').value = Sortable.sequence('coordinator_list')";
+						$ONLOAD[] = "Sortable.create('faculty_list', {onUpdate : function() {updateOrder('faculty')}})";
+						$ONLOAD[] = "$('associated_faculty').value = Sortable.sequence('faculty_list')";
 
-                        require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
+						require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 
                         $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 
@@ -1333,10 +1418,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                             $hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
                             ?>
                             <a name="course-objectives-section"></a>
-                            <h2 title="Course Objectives Section"><?php echo $translate->_("course"); ?> Objectives</h2>
+                            <h2 title="<?php echo $translate->_("Course Objectives Section"); ?>"><?php echo $translate->_("course"); ?> <?php echo $translate->_("Objectives"); ?></h2>
                             <div id="course-objectives-section">
                                 <div class="objectives half left">
-                                    <h3>Objective Sets</h3>
+                                    <h3><?php echo $translate->_("Objective Sets"); ?></h3>
                                     <ul class="tl-objective-list" id="objective_list_0">
                                         <?php
                                         foreach ($objectives as $objective) {
@@ -1370,16 +1455,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                 </div>
 
                                 <div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="course" data-resource-id="<?php echo $COURSE_ID;?>">
-                                    <h3>Mapped Objectives</h3>
+                                    <h3>Mapped <?php echo $translate->_("Objectives"); ?></h3>
                                     <div class="clearfix">
                                         <ul class="page-action" style="float: right">
                                             <div class="row-fluid space-below">
-                                                <a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Show Objective Sets</a>
+                                                <a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Show <?php echo $translate->_("Objective Sets"); ?></a>
                                             </div>
                                         </ul>
                                     </div>
                                     <p class="well well-small content-small">
-                                        <strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left to map it to the course.
+                                        <strong>Helpful Tip:</strong> Click <strong>Show All <?php echo $translate->_("Objectives"); ?></strong> to view the list of available objectives. Select an objective from the list on the left to map it to the course.
                                     </p>
                                     <?php
                                     $query = "SELECT a.*,b.`objective_type`, b.`importance`, c.`objective_active` AS `parent_active`
@@ -1414,7 +1499,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     }
                                     ?>
                                     <a name="curriculum-objective-list"></a>
-                                    <h2 id="hierarchical-toggle" title="Curriculum Objective List" class="list-heading">Curriculum Objectives</h2>
+                                    <h2 id="hierarchical-toggle" title="<?php echo $translate->_("Curriculum Objective List"); ?>" class="list-heading"><?php echo $translate->_("Curriculum Objectives"); ?></h2>
                                     <div id="curriculum-objective-list">
                                         <ul class="objective-list mapped-list" id="mapped_hierarchical_objectives" data-importance="hierarchical">
                                             <?php
@@ -1431,7 +1516,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                                             <?php
                                                             $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
                                                             if ($set) {
-                                                                echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                                echo "From the ".$translate->_("Objective Set").": <strong>".$set["objective_name"]."</strong><br/>";
                                                             }
                                                             ?>
                                                             <?php echo $objective["objective_description"];?>
@@ -1456,7 +1541,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     </div>
 
                                     <a name="other-objective-list"></a>
-                                    <h2 id="flat-toggle" title="Other Objective List" class="collapsed list-heading">Other Objectives</h2>
+                                    <h2 id="flat-toggle" title="Other <?php echo $translate->_("Objective"); ?> List" class="collapsed list-heading">Other <?php echo $translate->_("Objectives"); ?></h2>
                                     <div id="other-objective-list">
                                         <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
                                             <?php
@@ -1473,7 +1558,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                                             <?php
                                                             $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
                                                             if ($set) {
-                                                                echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                                echo "From the ".$translate->_("Objective Set").": <strong>".$set["objective_name"]."</strong><br/>";
                                                             }
                                                             ?>
                                                             <?php echo $objective["objective_description"];?>

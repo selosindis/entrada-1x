@@ -32,8 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("user", "update", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -43,61 +42,37 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	 * Clears all open buffers so we can return a simple JSON response.
 	 */
 	ob_clear_open_buffers();
-	
-	if (isset($_GET["number"]) && ($number = (clean_input($_GET["number"], array("int"))))) {
-		$query = "	SELECT a.*, b.`account_active`
+    
+    $field = $value = false;
+
+	if (isset($_GET["number"])) {
+		$field = "number";
+        $value = clean_input($_GET["number"], array("int"));
+	} elseif (isset($_GET["username"])) {
+        $field = "username";
+        $value = clean_input($_GET["username"], array("credentials"));
+    } elseif (isset($_GET["id"])) {
+        $field = "id";
+        $value = clean_input($_GET["id"], array("int"));
+    }
+
+    if ($field && $value) {
+        $query = "	SELECT a.*, b.`account_active`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON a.`id` = b.`user_id`
 					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-					WHERE `number` = ".$db->qstr($number);
-		$result = $db->GetRow($query);
-		if ($result) {
-			if ($result["account_active"] == "true") {
-				$result["message"] = "<ul><li>A user with that id has been found in the system, this existing user already has access to this application. Please click <strong><a onclick=\"$$('input [type: text]').each(function (e) { if (e.disabled) e.enable().value = ''; }); $('display-notice').remove(); $$('.departments').each( function (e) { e.show(); }); $('prefix').enable(); $('access_finish_date').disabled = !$('access_finish').checked;\">here</a></strong> to choose another user.</li></ul>";
-			} else {
-				$result["message"] = "<ul><li>A user with that id has been found in the system, this existing user will be given access to this application if you select &quot;Add User&quot; now, otherwise click <strong><a onclick=\"$$('input [type: text]').each(function (e) { if (e.disabled) e.enable().value = ''; }); $('display-notice').remove(); $$('.departments').each( function (e) { e.show(); }); $('prefix').enable(); $('access_finish_date').disabled = !$('access_finish').checked;\">here</a></strong> to choose another user.</li></ul>";
-			}
+					WHERE `".$field."` = ".$db->qstr($value);
 
-			header("Content-type: application/json");
-			echo json_encode($result);
-		}
-	} elseif (isset($_GET["username"]) && ($username = (clean_input($_GET["username"], array("credentials"))))) {
-		$query = "	SELECT a.*, b.`account_active`
-					FROM `".AUTH_DATABASE."`.`user_data` AS a
-					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-					ON a.`id` = b.`user_id`
-					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-					WHERE `username` = ".$db->qstr($username);
-		$result = $db->GetRow($query);
-		if ($result) {
-			if ($result["account_active"] == "true") {
-				$result["message"] = "<ul><li>A user with that id has been found in the system, this existing user already has access to this application. Please click <strong><a onclick=\"$$('input [type: text]').each(function (e) { if (e.disabled) e.enable().value = ''; }); $('display-notice').remove(); $$('.departments').each( function (e) { e.show(); }); $('prefix').enable(); $('access_finish_date').disabled = !$('access_finish').checked;\">here</a></strong> to choose another user.</li></ul>";
-			} else {
-				$result["message"] = "<ul><li>A user with that id has been found in the system, this existing user will be given access to this application if you select &quot;Add User&quot; now, otherwise click <strong><a onclick=\"$$('input [type: text]').each(function (e) { if (e.disabled) e.enable().value = ''; }); $('display-notice').remove(); $$('.departments').each( function (e) { e.show(); }); $('prefix').enable(); $('access_finish_date').disabled = !$('access_finish').checked;\">here</a></strong> to choose another user.</li></ul>";
-			}
+        $result = $db->GetRow($query);
 
-			header("Content-type: application/json");
-			echo json_encode($result);
-		}
-	} elseif (isset($_GET["id"]) && ($proxy_id = (clean_input($_GET["id"], array("int"))))) {
-		$query = "	SELECT a.*, b.`account_active`
-					FROM `".AUTH_DATABASE."`.`user_data` AS a
-					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-					ON a.`id` = b.`user_id`
-					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-					WHERE a.`id` = ".$db->qstr($proxy_id);
-		$result = $db->getRow($query);
-		if ($result) {
-			if ($result["account_active"] == "true") {
-				$result["message"] = "<ul><li>A user with that id has been found in the system, this existing user already has access to this application. Please click <strong><a onclick=\"$$('input [type: text]').each(function (e) { if (e.disabled) e.enable().value = ''; }); $('display-notice').remove(); $$('.departments').each( function (e) { e.show(); }); $('prefix').enable(); $('access_finish_date').disabled = !$('access_finish').checked;\">here</a></strong> to choose another user.</li></ul>";
-			} else {
-				$result["message"] = "<ul><li>A user with that id has been found in the system, this existing user will be given access to this application if you select &quot;Add User&quot; now, otherwise click <strong><a onclick=\"$$('input [type: text]').each(function (e) { if (e.disabled) e.enable().value = ''; }); $('display-notice').remove(); $$('.departments').each( function (e) { e.show(); }); $('prefix').enable(); $('access_finish_date').disabled = !$('access_finish').checked;\">here</a></strong> to choose another user.</li></ul>";
-			}
+        if ($result) {
+            $result["message"] = "<ul><li>A user with that " . $field . " has been found in the system. Please click <strong><a class=\"add-another-user\">here</a></strong> to add another user or <strong><a href=\"" . ENTRADA_URL . "/admin/users/manage?section=edit&id=" . $result["id"] . "\">here</a></strong> to edit this user.</li></ul>";
 
-			header("Content-type: application/json");
-			echo json_encode($result);
-		}
-	}
+            header("Content-type: application/json");
+            echo json_encode($result);
+        }
+    }
+
 	exit;
 }

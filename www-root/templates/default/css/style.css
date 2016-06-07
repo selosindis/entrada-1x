@@ -542,7 +542,6 @@ div.ps-tab-style {
 	padding-right: 14px !important;
 }
 
-
 /** Event views **/
 .statsUL {
     list-style: none;
@@ -630,7 +629,6 @@ div.event-description .span4 h3, div.event-message .span4 h3, #event_details_2 h
 div.event-description .span8, div.event-message .span8, #event_details_2 span {
     margin-top: 2px;
     font-size: 14px;
-    display: block
 }
 #event_details_1 .span12 hr, #event_details_2 .span12 hr{
     margin-right: 2.12766%;
@@ -652,6 +650,10 @@ div.event-description .span8, div.event-message .span8, #event_details_2 span {
     margin: 1px 0px;
     margin-right: 6px;
 }
+
+div#event_details_2 ul.menu {
+   position: relative;
+} 
 
 /** End Event views **/
 

@@ -39,8 +39,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-    $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.timepicker.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+	$HEAD[] = "<script src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+    $HEAD[] = "<script src=\"".ENTRADA_URL."/javascript/jquery/jquery.timepicker.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	?>
 	<script type="text/javascript">
 		var EVENT_LIST_STATIC_TOTAL_DURATION = true;
@@ -48,31 +48,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	<?php
 	if ($EVENT_ID) {
         $HEAD[] = "<script>var SITE_URL = '".ENTRADA_URL."';</script>";
+        $HEAD[] = "<script type=\"text/javascript\" >var ENTRADA_URL = '". ENTRADA_URL ."';</script>\n";
         $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
         $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/objectives_event.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
         $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/keywords_event.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
         $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/event_resources.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
         $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/events_nl_form.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+        $HEAD[] = "<script type=\"text/javascript\" src=\"".  ENTRADA_URL ."/javascript/jquery/jquery.advancedsearch.js\"></script>";
+        $HEAD[] = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".  ENTRADA_URL ."/css/jquery/jquery.advancedsearch.css\" />";
 
-		$query = "SELECT a.*, b.`organisation_id`
-                    FROM `events` AS a
-                    LEFT JOIN `courses` AS b
-                    ON b.`course_id` = a.`course_id`
-                    WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
+
+		$query		= "	SELECT a.*, b.`organisation_id`
+						FROM `events` AS a
+						LEFT JOIN `courses` AS b
+						ON b.`course_id` = a.`course_id`
+						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info) {
             if ($event_info["recurring_id"]) {
-                $query = "SELECT * FROM `events`
-                            WHERE `recurring_id` = ".$db->qstr($event_info["recurring_id"])."
-                            AND `event_id` != ".$db->qstr($EVENT_ID);
-                $recurring_events = $db->GetAll($query);
+                $recurring_event_array  = Models_Event::getRecurringEventIds($EVENT_ID);
+                $recurring_events       = $recurring_event_array["recurring_events"];
+                $re_bool                = ($recurring_events && is_array($recurring_events) ? 1 : 0 );
+                $re_ids                 = $recurring_event_array["recurring_event_ids"];
             } else {
-                $recurring_events = false;
+                $recurring_events       = false;
+                $re_bool                = 0;
+                $re_ids                 = 0;
             }
+
             $PROCESSED["keywords_hidden"] = $event_info["keywords_hidden"];
 			$PROCESSED["keywords_release_date"] = $event_info["keywords_release_date"];
 			$PROCESSED["objectives_release_date"] = $event_info["objectives_release_date"];
 			$COURSE_ID = $event_info["course_id"];
+
 			if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
 				application_log("error", "Someone attempted to modify content for an event [".$EVENT_ID."] that they were not the coordinator for.");
 
@@ -86,7 +94,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				/**
 				 * Load the rich text editor.
 				 */
-				load_rte();
+				load_rte("events");
 
 				/**
 				 * Fetch event content history
@@ -94,7 +102,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$history = $db->GetRow("SELECT * FROM `event_history` WHERE `event_id`  = ".$db->qstr($EVENT_ID));
 
 				if (!$history) { // Create the first history record of the event's creation when another user updates the event
-					if(count($_POST) && ($ENTRADA_USER->getID() != $event_info["updated_by"])) {	// Ignore starting history when it's the sole author initially adding content.
+					if (count($_POST) && ($ENTRADA_USER->getID() != $event_info["updated_by"])) {	// Ignore starting history when it's the sole author initially adding content.
 						history_log($EVENT_ID, 'created this learning event.', $event_info["updated_by"], $event_info["updated_date"]);
 					}
 				}
@@ -184,7 +192,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 * Fetch the Curriculum Objective details.
 				 */
 				list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($event_info["organisation_id"],array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
-				$curriculum_objectives = array();
+
+                $curriculum_objectives = array();
 
 				if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
 					foreach ($checked_objectives as $objective_id) { // => $status
@@ -198,6 +207,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$curriculum_objectives[$objective_id] = $objective_text;
 						}
 					}
+
 					history_log($EVENT_ID, "updated clinical objectives.");
 				}
 
@@ -226,7 +236,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$results	= $db->GetAll($query);
 				if ($results) {
 					foreach ($results as $result) {
-						$event_eventtypes_list[$result["eventtype_id"]] = $result["eventtype_title"];
+						$event_eventtypes_list[] = array("id" => $result["eventtype_id"], "title" => $result["eventtype_title"], "description" => $result["eventtype_description"]);
 					}
 				}
 
@@ -236,7 +246,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				if ($results) {
 					foreach ($results as $result) {
 						$initial_duration += $result["duration"];
-						//$event_eventtypes[] = array($result["eventtype_id"], $result["duration"], $event_eventtypes_list[$result["eventtype_id"]]);
 						$event_eventtypes[] = $result;
 					}
 				}
@@ -252,7 +261,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 					$event_types = explode(",", trim($_POST["eventtype_duration_order"]));
 
-					if ((is_array($event_types)) && (count($event_types))) {
+					if (is_array($event_types) && count($event_types)) {
 						foreach ($event_types as $order => $eventtype_id) {
 							if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
 								if (!($duration >= LEARNING_EVENT_MIN_DURATION)) {
@@ -269,7 +278,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 						$event_duration	= 0;
 						$old_event_duration = 0;
-						foreach($event_eventtypes as $event_type) {
+						foreach ($event_eventtypes as $event_type) {
 							$event_duration += $event_type["duration"];
 						}
 
@@ -277,20 +286,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$old_event_duration += $event_type["duration"];
 						}
 
-						if($old_event_duration != $event_duration) {
-							add_error("The modified <strong>Event Types</strong> duration specified is different than the existing one, please ensure the event's duration remains the same.");
+						if ($old_event_duration != $event_duration) {
+							add_error("The modified <strong>" . $translate->_("Event Types") . "</strong> duration specified is different than the existing one, please ensure the event's duration remains the same.");
 						}
 					} else {
-						add_error("At least one event type in the <strong>Event Types</strong> field is required.");
+						add_error("At least one event type in the <strong>" . $translate->_("Event Types") . "</strong> field is required.");
 					}
 				}
-
-
 
 				if (isset($_POST["type"])) {
 					switch ($_POST["type"]) {
 						case "content" :
-                            
                             /**
                              * Event keywords hidden from students
                              */
@@ -343,9 +349,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 }
                             }
 
-                            if(!$ERROR) {
+                            if (!$ERROR) {
+                                $history_updates = array();
 
-                                $history_texts = " [";
                                 /**
                                  * Event Description
                                  */
@@ -354,8 +360,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $changed = md5_change_value($EVENT_ID, 'event_id', 'event_description', $_POST["event_description"], 'events');
 
                                 if ($changed) {
-                                    $history_texts .= "Event Description";
+                                    $history_updates[] = "Event Description";
                                 }
+
                                 if ((isset($_POST["event_description"])) && (clean_input($_POST["event_description"], array("allowedtags", "nows")))) {
                                     $event_description = clean_input($_POST["event_description"], array("allowedtags"));
                                 } else {
@@ -369,11 +376,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $changed = false;
                                 $changed = md5_change_value($EVENT_ID, 'event_id', 'event_objectives', $_POST["event_objectives"], 'events');
                                 if ($changed) {
-                                    if (strlen($history_texts)>2) {
-                                        $history_texts .= ":";
-                                    }
-                                    $history_texts .= "Event Objectives";
+                                    $history_updates[] = $translate->_("Event Objectives");
                                 }
+
                                 if ((isset($_POST["event_objectives"])) && (clean_input($_POST["event_objectives"], array("allowedtags", "nows")))) {
                                     $event_objectives = clean_input($_POST["event_objectives"], array("allowedtags"));
                                 } else {
@@ -388,12 +393,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $changed = md5_change_value($EVENT_ID, 'event_id', 'event_message', $_POST["event_message"], 'events');
                                 
                                 if ($changed) {
-                                    if (strlen($history_texts)>2) {
-                                        $history_texts .= ":";
-                                    }
-                                    $history_texts .= "Event Preparation";
+                                    $history_updates[] = "Event Preparation";
                                 }
-                                if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("allowedtags", "nows")))) {
+                                if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
                                     $event_message = clean_input($_POST["event_message"], array("allowedtags"));
                                 } else {
                                     $event_message = "";
@@ -402,7 +404,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $event_finish	= $event_info["event_start"];
                                 $event_duration	= 0;
 
-                                foreach($event_eventtypes as $event_type) {
+                                foreach ($event_eventtypes as $event_type) {
                                     $event_finish += ($event_type["duration"] * 60);
                                     $event_duration += $event_type["duration"];
                                 }
@@ -412,9 +414,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                  */
                                 if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "keywords_hidden" => $PROCESSED["keywords_hidden"], "keywords_release_date" => $PROCESSED["keywords_release_date"], "objectives_release_date" => $PROCESSED["objectives_release_date"] , "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
                                     add_success("You have successfully updated the event details for this learning event.");
-
                                     application_log("success", "Updated learning event content.");
-
                                 } else {
                                     application_log("error", "Failed to update learning event content. Database said: ".$db->ErrorMsg());
                                 }
@@ -427,14 +427,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 if ($db->Execute($query)) {
                                     foreach ($event_eventtypes as $event_type) {
                                         if (!$db->AutoExecute("event_eventtypes", array("event_id" => $EVENT_ID, "eventtype_id" => $event_type["eventtype_id"], "duration" => $event_type["duration"]), "INSERT")) {
-                                            add_error("There was an error while trying to save the selected <strong>Event Type</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.");
-
+                                            add_error("There was an error while trying to save the selected <strong>" . $translate->_("Event Type") . "</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.");
                                             application_log("error", "Unable to insert a new event_eventtype record while adding a new event. Database said: ".$db->ErrorMsg());
                                         }
                                     }
                                 } else {
-                                    add_error("There was an error while trying to update the selected <strong>Event Types</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.");
-
+                                    add_error("There was an error while trying to update the selected <strong>" . $translate->_("Event Types") . "</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.");
                                     application_log("error", "Unable to delete any eventtype records while editing an event. Database said: ".$db->ErrorMsg());
                                 }
 
@@ -443,7 +441,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                  */
                                 $query = "DELETE FROM `event_objectives` WHERE `objective_type` = 'event' AND `event_id` = ".$db->qstr($EVENT_ID);
                                 if ($db->Execute($query)) {
-                                    if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+                                    if (is_array($clinical_presentations) && count($clinical_presentations)) {
                                         foreach ($clinical_presentations as $objective_id => $presentation_name) {
                                             if (isset($_POST["objective_text"][$objective_id]) && ($tmp_input = clean_input($_POST["objective_text"][$objective_id], array("notags")))) {
                                                 $objective_text = $tmp_input;
@@ -452,7 +450,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             }
                                             if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
                                                 add_error("There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.");
-
                                                 application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
                                             }
                                         }
@@ -500,34 +497,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                         if ($count > 0){
                                             // Removed the keywords in the delete array.
-                                            for ($i=0; $i<$count; $i++){
-                                                if (trim($lis[$i]) != ""){
+                                            for ($i=0; $i<$count; $i++) {
+                                                if (trim($lis[$i]) != "") {
                                                     $query = "  DELETE 
                                                                 FROM `event_keywords` 
                                                                 WHERE keyword_id = ". $db->qstr($lis[$i])." AND event_id = ".$db->qstr($EVENT_ID);
                                                     $db->Execute($query);
                                                 }
                                             }
-                                            history_log($EVENT_ID, "deleted MeSH Keywords.", $PROXY_ID);
+
+                                            if (!in_array('Event Keywords Removed', $history_updates)) {
+                                                $history_updates[] = 'Event Keywords Removed';
+                                            }
                                         }
                                     }
                                 }
 
-                                if (isset($_POST["add_keywords"][0])){
-                                    if (trim($_POST["add_keywords"][0]) !== ""){                                                                        
+                                if (isset($_POST["add_keywords"][0])) {
+                                    if (trim($_POST["add_keywords"][0]) !== "") {
                                         $lis = explode(",", $_POST["add_keywords"][0]);
                                         $count = count($lis);                                                                 
 
-                                        if ($count > 0){
+                                        if ($count > 0) {
                                             // Add the keywords n the add array.
-                                            for ($i=0; $i<$count; $i++){
-                                                if (trim($lis[$i]) != ""){
+                                            for ($i=0; $i<$count; $i++) {
+                                                if (trim($lis[$i]) != "") {
                                                     $query = "  INSERT INTO `event_keywords` (event_id, keyword_id, updated_date, updated_by) 
                                                                 VALUES (".$db->qstr($EVENT_ID).", ". $db->qstr($lis[$i]).", ". $db->qstr(time()). ", ". $db->qstr($ENTRADA_USER->getID()).")";
                                                     $db->Execute($query);
                                                 }
                                             }
-                                            history_log($EVENT_ID, "added MeSH Keywords.", $PROXY_ID);
+
+                                            if (!in_array('Event Keywords Added', $history_updates)) {
+                                                $history_updates[] = 'Event Keywords Added';
+                                            }
                                         }
                                     }                                                                                                                             
                                 }
@@ -535,10 +538,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 /**
                                  * Update Event Topics information.
                                  */
-                                $query = "DELETE FROM `event_topics` WHERE `event_id` = ".$db->qstr($EVENT_ID);
-                                if ($db->Execute($query)) {
-                                    if ((isset($_POST["event_topic"])) && (is_array($_POST["event_topic"])) && (count($_POST["event_topic"]))) {
-                                        foreach ($_POST["event_topic"] as $topic_id => $value) {
+
+                                $query = "SELECT `topic_id`, `topic_coverage`, `etopic_id` FROM `event_topics` WHERE `event_id` = ".$db->qstr($EVENT_ID);
+                                $current_hot_topics_results = $db->GetAll($query);
+                                
+                                if (isset($current_hot_topics_results) && is_array($current_hot_topics_results)) {                                    
+                                    foreach ($current_hot_topics_results as $current_hot_topics_result) {
+                                        $current_hot_topics[$current_hot_topics_result['topic_id']] = $current_hot_topics_result['topic_coverage'];
+                                    }
+                                }
+                                
+                                $hot_topic_update = false;
+                                if ((isset($_POST["event_topic"])) && (is_array($_POST["event_topic"])) && (count($_POST["event_topic"]))) {
+                                    if (isset($current_hot_topics) && is_array($current_hot_topics)) {
+                                        $remove_topics_array = array_diff_assoc($current_hot_topics, $_POST["event_topic"]);
+                                        $add_topics_array = array_diff_assoc($_POST["event_topic"], $current_hot_topics);
+                                    } else {
+                                        //no current record so insert all
+                                        $add_topics_array = $_POST["event_topic"];
+                                    }
+                                    
+                                    if (isset($remove_topics_array) && is_array($remove_topics_array) && (count($remove_topics_array))) {
+                                        foreach($remove_topics_array as $topic_id => $value) {
+                                            $query = "DELETE FROM `event_topics` WHERE `event_id` = ".$db->qstr($EVENT_ID) . 'AND `topic_id` = ' . $db->qstr($topic_id);
+                                            if (!$db->Execute($query)) {
+                                                add_error("There was an error when trying to delete an Event Topic response from the system. System administrators have been informed of this error; please try again later.");
+                                                application_log("error", "Unable to delete an Event Topic response entry from the database while modifying event contents. Database said: ".$db->ErrorMsg());
+                                            }
+                                        }
+                                        //log history delete hot topic
+                                        if (!in_array('Event Topics Removed', $history_updates)) {
+                                            $history_updates[] = 'Event Topics Removed';
+                                        }
+                                    }
+                                    
+                                    if (isset($add_topics_array) && is_array($add_topics_array) && (count($add_topics_array))) {
+                                        foreach ($add_topics_array as $topic_id => $value) {
                                             if ($topic_id = clean_input($topic_id, array("trim", "int"))) {
                                                 $squery		= "SELECT * FROM `events_lu_topics` WHERE `topic_id` = ".$db->qstr($topic_id);
                                                 $sresult	= $db->GetRow($squery);
@@ -558,6 +593,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     }
                                                 }
                                             }
+                                            //log history add hot topic
+                                            if (!in_array('Event Topics Added', $history_updates)) {
+                                                $history_updates[] = 'Event Topics Added';
+                                            }
                                         }
                                     }
                                 }
@@ -574,7 +613,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 if (!$event_info) {
                                     application_log("error", "After updating the text content of event_id [".$EVENT_ID."] the select query failed.");
                                 }
-                                history_log($EVENT_ID, "updated event content".(strlen($history_texts)>2?" $history_texts].":"."));
+                                if ($history_updates) {
+                                    history_log($EVENT_ID, "updated event content: [".implode(",", $history_updates)."]", $PROXY_ID);
+                                }
 
                                 if ($recurring_events && $event_info && isset($_POST["recurring_event_ids"]) && @count($_POST["recurring_event_ids"]) && isset($_POST["update_recurring_fields"]) && @count($_POST["update_recurring_fields"])) {
                                     $updating_recurring_events = array();
@@ -603,6 +644,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 }
                                             }
                                         }
+
                                         if (isset($_POST["update_recurring_fields"]) && in_array("mesh_keywords", $_POST["update_recurring_fields"])) {
                                             $keyword_ids = array();
                                             $PROCESSED_RECURRING_EVENT["mesh_keywords"] = array();
@@ -615,13 +657,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 }
                                             }
                                         }
+
                                         if (isset($_POST["update_recurring_fields"]) && in_array("event_topics", $_POST["update_recurring_fields"])) {
                                             $PROCESSED_RECURRING_EVENT["event_topics"] = array();
                                             $query = "SELECT `topic_id`, `topic_coverage`, `topic_time` FROM `event_topics` WHERE `event_id` = ".$db->qstr($EVENT_ID);
                                             $results = $db->GetAll($query);
                                             if ($results) {
                                                 foreach ($results as $result) {
-                                                    $PROCESSED_RECURRING_EVENT["event_topics"][] = $result;
+                                                    $PROCESSED_RECURRING_EVENT["event_topics"][$result['topic_id']] = $result['topic_coverage'];
                                                 }
                                             }
                                         }
@@ -629,14 +672,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         if (in_array("event_description", $_POST["update_recurring_fields"])) {
                                             $PROCESSED_RECURRING_EVENT["event_description"] = $event_info["event_description"];
                                         }
+
                                         if (in_array("event_message", $_POST["update_recurring_fields"])) {
                                             $PROCESSED_RECURRING_EVENT["event_message"] = $event_info["event_message"];
                                         }
+
                                         if (in_array("event_objectives", $_POST["update_recurring_fields"])) {
                                             $PROCESSED_RECURRING_EVENT["event_objectives"] = $event_objectives;
                                         }
 
+                                        if (in_array("mesh_keywords", $_POST["update_recurring_fields"])) {
+                                            $PROCESSED_RECURRING_EVENT["keywords_hidden"] = $PROCESSED["keywords_hidden"];
+                                            if ($PROCESSED["delay_release_keywords"]) {
+                                                $PROCESSED_RECURRING_EVENT["keywords_release_date"] = $PROCESSED["keywords_release_date"];
+                                            } else {
+                                                $PROCESSED_RECURRING_EVENT["keywords_release_date"] = 0;
+                                            }
+                                        }
+
                                         foreach ($updating_recurring_events as $order => $recurring_event) {
+                                            $recurring_history_updates = array();
+                                            
                                             if (isset($PROCESSED_RECURRING_EVENT["mapped_objectives"])) {
                                                 $query = "DELETE FROM `event_objectives` WHERE `event_id` = ".$db->qstr($recurring_event["event_id"]);
                                                 if ($db->Execute($query)) {
@@ -647,86 +703,173 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             $event_objective_data["updated_date"] = time();
                                                             $event_objective_data["updated_by"] = $ENTRADA_USER->GetID();
                                                             if (!$db->AutoExecute("`event_objectives`", $event_objective_data, "INSERT")) {
-                                                                add_error("There was an error while trying to save the selected <strong>Event Objective</strong> for a recurring event.<br /><br />The system administrator was informed of this error; please try again later.");
-
+                                                                add_error("There was an error while trying to save the selected <strong>" . $translate->_("Event Objective") . "</strong> for a recurring event.<br /><br />The system administrator was informed of this error; please try again later.");
                                                                 application_log("error", "Unable to insert a new event_objectives record while editing a recurring event. Database said: ".$db->ErrorMsg());
                                                             }
                                                         }
                                                     }
                                                 } else {
-                                                    add_error("There was an error while trying to update the selected <strong>Event Objectives</strong> for a recurring event.<br /><br />The system administrator was informed of this error; please try again later.");
-
+                                                    add_error("There was an error while trying to update the selected <strong>" . $translate->_("Event Objectives") . "</strong> for a recurring event.<br /><br />The system administrator was informed of this error; please try again later.");
                                                     application_log("error", "Unable to delete any event_objectives records while editing an event. Database said: ".$db->ErrorMsg());
                                                 }
                                             }
+
                                             if (isset($PROCESSED_RECURRING_EVENT["mesh_keywords"])) {
                                                 $query = "SELECT * FROM `event_keywords` WHERE `event_id` = ".$db->qstr($recurring_event["event_id"]);
                                                 $existing_keywords = $db->GetAll($query);
                                                 $remove_keywords_string = "";
                                                 if ($existing_keywords) {
+                                                    $existing_keyword_ids = $keyword_ids;
                                                     foreach ($existing_keywords as $existing_keyword) {
-                                                        if (!in_array($existing_keyword["keyword_id"], $keyword_ids)) {
+                                                        if (!in_array($existing_keyword["keyword_id"], $existing_keyword_ids)) {
                                                             $remove_keywords_string .= ($remove_keywords_string ? "," : "").$db->qstr($existing_keyword["keyword_id"]);
                                                         } else {
-                                                            unset($keyword_ids[array_search($existing_keyword["keyword_id"], $keyword_ids)]);
+                                                            unset($existing_keyword_ids[array_search($existing_keyword["keyword_id"], $existing_keyword_ids)]);
                                                         }
                                                     }
                                                 }
+
                                                 if ($remove_keywords_string) {
                                                     $query = "DELETE FROM `event_keywords`
                                                                 WHERE `keyword_id` IN (".$remove_keywords_string.")
                                                                 AND `event_id` = ".$db->qstr($recurring_event["event_id"]);
-                                                }
-                                                if (!$remove_keywords_string || $db->Execute($query)) {
-                                                    if (@count($PROCESSED_RECURRING_EVENT["mesh_keywords"])) {
-                                                        foreach($PROCESSED_RECURRING_EVENT["mesh_keywords"] as $mesh_keyword) {
-                                                            $mesh_keyword_data = $mesh_keyword;
-                                                            $mesh_keyword_data["updated_date"] = time();
-                                                            $mesh_keyword_data["updated_by"] = $ENTRADA_USER->GetID();
-                                                            $mesh_keyword_data["event_id"] = $recurring_event["event_id"];
-                                                            if (!$db->AutoExecute("`event_keywords`", $mesh_keyword_data, "INSERT")) {
-                                                                add_error("There was an error while trying to save the selected <strong>Event Keyword</strong> for a recurring event.<br /><br />The system administrator was informed of this error; please try again later.");
 
-                                                                application_log("error", "Unable to insert a new event_topics record while editing a recurring event. Database said: ".$db->ErrorMsg());
+                                                    if ($deleted_keywords_query = $db->Execute($query)) {
+                                                        if (!in_array('Event Keywords Removed', $recurring_history_updates)) {
+                                                            $recurring_history_updates[] = 'Event Keywords Removed';
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                if (!$remove_keywords_string || $deleted_keywords_query) {
+                                                    if (@count($PROCESSED_RECURRING_EVENT["mesh_keywords"])) {
+                                                        $added_mesh_keywords = 0;
+                                                        foreach($PROCESSED_RECURRING_EVENT["mesh_keywords"] as $mesh_keyword) {
+                                                            //checks to see if keyword is already on event so we don't get duplicates.
+                                                            $query = "  SELECT * FROM `event_keywords`
+                                                                        WHERE `event_id` = " . $db->qstr($recurring_event["event_id"]) . "
+                                                                        AND `keyword_id` = " . $db->qstr($mesh_keyword['keyword_id']);
+                                                            $existing_keywords = $db->GetAll($query);
+                                                            
+                                                            if (!$existing_keywords) {
+                                                                $mesh_keyword_data = $mesh_keyword;
+                                                                $mesh_keyword_data["updated_date"] = time();
+                                                                $mesh_keyword_data["updated_by"] = $ENTRADA_USER->GetID();
+                                                                $mesh_keyword_data["event_id"] = $recurring_event["event_id"];
+
+                                                                if ($db->AutoExecute("`event_keywords`", $mesh_keyword_data, "INSERT")) {
+                                                                    $added_mesh_keywords++;
+                                                                } else {
+                                                                    add_error("There was an error while trying to save the selected <strong>Event Keyword</strong> for a recurring event.<br /><br />The system administrator was informed of this error; please try again later.");
+                                                                    application_log("error", "Unable to insert a new event keyword record while editing a recurring event. Database said: ".$db->ErrorMsg());
+                                                                }
+                                                            }
+                                                        }
+
+                                                        if ($added_mesh_keywords > 0) {
+                                                            if (!in_array('Event Keywords Added', $recurring_history_updates)) {
+                                                                $recurring_history_updates[] = 'Event Keywords Added';
                                                             }
                                                         }
                                                     }
                                                 } else {
-                                                    add_error("There was an error while trying to update the selected <strong>Event Topics</strong> for a recurring event.<br /><br />The system administrator was informed of this error; please try again later.");
-
-                                                    application_log("error", "Unable to delete any event_topics records while editing an event. Database said: ".$db->ErrorMsg());
+                                                    add_error("There was an error while trying to update the selected <strong>Event Keywords</strong> for a recurring event.<br /><br />The system administrator was informed of this error; please try again later.");
+                                                    application_log("error", "Unable to delete any event keyword records while editing an event. Database said: ".$db->ErrorMsg());
                                                 }
                                             }
                                             if (isset($PROCESSED_RECURRING_EVENT["event_topics"])) {
-                                                $query = "DELETE FROM `event_topics` WHERE `event_id` = ".$db->qstr($recurring_event["event_id"]);
-                                                if ($db->Execute($query)) {
-                                                    if (@count($PROCESSED_RECURRING_EVENT["event_topics"])) {
-                                                        foreach($PROCESSED_RECURRING_EVENT["event_topics"] as $event_topic) {
-                                                            $event_topic_data = $event_topic;
-                                                            $event_topic_data["event_id"] = $recurring_event["event_id"];
-                                                            $event_topic_data["updated_date"] = time();
-                                                            $event_topic_data["updated_by"] = $ENTRADA_USER->GetID();
-                                                            if (!$db->AutoExecute("`event_topics`", $event_topic_data, "INSERT")) {
-                                                                add_error("There was an error while trying to save the selected <strong>Event Topic</strong> for a recurring event.<br /><br />The system administrator was informed of this error; please try again later.");
+                                                //select current topics
+                                                $query = "SELECT `topic_id`, `topic_coverage`, `etopic_id` FROM `event_topics` WHERE `event_id` = ".$db->qstr($recurring_event["event_id"]);
+                                                $current_hot_topics_results = $db->GetAll($query);
+                                                
+                                                $current_hot_topics = array();
+                                                if (isset($current_hot_topics_results) && is_array($current_hot_topics_results)) {                                    
+                                                    foreach ($current_hot_topics_results as $current_hot_topics_result) {
+                                                        $current_hot_topics[$current_hot_topics_result['topic_id']] = $current_hot_topics_result['topic_coverage'];
+                                                    }
+                                                }
 
-                                                                application_log("error", "Unable to insert a new event_topics record while editing a recurring event. Database said: ".$db->ErrorMsg());
+                                                if ((isset($PROCESSED_RECURRING_EVENT["event_topics"])) && (is_array($PROCESSED_RECURRING_EVENT["event_topics"])) && (count($PROCESSED_RECURRING_EVENT["event_topics"]))) {
+                                                    if (isset($current_hot_topics) && is_array($current_hot_topics)) {
+                                                        $remove_topics_array = array_diff_assoc($current_hot_topics, $PROCESSED_RECURRING_EVENT["event_topics"]);
+                                                        $add_topics_array = array_diff_assoc($PROCESSED_RECURRING_EVENT["event_topics"], $current_hot_topics);
+                                                    } else {
+                                                        //no current record so insert all
+                                                        $add_topics_array = $PROCESSED_RECURRING_EVENT["event_topics"];
+                                                    }
+
+                                                    if (isset($remove_topics_array) && is_array($remove_topics_array) && (count($remove_topics_array))) {
+                                                        foreach($remove_topics_array as $topic_id => $value) {
+                                                            $query = "DELETE FROM `event_topics` WHERE `event_id` = ".$db->qstr($recurring_event["event_id"]) . 'AND `topic_id` = ' . $db->qstr($topic_id);
+                                                            if (!$db->Execute($query)) {
+                                                                add_error("There was an error when trying to delete an Event Topic response from the system. System administrators have been informed of this error; please try again later.");
+                                                                application_log("error", "Unable to delete an Event Topic response entry from the database while modifying event contents. Database said: ".$db->ErrorMsg());
                                                             }
                                                         }
-                                                    }
-                                                } else {
-                                                    add_error("There was an error while trying to update the selected <strong>Event Topics</strong> for a recurring event.<br /><br />The system administrator was informed of this error; please try again later.");
 
-                                                    application_log("error", "Unable to delete any event_topics records while editing an event. Database said: ".$db->ErrorMsg());
+                                                        //log history delete hot topic
+                                                        if (!in_array('Event Topics Removed', $recurring_history_updates)) {
+                                                            $recurring_history_updates[] = 'Event Topics Removed';
+                                                        }
+                                                    }
+
+                                                    if (isset($add_topics_array) && is_array($add_topics_array) && (count($add_topics_array))) {
+                                                        foreach ($add_topics_array as $topic_id => $value) {
+                                                            if ($topic_id = clean_input($topic_id, array("trim", "int"))) {
+                                                                $squery		= "SELECT * FROM `events_lu_topics` WHERE `topic_id` = ".$db->qstr($topic_id);
+                                                                $sresult	= $db->GetRow($squery);
+                                                                if ($sresult) {
+                                                                    if (!$db->AutoExecute("event_topics", array("event_id" => $recurring_event["event_id"], "topic_id" => $topic_id, "topic_coverage" => $value, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+                                                                        add_error("There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.");
+                                                                        application_log("error", "Unable to insert a new event_topic entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                        //log history add hot topic
+                                                        if (!in_array('Event Topics Added', $recurring_history_updates)) {
+                                                            $recurring_history_updates[] = 'Event Topics Added';
+                                                        }
+                                                    }
                                                 }
                                             }
-                                            if (!has_error() && @array_intersect($_POST["update_recurring_fields"], array("event_description", "event_message", "event_objectives"))) {
+                                            
+                                            if (!has_error() && @array_intersect($_POST["update_recurring_fields"], array("mesh_keywords", "event_description", "event_message", "event_objectives"))) {
+
+                                                //checks if the description, objectives, or message has changed before saving.
+                                                $changed_event_description = false;
+                                                $changed_event_description = md5_change_value($recurring_event["event_id"], 'event_id', 'event_description', $PROCESSED_RECURRING_EVENT["event_description"], 'events');
+
+                                                $changed_event_objectives = false;
+                                                $changed_event_objectives = md5_change_value($recurring_event["event_id"], 'event_id', 'event_objectives', $PROCESSED_RECURRING_EVENT["event_objectives"], 'events');
+
+                                                $changed_event_message = false;
+                                                $changed_event_message = md5_change_value($recurring_event["event_id"], 'event_id', 'event_message', $PROCESSED_RECURRING_EVENT["event_message"], 'events');
+                                                
                                                 if (!$db->AutoExecute("`events`", $PROCESSED_RECURRING_EVENT, "UPDATE", "`event_id` = ".$db->qstr($recurring_event["event_id"]))) {
                                                     add_error("There was an error while trying to save changes to the selected <strong>Recurring Event</strong>.<br /><br />The system administrator was informed of this error; please try again later.");
-
                                                     application_log("error", "Unable to update an event record while editing a recurring event. Database said: ".$db->ErrorMsg());
+                                                } else {
+                                                    if ($changed_event_description || $changed_event_objectives || $changed_event_message) {
+                                                        if ($changed_event_description) {
+                                                            $recurring_history_updates[] = "Event Description";
+                                                        }
+
+                                                        if ($changed_event_objectives) {
+                                                            $recurring_history_updates[] = $translate->_("Event Objectives");
+                                                        }
+
+                                                        if ($changed_event_message) {
+                                                            $recurring_history_updates[] = "Event Preparation";
+                                                        }
+                                                    }
                                                 }
                                             }
 
+                                            if (!empty($recurring_history_updates)) {
+                                                history_log($recurring_event["event_id"], "updated event content: [".implode(",", $recurring_history_updates)."]");
+                                            }
                                         }
                                         if (!has_error()) {
                                             $query = "	SELECT b.*
@@ -756,24 +899,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             }
 						break;
 						case "files" :
-                            history_log($EVENT_ID, "deleted ". count($FILE_IDS) ." resource file".(count($FILE_IDS)>1?"s":""), $PROXY_ID);
-						break;
+									history_log($EVENT_ID, "deleted ". count($FILE_IDS) ." resource file".(count($FILE_IDS)>1?"s":""), $PROXY_ID);
+						    break;
 						case "links" :
-                            history_log($EVENT_ID, "deleted ". count($LINK_IDS) ." resource file".(count($LINK_IDS)>1?"s":""), $PROXY_ID);
-						break;
+									history_log($EVENT_ID, "deleted ". count($LINK_IDS) ." resource file".(count($LINK_IDS)>1?"s":""), $PROXY_ID);
+						    break;
 						case "quizzes" :
-                            history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." quiz".(count($QUIZ_IDS)>1?"es":""), $PROXY_ID);
-						break;
+									history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." quiz".(count($QUIZ_IDS)>1?"es":""), $PROXY_ID);
+						    break;
                         case "lti" :
-                           
-                            break;
+                            continue;
+                        break;
 						default :
 							continue;
 						break;
 					}
 				}
                 ?>
-                <style type="text/css">
+                <style>
                 textarea.expandable {
                     width: 90%;
                 }
@@ -781,22 +924,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 .datepicker, .timepicker {
                     z-index: 1151 !important;
                 }
-                
-                
                 </style>
                 <a id="false-link" href="#placeholder"></a>
                 <div id="placeholder" style="display: none"></div>
                 <?php
                 $HEAD[] = "<script src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
                 ?>
-                <script type="text/javascript">
+                <script>
                 jQuery(document).ready(function () {
 //                    jQuery("#delay_release_keywords_option_date").css("margin", "0");
 //                    jQuery("#delay_release_keywords").is(":checked") ? jQuery("#delay_release_keywords_controls").show() : jQuery("#delay_release_keywords_controls").hide();
 //                    jQuery("#delay_release_keywords").on("click", function() {
 //                        jQuery("#delay_release_keywords_controls").toggle(this.checked);
 //                    });
-                    
+
 //                    jQuery("#delay_release_option_date").css("margin", "0");
 
                     jQuery(".remove-hottopic").on("click", function(e) {
@@ -823,6 +964,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             if (uploaded == true) {
                                 location.reload();
                             }
+
+                            maxSteps = 3;
                         }
                     });
                 });
@@ -850,7 +993,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                 function confirmFileDelete() {
                     ask_user = confirm("Press OK to confirm that you would like to delete the selected file or files from this event, otherwise press Cancel.");
-
+                    
                     if (ask_user == true) {
                         $('file-listing').submit();
                     } else {
@@ -916,7 +1059,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 </script>
                 <?php
                 events_subnavigation($event_info,'content');
-
 
                 echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
                 echo "<h1 id=\"page-top\" class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
@@ -1010,7 +1152,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         $results	= $db->GetAll($query);
                                         if ($results) {
                                             foreach ($results as $key => $result) {
-                                                echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a> - ".(($result["contact_role"] == "ta")?"Teacher's Assistant":html_encode(ucwords($result["contact_role"])))."<br />\n";
+                                                switch ($result["contact_role"]) {
+                                                case "ta":
+                                                    $display_contact_role = "Teacher's Assistant";
+                                                    break;
+                                                case "teacher":
+                                                    $display_contact_role = $translate->_("Teacher");
+                                                    break;
+                                                default:
+                                                    $display_contact_role = html_encode(ucwords($result["contact_role"]));
+                                                    break;
+                                                }
+                                                echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a> - ".$display_contact_role."<br />\n";
                                             }
                                         } else {
                                             echo "To Be Announced";
@@ -1022,18 +1175,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     <td colspan="2">&nbsp;</td>
                                 </tr>
                                 <tr>
-                                    <td class="borderless" style="vertical-align: top"><label for="eventtype_ids" class="form-required">Event Types</label></td>
+                                    <td class="borderless" style="vertical-align: top"><label for="eventtype_ids" class="form-required"><?php echo $translate->_("Event Types"); ?></label></td>
                                     <td class="borderless">
-                                        <select id="eventtype_ids" name="eventtype_ids">
-                                            <option id="-1"> -- Pick a type to add -- </option>
-                                            <?php
-                                            if ((is_array($event_eventtypes_list)) && (count($event_eventtypes_list))) {
-                                                foreach ($event_eventtypes_list as $eventtype_id => $eventtype_title) {
-                                                    echo "<option value=\"".$eventtype_id."\">".html_encode($eventtype_title)."</option>";
-                                                }
+                                        <script>
+                                            var event_types = [];
+                                        </script>
+
+                                        <?php
+                                        if ((is_array($event_eventtypes_list)) && (count($event_eventtypes_list))) {
+                                            foreach ($event_eventtypes_list as $eventtype) {
+                                                $description = nl2br($eventtype["description"]);
+                                                $description = str_replace(array("\r\n", "\n\r", "\n", "\r"), "", $description);
+                                                ?>
+
+                                                <script>
+                                                    var event_type = [];
+                                                    event_type["target_id"] = "<?php echo (int) $eventtype["id"]; ?>";
+                                                    event_type["target_label"] = "<?php echo html_encode($eventtype["title"]); ?>";
+                                                    event_type["description"] = "<?php echo addslashes($description); ?>";
+                                                    event_types.push(event_type);
+                                                </script>
+
+                                                <?php
                                             }
                                             ?>
-                                        </select>
+
+                                            <button id="eventtype_ids" class="btn btn-search-filter" style="min-width: 220px; text-align: left;"><?php echo $translate->_("Browse Event Types"); ?><i class="icon-chevron-down btn-icon pull-right"></i></button>
+
+                                            <?php
+                                        } else {
+                                            echo display_error("No Event Types were found. You will need to add at least one Event Type before continuing.");
+                                        }
+                                        ?>
+
                                         <div id="duration_notice" class="content-small">Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
                                         <?php
                                         echo "<ol id=\"duration_container\" class=\"sortableList\" style=\"display: none\">\n";
@@ -1052,7 +1226,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         }
                                         ?>
                                         <div id="total_duration" class="content-small">Total time: 0 minutes.</div>
-                                        <input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">
+                                        <input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;" />
                                     </td>
                                 </tr>
                                 <tr>
@@ -1108,8 +1282,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             <div class="keywords half left">
                                 <h3>Keyword Search</h3>
                                 <div>Search MeSH Keywords
-                                    <input id="search" autocomplete="off" type="text" name="keyword">
-                                    <input id="event_id" type="hidden" name="event_id" value="<?php echo $EVENT_ID; ?>">
+                                    <input id="search" autocomplete="off" type="text" name="keyword" />
+                                    <input id="event_id" type="hidden" name="event_id" value="<?php echo $EVENT_ID; ?>" />
                                 </div>
 
                                 <div id="search_results">
@@ -1122,7 +1296,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 <div class="clearfix">
                                     <ul class="page-action" style="float: right">
                                         <div class="row-fluid space-below">
-                                            <a href="javascript:void(0)" class="keyword-toggle btn btn-success btn-small pull-right" keyword-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Show Keyword Search</a>
+                                            <a href="javascript:void(0)" class="keyword-toggle btn btn-success btn-small pull-right" keyword-toggle="show" id="toggle_sets">
+                                                <i class="icon-plus-sign icon-white"></i>
+                                                 Show Keyword Search
+                                             </a>
                                         </div>
                                     </ul>
                                 </div>
@@ -1159,7 +1336,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     ?>
 
                     <a name="event-objectives-section"></a>
-                    <h1 class="collapsable" title="Event Objectives Section">Event Objectives</h1>
+                    <h1 class="collapsable" title="<?php echo $translate->_("Event Objectives Section"); ?>"><?php echo $translate->_("Event Objectives"); ?></h1>
                     <div id="event-objectives-section">
                         <div class="row-fluid space-below">
                             <div id="objective-display" class="nl-form">
@@ -1214,10 +1391,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 }
                             </style>
                             <div class="objectives half left">
-                                <h3>Objective Sets</h3>
+                                <h3><?php echo $translate->_("Objective Sets"); ?></h3>
                                 <ul class="tl-objective-list" id="objective_list_0">
                                 <?php
-                                foreach($objectives as $objective){
+                                foreach($objectives as $objective) {
                                     ?>
                                     <li class = "objective-container objective-set"
                                         id = "objective_<?php echo $objective["objective_id"]; ?>"
@@ -1300,10 +1477,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             ?>
 
                             <div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="event" data-resource-id="<?php echo $EVENT_ID;?>">
-                                <h2>Mapped Objectives</h2>
+                                <h2>Mapped <?php echo $translate->_("Objectives"); ?></h2>
 
                                 <div class="row-fluid space-below">
-                                    <a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Map Additional Objectives</a>
+                                    <a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Map Additional <?php echo $translate->_("Objectives"); ?></a>
                                 </div>
                                 <?php
                                 if ($hierarchical_objectives) {
@@ -1314,7 +1491,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     ?>
                                     <div id="clinical-list-wrapper">
                                         <a name="clinical-objective-list"></a>
-                                        <h3 id="flat-toggle"  title="Clinical Objective List" class="collapsable <?php echo empty($objective_name["cp"]["global_lu_objectives_name"]) ? "collapsed" : ""; ?> list-heading"><?php echo $objective_name["cp"]["global_lu_objectives_name"] ? $objective_name["cp"]["global_lu_objectives_name"] : "Other Objectives"; ?></h3>
+                                        <h3 id="flat-toggle"  title="<?php echo $translate->_("Clinical Objective List"); ?>" class="collapsable <?php echo empty($objective_name["cp"]["global_lu_objectives_name"]) ? "collapsed" : ""; ?> list-heading"><?php echo $objective_name["cp"]["global_lu_objectives_name"] ? $objective_name["cp"]["global_lu_objectives_name"] : "Other " . $translate->_("Objectives"); ?></h3>
                                         <div id="clinical-objective-list">
                                             <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
                                                 <?php
@@ -1331,7 +1508,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             <?php
                                                             $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
                                                             if ($set) {
-                                                                echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                                echo "From the " . $translate->_("Objective Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
                                                             }
 
                                                             echo $objective["objective_description"];
@@ -1353,7 +1530,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 ?>
                                 <div id="event-list-wrapper" <?php echo ($explicit_event_objectives)?'':' style="display:none;"';?>>
                                     <a name="event-objective-list"></a>
-                                    <h2 id="event-toggle" title="Event Objective List" class="collapsable collapsed list-heading">Event Specific Objectives</h2>
+                                    <h2 id="event-toggle" title="<?php echo $translate->_("Event Objective List"); ?>" class="collapsable collapsed list-heading"><?php echo $translate->_("Event Specific Objectives"); ?></h2>
                                     <div id="event-objective-list">
                                         <ul class="objective-list mapped-list" id="mapped_event_objectives" data-importance="event">
                                             <?php
@@ -1372,7 +1549,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             <?php
                                                             $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
                                                             if ($set) {
-                                                                echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                                echo "From the " . $translate->_("Objective Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
                                                             }
 
                                                             echo $objective["objective_description"];
@@ -1446,6 +1623,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         $topic_results = $db->GetAll($query);
                         if ($topic_results) {
                             ?>
+                        <div style="clear:both;"></div>
                             <a name="event-topics-section"></a>
                             <h2 class="collapsable collapsed" title="Event Topics Section">Event Topics</h2>
                             <div id="event-topics-section">
@@ -1503,7 +1681,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         $sidebar_html .= "      <li><label for=\"cascade_event_message\" class=\"checkbox\"><input type=\"checkbox\" value=\"event_message\" id=\"cascade_event_message\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Required Preparation</label></li>\n";
                         $sidebar_html .= "      <li><label for=\"cascade_mesh_keywords\" class=\"checkbox\"><input type=\"checkbox\" value=\"mesh_keywords\" id=\"cascade_mesh_keywords\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Keywords</label></li>\n";
                         $sidebar_html .= "      <li><label for=\"cascade_event_objectives\" class=\"checkbox\"><input type=\"checkbox\" value=\"event_objectives\" id=\"cascade_event_objectives\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Free-Text Objectives</label></li>\n";
-                        $sidebar_html .= "      <li><label for=\"cascade_mapped_objectives\" class=\"checkbox\"><input type=\"checkbox\" value=\"mapped_objectives\" id=\"cascade_mapped_objectives\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Objectives</label></li>\n";
+                        $sidebar_html .= "      <li><label for=\"cascade_mapped_objectives\" class=\"checkbox\"><input type=\"checkbox\" value=\"mapped_objectives\" id=\"cascade_mapped_objectives\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> " . $translate->_("Event Objectives") . "</label></li>\n";
                         $sidebar_html .= "      <li><label for=\"cascade_event_topics\" class=\"checkbox\"><input type=\"checkbox\" value=\"event_topics\" id=\"cascade_event_topics\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Topics</label></li>\n";
                         $sidebar_html .= "  </ul>\n";
                         $sidebar_html .= "</div>\n";
@@ -1562,6 +1740,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 </div>
                                 <?php
                                 foreach ($recurring_events as $recurring_event) {
+                                    $recurring_event = $recurring_event->toArray();
                                     ?>
                                     <div class="row-fluid">
                                     <span class="span1">
@@ -1577,7 +1756,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         [<span class="content-small"><?php echo html_encode(date(DEFAULT_DATE_FORMAT, $recurring_event["event_start"])); ?></span>]
                                     </label>
                                     </div>
-                                <?php
+                                    <?php
                                 }
                                 ?>
                             </div>
@@ -1588,6 +1767,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         <?php
                     }
                     ?>
+                    <div id="selected_list_container"></div>
                 </form>
                 <a name="event-resources-section" id="event-resources-section"></a>
                 <h1 class="space-above large">Event Resources</h1>
@@ -1641,9 +1821,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         }
                     }
                     ?>
-                    
-                </div>
-               
+
                 <div id="delete-event-resource-modal" class="modal scrollable fade hide" style="max-height: 314px;">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -1679,7 +1857,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        
+
                                     </tbody>
                                 </table>
                             </div>
@@ -1699,6 +1877,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             <div class="modal-body">
                                 <form class="form-horizontal" action="<?php echo ENTRADA_URL . "/admin/events?section=api-resource-wizard" ?>" method="post" id="event_resource_form" enctype="multipart/form-data">
                                     <input id="event_id" type="hidden" name="event_id" value="<?php echo $EVENT_ID; ?>" />
+                                    <input id="re_bool" type="hidden" name="re_bool" value="<?php echo $re_bool; ?>" />
+                                    <input id="re_ids" type="hidden" name="re_ids" value="<?php echo htmlentities(json_encode($re_ids)); ?>" />
                                     <input id="event_resource_entity_id" type="hidden" name="event_resource_entity_id" value="" />
                                     <input id="resource_id" type="hidden" name="resource_id" value="" />
                                     <input id="resource_step" type="hidden" name="step" value="1" />
@@ -1738,10 +1918,112 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 </div>
 
                 <script type="text/javascript">
-                $$('select.ed_select_off').each(function(el) {
-                    $(el).disabled = true;
-                    $(el).fade({ duration: 0.3, to: 0.25 });
-                });
+                    jQuery(document).ready(function ($) {
+                        $("#eventtype_ids").advancedSearch({
+                            resource_url: ENTRADA_URL,
+                            filters: {
+                                event_types: {
+                                    label: "<?php echo $translate->_("Event Types"); ?>",
+                                    data_source: event_types,
+                                    mode: "radio"
+                                }
+                            },
+                            no_results_text: "<?php echo $translate->_("No Event Types found matching the search criteria"); ?>",
+                            selected_list_container: jQuery("#selected_list_container"),
+                            parent_form: $("#content_form"),
+                            width: 300
+                        });
+
+                        var popover_options = {
+                            animation: false,
+                            container: "body",
+                            selector: "[rel=\"popover\"]",
+                            html: true,
+                            trigger: "hover",
+                            placement: "left",
+                            content: function () {
+                                var target_id = $(this).attr("data-id");
+                                var index;
+
+                                for (index = 0; index < event_types.length; index++) {
+                                    if (event_types[index]["target_id"] == target_id) {
+                                        break;
+                                    }
+                                }
+
+                                return event_types[index]["description"];
+                            }
+                        };
+
+                        $("#eventtype_ids").click(function (e) {
+                            $.each($(".search-filter-item"), function (index, value) {
+                                $(this).attr("rel", "popover");
+                            });
+
+                            $("#content_form").on("mouseenter", ".search-filter-item", function (e) {
+                                e.stopPropagation();
+
+                                $(".popover").remove();
+                                $("[rel=\"popover\"]").popover(popover_options);
+                                $(this).popover("show");
+                            });
+
+                            $("#content_form").on("mouseleave", ".search-filter-item", function (e) {
+                                e.stopPropagation();
+
+                                if (!$(".search-filter-item:hover").length) {
+                                    setTimeout(function () {
+                                        if (!$(".popover:hover").length) {
+                                            $(".popover").remove();
+                                        }
+                                    }, 300);
+                                }
+                            });
+
+                            $("#content_form").on("click", ".search-filter-item", function (e) {
+                                $(".popover").remove();
+                            });
+                        });
+
+                        $("body").on("mouseleave", ".popover", function (e) {
+                            e.stopPropagation();
+
+                            setTimeout(function () {
+                                if (!$(".search-filter-item:hover").length) {
+                                    $(".popover").remove();
+                                }
+                            }, 300);
+                        });
+
+                        $("body").on("click", ".popover", function (e) {
+                            $(".popover").remove();
+                        });
+
+                        $("#content_form").on("change", ".search-target-input-control", function () {
+                            if ($(this).is(":checked")) {
+                                var li = $(document.createElement("li")).attr({id: "type_" + this.value}).html($(this).attr("data-label"));
+                                var a = $(document.createElement("a")).attr({href: "#", onclick: "$(this).up().remove(); cleanupList(); return false;"}).addClass("remove");
+                                var img = $(document.createElement("img")).attr({src: ENTRADA_URL + "/images/action-delete.gif"});
+                                var span = $(document.createElement("span")).addClass("duration_segment_container").html("Duration: ");
+                                var input = $(document.createElement("input")).attr({type: "text", name: "duration_segment[]", onchange: "cleanupList();", value: "60"}).addClass("input-mini duration_segment");
+
+                                a.append(img);
+                                span.append(input).append(" minutes");
+                                li.append(a).append(span);
+
+                                $("#duration_container").append(li);
+
+                                cleanupList();
+                                
+                                $("#selected_list_container").html("");
+                            }
+                        });
+                    });
+
+                    $$('select.ed_select_off').each(function(el) {
+                        $(el).disabled = true;
+                        $(el).fade({ duration: 0.3, to: 0.25 });
+                    });
                 </script>
                 <?php
                 /**
@@ -1749,7 +2031,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                  */
                 $sidebar_html  = "<ul class=\"menu\">\n";
                 $sidebar_html .= "	<li class=\"link\"><a href=\"#event-details-section\" onclick=\"$('event-details-section').scrollTo(); return false;\" title=\"Event Details\">Event Details</a></li>\n";
-                $sidebar_html .= "	<li class=\"link\"><a href=\"#event-objectives-section\" onclick=\"$('event-objectives-section').scrollTo(); return false;\" title=\"Event Objectives\">Event Objectives</a></li>\n";
+                $sidebar_html .= "	<li class=\"link\"><a href=\"#event-objectives-section\" onclick=\"$('event-objectives-section').scrollTo(); return false;\" title=\"" . $translate->_("Event Objectives") . "\">" . $translate->_("Event Objectives") . "</a></li>\n";
                 $sidebar_html .= "	<li class=\"link\"><a href=\"#event-resources-section\" onclick=\"$('event-resources-section').scrollTo(); return false;\" title=\"Event Resources\">Event Resources</a></li>\n";
                 $sidebar_html .= "</ul>\n";
 

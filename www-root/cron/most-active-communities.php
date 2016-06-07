@@ -30,6 +30,7 @@
     __DIR__ . "/../core",
     __DIR__ . "/../core/includes",
     __DIR__ . "/../core/library",
+    __DIR__ . "/../core/library/vendor",
     get_include_path(),
 )));
 

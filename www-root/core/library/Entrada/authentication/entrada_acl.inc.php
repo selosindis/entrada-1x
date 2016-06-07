@@ -19,7 +19,14 @@ class Entrada_ACL extends ACL_Factory {
 	var $modules = array (
 		"mom" => array (
 			"awards",
-			"community",
+			"community" => array(
+				"communitydiscussion" => array(
+					"communitydiscussiontopic"
+				),
+				"communityfolder",
+				"communityfile",
+				"communitylink"
+			),
 			"communityadmin",
 			"configuration",
 			"course" => array (
@@ -1773,6 +1780,331 @@ class CommunityMemberAssertion extends CommunityAssertion {
 	}
 }
 
+class CourseCommunityEnrollmentAssertion implements Zend_Acl_Assert_Interface {
+    public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+        global $db;
+                
+        //If asserting is off then return true right away
+        if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+            return false;
+        }
+
+        if (isset($resource->communityresource_id)) {
+            $communityresource_id = $resource->communityresource_id;
+        } else if (isset($acl->_entrada_last_query->communityresource_id)) {
+            $communityresource_id = $acl->_entrada_last_query->communityresource_id;
+        } else {
+            // Parse out the user ID and communitydiscussion ID
+            $resource_id = $resource->getResourceId();
+            $communityresource_type = preg_replace('/[0-9]+/', "", $resource_id);
+            $communityresource_id = preg_replace('/[^0-9]+/', "", $resource_id);
+        }
+
+        //community_discussions community_id
+		switch ($communityresource_type) {
+			case 'communitydiscussion' :
+				$query = "SELECT `course_id`
+						  FROM `community_courses` AS a
+						  JOIN `community_discussions` AS b
+						  ON a.`community_id` = b.`community_id`
+						  WHERE b.`cdiscussion_id` = " . $db->qstr($communityresource_id);
+			break;
+			case 'communityfolder' :
+				$query = "SELECT `course_id`
+						  FROM `community_courses` AS a
+						  JOIN `community_shares` AS b
+						  ON a.`community_id` = b.`community_id`
+						  WHERE b.`cshare_id` = ".$db->qstr($communityresource_id);
+			break;
+			case 'communityfile' :
+				$query = "SELECT `course_id`
+						  FROM `community_courses` AS a
+						  JOIN `community_share_files` AS b
+						  ON a.`community_id` = b.`community_id`
+						  WHERE b.`csfile_id` = ".$db->qstr($communityresource_id);
+			break;
+			case 'communitylink' :
+				$query = "SELECT `course_id`
+						  FROM `community_courses` AS a
+						  JOIN `community_share_links` AS b
+						  ON a.`community_id` = b.`community_id`
+						  WHERE b.`cslink_id` = ".$db->qstr($communityresource_id);
+			break;
+		}
+        $course_id = $db->GetOne($query);
+        if ($course_id) {
+            $role_id = $role->getRoleId();
+            $access_id = preg_replace('/[^0-9]+/', "", $role_id);
+
+            $query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+                        WHERE `id` = ".$db->qstr($access_id);
+            $user_id = $db->GetOne($query);
+
+            if (!isset($user_id) || !$user_id) {
+                $role_id = $acl->_entrada_last_query_role->getRoleId();
+                $access_id = preg_replace('/[^0-9]+/', "", $role_id);
+
+                    $query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+                                WHERE `id` = ".$db->qstr($access_id);
+                    $user_id = $db->GetOne($query);
+                }
+
+            return $this->_checkCourseCommunityEnrollment($user_id, $course_id);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+    * Checks if the $user_id is an active member of the corresponding
+    * course website (community).
+    *
+    * @param string|integer $user_id The proxy_id to be checked
+    * @param string|integer $course_id The course id to be checked
+    * @return boolean
+    */
+    static function _checkCourseCommunityEnrollment($user_id, $course_id) {
+        global $db;
+
+        $query = "
+        SELECT *
+        FROM `courses`
+        WHERE `course_id` = " . $db->qstr($course_id);
+        $result = $db->GetRow($query);
+
+        if ($result["permission"] == "open") {
+            return true;
+        } else {
+            $query = "
+            SELECT *
+            FROM `community_courses`
+            WHERE `course_id` = " . $db->qstr($course_id);
+            $result = $db->GetRow($query);
+            if ($result) {
+                $query = "
+                SELECT *
+                FROM `community_members`
+                WHERE `community_id` = " . $db->qstr($result["community_id"]) . "
+                AND `proxy_id` = " . $db->qstr($user_id) . "
+                AND `member_active` = 1";
+                $result = $db->GetRow($query);
+                if ($result) {
+                    return true;
+                }
+            }
+        }
+    }
+}
+
+
+/**
+ * Course Group Member Assertion
+ *
+ * Used to assert that user is a course group member and checks permissions
+ * in the corresponding course website (community). Grants access to community 
+ * administrators
+ *
+ * @author Organisation: UCLA
+ * @author Unit: David Geffen School of Medicine
+ * @author Developer: Daniel Noji <dnoji@mednet.ucla.edu>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class CourseGroupMemberAssertion implements Zend_Acl_Assert_Interface {
+
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
+                
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return false;
+		}
+                
+		if (isset($resource->communityresource_id)) {
+			$communityresource_id = $resource->communityresource_id;
+		} else if (isset($acl->_entrada_last_query->communityresource_id)) {
+			$communityresource_id = $acl->_entrada_last_query->communityresource_id;
+		} else {
+			// Parse out the user ID and communitydiscussion ID
+			$resource_id = $resource->getResourceId();
+			$communityresource_type = preg_replace('/[0-9]+/', "", $resource_id);
+            $communityresource_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+                
+		$role_id = $role->getRoleId();
+		$access_id = preg_replace('/[^0-9]+/', "", $role_id);
+                
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}
+            return $this->_checkCourseGroupMember($user_id, $communityresource_type, $communityresource_id, $privilege);
+                
+        }  
+        static function _checkCourseGroupMember ($user_id, $communityresource_type, $communityresource_id, $privilege){
+            global $db;
+            $course_group_member = false;
+            
+            //Check Community Membership
+            //Get the community ID
+			switch ($communityresource_type) {
+				case 'communitydiscussion' :
+		            $query = "SELECT `community_id` FROM `community_discussions`
+		                      WHERE `cdiscussion_id` = ".$db->qstr($communityresource_id);
+				break;
+				case 'communityfolder' :
+					$query = "SELECT `community_id` FROM `community_shares`
+							  WHERE `cshare_id` = ".$db->qstr($communityresource_id);
+				break;
+				case 'communityfile' :
+					$query = "SELECT `community_id` FROM `community_share_files`
+							  WHERE `csfile_id` = ".$db->qstr($communityresource_id);
+				break;
+				case 'communitylink' :
+					$query = "SELECT `community_id` FROM `community_share_links`
+							  WHERE `cslink_id` = ".$db->qstr($communityresource_id);
+				break;
+			}
+            $result	= $db->GetRow($query);
+            if ($result) {
+            //Check for the user's membership in the community
+                
+                $query	= "
+                        SELECT `proxy_id`, `member_acl` FROM `community_members`
+                        WHERE `community_id` = ".$db->qstr($result['community_id'])."
+                        AND `proxy_id` = ".$db->qstr($user_id)."
+                        AND `member_active` = '1'";
+                $membership	= $db->GetRow($query);
+                
+                if ($membership){
+                    /*
+                     * Grant Access if the user is an administrator of the community
+                     */
+                    if ($membership['member_acl'] == 1) {
+                        return true;
+                    } else {
+                        /*
+                         * If the user is not an administrator, try to grant access by course group membership permissions
+                         */
+						
+                        //Look up the course group permissions for the supplied $communityresource_id
+                        $query = " SELECT `cgroup_id`
+                                    FROM `community_acl_groups`
+                                    WHERE `resource_type` =  ". $db->qstr($communityresource_type) ."
+                                    AND `resource_value` = ". $db->qstr($communityresource_id) ."
+                                    AND `" . clean_input($privilege) . "` = '1'";
+                        $cgroups = $db->GetAll($query);
+
+                        if ($cgroups){
+                            foreach ($cgroups as $cgroup) {
+
+                                //Check if user is a member of the course group
+                                $query = " SELECT COUNT(*) as `user_access`
+                                            FROM `course_group_audience`
+                                            WHERE `cgroup_id` = " . $db->qstr($cgroup['cgroup_id'])."
+                                            AND `proxy_id` = " .$db->qstr($user_id) ."
+                                            AND `active` = '1'";
+
+                                $result = $db->GetRow($query); 
+
+                                //If the user is a member of the course group, give them access
+                                if ($result['user_access'] != 0){
+                                    $course_group_member = true;
+									break;
+                                }
+								
+								//Check if user is a tutor for the course group
+								$query = "SELECT COUNT(*) as `user_access`
+										  FROM `course_group_contacts`
+										  WHERE `cgroup_id` = ".$db->qstr($cgroup['cgroup_id'])."
+										  AND `proxy_id` = ".$db->qstr($user_id);
+								$result = $db->GetRow($query);
+								
+								//If the user is a tutor for the course group, give them access
+								if ($result['user_access'] != 0) {
+									$course_group_member = true;
+									break;
+								}
+                            }
+                        }
+                        return ($course_group_member) ? true : false;
+                    }
+                }
+            }
+        }
+}
+
+/**
+ * Community Discussion Post Owner Assertion Class
+ *
+ * Asserts that a role is an owner of the discussion post.
+ */
+class CommunityDiscussionTopicOwnerAssertion implements Zend_Acl_Assert_Interface {
+
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
+                
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return false;
+		}
+                
+		if (isset($resource->communitydiscussiontopic_id)) {
+			$communityresource_id = $resource->communitydiscussiontopic_id;
+		} else if (isset($acl->_entrada_last_query->communitydiscussiontopic_id)) {
+			$communityresource_id = $acl->_entrada_last_query->communitydiscussiontopic_id;
+		} else {
+			// Parse out the user ID and communitydiscussion ID
+			$resource_id = $resource->getResourceId();
+			$communityresource_type = preg_replace('/[0-9]+/', "", $resource_id);
+            $communityresource_id = preg_replace('/[^0-9]+/', "", $resource_id);
+            
+            if ($resource_type !== "communitydiscussiontopic") {
+            //This only asserts for communitydiscussiontopics.
+                return false;
+            }
+		}
+                
+		$role_id = $role->getRoleId();
+		$access_id = preg_replace('/[^0-9]+/', "", $role_id);
+                
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}
+       
+        return $this->_checkCommunityDiscussionTopicOwner($user_id, $communityresource_type, $communityresource_id, $privilege);
+    }
+    
+    static function _checkCommunityDiscussionTopicOwner ($user_id, $communityresource_type, $communityresource_id, $privilege){
+        global $db;
+        
+        $query = "SELECT EXISTS(SELECT 1 FROM `community_discussion_topics` WHERE `cdtopic_id` = ".$db->qstr($communityresource_id)." AND `proxy_id` = ".$db->qstr($user_id)." ) as `exists`";
+        $isDiscussionTopicOwner = $db->getRow($query);
+
+        if ($isDiscussionTopicOwner['exists'] == 1){
+            return true;
+        } else {
+            return false;
+        }
+    }        
+}
+
 /**
  * Not Guest assertion class
  *
@@ -2190,6 +2522,50 @@ class CourseResource extends EntradaAclResource {
 	public function getResourceId() {
 		return "course".($this->specific ? $this->course_id : "");
 	}
+}
+/**
+ *  Creates a community discussion resource
+ * 
+ * @author Organisation: UCLA
+ * @author Unit: David Geffen School of Medicine
+ * @author Developer: Daniel Noji <dnoji@mednet.ucla.edu>
+ * */
+
+class CommunityDiscussionResource extends EntradaAclResource{
+    var $communitydiscussion_id;
+            
+    function __construct($communitydiscussion_id, $assert = true){
+        $this->communitydiscussion_id = $communitydiscussion_id;
+        
+        if (isset($assert)){
+            $this->assert = $assert;
+        }
+    }
+    public function getResourceId() {
+        return "communitydiscussion". ($this->specific ? $this->communitydiscussion_id : "");
+    }
+}
+/**
+ *  Creates a community discussion topic resource
+ * 
+ * @author Organisation: UCLA
+ * @author Unit: David Geffen School of Medicine
+ * @author Developer: Daniel Noji <dnoji@mednet.ucla.edu>
+ * */
+
+class CommunityDiscussionTopicResource extends EntradaAclResource{
+    var $communitydiscussiontopic_id;
+            
+    function __construct($communitydiscussiontopic_id, $assert = true){
+        $this->communitydiscussiontopic_id = $communitydiscussiontopic_id;
+        
+        if (isset($assert)){
+            $this->assert = $assert;
+        }
+    }
+    public function getResourceId() {
+        return "communitydiscussiontopic". ($this->specific ? $this->communitydiscussiontopic_id : "");
+    }
 }
 /**
  * Smart gradebook resource object for the EntradaACL.

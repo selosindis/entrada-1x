@@ -112,6 +112,7 @@ class Models_Event_Resource_File extends Models_Base {
         return $this->updated_by;
     }
     
+    /* @return bool|Models_Event_Resource_File */
     public static function fetchRowByID ($id = null) {
         $self = new self();
         
@@ -126,25 +127,32 @@ class Models_Event_Resource_File extends Models_Base {
         return $self->fetchRow($contraints);
     }
     
+    /* @return bool|Models_Event_Resource_File */
     public static function fetchRowByEventIDName ($event_id = null, $file_name = null) {
         $self = new self();
         
+        $constraints = array (
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
+            array("key" => "file_name", "value" => $file_name, "method" => "=")
+        );
+
+        return $self->fetchRow($constraints);
+    }
+
+    /* @return bool|Models_Event_Resource_File */
+    public static function fetchRowByEventIDNameUpdate($event_id = null, $file_name = null, $updated_date = null) {
+        $self = new self();
+        
         $contraints = array (
-            array(
-                "key" => "event_id",
-                "value" => $event_id,
-                "method" => "="
-            ),
-            array(
-                "key" => "file_name",
-                "value" => $file_name,
-                "method" => "="
-            )
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
+            array("key" => "file_name", "value" => $file_name, "method" => "="),
+            array("key" => "updated_date", "value" => $updated_date, "method" => "=")
         );
         
         return $self->fetchRow($contraints);
     }
     
+    /* @return bool|Models_Statistic */
     public function getViewed() {
         global $db;
         global $ENTRADA_USER;

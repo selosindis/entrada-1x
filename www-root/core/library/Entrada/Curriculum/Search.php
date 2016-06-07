@@ -56,18 +56,24 @@ class Entrada_Curriculum_Search {
 
             $counter_select = "SELECT DISTINCT(`events`.`event_id`)";
 
-            $search_select  = "SELECT `events`.*, `event_audience`.`audience_type`, `event_audience`.`audience_value` AS `event_cohort`, ";
+            $search_select  = "SELECT `events`.*, `event_audience`.`audience_type`, COALESCE(`course_audience`.`audience_value`, `event_audience`.`audience_value`) AS `event_cohort`, ";
 
             $from = "FROM `events`
                     JOIN `courses` ON `events`.`course_id` = `courses`.`course_id`
                     " . ($only_active ? " AND `courses`.`course_active` = 1" : "") . "
                     " . ($search_org ? " AND `courses`.`organisation_id` = " . (int) $search_org : "") . "
-                    LEFT JOIN `event_audience` ON `event_audience`.`event_id` = `events`.`event_id`";
+                    LEFT JOIN `event_audience` ON `event_audience`.`event_id` = `events`.`event_id`
+                    LEFT JOIN `course_audience` ON `course_audience`.`course_id` = `courses`.`course_id`
+                    AND `event_audience`.`audience_type` = 'course_id'
+                    AND `course_audience`.`course_id` = `event_audience`.`audience_value`
+                    LEFT JOIN `curriculum_periods` ON `curriculum_periods`.`cperiod_id` = `course_audience`.`cperiod_id`";
 
             $where = "WHERE (`events`.`parent_id` IS NULL OR `events`.`parent_id` = '0')";
 
             if ($search_cohort) {
-                $where .= " AND (`event_audience`.`audience_type` = 'cohort' AND `event_audience`.`audience_value` = " . (int) $search_cohort . ")";
+                $where .= " AND (`event_audience`.`audience_type` = 'cohort' AND `event_audience`.`audience_value` = " . (int) $search_cohort . "";
+                $where .= " OR `course_audience`.`audience_type` = 'group_id' AND `course_audience`.`audience_value` = " . (int) $search_cohort . ")";
+                $where .= " AND (`curriculum_periods`.`cperiod_id` IS NULL OR (`events`.`event_start` BETWEEN `curriculum_periods`.`start_date` AND `curriculum_periods`.`finish_date`))";
             }
 
             if ($search_academic_year) {

@@ -24,7 +24,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]." and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[]	= array("url" => "", "title" => "Learning Event Types by Course");
+	$BREADCRUMB[]	= array("url" => "", "title" => $translate->_("Learning Event Types") . " by Course");
 	
 	/**
 	 * Add PlotKit to the beginning of the $HEAD array.
@@ -158,7 +158,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		$courses_included	= array();
 		$eventtype_legend	= array();
 		
-		echo "<h2 style=\"page-break-before: avoid\">Learning Event Types by Course</h2>";
+		echo "<h2 style=\"page-break-before: avoid\">" . $translate->_("Learning Event Types") . " by Course</h2>";
 		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
 		echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).".";
 		echo "</div>\n";
@@ -223,7 +223,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				<div style="text-align: center">
 					<canvas id="graph_1_<?php echo $course_id; ?>" width="675" height="450"></canvas>
 				</div>
-				<table id="data_table_<?php echo $course_id; ?>" class="tableList" cellspacing="0" summary="Event Types of <?php echo html_encode($courses_included[$course_id]); ?>">
+				<table id="data_table_<?php echo $course_id; ?>" class="tableList" cellspacing="0" summary="<?php echo $translate->_("Event Types"); ?> of <?php echo html_encode($courses_included[$course_id]); ?>">
 				<colgroup>
 					<col class="modified" />
 					<col class="title" />
@@ -233,7 +233,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
-						<td class="title">Event Type</td>
+						<td class="title"><?php echo $translate->_("Event Type"); ?></td>
 						<td class="report-hours large">Event Count</td>
 						<td class="report-hours large">Hour Count</td>
 					</tr>
@@ -269,7 +269,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				<tbody>
 					<tr class="na">
 						<td>&nbsp;</td>
-						<td>Event Type Totals</td>
+						<td><?php echo $translate->_("Event Type"); ?> Totals</td>
 						<td class="report-hours large"><?php echo $result["total_events"]; ?></td>
 						<td class="report-hours large"><?php echo display_hours($result["total_duration"]); ?> hrs</td>
 					</tr>
@@ -318,7 +318,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					<thead>
 						<tr>
 							<td class="title" style="border-left: 1px #666 solid">Event Title</td>
-							<td class="date">Event Type</td>
+							<td class="date"><?php echo $translate->_("Event Type"); ?></td>
 							<td class="date">Date</td>
 							<td class="report-hours">Duration</td>
 						</tr>
@@ -339,7 +339,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					}
 
 					echo "<tr class=\"na\" style=\"font-weight: bold\">\n";
-					echo "	<td colspan=\"2\" style=\"padding-left: 10px\">Total of ".count($appendix[$course_id])." events with ".$result["total_events"]." event type segments.</td>\n";
+					echo "	<td colspan=\"2\" style=\"padding-left: 10px\">Total of ".count($appendix[$course_id])." events with ".$result["total_events"]." " . $translate->_("Event Type") . " segments.</td>\n";
 					echo "	<td class=\"date\" style=\"text-align: right\">Total Hours:</td>\n";
 					echo "	<td class=\"report-hours\">".display_hours($total_duration)." hr".(($total_duration != 1) ? "s" : "")."</td>\n";
 					echo "</tr>\n";

@@ -35,11 +35,11 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	?>
-	<h1>Learning Event Types</h1>
+    <h1><?php echo $translate->_("Learning Event Types"); ?></h1>
 
-	<div class="row-fluid">
+    <div class="row-fluid">
         <span class="pull-right">
-            <a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/settings/manage/eventtypes?section=add&amp;org=<?php echo $ORGANISATION_ID; ?>"><i class="icon-plus-sign icon-white"></i> Add Event Type</a>
+            <a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/settings/manage/eventtypes?section=add&amp;org=<?php echo $ORGANISATION_ID; ?>"><i class="icon-plus-sign icon-white"></i> Add <?php echo $translate->_("Event Type"); ?></a>
         </span>
 	</div>
 	<br />
@@ -49,7 +49,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	if ($results) {
 		?>
 		<form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/eventtypes?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
-			<table class="table table-striped" summary="Learning Event Types">
+			<table class="table table-striped" summary="<?php echo $translate->_("Learning Event Types"); ?>">
 				<colgroup>
 					<col style="width: 3%" />
 					<col style="width: 97%" />
@@ -70,7 +70,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 		</form>
 		<?php
 	} else {
-		add_notice("There are currently no Learning Event Types in this organization.");
+		add_notice("There are currently no " . $translate->_("Learning Event Types") . " in this organization.");
 		echo display_notice();
 	}
 }

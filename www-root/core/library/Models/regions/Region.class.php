@@ -17,10 +17,10 @@
  *
  */
 class Region {
-	private $name;
-	private $abbreviation;
-	private $region_id;
-	private $parent_id;
+	protected $name;
+	protected $abbreviation;
+	protected $region_id;
+	protected $parent_id;
 	
 	/**
 	 * @param $name

@@ -1271,8 +1271,7 @@ border-left:none;
 }
 
 table.tableList tr td.attachment {
-width:20px;
-/*text-align:center;*/
+width:24px;
 border-left:none;
 overflow:visible;
 }
@@ -2681,9 +2680,13 @@ padding-bottom:15px;
 
 img.list-cancel-image {
 cursor:pointer;
-width:11px;
-height:11px;
+width:16px;
+height:16px;
 right:10px;
+}
+
+#faculty_list img.list-cancel-image, #audience_list img.list-cancel-image {
+    position: absolute;
 }
 
 a:hover,a.navi:hover {

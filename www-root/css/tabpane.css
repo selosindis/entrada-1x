@@ -70,8 +70,8 @@ padding:15px 10px 10px;
 }
 
 .dynamic-tab-pane-control .tab-page.members {
+min-height: 500px;
 height:auto;
-overflow:auto;
 }
 
 .dynamic-tab-pane-control .tab-row {

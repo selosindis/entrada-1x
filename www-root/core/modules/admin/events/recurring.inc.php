@@ -28,30 +28,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
     header("Location: ".ENTRADA_URL);
     exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('eventcontent', 'update', false)) {
-    $ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
+} elseif (!$ENTRADA_ACL->amIAllowed("eventcontent", "update", false)) {
+    $ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-    $ERROR++;
-    $ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+    add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
     echo display_error();
 
     application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
     if ($EVENT_ID) {
-        $query		= "	SELECT a.*, b.`organisation_id`
-						FROM `events` AS a
-						LEFT JOIN `courses` AS b
-						ON b.`course_id` = a.`course_id`
-						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
+        $query = "SELECT a.*, b.`organisation_id`
+                    FROM `events` AS a
+                    LEFT JOIN `courses` AS b
+                    ON b.`course_id` = a.`course_id`
+                    WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
         $event_info	= $db->GetRow($query);
-        if ($event_info && isset($event_info["recurring_id"])) {
-            $query = "SELECT * FROM `events`
-                        WHERE `recurring_id` = ".$db->qstr($event_info["recurring_id"]);
-            $recurring_events = $db->GetAll($query);
+        if ($event_info && isset($event_info["recurring_id"]) && $event_info["recurring_id"]) {
+            $recurring_events = Models_Event::fetchAllRecurringByEventID($event_info["event_id"]);
             if ($recurring_events) {
                 $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $EVENT_ID)), "title" => "Event Content");
                 events_subnavigation($event_info, "recurring");
+
                 echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
                 echo "<h1 class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
 
@@ -75,57 +73,60 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         <table class="tableList" cellspacing="0" summary="List of Recurring Events">
                             <colgroup>
                                 <col class="modified"/>
-                                <col class="title"/>
+                                <col class="date"/>
                                 <col class="title"/>
                                 <col class="attachment"/>
                             </colgroup>
                             <thead>
-                            <tr>
-                                <td class="modified">&nbsp;</td>
-                                <td class="title">Date & Time</td>
-                                <td class="title">Event Title</td>
-                                <td class="attachment">&nbsp;</td>
-                            </tr>
+                                <tr>
+                                    <td class="modified">&nbsp;</td>
+                                    <td class="date">Date & Time</td>
+                                    <td class="title">Event Title</td>
+                                    <td class="attachment">&nbsp;</td>
+                                </tr>
                             </thead>
                             <tbody>
                             <?php
-                                foreach ($recurring_events as $recurring_event) {
-                                    if ($ENTRADA_ACL->amIAllowed(new EventResource($recurring_event["event_id"], $recurring_event["course_id"], $event_info["organisation_id"]), "update")) {
-                                        $administrator = true;
-                                        $url = ENTRADA_URL."/admin/events?section=edit&amp;id=".$recurring_event["event_id"];
-                                    } else if ($ENTRADA_ACL->amIAllowed(new EventContentResource($recurring_event["event_id"], $recurring_event["course_id"], $event_info["organisation_id"]), "update")) {
-                                        $url = ENTRADA_URL."/admin/events?section=content&amp;id=".$recurring_event["event_id"];
-                                    }
-                                    ?>
-                                    <tr>
-                                        <td><input type="checkbox" class="delete" name="checked[]" value="<?php echo $recurring_event["event_id"];?>" id="event-<?php echo $recurring_event["event_id"];?>" /></td>
-                                        <?php
-                                        echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").($EVENT_ID == $recurring_event["event_id"] ? "<strong>" : "").date(DEFAULT_DATE_FORMAT, $recurring_event["event_start"]).($EVENT_ID == $recurring_event["event_id"] ? "</strong>" : "").(($url) ? "</a>" : "")."</td>\n";
-                                        echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($recurring_event["event_title"])."\">" : "").($EVENT_ID == $recurring_event["event_id"] ? "<strong>" : "").html_encode($recurring_event["event_title"]).($EVENT_ID == $recurring_event["event_id"] ? "</strong>" : "").(($url) ? "</a>" : "")."</td>\n";
-                                        echo "  <td class=\"attachment".((!$url) ? " np" : "")."\">";
-                                        if ($url) {
-                                            echo "  <div class=\"btn-group\">\n";
-                                            echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">\n";
-                                            echo "          <i class=\"icon-pencil\"></i>\n";
-                                            echo "      </button>";
-                                            echo "      <ul class=\"dropdown-menu toggle-left\">\n";
-                                            if ($ENTRADA_ACL->amIAllowed(new EventResource($recurring_event["event_id"], $recurring_event["course_id"], $event_info["organisation_id"]), 'update')) {
-                                                echo "      <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=edit&amp;id=".$recurring_event["event_id"]."\">Event Details</a></li>";
-                                            }
-                                            echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=content&amp;id=".$recurring_event["event_id"]."\">Event Content</a></li>";
-                                            echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=attendance&amp;id=".$recurring_event["event_id"]."\">Event Attendance</a></li>";
-                                            echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=history&amp;id=".$recurring_event["event_id"]."\">Event History</a></li>";
-                                            echo "      </ul>\n";
-                                            echo "  </div>\n";
-                                        } else {
-                                            echo "&nbsp;";
-                                        }
-                                        echo "  </td>\n";
-                                        ?>
-                                    </tr>
-                                    <?php
+                            foreach ($recurring_events as $recurring_event) {
+                                $recurring_event = $recurring_event->toArray();
+
+                                if ($ENTRADA_ACL->amIAllowed(new EventResource($recurring_event["event_id"], $recurring_event["course_id"], $event_info["organisation_id"]), "update")) {
+                                    $administrator = true;
+                                    $url = ENTRADA_URL."/admin/events?section=edit&amp;id=".$recurring_event["event_id"];
+                                } else if ($ENTRADA_ACL->amIAllowed(new EventContentResource($recurring_event["event_id"], $recurring_event["course_id"], $event_info["organisation_id"]), "update")) {
+                                    $url = ENTRADA_URL."/admin/events?section=content&amp;id=".$recurring_event["event_id"];
                                 }
                                 ?>
+                                <tr>
+                                    <td><input type="checkbox" class="delete" name="checked[]" value="<?php echo $recurring_event["event_id"];?>" id="event-<?php echo $recurring_event["event_id"];?>" /></td>
+                                    <?php
+                                    echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").($EVENT_ID == $recurring_event["event_id"] ? "<strong>" : "").date(DEFAULT_DATE_FORMAT, $recurring_event["event_start"]).($EVENT_ID == $recurring_event["event_id"] ? "</strong>" : "").(($url) ? "</a>" : "")."</td>\n";
+                                    echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($recurring_event["event_title"])."\">" : "").($EVENT_ID == $recurring_event["event_id"] ? "<strong>" : "").html_encode($recurring_event["event_title"]).($EVENT_ID == $recurring_event["event_id"] ? "</strong>" : "").(($url) ? "</a>" : "")."</td>\n";
+                                    echo "  <td class=\"attachment".((!$url) ? " np" : "")."\">";
+                                    if ($url) {
+                                        echo "  <div class=\"btn-group\">\n";
+                                        echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">\n";
+                                        echo "          <i class=\"icon-cog\"></i>\n";
+                                        echo "      </button>";
+                                        echo "      <ul class=\"dropdown-menu toggle-left\">\n";
+                                        if ($ENTRADA_ACL->amIAllowed(new EventResource($recurring_event["event_id"], $recurring_event["course_id"], $event_info["organisation_id"]), 'update')) {
+                                            echo "      <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=edit&amp;id=".$recurring_event["event_id"]."\">Event Details</a></li>";
+                                        }
+                                        echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=content&amp;id=".$recurring_event["event_id"]."\">Event Content</a></li>";
+                                        echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=attendance&amp;id=".$recurring_event["event_id"]."\">Event Attendance</a></li>";
+                                        echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=history&amp;id=".$recurring_event["event_id"]."\">Event History</a></li>";
+                                        echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=statistics&amp;id=".$recurring_event["event_id"]."\">Event Statistics</a></li>";
+                                        echo "      </ul>\n";
+                                        echo "  </div>\n";
+                                    } else {
+                                        echo "&nbsp;";
+                                    }
+                                    echo "  </td>\n";
+                                    ?>
+                                </tr>
+                                <?php
+                            }
+                            ?>
                             </tbody>
                         </table>
                         <div style="margin-top:10px">
@@ -139,21 +140,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         </div>
                     </form>
                 </div>
-            <?php
+                <?php
             } else {
                 echo display_notice("No recurring events associated with this event [<strong>".html_encode($event_info["event_title"])."</strong>] were found in the system.");
             }
         } else {
-            $ERROR++;
-            $ERRORSTR[] = "In order to view the related recurring events for an event, you must provide a valid event identifier. The provided ID does not exist in this system.";
+            add_error("In order to view the related recurring events for an event, you must provide a valid event identifier. The provided ID does not exist in this system.");
 
             echo display_error();
 
             application_log("notice", "Failed to provide a valid event identifer when attempting to edit a event.");
         }
     } else {
-        $ERROR++;
-        $ERRORSTR[] = "In order to view the related recurring events for an event, you must provide the events identifier.";
+        add_error("In order to view the related recurring events for an event, you must provide the events identifier.");
 
         echo display_error();
 

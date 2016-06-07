@@ -155,7 +155,7 @@ if ($RECORD_ID) {
 							
 							$count = 1;
 							if (count($questions) > 1) {
-								echo "<div class=\"pagination\" style=\"position: relative; text-align: right;\">\n";
+								echo "<div id=\"pagination-links\" class=\"pagination\" style=\"position: relative; text-align: right;\">\n";
 								echo "	<ul>";
 								echo "		<li class=\"active\"><a>1</a></li>";
 								echo "		<li><a href=\"javascript:displayChart('1','2');\">2</a></li>";
@@ -211,7 +211,7 @@ if ($RECORD_ID) {
 														</colgroup>
 														<thead>
 															<tr>
-																<td class="general" style="width: 75%; border-left: none;">Responses</td>
+																<td class="general" style="width: 75%;">Responses</td>
 																<td class="report-hours" style="border-left: none;">Votes</td>
 															</tr>
 														</thead>

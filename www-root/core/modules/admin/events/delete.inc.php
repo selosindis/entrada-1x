@@ -396,7 +396,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<td class="modified" style="font-size: 12px">&nbsp;</td>
 							<td class="date sortedASC" style="font-size: 12px"><div class="noLink">Date &amp; Time</div></td>
 							<td class="phase" style="font-size: 12px">Phase</td>
-							<td class="teacher" style="font-size: 12px">Teacher</td>
+							<td class="teacher" style="font-size: 12px"><?php echo $translate->_("Teacher"); ?></td>
 							<td class="title" style="font-size: 12px">Event Title</td>
 							<?php echo ((!$is_draft) ? "<td class=\"attachment\" style=\"font-size: 12px\">&nbsp;</td>" : ""); ?>
 						</tr>

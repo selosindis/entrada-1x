@@ -48,6 +48,12 @@ if ($RECORD_ID) {
 						if (isset($_FILES["uploaded_file"])) {
 							switch($_FILES["uploaded_file"]["error"]) {
 								case 0 :
+                                    if (strpos($_FILES["uploaded_file"]["name"], ".") === false) {
+                                        $ERROR++;
+                                        $ERRORSTR[] = "You cannot upload a file without an extension (.doc, .ppt, etc).";
+
+                                        application_log("error", "User {$ENTRADA_USER->getID()} uploaded a file to shares without an extension.");
+                                    } else {
 									if (($file_filesize = (int) trim($_FILES["uploaded_file"]["size"])) <= $VALID_MAX_FILESIZE) {
 										$query	= "
 												SELECT `file_version`
@@ -65,7 +71,22 @@ if ($RECORD_ID) {
 											$PROCESSED["file_version"] = 1;
 										}
 
+                                            $finfo = new finfo(FILEINFO_MIME);
+                                            $type = $finfo->file($_FILES["uploaded_file"]["tmp_name"]);
+                                            $type_array = explode(";", $type);
+                                            $mimetype = $type_array[0];
 										$PROCESSED["file_mimetype"]		= strtolower(trim($_FILES["uploaded_file"]["type"]));
+                                            switch($PROCESSED["file_mimetype"]) {
+                                                case "application/x-forcedownload":
+                                                case "application/octet-stream":
+                                                case "\"application/octet-stream\"":
+                                                case "application/download":
+                                                case "application/force-download":
+                                                    $PROCESSED["file_mimetype"] = $mimetype;
+                                                    break;
+                                            }
+                                            
+                                            
 										$PROCESSED["file_filesize"]		= $file_filesize;
 										$PROCESSED["file_filename"]		= useable_filename(trim($_FILES["uploaded_file"]["name"]));
 
@@ -75,6 +96,12 @@ if ($RECORD_ID) {
 
 											application_log("error", "The community document storage path [".COMMUNITY_STORAGE_DOCUMENTS."] does not exist or is not writable.");
 										}
+                                        } else {
+                                            $ERROR++;
+                                            $ERRORSTR[] = "The file that was uploaded is larger than ".readable_size($VALID_MAX_FILESIZE).". Please make the file smaller and try again.";
+
+                                            application_log("error", "User {$ENTRADA_USER->getID()} unable to upload a file, the file size is larger than the limit.");
+                                        }
 									}
 								break;
 								case 1 :
@@ -118,22 +145,7 @@ if ($RECORD_ID) {
 							if ($db->AutoExecute("community_share_file_versions", $PROCESSED, "INSERT")) {
 								if ($VERSION_ID = $db->Insert_Id()) {
 									if (communities_shares_process_file($_FILES["uploaded_file"]["tmp_name"], $VERSION_ID)) {
-										
-										if ($LOGGED_IN){
-											if ($COMMUNITY_MEMBER) {
-												if (($COMMUNITY_ADMIN) || ($file_record["allow_member_read"] == 1)) {
-													$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID;
-												} elseif ($file_record["allow_member_upload"] == 1) {
-													$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-												}
-											}else{
-												if ($file_record["allow_troll_read"] == 1) {
-													$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID;
-												} elseif ($file_record["allow_member_upload"] == 1) {
-													$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-												}
-											}
-										}
+										$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID;
 										$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 										$SUCCESS++;

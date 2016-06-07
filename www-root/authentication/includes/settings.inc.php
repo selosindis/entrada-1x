@@ -48,7 +48,7 @@ define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : T
 $ALLOWED_AUTH_METHODS = array(													// Authentication methods you want this server to support.
 	"local" => true,															// Uses local entrada_auth database to authenticate users.
 	"ldap" => false,															// Uses configured LDAP server (LDAP_HOST) to authenticate users.
-	"cas" => false																// Uses CAS to authenticate users.
+	"sso" => false																// Uses SSO to authenticate users.
 );
 
 $ALLOWED_ENCRYPTION_METHODS = array(											// Encryption methods you want this server to use.

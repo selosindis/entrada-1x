@@ -41,16 +41,18 @@ if (isset($_GET["download"])) {
 }
 
 /**
- * This function handles granular permissions levels (where as communities_module_access handles higer level permissions)
+ * This function handles granular permissions levels (where as communities_module_access handles higher level permissions)
  * for the actual shares.
  *
  * @param int $cshare_id
  * @param string $section
  * @return bool
  */
-function shares_module_access($cshare_id = 0, $section = "") {
-	global $db, $COMMUNITY_ID, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $NOTICE, $NOTICESTR, $ERROR, $ERRORSTR, $PAGE_ID;
+function shares_module_access($cshare_id = 0, $section = "", $ignore_parent = false) {
+	global $db, $COMMUNITY_ACL, $COMMUNITY_ID, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $NOTICE, $NOTICESTR, $ERROR, $ERRORSTR, $PAGE_ID, $ENTRADA_USER;
 
+    $is_student = $ENTRADA_USER->getActiveGroup() === 'student';
+	$is_community_course = Models_Community_Course::is_community_course($COMMUNITY_ID);
 	$allow_to_load = false;
 
 	if (((bool) $LOGGED_IN) && ((bool) $COMMUNITY_MEMBER) && ((bool) $COMMUNITY_ADMIN)) {
@@ -59,7 +61,8 @@ function shares_module_access($cshare_id = 0, $section = "") {
 		if ($cshare_id = (int) $cshare_id) {
 			$query	= "SELECT * FROM `community_shares` WHERE `cshare_id` = ".$db->qstr($cshare_id)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
 			$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
-			if ($result) {
+            //Make sure the user has read rights to the parent folder, if present
+			if ($result && (!$result["parent_folder_id"] || $allow_to_load = ($ignore_parent || shares_module_access($result["parent_folder_id"], "view-folder")))) {
 				switch($section) {
 					case "add-folder" :
 					case "delete-folder" :
@@ -71,47 +74,71 @@ function shares_module_access($cshare_id = 0, $section = "") {
 						$allow_to_load = false;
 					break;
 					case "add-file" :
-					case "delete-file" :
+                    case "add-link" :
+                    case "add-html" :
 					case "edit-file" :
-						if ($LOGGED_IN) {
-							if ($COMMUNITY_MEMBER) {
-								if ((int) $result["allow_member_upload"]) {
+                    case "edit-html" :
+					case "delete-file" :
+					case "delete-link" :
+                    case "delete-html" :
+						if ($is_community_course) {
+							$allow_to_load = $COMMUNITY_ACL->amIAllowed("communityfolder", $cshare_id, "create");
+						} else {
+							if ($LOGGED_IN) {
+								if ($COMMUNITY_MEMBER) {
+									if ((int) $result["allow_member_upload"]) {
+										$allow_to_load = true;
+									}
+								} elseif ((int) $result["allow_troll_upload"]) {
 									$allow_to_load = true;
 								}
-							} elseif ((int) $result["allow_troll_upload"]) {
-								$allow_to_load = true;
+							} else {
+								$allow_to_load = false;
 							}
-						} else {
-							$allow_to_load = false;
 						}
+					break;
+					case "edit-link" :
+						//If it is checking for edit-link, the real check will be
+						//done in the call to shares_link_module_access
+						$allow_to_load = true;
 					break;
 					case "add-comment" :
 					case "edit-comment" :
 					case "delete-comment" :
-						if ($LOGGED_IN) {
-							if ($COMMUNITY_MEMBER) {
-								if ((int) $result["allow_member_comment"]) {
+						if ($is_community_course) {
+							$allow_to_load = $COMMUNITY_ACL->amIAllowed("communityfolder", $cshare_id, "update");
+						} else {
+							if ($LOGGED_IN) {
+								if ($COMMUNITY_MEMBER) {
+									if ((int) $result["allow_member_comment"]) {
+										$allow_to_load = true;
+									}
+								} elseif ((int) $result["allow_troll_comment"]) {
 									$allow_to_load = true;
 								}
-							} elseif ((int) $result["allow_troll_comment"]) {
-								$allow_to_load = true;
+							} else {
+								$allow_to_load = false;
 							}
-						} else {
-							$allow_to_load = false;
 						}
 					break;
 					case "view-folder" :
 					case "view-file" :
-						if ($LOGGED_IN) {
-							if ($COMMUNITY_MEMBER) {
-								if ((int) $result["allow_member_read"]) {
+                    case "view-link" :
+                    case "view-html" :
+						if ($is_community_course) {
+							$allow_to_load = $COMMUNITY_ACL->amIAllowed("communityfolder", $cshare_id, "read");
+						} else {
+							if ($LOGGED_IN) {
+								if ($COMMUNITY_MEMBER) {
+									if ((int) $result["allow_member_read"]) {
+										$allow_to_load = true;
+									}
+								} elseif ((int) $result["allow_troll_read"]) {
 									$allow_to_load = true;
 								}
-							} elseif ((int) $result["allow_troll_read"]) {
+							} elseif ((int) $result["allow_public_read"]) {
 								$allow_to_load = true;
 							}
-						} elseif ((int) $result["allow_public_read"]) {
-							$allow_to_load = true;
 						}
 					break;
 					case "add-revision" :
@@ -137,10 +164,17 @@ function shares_module_access($cshare_id = 0, $section = "") {
 			if ((int) $result["folder_active"]) {
 				if ((!$release_date = (int) $result["release_date"]) || ($release_date <= time())) {
 					if ((!$release_until = (int) $result["release_until"]) || ($release_until > time())) {
-						/**
-						 * You're good to go, no further checks at this time.
-						 * If you need to add more checks, this is there they would go.
-						 */
+                        if (!$is_student || !$result["student_hidden"]) {
+                            /**
+                             * You're good to go, no further checks at this time.
+                             * If you need to add more checks, this is there they would go.
+                             */
+                        } else {
+                            $NOTICE++;
+                            $NOTICESTR[] = "This shared folder is hidden from students.";
+                            
+                            $allow_to_load = false;
+                        }
 					} else {
 						$NOTICE++;
 						$NOTICESTR[]	= "This shared folder was only accessible until ".date(DEFAULT_DATE_FORMAT, $release_until).".<br /><br />Please contact your community administrators for further assistance.";
@@ -177,9 +211,11 @@ function shares_module_access($cshare_id = 0, $section = "") {
  * @param string $section
  * @return bool
  */
-function shares_file_module_access($csfile_id = 0, $section = "") {
-	global $db, $COMMUNITY_ID, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $NOTICE, $NOTICESTR, $ERROR, $ERRORSTR, $ENTRADA_USER;
+function shares_file_module_access($csfile_id = 0, $section = "", $ignore_parent = false) {
+	global $db, $COMMUNITY_ACL, $COMMUNITY_ID, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $NOTICE, $NOTICESTR, $ERROR, $ERRORSTR, $ENTRADA_USER;
 
+    $is_student = $ENTRADA_USER->getActiveGroup() === 'student';
+	$is_community_course = Models_Community_Course::is_community_course($COMMUNITY_ID);
 	$allow_to_load = false;
 
 	if (((bool) $LOGGED_IN) && ((bool) $COMMUNITY_MEMBER) && ((bool) $COMMUNITY_ADMIN)) {
@@ -189,39 +225,55 @@ function shares_file_module_access($csfile_id = 0, $section = "") {
 			$query	= "SELECT * FROM `community_share_files` WHERE `csfile_id` = ".$db->qstr($csfile_id)." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
 			$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
 			if ($result) {
-				if ($allow_to_load = shares_module_access($result["cshare_id"], $section)) {
+				if ($allow_to_load = ($ignore_parent || shares_module_access($result["cshare_id"], "view-folder"))) {
 					switch($section) {
 						case "delete-file" :
 						case "edit-file" :
+                        case "move-file" :
 							if ($ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
 								$allow_to_load = false;
 							}
 						break;
 						case "add-revision" :
-							if ($LOGGED_IN) {
-								if ($result["proxy_id"] != $ENTRADA_USER->getActiveId()){
-									if ($COMMUNITY_MEMBER) {
-										if (!(int) $result["allow_member_revision"]) {
-											$allow_to_load = false;	
-										}
-									} elseif (!(int) $result["allow_troll_revision"]) {
-										$allow_to_load = false;
-									}
-								}else{
-									
-									$query = "SELECT `allow_troll_upload`, `allow_member_upload` FROM `community_shares` WHERE `cshare_id` = ".$db->qstr($result["cshare_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
-									$share_permission = $db->GetRow($query);
-									
-									if ($COMMUNITY_MEMBER) {
-										if (!(int) $share_permission["allow_member_upload"]) {
-											$allow_to_load = false;	
-										}
-									} elseif (!(int) $share_permission["allow_troll_upload"]) {
-										$allow_to_load = false;
-									}
-								}
+							if ($is_community_course) {
+								$allow_to_load = $COMMUNITY_ACL->amIAllowed("communityfile", $csfile_id, "update");
 							} else {
-								$allow_to_load = false;
+								if ($LOGGED_IN) {
+									if ($result["proxy_id"] != $ENTRADA_USER->getActiveId()){
+										if ($COMMUNITY_MEMBER) {
+											if (!(int) $result["allow_member_revision"]) {
+												$allow_to_load = false;	
+											}
+										} elseif (!(int) $result["allow_troll_revision"]) {
+											$allow_to_load = false;
+										}
+									} else {
+										
+										$query = "SELECT `allow_troll_upload`, `allow_member_upload` FROM `community_shares` WHERE `cshare_id` = ".$db->qstr($result["cshare_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
+										$share_permission = $db->GetRow($query);
+										
+										if ($COMMUNITY_MEMBER) {
+											if (!(int) $share_permission["allow_member_upload"]) {
+												$allow_to_load = false;	
+											}
+										} elseif (!(int) $share_permission["allow_troll_upload"]) {
+											$allow_to_load = false;
+										}
+									}
+								} else {
+									$allow_to_load = false;
+								}
+							}
+						break;
+						case "view-file" :
+							if ($is_community_course) {
+								$allow_to_load = $COMMUNITY_ACL->amIAllowed("communityfile", $csfile_id, "read");
+							} else {
+								if ($COMMUNITY_MEMBER) {
+									$allow_to_load = (bool)$result["allow_member_read"];
+								} else {
+									$allow_to_load = (bool)$result["allow_troll_read"];
+								}
 							}
 						break;
 						default :
@@ -240,10 +292,17 @@ function shares_file_module_access($csfile_id = 0, $section = "") {
 				if (!$LOGGED_IN || $ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
 					if ((!$release_date = (int) $result["release_date"]) || ($release_date <= time())) {
 						if ((!$release_until = (int) $result["release_until"]) || ($release_until > time())) {
-							/**
-							 * You're good to go, no further checks at this time.
-							 * If you need to add more checks, this is there they would go.
-							 */
+                            if (!$is_student || !$result["student_hidden"]) {
+                                /**
+                                 * You're good to go, no further checks at this time.
+                                 * If you need to add more checks, this is there they would go.
+                                 */
+                            } else {
+                                $NOTICE++;
+                                $NOTICESTR[] = "This file is hidden from students.";
+                                
+                                $allow_to_load = false;
+                            }
 						} else {
 							$NOTICE++;
 							$NOTICESTR[]	= "This file was only accessible until ".date(DEFAULT_DATE_FORMAT, $release_until).".<br /><br />Please contact your community administrators for further assistance.";
@@ -274,6 +333,259 @@ function shares_file_module_access($csfile_id = 0, $section = "") {
 	return $allow_to_load;
 }
 
+
+/**
+ * This function handles granular permissions levels (where as communities_module_access handles higer level permissions)
+ * for the actual files within the share.
+ *
+ * @param int $cslink_id
+ * @param string $section
+ * @return bool
+ */
+function shares_link_module_access($cslink_id = 0, $section = "", $ignore_parent = false) {
+	global $db, $COMMUNITY_ACL, $COMMUNITY_ID, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $NOTICE, $NOTICESTR, $ERROR, $ERRORSTR, $ENTRADA_USER;
+
+    $is_student = $ENTRADA_USER->getActiveGroup() === 'student';
+	$is_community_course = Models_Community_Course::is_community_course($COMMUNITY_ID);
+	$allow_to_load = false;
+
+	if (((bool) $LOGGED_IN) && ((bool) $COMMUNITY_MEMBER) && ((bool) $COMMUNITY_ADMIN)) {
+		$allow_to_load = true;
+	} else {
+		if ($cslink_id = (int) $cslink_id) {
+			$query	= "SELECT * FROM `community_share_links` WHERE `cslink_id` = ".$db->qstr($cslink_id)." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
+			$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
+			if ($result) {
+				if ($allow_to_load = ($ignore_parent || shares_module_access($result["cshare_id"], "view-folder"))) {
+					switch($section) {
+						case "delete-link" :
+							if ($ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
+								$allow_to_load = false;
+							}
+						break;
+						case "edit-link" :
+                        case "move-link" :
+							if ($is_community_course) {
+								$allow_to_load = $COMMUNITY_ACL->amIAllowed("communitylink", $cslink_id, "update");
+							} else {
+								if ($ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
+									$allow_to_load = false;
+								}
+							}
+						break;
+						case "add-revision" :
+							if ($is_community_course) {
+								$allow_to_load = $COMMUNITY_ACL->amIAllowed("communitylink", $cslink_id, "update");
+							} else {
+								if ($LOGGED_IN) {
+									if ($result["proxy_id"] != $ENTRADA_USER->getActiveId()){
+										if ($COMMUNITY_MEMBER) {
+											if (!(int) $result["allow_member_revision"]) {
+												$allow_to_load = false;	
+											}
+										} elseif (!(int) $result["allow_troll_revision"]) {
+											$allow_to_load = false;
+										}
+									}else{
+										
+										$query = "SELECT `allow_troll_upload`, `allow_member_upload` FROM `community_shares` WHERE `cshare_id` = ".$db->qstr($result["cshare_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
+										$share_permission = $db->GetRow($query);
+										
+										if ($COMMUNITY_MEMBER) {
+											if (!(int) $share_permission["allow_member_upload"]) {
+												$allow_to_load = false;	
+											}
+										} elseif (!(int) $share_permission["allow_troll_upload"]) {
+											$allow_to_load = false;
+										}
+									}
+								} else {
+									$allow_to_load = false;
+								}
+							}
+						break;
+						case "view-link" :
+							if ($is_community_course) {
+								$allow_to_load = $COMMUNITY_ACL->amIAllowed("communitylink", $cslink_id, "read");
+							} else {
+								if ($COMMUNITY_MEMBER) {
+									$allow_to_load = (bool)$result["allow_member_read"];
+								} else {
+									$allow_to_load = (bool)$result["allow_troll_read"];
+								}
+							}
+						break;
+						default :
+							continue;
+						break;
+					}
+				}
+			}
+		}
+		if ($allow_to_load) {
+			if ((int) $result["link_active"]) {
+				/**
+				 * Don't worry about checking the release dates if the person viewing
+				 * the photo is the photo uploader.
+				 */
+				if (!$LOGGED_IN || $ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
+					if ((!$release_date = (int) $result["release_date"]) || ($release_date <= time())) {
+						if ((!$release_until = (int) $result["release_until"]) || ($release_until > time())) {
+                            if (!$is_student || !$result["student_active"]) {
+                                /**
+                                 * You're good to go, no further checks at this time.
+                                 * If you need to add more checks, this is there they would go.
+                                 */
+                            } else {
+                                $NOTICE++;
+                                $NOTICESTR[] = "This link is hidden from students.";
+                                
+                                $allow_to_load = false;
+                            }
+						} else {
+							$NOTICE++;
+							$NOTICESTR[]	= "This link was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.<br /><br />Please contact your community administrators for further assistance.";
+
+							$allow_to_load	= false;
+						}
+					} else {
+						$NOTICE++;
+						$NOTICESTR[]	= "This link will not be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.<br /><br />Please check back at this time, thank-you.";
+
+						$allow_to_load	= false;
+					}
+				}
+			} else {
+				$NOTICE++;
+				$NOTICESTR[]	= "This link was deactivated <strong>".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</strong> by <strong>".html_encode(get_account_data("firstlast", $result["updated_by"]))."</strong>.<br /><br />If there has been a mistake or you have questions relating to this issue please contact the MEdTech Unit directly.";
+
+				$allow_to_load	= false;
+			}
+		} else {
+			if (!$ERROR) {
+				$ERROR++;
+				$ERRORSTR[] = "You do not have access to this link.<br /><br />If you believe there has been a mistake, please contact a community administrator for assistance.";
+			}
+		}
+	}
+	
+	return $allow_to_load;
+}
+
+/**
+ * This function handles granular permissions levels (where as communities_module_access handles higher level permissions)
+ * for the actual files within the share.
+ *
+ * @param int $cshtml_id
+ * @param string $section
+ * @return bool
+ */
+function shares_html_module_access($cshtml_id = 0, $section = "", $ignore_parent = false) {
+	global $db, $COMMUNITY_ACL, $COMMUNITY_ID, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $NOTICE, $NOTICESTR, $ERROR, $ERRORSTR, $ENTRADA_USER;
+
+    $is_student = $ENTRADA_USER->getActiveGroup() === 'student';
+	$is_community_course = Models_Community_Course::is_community_course($COMMUNITY_ID);
+	$allow_to_load = false;
+
+	if (((bool) $LOGGED_IN) && ((bool) $COMMUNITY_MEMBER) && ((bool) $COMMUNITY_ADMIN)) {
+		$allow_to_load = true;
+	} else {
+		if ($cshtml_id = (int) $cshtml_id) {
+			$query	= "SELECT * FROM `community_share_html` WHERE `cshtml_id` = ".$db->qstr($cshtml_id)." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
+			$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
+			if ($result) {
+				if ($allow_to_load = ($ignore_parent || shares_module_access($result["cshare_id"], "view-folder"))) {
+					switch($section) {
+                        case "view-html" :
+                            if ($is_community_course) {
+								$allow_to_load = $COMMUNITY_ACL->amIAllowed("communityhtml", $cshtml_id, "read");
+                            } else {
+                                if ($LOGGED_IN) {
+                                    if ($ENTRADA_USER->getActiveId() != $result["proxy_id"]) {
+                                        if ($COMMUNITY_MEMBER) {
+                                            if (!$result["allow_member_read"]) {
+                                                $allow_to_load = false;
+                                            }
+                                        } else {
+                                            if (!$result["allow_troll_read"]) {
+                                                $allow_to_load = false;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    $allow_to_load = false;
+                                }
+                            }
+                        break;
+                        case "move-html" :
+						case "delete-html" :
+						case "edit-html" :
+						case "add-revision" :
+							if ($LOGGED_IN) {
+                                if ($ENTRADA_USER->getActiveId() != $result["proxy_id"]) {
+                                    $allow_to_load = false;
+                                }
+                            } else {
+                                $allow_to_load = false;
+                            }
+						break;
+						default :
+							continue;
+						break;
+					}
+				}
+			}
+		}
+		if ($allow_to_load) {
+			if ((int) $result["html_active"]) {
+				/**
+				 * Don't worry about checking the release dates if the person viewing
+				 * the photo is the photo uploader.
+				 */
+				if (!$LOGGED_IN || $ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
+					if ((!$release_date = (int) $result["release_date"]) || ($release_date <= time())) {
+						if ((!$release_until = (int) $result["release_until"]) || ($release_until > time())) {
+                            if (!$is_student || !$result["student_hidden"]) {
+                                /**
+                                 * You're good to go, no further checks at this time.
+                                 * If you need to add more checks, this is there they would go.
+                                 */
+                            } else {
+                                $NOTICE++;
+                                $NOTICESTR[] = "This HTML document is hidden from students.";
+                                
+                                $allow_to_load = false;
+                            }
+						} else {
+							$NOTICE++;
+							$NOTICESTR[]	= "This HTML document was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.<br /><br />Please contact your community administrators for further assistance.";
+
+							$allow_to_load	= false;
+						}
+					} else {
+						$NOTICE++;
+						$NOTICESTR[]	= "This HTML document will not be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.<br /><br />Please check back at this time, thank-you.";
+
+						$allow_to_load	= false;
+					}
+				}
+			} else {
+				$NOTICE++;
+				$NOTICESTR[]	= "This HTML document was deactivated <strong>".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</strong> by <strong>".html_encode(get_account_data("firstlast", $result["updated_by"]))."</strong>.<br /><br />If there has been a mistake or you have questions relating to this issue please contact the " . SUPPORT_UNIT . " directly.";
+
+				$allow_to_load	= false;
+			}
+		} else {
+			if (!$ERROR) {
+				$ERROR++;
+				$ERRORSTR[] = "You do not have access to This HTML document.<br /><br />If you believe there has been a mistake, please contact a community administrator for assistance.";
+			}
+		}
+	}
+	
+	return $allow_to_load;
+}
+
 /**
  * This function handles granular permissions levels (where as communities_module_access handles higer level permissions)
  * for the actual gallery comments.
@@ -283,8 +595,9 @@ function shares_file_module_access($csfile_id = 0, $section = "") {
  * @return bool
  */
 function shares_comment_module_access($cscomment_id = 0, $section = "") {
-	global $db, $COMMUNITY_ID, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $NOTICE, $NOTICESTR, $ERROR, $ERRORSTR, $ENTRADA_USER;
+	global $db, $COMMUNITY_ACL, $COMMUNITY_ID, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $NOTICE, $NOTICESTR, $ERROR, $ERRORSTR, $ENTRADA_USER;
 
+	$is_community_course = Models_Community_Course::is_community_course($COMMUNITY_ID);
 	$allow_to_load = false;
 
 	if (((bool) $LOGGED_IN) && ((bool) $COMMUNITY_MEMBER) && ((bool) $COMMUNITY_ADMIN)) {
@@ -301,6 +614,11 @@ function shares_comment_module_access($cscomment_id = 0, $section = "") {
 						case "edit-comment" :
 							if ($ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
 								$allow_to_load = false;
+							}
+						break;
+						case "add-comment" :
+							if ($is_community_course) {
+								$allow_to_load = $COMMUNITY_ACL->amIAllowed("communityfolder", $result["cshare_id"], "update");
 							}
 						break;
 						default :
@@ -462,7 +780,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, $SECTION)) {
 
 	$ERROR++;
 	$ERRORSTR[] = "You do not have access to this section of this module. Please contact a community administrator for assistance.";
-
 	echo display_error();
+    application_log("error", "Permission denied for : Community: " . $COMMUNITY_ID . " Module: " . $MODULE_ID . " Section: ". $SECTION);    
 }
 ?>

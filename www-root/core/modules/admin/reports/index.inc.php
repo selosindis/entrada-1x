@@ -59,8 +59,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	<h2>Learning Event Reports</h2>
 	<ol class="system-reports">
 		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=event-types-by-course">Learning Event Types by Course</a><br />
-			A detailed report containing a learning event type breakdown by Course.
+			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=event-types-by-course"><?php echo $translate->_("Learning Event Types"); ?> by Course</a><br />
+			A detailed report containing a <?php echo $translate->_("Learning Event Type"); ?> breakdown by Course.
 		</li>
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=course-summary">Course Summary Report</a><br />
@@ -84,7 +84,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		</li>
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=teaching-report-by-department">Faculty Teaching Report By Department (half days)</a><br />
-			A teaching report that shows how many hours faculty are teaching different event types broken down by department and division.
+			A teaching report that shows how many hours faculty are teaching different <?php echo $translate->_("Event Types"); ?> broken down by department and division.
 		</li>
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=teaching-faculty-contact-details">Teaching Faculty Contact Details</a><br />

@@ -46,7 +46,7 @@ aside ul {
     border-bottom: 1px solid #e7e6e6;
 }
 #main .row-fluid {
-    overflow: hidden;
+    /*overflow: hidden;*/
 }
 
 /* HEADER */
@@ -122,6 +122,26 @@ header h1 {
     display: inline-block;
     height: 24px;
     width: 24px;
+}
+
+.collapsable {
+    cursor:pointer;
+}
+
+.collapsable.expanded:before {
+    float: right;
+    content: url(../images/minus.gif);
+    clear: both;
+}
+
+.collapsable.collapsed {
+    color: #CCC;
+}
+
+.collapsable.collapsed:before {
+    float: right;
+    content: url(../images/plus.gif);
+    clear: both;
 }
 
 /* MAIN NAV */
@@ -208,6 +228,7 @@ header h1 {
 #main section h2 {
     margin-top: 40px;
 }
+
 .additional-pages ul {
     list-style: none;
     margin: 0;
@@ -240,6 +261,39 @@ header h1 {
 .alert-block ul {
     list-style: none;
     margin: 0;
+}
+
+.db-profile-photo {
+    width: 32px;
+    height: 42px;
+}
+
+.schedule-day {
+    margin: 0;
+    font-size: 2.5em;
+}
+.schedule-week {
+    display: block;
+    margin: 0 0 -0.6em 0;
+    font-style: normal;
+}
+.scheduler-date {
+    font-size: .8em;
+}
+.event-title {
+    font-size: 1.5em;
+}
+
+.date-meta-wrap {
+    display: inline-block;
+    margin-top: -5px;
+    margin-right: 5px;
+}
+
+.day-wrap {
+    display: inline-block;
+    margin-right: 5px;
+    margin-top: 5px;
 }
 
 /* RIGHT COMMUNITY NAV */
@@ -657,7 +711,7 @@ div.tagline {
 }
 
 ul.shares li {
-    border-bottom:1px solid #ddd;
+    /*border-bottom:1px solid #ddd;*/
     padding:15px 0
 }
 
@@ -701,6 +755,152 @@ ul.shares li.folder-6 {
     padding-left:37px
 }
 
+span.folder-1 {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-1.gif) no-repeat 0 2px;
+    float: left;
+}
+span.folder-2 {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-2.gif) no-repeat 0 2px;
+    float: left;
+}
+span.folder-3 {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-3.gif) no-repeat 0 2px;
+    float: left;
+}
+span.folder-4 {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-4.gif) no-repeat 0 2px;
+    float: left;
+}
+span.folder-5 {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-5.gif) no-repeat 0 2px;
+    float: left;
+}
+span.folder-6 {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-6.gif) no-repeat 0 2px;
+    float: left;
+}
+
+ul.shares li a {
+    white-space:nowrap;
+    overflow:hidden;
+    line-height:135%;
+    padding:1px;
+}
+
+.float-left {
+    float: left;
+}
+i.float-left{
+    margin: 8px 0 0 0;
+}
+span.iconPlaceholder {
+    height: 16px;
+    width: 16px;
+    float: left;
+}
+.clear{
+    clear: both;
+}
+.subshare{
+    display: none;
+}
+
+li.folderShare{
+    padding: 2px!important;
+}
+.fileUL{
+    padding: 0;
+    margin: 0px 0px 0px 18px;
+}
+.folderUL{
+    margin: 0px 0px 0px 5px;
+}
+
+ul.folderUL li.folderShare div.content-small {
+    margin-left: 40px;
+}
+
+.dev-notes.alert {
+    margin: 5px 25px 0px 0px;
+    margin-bottom: 0px;
+    padding-top: 2px;
+    font-size: 10px;
+    display: none;
+}
+.dev-notes.alert h3 {
+    line-height: 20px;
+    font-size: 12px;
+}
+span.dev-notes-link {
+    cursor: hand;
+    font-size: 10px;
+    font-weight: bold;
+    color: #32456e;
+}
+
+.folderShare .dropdown-toggle {
+    height: 24px;
+}
+ul.dropdown-menu li {
+    list-style: none;
+    padding: 0;
+}
+
+.folderShare ul.dropdown-menu li a {
+    padding: 5px 15px;
+    font-weight: normal;
+    font-size: 11px;
+    color: #333333;
+}
+
+.folderShare .dropdown-menu li > a:hover{
+    background: none repeat scroll 0 0 #1d3569;
+    color: #fff;
+}
+
+.share-edit-btn .icon-pencil, .file-download-btn .icon-download-alt {
+    transform: scale(.75);
+}
+
+.share-edit-btn .btn-mini, .file-download-btn .btn-mini {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+}
+
+.share-edit-btn.btn-group > .btn-mini {
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+.medtech_message {
+    font-size: 12px;
+}
+
+#html-content {
+    padding-bottom: 10px;
+}
+
+ul#move-html-ul.page-action {
+    margin-left: 0;
+}
+
+/*#main div#folderTop .row-fluid {*/
+    /*overflow: hidden;*/
+/*}*/
+
 .space-left{
     margin-left:10px;
 }
@@ -740,6 +940,375 @@ ul.announcements,ul.events {
     list-style-type:none;
     margin:0 0 10px;
     padding:4px 0 0
+}
+
+/* Discussion Boards */
+#attached-files div span.attached-file-wrapper {
+    border: 1px solid #ccc;
+    padding: 5px 15px;
+    border-radius: 5px;
+    background-color: #f7f7f7;
+    display: inline-block;
+    margin: 5px 0;
+}
+#attached-files input {
+    display: none;
+}
+input[type="file"]#uploaded_file {
+    width: 190px;
+}
+input#uploaded_title {
+    display: inline;
+    width: 175px;
+    margin-right: 10px;
+}
+.db_file_col1 {
+    width: 15%;
+    text-align: right;
+    vertical-align: top;
+    padding: 5px;
+    border-bottom: none;
+    display: inline-block;
+}
+.db_file_col2{
+    width: 75%;
+    text-align: left;
+    padding: 0px 5px 5px 5px;
+    display: inline-block;
+}
+.db_file_col2a{
+    padding: 9px 5px 5px 5px;
+}
+.db_file_col2b{
+    padding: 9px 5px 5px 5px;
+    width: 60%;
+
+}
+.file-checkbox-text{
+    padding: 5px 0px 0px 0px;
+    vertical-align: bottom;
+}
+.container-file{
+    width: 100%;
+}
+
+iframe {
+    max-width: 500px;
+}
+
+span.db_file_col2 .bootstrap-filestyle {
+    margin-bottom: 10px;
+}
+span.db_file_col2 .bootstrap-filestyle .input-large {
+    margin-bottom: 0px;
+}
+span.db_file_col2 .bootstrap-filestyle label {
+    margin-left: 5px;
+}
+span.db_file_col2 input#uploaded_title {
+    margin-bottom: 0px;
+    width: 210px;
+    margin-right: 0px;
+}
+span.db_file_col2 input#file_attach_button {
+    padding: 7px;
+    margin-left: 5px;
+    width: 88px;
+}
+.container-file-group #topic_title {
+    margin-left: 4px;
+    width: 466px;
+}
+
+.container-file h2.title {
+    float: left;
+    margin: 4px 0px 0px 0px;
+    border-bottom: none;
+}
+
+.container-file ul.page-action {
+    float: right;
+    margin: 0px;
+    padding: 10px 0px 0px 0px;
+}
+.container-file hr {
+    margin: 4px 0 8px 0;
+    border-bottom: 2px solid #CCCCCC;
+}
+
+.container-file-group{
+    list-style-type: none;
+}
+ul.container-file-group h3.db_file_col1 {
+    margin-top: 2px;
+    line-height: 20px;
+}
+
+ul.container-file-group span.db_file_col2 {
+    margin-top: 4px;
+    padding-top: 2px;
+    line-height: 20px;
+}
+
+ul.container-file-group span.db_file_col2 input[type='checkbox'] {
+    margin: 0px;
+}
+
+ul.container-file-group span.db_file_col2 input[type='radio'] {
+    margin: 0px 3px 0px 0px;
+}
+
+/** db photo section **/
+img.db-profile-photo {
+    width: 32px;
+    height: 42px;
+    float: left;
+    margin-bottom: 5px;
+}
+
+img.db-profile-photo + span {
+    width: 70px;
+    height: 42px;
+    margin-left: 10px;
+    margin-top: 5px;
+    float: left;
+}
+/** end db photo section **/
+.category-title {
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 5px;
+    margin-top: -2px;
+}
+.ui-accordion .category-title {
+    margin-left: 15px;
+}
+
+/** End Discussion Board Section */
+
+
+
+/*
+*
+*Community Share folder and Links section
+*
+*/
+
+table.date-time{
+    width: 100%;
+}
+table.date-time tr td {
+    padding: 5px;
+}
+table.date-time div.input-append {
+    margin-bottom: 0;
+}
+table.date-time #release_start, table.date-time #release_finish {
+    margin-top: 0;
+}
+
+table.date-time #release_start_text, table.date-time #release_finish_text {
+    margin-bottom: 0;
+}
+
+table.community-add-table {
+    width: 100%;
+}
+
+table.community-add-table textarea {
+    height: 60px;
+    width: 95%;
+}
+
+table.community-add-table table {
+    width: 100%;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+tr.dev-notes-row {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    display: none;
+}
+
+
+.iframeSize{
+    width: 675px;
+    height: 600px;
+    border: 0;
+}
+
+.hidden_shares{
+    color: #A7A7A7;
+}
+
+a:hover.hidden_shares{
+    color: #696969;
+}
+
+ul.shares li.folder-1-hidden {
+    background:transparent url(../images/list-folder-1-hidden.gif) no-repeat 0 2px;
+    background-position: 10px 0px;
+}
+
+ul.shares li.folder-2-hidden {
+    background:transparent url(../images/list-folder-2-hidden.gif) no-repeat 0 2px;
+    background-position: 10px 0px;
+}
+
+ul.shares li.folder-3-hidden {
+    background:transparent url(../images/list-folder-3-hidden.gif) no-repeat 0 2px;
+    background-position: 10px 0px;
+}
+
+ul.shares li.folder-4-hidden {
+    background:transparent url(../images/list-folder-4-hidden.gif) no-repeat 0 2px;
+    background-position: 10px 0px;
+}
+
+ul.shares li.folder-5-hidden {
+    background:transparent url(../images/list-folder-5-hidden.gif) no-repeat 0 2px;
+    background-position: 10px 0px;
+}
+
+ul.shares li.folder-6-hidden {
+    background:transparent url(../images/list-folder-6-hidden.gif) no-repeat 0 2px;
+    background-position: 10px 0px;
+}
+span.folder-1-hidden {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-1-hidden.gif) no-repeat 0 2px;
+    float: left;
+}
+span.folder-2-hidden {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-2-hidden.gif) no-repeat 0 2px;
+    float: left;
+}
+span.folder-3-hidden {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-3-hidden.gif) no-repeat 0 2px;
+    float: left;
+}
+span.folder-4-hidden {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-4-hidden.gif) no-repeat 0 2px;
+    float: left;
+}
+span.folder-5-hidden {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-5-hidden.gif) no-repeat 0 2px;
+    float: left;
+}
+span.folder-6-hidden {
+    height: 35px;
+    width: 35px;
+    background:transparent url(../images/list-folder-6-hidden.gif) no-repeat 0 2px;
+    float: left;
+}
+
+.folderShare a.action, table.discussions a.action {
+    background-color: transparent;
+    font-weight: bold;
+}
+
+.handle {
+    background-image: url(../../../../images/arrow-resize.png);
+    display: inline-block;
+    float: left;
+    height: 16px;
+    width: 16px;
+    margin: 10px 0 0;
+}
+
+.handleFile{
+    background-image: url(../../../../images/arrow-resize.png);
+    display: inline-block;
+    float: left;
+    height: 16px;
+    width: 16px;
+    margin: 3px 0 0;
+}
+
+.hoverClass{
+    background: blue;
+}
+
+.i-hidden {
+    display: none!important;
+}
+ul.shares li {
+    padding: 5px 0 2px 10px;
+    list-style: none;
+
+}
+li.fileshare {
+    margin: 0px 0px 0px 5px;
+}
+ul.shares {
+    margin: 0;
+    padding: 0;
+}
+ul.shares .media-body .well{
+    margin-top:8px;
+}
+
+/*
+    End community Share folder and Links section
+*/
+
+.quiz-header-row {
+    display: block;
+    height: auto;
+    line-height: 40px;
+}
+
+.quiz-header-title {
+    font-size: 1.25em;
+    font-weight: bold;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;
+}
+
+.fa-stack.quiz-header {
+    height: 2.5em;
+    width: 2.5em;
+    line-height: 2.5em;
+}
+
+.fa-stack-2x.quiz-header {
+    font-size: 2.5em;
+}
+
+.quiz-header.primary {
+    color: #337ab7;
+}
+
+.quiz-header.success {
+    color: #5cb85c;
+}
+
+.quiz-header.warning {
+    color: #f0ad4e;
+}
+
+.quiz-header.danger {
+    color: #d9534f;
+}
+
+.quiz-icons a:hover {
+    text-decoration: none;
+}
+
+.attempt-not-allowed {
+    color: #666666;
 }
 
 /*

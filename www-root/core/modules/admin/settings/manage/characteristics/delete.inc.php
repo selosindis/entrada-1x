@@ -34,10 +34,10 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/characteristics?section=delete&amp;org=".$ORGANISATION["organisation_id"], "title" => "Delete Characteristics");
+    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/characteristics?section=delete&amp;org=".$ORGANISATION["organisation_id"], "title" => "Delete " . $translate->_("Characteristic"));
     ?>
 
-    <h1>Delete Characteristics</h1>
+    <h1>Delete <?php echo $translate->_("Characteristics"); ?></h1>
 
     <?php
     $PROCESSED["remove_ids"] = array();
@@ -71,9 +71,9 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                 $url = ENTRADA_URL."/admin/settings/manage/characteristics?org=".$ORGANISATION_ID;
 
                 if ($total_deactivated) {
-                    add_success("You have successfully deactivated ".$total_deactivated." Assessment Characteristic".($total_deactivated != 1 ? "s" : "").".<br /><br />You will now be redirected to the Assessment Characteristics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+                    add_success("You have successfully deactivated ".$total_deactivated." ".$translate->_("Characteristic").($total_deactivated != 1 ? "s" : "").".<br /><br />You will now be redirected to the ".$translate->_("Assessment Characteristics")." index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
                 } else {
-                    add_notice("We were unable to deactivate any of the Assessment Characteristics you selected. Please try your request again.");
+                    add_notice("We were unable to deactivate any of the ".$translate->_("Assessment Characteristics")." you selected. Please try your request again.");
                 }
 
                 if (has_success()) {
@@ -88,10 +88,10 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
             break;
 			case 1:
 			default:
-				echo display_notice("Please review the following Assessment Characteristics to ensure that you wish to <strong>deactivate</strong> them.");
+				echo display_notice("Please review the following " . $translate->_("Assessment Characteristics") . " to ensure that you wish to <strong>deactivate</strong> them.");
     			?>
     			<form action ="<?php echo ENTRADA_URL."/admin/settings/manage/characteristics?section=delete&org=".$ORGANISATION_ID."&step=2"; ?>" method="post">
-					<table class="tableList" cellspacing="0" summary="List of Assessment Characteristics To Be Deleted">
+                    <table class="tableList" cellspacing="0" summary="List of <?php echo $translate->_("Assessment Characteristics"); ?> To Be Deleted">
                         <colgroup>
                             <col class="modified" />
                             <col class="title" />
@@ -101,7 +101,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                         <tr>
                             <td class="modified">&nbsp;</td>
                             <td class="type">Type</td>
-                            <td class="title">Characteristic</td>
+                            <td class="title"><?php echo $translate->_("Characteristic"); ?></td>
                         </tr>
                         </thead>
                         <tbody>
@@ -132,7 +132,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 
         $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-		add_error("There were no Assessment Characteristics selected to be deleted. You will now be redirected to the Assessment Characteristics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+		add_error("There were no " . $translate->_("Assessment Characteristics") . " selected to be deleted. You will now be redirected to the " . $translate->_("Assessment Characteristics") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
 
 		echo display_error();
 	}

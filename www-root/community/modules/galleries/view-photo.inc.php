@@ -207,7 +207,7 @@ if ($RECORD_ID) {
 							echo "	</table>\n";
 						}
 						?>
-						<table>
+						<table style="width: 100%">
 							<colgroup>
 								<col style="width: 20%" />
 								<col style="width: 80%" />
@@ -335,7 +335,7 @@ if ($RECORD_ID) {
 							?>
 							<ul class="page-action">
 								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success">Add Photo Comment</a></li>
-								<li><a href="#top" class="btn btn-success pull-right"><i class="icon-chevron-up icon-white"></i></a></li>
+								<li  style="padding-right: 0px"><a href="#top" class="btn btn-success pull-right"><i class="icon-chevron-up icon-white"></i></a></li>
 							</ul>
 							<?php
 						}

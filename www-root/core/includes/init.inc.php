@@ -27,27 +27,14 @@
 @ini_set("filter.default_flags", FILTER_FLAG_NO_ENCODE_QUOTES);
 
 /**
- * Register the Zend autoloader so we use any part of Zend Framework without
- * the need to require the specific Zend Framework files.
+ * Register the Composer autoloader.
  */
-require_once("Zend/Loader/Autoloader.php");
-$loader = Zend_Loader_Autoloader::getInstance();
-$loader->registerNamespace('Entrada_');
-$loader->registerNamespace('Models_');
+require_once("autoload.php");
 
 require_once("config/settings.inc.php");
 
-//if the google api code is included, add google's autoloader also
-if (file_exists(ENTRADA_ABSOLUTE.'/core/library/Google/autoload.php')) {
-    require_once 'Google/autoload.php';
-}
-
 header("X-Frame-Options: SAMEORIGIN");
 
-if (defined("DEVELOPMENT_MODE") && (bool) DEVELOPMENT_MODE) {
-    require_once("Entrada/adodb/adodb-exceptions.inc.php");
-}
-require_once("Entrada/adodb/adodb.inc.php");
 require_once("functions.inc.php");
 require_once("dbconnection.inc.php");
 require_once("Entrada/pagination/pagination.class.php");
@@ -71,12 +58,6 @@ if (defined("DEVELOPMENT_MODE") && (bool) DEVELOPMENT_MODE) {
 		header("Location: ".ENTRADA_URL."/maintenance.html");
 		exit;
 	}
-}
-
-if (defined("AUTH_ALLOW_CAS") && (bool) AUTH_ALLOW_CAS) {
-	require_once("Entrada/cas/CAS.php");
-
-	phpCAS::client(CAS_VERSION_2_0, AUTH_CAS_HOSTNAME, AUTH_CAS_PORT, AUTH_CAS_URI, false);
 }
 
 /**
@@ -119,12 +100,22 @@ if ($ENTRADA_CACHE) {
 $translate = new Entrada_Translate(
     array (
         "adapter" => "array",
-        "content" => ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_TEMPLATE->activeTemplate() . "/languages",
-        "locale" => "auto",
-        "scan" => Entrada_Translate::LOCALE_FILENAME,
-        "disableNotices" => (DEVELOPMENT_MODE ? false : true),
+		"disableNotices" => (DEVELOPMENT_MODE ? false : true)
     )
 );
+
+/**
+ * The auto detection of translations only works when using the addTranslation() method;
+ */
+$translate->addTranslation(
+	array(
+		'adapter' => 'array',
+		'content' => ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_TEMPLATE->activeTemplate() . "/languages",
+		'locale'  => 'auto',
+		"scan" => Entrada_Translate::LOCALE_FILENAME
+	)
+);
+
 
 $ADODB_CACHE_DIR = CACHE_DIRECTORY;
 $time_start = getmicrotime();
@@ -156,7 +147,8 @@ if ($ENTRADA_USER) {
                 </script>";
 }
 
-$CAS_AUTHENTICATED = false;
+$SSO_AUTHENTICATED = false;
+$SSO_ERROR = false;
 
 $MODULE = "login";
 $SECTION = "index";

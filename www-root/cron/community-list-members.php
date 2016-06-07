@@ -16,6 +16,7 @@
 	dirname(__FILE__) . "/../core",
 	dirname(__FILE__) . "/../core/includes",
 	dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
 	get_include_path(),
 )));
 
@@ -58,8 +59,9 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 
 							if (@in_array($member["email"], $current_users)) {
 								try {
-									$list->remove($member["email"]);
-									$list->base_remove_member($member["proxy_id"]);
+									if ($list->remove($member["email"])) {
+										$list->base_remove_member($member["proxy_id"]);
+									}
 								} catch (Exception $e) {
 									echo $e->getCode()." - ".$e->getMessage();
 									if ($e->getCode() == "502") {
@@ -106,11 +108,14 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 							if (!in_array($member["email"], $current_users)) {
 								try {
 									$member["email"] = utf8_encode($member["email"]);
-									$list->add($member["email"], 0);
-									if ($member["list_administrator"]) {
-										$list->add($member["email"], 1);
+									if ($list->add($member["email"], 0)) {
+										if ($member["list_administrator"]) {
+											$list->add($member["email"], 1);
+											$list->base_edit_member($member["proxy_id"], ((int)$member["list_administrator"]), "1");
+										} else {
+											$list->base_edit_member($member["proxy_id"], ((int)$member["list_administrator"]), "1");
+										}
 									}
-									$list->base_edit_member($member["proxy_id"], ((int)$member["list_administrator"]), "1");
 								} catch (Exception $e) {
 									echo $e->getMessage();
 									if ($e->getCode() == "502") {
@@ -155,8 +160,9 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 							echo "Promote: ".$member["email"]." -> ".$community_id."<br/>";
 							if (!in_array($member["email"], $current_users)) {
 								try {
-									$list->add($member["email"], 1);
-									$list->base_edit_member($member["proxy_id"], "1", "1");
+									if ($list->add($member["email"], 1)) {
+										$list->base_edit_member($member["proxy_id"], "1", "1");
+									}
 								} catch (Exception $e) {
 									echo $e->getMessage();
 									if ($e->getCode() == "502") {
@@ -166,10 +172,10 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 								}
 							} else {
 								try {
-									// the user already exists, need to remove their member entry and re-add them as an owner.
-									$list->remove($member["email"]);
-									$list->add($member["email"], 1);
-									$list->base_edit_member($member["proxy_id"], "1", "1");
+									// User already exists, add method will insert/update role accordingly.
+									if ($list->add($member["email"], 1)) {
+										$list->base_edit_member($member["proxy_id"], "1", "1");
+									}
 								} catch (Exception $e) {
 									echo $e->getMessage();
 									if ($e->getCode() == "502") {
@@ -213,9 +219,9 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 							echo "Demote: ".$member["email"]." -> ".$community_id."<br/>";
 							if (in_array($member["email"], $current_users)) {
 								try {
-									$list->remove($member["email"]);
-									$list->add($member["email"]);
-									$list->base_edit_member($member["proxy_id"], "0", "1");
+									if ($list->remove($member["email"]) && $list->add($member["email"])) {
+										$list->base_edit_member($member["proxy_id"], "0", "1");
+									}
 								} catch (Exception $e) {
 									echo $e->getMessage();
 									if ($e->getCode() == "502") {

@@ -985,7 +985,7 @@ if (!defined("IN_PROFILE")) {
 			</div>
 			<div class="modal-body">
 				<div class="alert alert-info">
-					<strong>Please Note:</strong> You are about to reset your <?php echo APPLICATION_NAME; ?> account private hash. If you have active links to your <?php echo APPLICATION_NAME; ?> calendar or podcasting feeds from an external application suchas  Google Calendar or iTunes, don't forget to update those links accordingly.
+					<strong>Please Note:</strong> You are about to reset your <?php echo APPLICATION_NAME; ?> account private hash. If you have active links to your <?php echo APPLICATION_NAME; ?> calendar or podcasting feeds from an external application such as Google Calendar or iTunes, don't forget to update those links accordingly.
 				</div>
 			</div>
 			<div class="modal-footer">

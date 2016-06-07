@@ -10,6 +10,11 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
+ * @author Organization: David Geffen School of Medicine at UCLA
+ * @author Unit: Instructional Design and Technology Unit
+ * @author Developer: Sam Payne <spayne@mednet.ucla.edu>
+ * @copyright Copyright 2013 Regents of The University of California. All Rights Reserved.
+ * 
 */
 
 if (!defined("COMMUNITY_INCLUDED")) {
@@ -22,9 +27,25 @@ define("IN_DISCUSSIONS", true);
 
 communities_build_parent_breadcrumbs();
 $BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL, "title" => $MENU_TITLE);
+$VALID_MIME_TYPES		= array();
+$VALID_MAX_FILESIZE		= 31457280; // 30MB
+$DOWNLOAD				= false;
 
 /**
- * This function handles granular permissions levels (where as communities_module_access handles higer level permissions)
+ * If the download variable exists in the URL on view-file and it's a valid integer
+ * it will download the specified version of the file (i.e. ...action=view-file&id=123&download=6
+ */
+if (isset($_GET["download"])) {
+	if ($tmp_download = clean_input($_GET["download"], "alphanumeric")) {
+		if ((int) $tmp_download) {
+			$DOWNLOAD = (int) $tmp_download;
+		} elseif ($tmp_download == "latest") {
+			$DOWNLOAD = "latest";
+		}
+	}
+}
+/**
+ * This function handles granular permissions levels (where as communities_module_access handles higher level permissions)
  * for the actual discussion forum.
  *
  * @param int $cdiscussion_id
@@ -32,8 +53,9 @@ $BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL, "titl
  * @return bool
  */
 function discussions_module_access($cdiscussion_id = 0, $section = "") {
-	global $db, $COMMUNITY_ID, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $NOTICE, $NOTICESTR, $ERROR, $ERRORSTR, $PAGE_ID;
+	global $db, $COMMUNITY_ACL, $COMMUNITY_ID, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $NOTICE, $NOTICESTR, $ERROR, $ERRORSTR, $PAGE_ID, $ENTRADA_USER;
 
+	$is_community_course = Models_Community_Course::is_community_course($COMMUNITY_ID);
 	$allow_to_load = false;
 
 	if (((bool) $LOGGED_IN) && ((bool) $COMMUNITY_MEMBER) && ((bool) $COMMUNITY_ADMIN)) {
@@ -54,57 +76,66 @@ function discussions_module_access($cdiscussion_id = 0, $section = "") {
 						$allow_to_load = false;
 					break;
 					case "add-post" :
-						if ($LOGGED_IN) {
-							if ($COMMUNITY_MEMBER) {
-								if ((int) $result["allow_member_post"]) {
+					case "add-file" :
+						if ($is_community_course) {
+							$allow_to_load = $COMMUNITY_ACL->amIAllowed("communitydiscussion", $cdiscussion_id, "create");
+						} else {
+							if ($LOGGED_IN) {
+								if ($COMMUNITY_MEMBER) {
+									if ((int) $result["allow_member_post"]) {
+										$allow_to_load = true;
+									}
+								} else if ((int) $result["allow_troll_post"]) {
 									$allow_to_load = true;
 								}
-							} elseif ((int) $result["allow_troll_post"]) {
+							} else if ((int) $result["allow_public_post"]) {
 								$allow_to_load = true;
 							}
-						} elseif ((int) $result["allow_public_post"]) {
-							$allow_to_load = true;
 						}
 					break;
 					case "delete-post" :
+					case "delete-file" :
 					case "edit-post" :
-						if ($LOGGED_IN) {
-							if ($COMMUNITY_MEMBER) {
-								if ((int) $result["allow_member_post"]) {
-									$allow_to_load = true;
-								}
-							} elseif ((int) $result["allow_troll_post"]) {
-								$allow_to_load = true;
-							}
-						} else {
-							$allow_to_load = false;
-						}
+					case "edit-file" :
+                        //Users can edit and delete posts if they are an admin
+                        //or they are the original poster. This will be checked
+                        //in discussion_topic_module_access()
+                        $allow_to_load = true;
 					break;
 					case "reply-post" :
-						if ($LOGGED_IN) {
-							if ($COMMUNITY_MEMBER) {
-								if ((int) $result["allow_member_reply"]) {
+						if ($is_community_course) {
+							$allow_to_load = $COMMUNITY_ACL->amIAllowed("communitydiscussion", $cdiscussion_id, "create");
+						} else {
+							if ($LOGGED_IN) {
+								if ($COMMUNITY_MEMBER) {
+									if ((int) $result["allow_member_reply"]) {
+										$allow_to_load = true;
+									}
+								} elseif ((int) $result["allow_troll_reply"]) {
 									$allow_to_load = true;
 								}
-							} elseif ((int) $result["allow_troll_reply"]) {
+							} elseif ((int) $result["allow_public_reply"]) {
 								$allow_to_load = true;
 							}
-						} elseif ((int) $result["allow_public_reply"]) {
-							$allow_to_load = true;
 						}
 					break;
 					case "view-forum" :
 					case "view-post" :
-						if ($LOGGED_IN) {
-							if ($COMMUNITY_MEMBER) {
-								if ((int) $result["allow_member_read"]) {
+					case "view-file" :
+						if ($is_community_course) {
+							$allow_to_load = $COMMUNITY_ACL->amIAllowed("communitydiscussion", $cdiscussion_id, "read");
+						} else {
+							if ($LOGGED_IN) {
+								if ($COMMUNITY_MEMBER) {
+									if ((int) $result["allow_member_read"]) {
+										$allow_to_load = true;
+									}
+								} elseif ((int) $result["allow_troll_read"]) {
 									$allow_to_load = true;
 								}
-							} elseif ((int) $result["allow_troll_read"]) {
+							} elseif ((int) $result["allow_public_read"]) {
 								$allow_to_load = true;
 							}
-						} elseif ((int) $result["allow_public_read"]) {
-							$allow_to_load = true;
 						}
 					break;
 					case "index" :
@@ -179,6 +210,8 @@ function discussion_topic_module_access($cdtopic_id = 0, $section = "") {
 						case "edit-post" :
 							if ($ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
 								$allow_to_load = false;
+							} else {
+                                $allow_to_load = true;
 							}
 						break;
 						default :

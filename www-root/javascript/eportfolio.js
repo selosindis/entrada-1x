@@ -480,7 +480,7 @@ function artifactForm () {
 	jQuery(description_controls).addClass("controls");
 	jQuery(title_input).attr({type: "text", name: "title", id: "artifact-title"}).addClass("input-large");
 	jQuery(description_textarea).attr({name: "description", id: "artifact-description"}).addClass("input-large");
-	jQuery(title_label).html("Title:<br /><em class=\"content-small muted\">required</em>").attr("for", "artifact-title").addClass("control-label form-required");
+	jQuery(title_label).html("Title<br /><em class=\"content-small muted\">required</em>").attr("for", "artifact-title").addClass("control-label form-required");
 	jQuery(description_label).html("Description:<br /><em class=\"content-small muted\">required</em>").attr("for", "artifact-description").addClass("control-label form-required");
 
 	// Put it all together
@@ -501,7 +501,7 @@ function entryForm (pfartifact_id) {
 	jQuery(title_control_group).addClass("control-group");
 	jQuery(title_controls).addClass("controls");
 	jQuery(title_input).attr({type: "text", name: "title", id: "media-entry-title"}).addClass("input-large");
-	jQuery(title_label).html("Title:").attr("for", "media-entry-title").addClass("control-label");
+	jQuery(title_label).html("Title").attr("for", "media-entry-title").addClass("control-label");
 	
 	// Create the elements for the enrty type selectbox
 	var type_control_group = document.createElement("div");
@@ -734,7 +734,7 @@ function buildEntryForm(entry_type, pentry_id, edit_mode) {
 	
 	jQuery(title_controls).addClass("controls");
 	jQuery(title_input).attr({type: "text", name: "title", id: "entry-title"}).addClass("input-large");
-	jQuery(title_label).html("Title:").attr("for", "entry-title").addClass("control-label");
+	jQuery(title_label).html("Title").attr("for", "entry-title").addClass("control-label");
 	jQuery(title_controls).append(title_input);
 	jQuery(title_control_group).addClass("control-group").append(title_label).append(title_controls);
 	jQuery(title_fieldset).append(title_control_group);

@@ -156,23 +156,25 @@ function setUnsetResults() {
 
 function displayChart(old_question_id, new_question_id) {
 	$('question-'+old_question_id).toggle();
-	updatePollTypeIcon(new_question_id, $('polling-type-'+old_question_id).value);
-	updateColorIcon(new_question_id, $('color-icon-'+old_question_id).value);
+//	updatePollTypeIcon(new_question_id, $('polling-type-'+old_question_id).value);
+//	updateColorIcon(new_question_id, $('color-icon-'+old_question_id).value);
 	$('question-'+new_question_id).toggle();
-	$('pagination-links').innerHTML = "Pages: 	"
-												+(parseInt(new_question_id) > 3 ? " <a href=\"javascript:displayChart('"+new_question_id+"','"+(new_question_id-1)+"');\">&laquo;</a>" : "")
-												+(parseInt(new_question_id) > 3 ? " <a href=\"javascript:displayChart('"+new_question_id+"','1');\">1...</a>" : "")
-												+(parseInt(new_question_id) > 2 ? " <a href=\"javascript:displayChart('"+new_question_id+"','"+(new_question_id-2)+"');\">"+(new_question_id-2)+"</a>" : "")
-												+(parseInt(new_question_id) > 1 ? " <a href=\"javascript:displayChart('"+new_question_id+"','"+(new_question_id-1)+"');\" >"+(new_question_id-1)+"</a>" : "")
-												+" <span class=\"active\" >"+new_question_id+"</span>"
-												+(parseInt(new_question_id) < (parseInt($('no-questions').innerHTML)) ? " <a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt(new_question_id)+1)+"');\" >"+(parseInt(new_question_id)+1)+"</a>" : "")
-												+((parseInt(new_question_id)+1) < (parseInt($('no-questions').innerHTML)) ? " <a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt(new_question_id)+2)+"');\">"+(parseInt(new_question_id)+2)+"</a>" : "")
-												+(((parseInt(new_question_id)+2) < (parseInt($('no-questions').innerHTML)) && (parseInt(new_question_id) < 3)) ? " <a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt(new_question_id)+3)+"');\" >"+(parseInt(new_question_id)+3)+"</a>" : "")
-												+(((parseInt(new_question_id)+3) < (parseInt($('no-questions').innerHTML)) && (parseInt(new_question_id) < 2)) ? " <a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt(new_question_id)+4)+"');\">"+(parseInt(new_question_id)+4)+"</a>" : "")
-												+((parseInt(new_question_id)+2) < (parseInt($('no-questions').innerHTML)) ? " <a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt($('no-questions').innerHTML))+"');\">..."+(parseInt($('no-questions').innerHTML))+"</a>" : "")
-												+((parseInt(new_question_id)) < (parseInt($('no-questions').innerHTML)) ? " <a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt(new_question_id)+1)+"');\">&raquo;</a>" : "");
-	var chartReload = "chartReload"+new_question_id;
-	eval(chartReload+'('+new_question_id+')');
+	$('pagination-links').innerHTML = "<ul>"
+												+(parseInt(new_question_id) > 1 ? " <li><a href=\"javascript:displayChart('"+new_question_id+"','"+(new_question_id-1)+"');\"><i class=\"icon-chevron-left\" style=\"margin-top: 3px;\"></i></a></li>" : "")
+												+(parseInt(new_question_id) > 3 ? " <li><a href=\"javascript:displayChart('"+new_question_id+"','1');\">1...</a></li>" : "")
+												+(parseInt(new_question_id) > 2 ? " <li><a href=\"javascript:displayChart('"+new_question_id+"','"+(new_question_id-2)+"');\">"+(new_question_id-2)+"</a></li>" : "")
+												+(parseInt(new_question_id) > 1 ? " <li><a href=\"javascript:displayChart('"+new_question_id+"','"+(new_question_id-1)+"');\" >"+(new_question_id-1)+"</a></li>" : "")
+												+" <li class=\"active\" ><a>"+new_question_id+"</a></li>"
+												+(parseInt(new_question_id) < (parseInt($('no-questions').innerHTML)) ? " <li><a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt(new_question_id)+1)+"');\" >"+(parseInt(new_question_id)+1)+"</a></li>" : "")
+												+((parseInt(new_question_id)+1) < (parseInt($('no-questions').innerHTML)) ? " <li><a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt(new_question_id)+2)+"');\">"+(parseInt(new_question_id)+2)+"</a></li>" : "")
+												+(((parseInt(new_question_id)+2) < (parseInt($('no-questions').innerHTML)) && (parseInt(new_question_id) < 3)) ? " <li><a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt(new_question_id)+3)+"');\" >"+(parseInt(new_question_id)+3)+"</a></li>" : "")
+												+(((parseInt(new_question_id)+3) < (parseInt($('no-questions').innerHTML)) && (parseInt(new_question_id) < 2)) ? " <li><a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt(new_question_id)+4)+"');\">"+(parseInt(new_question_id)+4)+"</a></li>" : "")
+												+((parseInt(new_question_id)+2) < (parseInt($('no-questions').innerHTML)) ? " <li><a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt($('no-questions').innerHTML))+"');\">..."+(parseInt($('no-questions').innerHTML))+"</a></li>" : "")
+												+((parseInt(new_question_id)) < (parseInt($('no-questions').innerHTML)) ? " <li><a href=\"javascript:displayChart('"+new_question_id+"','"+(parseInt(new_question_id)+1)+"');\"><i class=\"icon-chevron-right\" style=\"margin-top: 3px;\"></i></a></li>" : "")
+												+"</ul>";
+
+//	var chartReload = "chartReload"+new_question_id;
+//	eval(chartReload+'('+new_question_id+')');
 }
 
 function showEditor(element) {

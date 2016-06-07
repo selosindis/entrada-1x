@@ -197,7 +197,7 @@ switch($STEP) {
 		}
 		?>
 		<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-gallery&amp;step=2" method="post">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Photo Gallery">
+			<table cellspacing="0" cellpadding="2" border="0" summary="Add Photo Gallery">
 				<colgroup>
 					<col style="width: 20%" />
 					<col style="width: 80%" />
@@ -218,7 +218,7 @@ switch($STEP) {
 							<label for="gallery_title" class="form-required">Gallery Title</label>
 						</td>
 						<td>
-							<input type="text" id="gallery_title" name="gallery_title" class="span12" value="<?php echo ((isset($PROCESSED["gallery_title"])) ? html_encode($PROCESSED["gallery_title"]) : ""); ?>" maxlength="64" />
+							<input type="text" id="gallery_title" name="gallery_title" style="width: 70%" class="span8" value="<?php echo ((isset($PROCESSED["gallery_title"])) ? html_encode($PROCESSED["gallery_title"]) : ""); ?>" maxlength="64" />
 						</td>
 					</tr>
 					<tr>
@@ -226,7 +226,7 @@ switch($STEP) {
 							<label for="gallery_description" class="form-nrequired">Gallery Description</label>
 						</td>
 						<td>
-							<textarea id="gallery_description" name="gallery_description" class="span12" style="height: 100px" cols="50" rows="5"><?php echo ((isset($PROCESSED["gallery_description"])) ? html_encode($PROCESSED["gallery_description"]) : ""); ?></textarea>
+							<textarea id="gallery_description" name="gallery_description" class="span8" style="height: 100px; resize: vertical; width: 70%" cols="50" rows="5"><?php echo ((isset($PROCESSED["gallery_description"])) ? html_encode($PROCESSED["gallery_description"]) : ""); ?></textarea>
 						</td>
 					</tr>
 					<tr>

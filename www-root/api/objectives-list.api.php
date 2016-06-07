@@ -14,6 +14,7 @@
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
     dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
     get_include_path(),
 )));
 
@@ -93,12 +94,10 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 			$count = 0;
 
 			echo "<select id=\"objective_order\" name=\"objective_order\">\n";
-            if ($section == "edit") {
-                echo "<option id=\"leave_alone_-1\" value=\"-1\">-- Do not change --</option>\n";
-            }
-
 			foreach ($objectives as $key => $objective) {
-				if ($objective["objective_id"] != $objective_id) {
+				if ($objective["objective_id"] == $objective_id) {
+					echo "<option id=\"before_obj_".$objective["objective_id"]."\" value=\"-1\" selected=\"selected\">Do not change display order</option>\n";
+				} else {
 					$count++;
 					echo "<option id=\"before_obj_".$objective["objective_id"]."\" value=\"".$count."\">Before ".$objective["objective_name"]."</option>\n";
 				}

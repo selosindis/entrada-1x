@@ -39,7 +39,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 		$PREFERENCES = preferences_load($MODULE);
 		
 
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?org=".$ORGANISATION['organisation_id'], "title" => "Learning Event Types");
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?org=".$ORGANISATION['organisation_id'], "title" => $translate->_("Learning Event Types"));
 
 		$module_file = $router->getRoute();
 		if ($module_file) {

@@ -139,15 +139,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     } else {
                                         $PROCESSED["assignment_uploads"] = 1;
                                     }
-                        
-                                    if (isset($_POST["allow_multiple_files"]) && $_POST["allow_multiple_files"]
-                                            && isset($_POST["num_files_allowed"]) && ($max_file_uploads = (int)$_POST["num_files_allowed"]) > 0) {
-                                        $PROCESSED["max_file_uploads"] = $max_file_uploads;
+
+                                    if (isset($_POST["allow_multiple_files"]) && $tmp_input = clean_input($_POST["allow_multiple_files"], array("trim", "int"))) {
                                         $PROCESSED["allow_multiple_files"] = true;
-                                    } else {($_POST["allow_multiple_files"]) && $_POST["allow_multiple_files"]
-                                            &
+                                        if (isset($_POST["num_files_allowed"]) && $tmp_input = clean_input($_POST["num_files_allowed"], array("trim", "int"))) {
+                                            if ($tmp_input > 1) {
+                                                $PROCESSED["max_file_uploads"] = $tmp_input;
+                                            } else {
+                                                $PROCESSED["max_file_uploads"] = NULL;
+                                                add_error("<strong>Max files allowed</strong> must be 2 or more when learners are able to updload more than one file when submitting this assignment.");
+                                            }
+                                        } else {
+                                            add_error("<strong>Max files allowed</strong> must be 2 or more when learners are able to updload more than one file when submitting this assignment.");
+                                        }
+                                    } else {
                                         $PROCESSED["max_file_uploads"] = 1;
                                     }
+
+                                    /*if (isset($_POST["allow_multiple_files"]) && $_POST["allow_multiple_files"] && isset($_POST["num_files_allowed"]) && ($max_file_uploads = (int)$_POST["num_files_allowed"]) > 1) {
+                                        $PROCESSED["max_file_uploads"] = $max_file_uploads;
+                                        $PROCESSED["allow_multiple_files"] = true;
+                                    } else {
+                                        add_error("<strong>Max files allowed</strong> must be higher than 1 when learners are able to updload more than one file when submitting this assignment.");
+                                        $PROCESSED["max_file_uploads"] = 2;
+                                        $PROCESSED["allow_multiple_files"] = false;
+                                    }*/
 
                                     if (isset($_POST["notice_enabled"]) && $_POST["notice_enabled"]) {
                                         $notice_enabled = true;
@@ -190,6 +206,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     } else {
                                         $notice_enabled = false;
                                         $PROCESSED["notice_id"] = 0;
+                                    }
+
+                                    if (isset($_POST["anonymous_marking"]) && $_POST["anonymous_marking"]) {
+                                        $PROCESSED["anonymous_marking"] = 1;
+                                    } else {
+                                        $PROCESSED["anonymous_marking"] = 0;
                                     }
 
                                     /**
@@ -312,7 +334,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                             if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
                                                                 if($proxy_id != $ENTRADA_USER->getID()){
                                                                     if (!$db->AutoExecute("assignment_contacts", array("assignment_id" => $ASSIGNMENT_ID, "proxy_id" => $proxy_id, "contact_order" => $order+1, "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID()), "INSERT")) {
-                                                                        add_error("There was an error when trying to insert a &quot;" . $translate->_("course") . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
+                                                                        add_error("There was an error when trying to insert a &quot;" . $module_singular_name . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
 
                                                                         application_log("error", "Unable to insert a new course_contact to the database when updating an event. Database said: ".$db->ErrorMsg());
                                                                     } else {
@@ -350,7 +372,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                      * Assignment record is assigned to $PROCESSED for edit.
                                      */
                                     $PROCESSED = $assignment_record;
-
                                     $PROCESSED["allow_multiple_files"] = ((int) $assignment_record["max_file_uploads"] > 1 ? 1 : 0);
                                 break;
                             }
@@ -580,9 +601,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         <div class="control-group">
                                             <label class="control-label form-nrequired">Assignment Options:</label>
                                             <div class="controls">
-                                                <input type="checkbox" name="allow_multiple_files" value="1" id="allow_multiple_files"<?php echo ($PROCESSED["allow_multiple_files"] ? " checked=\"checked\"" : ""); ?>/> <label for="allow_multiple_files" class="pad-above-small">Allow learners to upload <strong>more than one file</strong> when submitting this assignment.</label><br />
-                                                <input type="checkbox" name="notice_enabled" value="1" id="notice_enabled"<?php echo (isset($notice_enabled) && $notice_enabled ? " checked=\"checked\"" : "" ); ?>/> <label for="notice_enabled" class="pad-above-small">Add a <strong>dashboard notice</strong> for learners who are required to submit this assignment.</label><br />
-                                                <input type="checkbox" name="assignment_uploads" value="1" id="assignment_uploads"<?php echo (!isset($PROCESSED["assignment_uploads"]) || (int) $PROCESSED["assignment_uploads"] ? " checked=\"checked\"" : ""); ?>/> <label for="assignment_uploads" class="pad-above-small">Allow learners to upload <strong>new revisions</strong> of the assignment after their initial upload.</label><br />
+                                                <label for="allow_multiple_files" class="pad-above-small"><input type="checkbox" name="allow_multiple_files" value="1" id="allow_multiple_files"<?php echo (isset($PROCESSED["allow_multiple_files"]) && $PROCESSED["allow_multiple_files"]  ? " checked=\"checked\"" : ""); ?>/> Allow learners to upload <strong>more than one file</strong> when submitting this assignment.</label><br />
+                                                <label for="notice_enabled" class="pad-above-small"><input type="checkbox" name="notice_enabled" value="1" id="notice_enabled"<?php echo (isset($notice_enabled) && $notice_enabled ? " checked=\"checked\"" : "" ); ?>/> Add a <strong>dashboard notice</strong> for learners who are required to submit this assignment.</label><br />
+                                                <label for="assignment_uploads" class="pad-above-small"><input type="checkbox" name="assignment_uploads" value="1" id="assignment_uploads"<?php echo (!isset($PROCESSED["assignment_uploads"]) || $PROCESSED["assignment_uploads"] ? " checked=\"checked\"" : ""); ?>/> Allow learners to upload <strong>new revisions</strong> of the assignment after their initial upload.</label><br />
+                                                <label for="anonymous_marking" class="pad-above-small"><input type="checkbox" name="anonymous_marking" value="1" id="anonymous_marking"<?php echo (isset($PROCESSED["anonymous_marking"]) && $PROCESSED["anonymous_marking"] ? " checked=\"checked\"" : ""); ?>/> Make Grading Anonymous <span class="content-small">(Hide the identity of both the learner who submitted the assignment when being marked, and the person who marked the assignment when the learner is reviewing their grade.)</span></label><br />
                                             </div>
                                         </div>
                                         
@@ -599,7 +621,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         <div class="control-group" id="num_files_allowed_wrapper"<?php echo ((!isset($PROCESSED["allow_multiple_files"]) || !$PROCESSED["allow_multiple_files"]) ? " style=\"display: none\"" : ""); ?>>
                                             <label for="num_file_allowed" class="form-required control-label">Max Files Allowed:</label>
                                             <div class="controls">
-                                                <input type="text" name="num_files_allowed" id="num_files_allowed" value="<?php echo isset($PROCESSED["max_file_uploads"]) ? (int) $PROCESSED["max_file_uploads"] : 3; ?>" class="span1" maxlength="3" />
+                                                <input type="text" name="num_files_allowed" id="num_files_allowed" value="<?php echo isset($PROCESSED["max_file_uploads"]) && $PROCESSED["max_file_uploads"] > 1 ? (int) $PROCESSED["max_file_uploads"] : ""; ?>" class="span1" maxlength="3" />
                                                 <span class="help-inline content-small">The maximum number of files a learner can upload.</span>
                                             </div>
                                         </div>

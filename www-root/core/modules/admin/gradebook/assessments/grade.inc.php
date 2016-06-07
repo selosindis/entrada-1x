@@ -519,7 +519,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<ol id="exception_container" class="sortableList">
 								<?php
 								$exceptions_exist = false;
-								foreach ($students as $student) {
+								foreach ($students as &$student) {
 									if (isset($student["grade_weighting"]) && $student["grade_weighting"] !== NULL) {
 										$exceptions_exist = true;
 										echo "<li id=\"proxy_".$student["proxy_id"]."\"><span id=\"".$student["proxy_id"]."_name\">".$student["fullname"]."</span>

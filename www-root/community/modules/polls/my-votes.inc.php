@@ -146,7 +146,7 @@ if ($RECORD_ID) {
 												</colgroup>
 												<thead>
 													<tr>
-														<td class="general" style="width: 75%; border-left: none;">Responses</td>
+														<td class="general" style="width: 75%;">Responses</td>
 														<td class="report-hours" style="border-left: none;">Votes</td>
 													</tr>
 												</thead>

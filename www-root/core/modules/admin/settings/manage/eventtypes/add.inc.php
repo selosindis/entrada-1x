@@ -37,10 +37,10 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 } else {
 
     ?>
-    <h1>Add Event Type</h1>
+    <h1>Add <?php echo $translate->_("Event Type"); ?></h1>
     <?php
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add Event Type");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add " . $translate->_("Event Type"));
 	
 	// Error Checking
 	switch ($STEP) {
@@ -52,7 +52,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				$PROCESSED["eventtype_title"] = $eventtype_title;
 			} else {
 				$ERROR++;
-				$ERRORSTR[] = "The <strong>Event Type Name</strong> is a required field.";
+				$ERRORSTR[] = "The <strong>" . $translate->_("Event Type") . " Name</strong> is a required field.";
 			}
 
 			/**
@@ -97,7 +97,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 					}
 					else {
 						$ERROR++;
-						$ERRORSTR[] = "There was a problem inserting this event type into the system. The system administrator was informed of this error; please try again later.";
+						$ERRORSTR[] = "There was a problem inserting this " . $translate->_("Event Type") . " into the system. The system administrator was informed of this error; please try again later.";
 						application_log("error", "There was an error inserting an event type. Database said: ".$db->ErrorMsg());
 					}
 				} else {
@@ -109,7 +109,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                 if (!$ERROR) {
                     $url = ENTRADA_URL . "/admin/settings/manage/eventtypes?org=".$ORGANISATION_ID;
                     $SUCCESS++;
-                    $SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["eventtype_title"])."</strong> to the system.<br /><br />You will now be redirected to the Event Types index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                    $SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["eventtype_title"])."</strong> to the system.<br /><br />You will now be redirected to the " . $translate->_("Learning Event Types") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
                     $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
                     application_log("success", "New Event Type [".$EVENTTYPE_ID."] added to the system.");
                 }
@@ -162,16 +162,15 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 			$ONLOAD[] = "selectOrder(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
 						
 			?>
-            <h1>Add Event Type</h1>
 			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/eventtypes"."?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post" class="form-horizontal">
                 <div class="control-group">
-                    <label for="eventtype_title" class="form-required control-label">Event Type Name:</label>
+                    <label for="eventtype_title" class="form-required control-label"><?php echo $translate->_("Event Type"); ?> Name:</label>
                     <div class="controls">
                         <input type="text" class="input-xlarge" id="eventtype_title" name="eventtype_title" value="<?php echo ($event_type ? html_encode($event_type->getEventTypeTitle()) : ""); ?>" maxlength="60" />
                     </div>
                 </div>
                 <div class="control-group">
-                    <label for="eventtype_description" class="form-nrequired control-label">Event Type Description:</label>
+                    <label for="eventtype_description" class="form-nrequired control-label"><?php echo $translate->_("Event Type"); ?> Description:</label>
                     <div class="controls">
                         <textarea id="eventtype_description" name="eventtype_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ($event_type ? html_encode($event_type->getEventTypeDescription()): ""); ?></textarea>
                     </div>

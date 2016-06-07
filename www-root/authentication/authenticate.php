@@ -79,17 +79,16 @@
     dirname(__FILE__) . "/../core",
     realpath(dirname(__FILE__) . "/includes"),
     dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
     get_include_path(),
 )));
 
 header("Content-type: text/xml");
 
 /**
- * Register the Zend autoloader so we use any part of Zend Framework without
- * the need to require the specific Zend Framework files.
+ * Register the Composer autoloader.
  */
-require_once "Zend/Loader/Autoloader.php";
-$loader = Zend_Loader_Autoloader::getInstance();
+require_once("autoload.php");
 
 require_once("classes/adodb/adodb.inc.php");
 require_once("functions.inc.php");
@@ -228,7 +227,6 @@ if (!$ERROR) {
 	foreach ($auth_method_chain as $order => $auth_method) {
 		switch ($auth_method) {
 			case "local" :
-			case "cas" :
 				$query	= "SELECT * FROM `user_data` WHERE `username` = ".$db->qstr($user_username)." AND ((`salt` IS NULL AND `password` = MD5(".$db->qstr($user_password).")) OR (`salt` IS NOT NULL AND `password` = SHA1(CONCAT(".$db->qstr($user_password).", `salt`))))";
 				$result	= $db->GetRow($query);
 				if ($result) {
@@ -251,6 +249,29 @@ if (!$ERROR) {
 					$user_data = $result;
 				}
 			break;
+            case "sso":
+                $query	= "SELECT * FROM `user_data` WHERE `username` = ".$db->qstr($user_username)." AND `password` = ".$db->qstr($user_password);
+                $result	= $db->GetRow($query);
+                if ($result) {
+                    /**
+                     * Check to see if password requires some updating.
+                     */
+                    if (!$result["salt"]) {
+                        $salt = hash("sha256", (uniqid(rand(), 1) . time() . $result["id"]));
+                        $query = "UPDATE `user_data` SET `password` = " . $db->qstr(sha1($user_password . $salt)) . ", `salt` = " . $db->qstr($salt) . " WHERE `id` = " . $db->qstr($result["id"]);
+                        if ($db->Execute($query)) {
+                            application_log("auth_success", "Successfully updated password salt for user [" . $result["id"] . "] via local auth method.");
+                        } else {
+                            application_log("auth_error", "Failed to update password salt for user [" . $result["id"] . "] via local auth method. Database said: " . $db->ErrorMsg());
+                        }
+                    }
+
+                    /**
+                     * The provided user credentials are considered valid.
+                     */
+                    $user_data = $result;
+                }
+            break;
 			case "ldap" :
 			case "ldap3" :
 				$LDAP_CONNECT_OPTIONS = array(

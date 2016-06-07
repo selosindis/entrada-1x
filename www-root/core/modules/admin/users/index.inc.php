@@ -24,14 +24,13 @@
  *
 */
 
-if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif (!isset($_SESSION["isAuthorized"]) || !$_SESSION["isAuthorized"]) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("user", "update", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -56,12 +55,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	/**
 	 * Determine the type of search that is requested.
 	 */
-	if ((isset($_GET["type"])) && (in_array(trim($_GET["type"]), array("search", "browse-group", "browse-dept")))) {
+	if (isset($_GET["type"]) && in_array(trim($_GET["type"]), array("search", "browse-group", "browse-dept"))) {
 		$search_type = clean_input($_GET["type"], "trim");
 	}
 
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/selectchained.js\"></script>\n";
+    $HEAD[] = "<script type=\"text/javascript\" >var ENTRADA_URL = '". ENTRADA_URL ."';</script>\n";
+    $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/selectchained.js\"></script>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".  ENTRADA_URL ."/javascript/jquery/jquery.advancedsearch.js\"></script>\n";
+	$HEAD[] = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".  ENTRADA_URL ."/css/jquery/jquery.advancedsearch.css\" />\n";
 
 	$i = count($HEAD);
 	$HEAD[$i]  = "<script type=\"text/javascript\">\n";
@@ -146,8 +148,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$search_query_text.= " &rarr; Any Class";
 				}
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "To browse a group, you must select a group from the group select list.";
+				add_error("To browse a group, you must select a group from the group select list.");
 			}
 
 			if (!$ERROR) {
@@ -184,12 +185,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$browse_department = $department;
 					$search_query_text = html_encode($result["department_title"]);
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "The department you have provided does not exist. Please ensure that you select a valid department from the department list.";
+					add_error("The department you have provided does not exist. Please ensure that you select a valid department from the department list.");
 				}
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "To browse a department, you must select a department from the department selection list.";
+			} elseif (isset($_GET["browse_departments"])) {
+				add_error("To browse a department, you must select a department from the department selection list.");
 			}
 
 			if (!$ERROR) {
@@ -214,7 +213,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									GROUP BY a.`id`
 									$order_by
 									LIMIT %d, %d";
-			}
+			} else {
+                echo display_error();
+            }
 		break;
 		case "browse-newest" :
             if ((isset($_GET["n"])) && ($number = clean_input($_GET["n"], array("trim", "int"))) && ($number > 0) && ($number <= 100)) {
@@ -422,19 +423,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	$page_previous = (($page_current > 1) ? ($page_current - 1) : false);
 	$page_next = (($page_current < $total_pages) ? ($page_current + 1) : false);
 	?>
+
 	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
 
 	<div style="float: right">
-		
-			<a href="<?php echo ENTRADA_URL; ?>/admin/users?section=add" class="btn btn-primary">Add New User</a>
-		
+        <a href="<?php echo ENTRADA_URL; ?>/admin/users?section=add" class="btn btn-primary">Add New User</a>
 	</div>
 	<div style="clear: both"></div>
 
 	<style type="text/css">
-	.dynamic-tab-pane-control .tab-page {
-		height: 150px;
-	}
+		.dynamic-tab-pane-control .tab-page {
+            min-height: 150px;
+        }
+
+        .departments-advanced-search {
+            width: 75%;
+            text-align: left;
+            margin-left: 2%;
+        }
+
+        .departments-advanced-search .fa-chevron-down {
+            padding-top: 4px;
+        }
 	</style>
 	<div class="tab-pane" id="user-tabs">
 		<div class="tab-page">
@@ -490,7 +500,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="btn btn-primary" value="Search" />
+						<input type="submit" class="btn btn-default" value="Search" />
 					</td>
 				</tr>
 			</tfoot>
@@ -540,7 +550,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="btn btn-primary" value="Browse" />
+						<input type="submit" class="btn btn-default" value="Browse" />
 					</td>
 				</tr>
 			</tfoot>
@@ -565,57 +575,91 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 		</div>
 		<div class="tab-page">
 			<h3 class="tab">Browse Departments</h3>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/users" method="get">
-			<input type="hidden" name="type" value="browse-dept" />
-			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Browse By Department">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 25%" />
-				<col style="width: 72%" />
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="btn btn-primary" value="Browse" />
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td><label for="department" class="form-required">Browse Department:</label></td>
-					<td>
-						<select id="department" name="d" style="width: 95%">
-						<?php
-						$query		= "
-									SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
-									FROM `".AUTH_DATABASE."`.`departments` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
-									ON a.`entity_id` = b.`entity_id`
-									LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
-									ON a.`organisation_id` = c.`organisation_id`
-									ORDER BY c.`organisation_title` ASC, a.`department_title`";
-						$results	= $db->GetAll($query);
-						if ($results) {
-							foreach ($results as $result) {
-								echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($browse_department)) && ((int) $browse_department) && ($browse_department == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode(limit_chars($result["organisation_title"], 11)).": ".html_encode($result["department_title"])." ".(($result["entity_title"]) ? "(".html_encode($result["entity_title"]).")" : "")."</option>\n";
-							}
-						}
-						?>
-						</select>
-					</td>
-				</tr>
-			</tbody>
-			</table>
+
+			<form id="browse-departments-form" class="form-inline" action="<?php echo ENTRADA_URL; ?>/admin/users" method="get">
+				<input type="hidden" name="type" value="browse-dept" />
+
+				<div>
+					<label for="departments-advanced-search" class="form-required">Department:</label>
+
+					<button id="departments-advanced-search" class="btn btn-search-filter departments-advanced-search">
+                        <?php echo $translate->_("Browse Departments"); ?>
+                        <i class="fa fa-chevron-down pull-right"></i>
+                    </button>
+
+                    <input type="submit" class="btn btn-default pull-right" name="browse_departments" value="Browse" />
+
+                    <div id="advanced-search-departments-list"></div>
+				</div>
+
+                <input id="department-id" type="hidden" name="d">
 			</form>
 		</div>
 	</div>
-	<script type="text/javascript">setupAllTabs(true);</script>
+
+	<script type="text/javascript">
+        setupAllTabs(true);
+
+        jQuery(document).ready(function($) {
+            var current_height = parseInt($(".tab-page").css("height"));
+            var organisations = <?php echo json_encode(Models_Organisation::fetchOrganisationsWithDepartments()); ?>;
+            var filters = {};
+
+            for (var i = 0; i < organisations.length; i++) {
+                var filter_name = organisations[i].organisation_title.split(" ").join("_");
+
+                filters[filter_name] = {
+                    data_source: "get-organisation-departments",
+                    label: organisations[i].organisation_title,
+                    mode: "radio",
+                    set_button_text_to_selected_option: true,
+                    api_params: {
+                        organisation_id: organisations[i].organisation_id
+                    }
+                };
+            }
+            
+            $("#departments-advanced-search").advancedSearch({
+                api_url: "<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-departments"; ?>",
+                async: true,
+                resource_url: ENTRADA_URL,
+                filters: filters,
+				filter_component_label: "Departments",
+                selected_list_container: $("#advanced-search-departments-list"),
+                parent_form: $("#browse-departments-form"),
+                width: 487
+            });
+
+            $("#departments-advanced-search").on("click", function () {
+				if ($(".entrada-search-widget .filter-menu").length) {
+					var menu_height = parseInt($(".entrada-search-widget .filter-menu").css("height"));
+
+					$(".tab-page").css("min-height", current_height + menu_height + "px");
+				} else {
+					var overlay_height = parseInt($(".entrada-search-widget .search-overlay").css("height"));
+
+					$(".tab-page").css("min-height", current_height + overlay_height + "px");				}
+            });
+
+            $(".entrada-search-widget").on("click", ".filter-list-item", function () {
+                var overlay_height = parseInt($(".entrada-search-widget .search-overlay").css("height"));
+
+                $(".tab-page").css("min-height", current_height + overlay_height + "px");
+            });
+
+            $("#browse-departments-form").on("change", ".search-target-input-control", function () {
+                $("#department-id").val($(this).val());
+
+				$(".tab-page").css("min-height", current_height + "px");
+
+				var current_filter = $(this).attr("data-filter");
+                
+                $("#advanced-search-departments-list").find(".search-target-control").not("." + current_filter + "_search_target_control").remove();
+            });
+        });
+    </script>
 	<?php
-	if (($search_type) && (!$ERROR)) {
+	if ($search_type && !$ERROR) {
 		if ($total_pages > 1) {
 			echo "<br />\n";
 			echo "<div style=\"text-align: right\">\n";

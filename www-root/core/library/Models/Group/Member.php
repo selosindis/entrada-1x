@@ -105,7 +105,38 @@ class Models_Group_Member extends Models_Base {
         }
         return $members;
     }
-    
+
+    public static function getUsersByGroupIDWithoutAppID($group_id, $search_term = false, $active = 1, $excluded_ids = 0) {
+        global $db;
+        $members = false;
+
+        $query	= "	SELECT a.`id`, a.`number`, a.`firstname`, a.`lastname`, c.`gmember_id`, c.`member_active`,
+                           a.`username`, a.`email`, a.`organisation_id`, a.`username`, b.`group`, b.`role`
+                    FROM `".AUTH_DATABASE."`.`user_data` AS a
+                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                    ON a.`id` = b.`user_id`
+                    INNER JOIN `group_members` AS c
+                    ON a.`id` = c.`proxy_id`
+                    WHERE a.`id` NOT IN (".$excluded_ids.")
+                    AND b.`account_active` = 'true'
+                    AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+                    AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+                    AND c.`group_id` = ?
+                    AND c.`member_active` = ?
+                    ". (trim($search_term) ? " AND ((CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE ".$db->qstr("%".$search_term."%")." OR CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE ".$db->qstr("%".$search_term."%"). ") OR (a.`number` LIKE " .$db->qstr("%".$search_term."%").") OR (a.`email` LIKE " .$db->qstr("%".$search_term."%")."))" : "") ."
+                    GROUP BY a.`id`
+                    ORDER BY a.`firstname` ASC, a.`lastname` ASC";
+
+        $results = $db->GetAll($query, array($group_id, $active));
+        if ($results) {
+            foreach ($results as $result) {
+                $member = new User();
+                $members[] = $member::fromArray($result, $member);
+            }
+        }
+        return $members;
+    }
+
     public static function getUser($proxy_id = null, $search_term = false) {
         global $db;
         $member = false;

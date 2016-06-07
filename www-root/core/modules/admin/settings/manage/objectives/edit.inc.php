@@ -389,7 +389,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 							$PROCESSED["objective_name"] = $objective_name;
 						} else {
 							$ERROR++;
-							$ERRORSTR[] = "The <strong>Objective Name</strong> is a required field.";
+							$ERRORSTR[] = "The <strong>" . $translate->_("Objective") . " Name</strong> is a required field.";
 						}
 
 						/**
@@ -452,7 +452,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 								if ($objectives) {
 									$count = 0;
 									foreach ($objectives as $objective) {
-										if($count === $PROCESSED["objective_order"]) {
+										if ($count === $PROCESSED["objective_order"]) {
 											$count++;
 										}
 										if (!$db->AutoExecute("global_lu_objectives", array("objective_order" => $count), "UPDATE", "`objective_id` = ".$db->qstr($objective["objective_id"]))) {
@@ -560,9 +560,9 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 							$PROCESSED["objective_audience"] = "all";
 						}
 
-						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-						$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/picklist.js\"></script>\n";
+						$HEAD[] = "<script src=\"".ENTRADA_RELATIVE."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+						$HEAD[] = "<script src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+						$HEAD[] = "<script src=\"".ENTRADA_RELATIVE."/javascript/picklist.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 						$ONLOAD[] = "$('courses_list').style.display = 'none'";
 
 						$HEAD[]	= "<script type=\"text/javascript\">
@@ -865,15 +865,14 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 										var state = $(this).attr('data-toggle');
 										if(state == "show"){
 											$(this).attr('data-toggle','hide');
-											$(this).html('Hide All Objectives');
+											$(this).html('Hide All <?php echo $translate->_("Objectives"); ?>');
 											jQuery('.mapped_objectives').animate({width:'45%'},400,'swing',function(){
-												//jQuery('.objectives').animate({display:'block'},400,'swing');											
 												jQuery('.objectives').css({width:'48%'});
 												jQuery('.objectives').show(400);
 											});										
 										}else{
 											$(this).attr('data-toggle','show');
-											$(this).html('Show All Objectives');
+											$(this).html('Show All <?php echo $translate->_("Objectives"); ?>');
 											jQuery('.objectives').animate({width:'0%'},400,'swing',function(){
 												jQuery('.objectives').hide();
 												jQuery('.mapped_objectives').animate({width:'100%'},400,'swing');
@@ -883,7 +882,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 
 								});
 
-								function mapObjective(id,title){
+								function mapObjective(id, title) {
 
 									var li = jQuery(document.createElement('li'))
 													.attr('class','mapped-objective')
@@ -932,14 +931,17 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 											?>
 											<li class = "objective-container"
 												id = "objective_<?php echo $objective["objective_id"]; ?>">
-												<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-												<div 	class="objective-title"
+												<?php
+												$title = ($objective["objective_code"] ? $objective["objective_code"] . ": " : "") . $objective["objective_name"];
+												$description = $objective["objective_description"];
+												?>
+												<div class="objective-title"
 														id="objective_title_<?php echo $objective["objective_id"]; ?>"
 														data-title="<?php echo $title;?>"
-														data-id = "<?php echo $objective["objective_id"]; ?>"
-														data-code = "<?php echo $objective["objective_code"]; ?>"
-														data-name = "<?php echo $objective["objective_name"]; ?>"
-														data-description = "<?php echo $objective["objective_description"]; ?>">
+														data-id="<?php echo $objective["objective_id"]; ?>"
+														data-code="<?php echo $objective["objective_code"]; ?>"
+														data-name="<?php echo $objective["objective_name"]; ?>"
+														data-description="<?php echo $objective["objective_description"]; ?>">
 													<?php echo $title; ?>
 												</div>
 												<div class="objective-controls">
@@ -948,10 +950,11 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 													<i class="objective-delete-control icon-minus-sign" data-id="<?php echo $objective["objective_id"]; ?>"></i>
 													<i class="objective-link-control icon-link" data-id="<?php echo $objective["objective_id"]; ?>"></i>
 												</div>
-												<div 	class="objective-children"
-														id="children_<?php echo $objective["objective_id"]; ?>">
-														<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
-														</ul>
+												<div class="objective-description content-small" id="description_<?php echo $objective["objective_id"]; ?>">
+													<?php echo $description; ?>
+												</div>
+												<div class="objective-children" id="children_<?php echo $objective["objective_id"]; ?>">
+													<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>"></ul>
 												</div>
 											</li>
 											<?php

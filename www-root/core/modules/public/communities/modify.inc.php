@@ -82,6 +82,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			$community_resource = new CommunityResource($COMMUNITY_ID);
 			if ($ENTRADA_ACL->amIAllowed($community_resource, 'update')) {
 				$CATEGORY_ID = $community_details["category_id"];
+			?>
+				<a class="btn space-below" href="<?php echo html_encode(ENTRADA_URL."/community".$community_details["community_url"]); ?>">
+						<i class="icon-chevron-left" style="margin: 0"></i> Back To Community
+				</a>
+			<?php
 				echo "<h1>".html_encode($community_details["community_title"])."</h1>\n";
 
 				// Error Checking
@@ -1381,9 +1386,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							<div style="margin-top: 10px">
 								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 									<tr>
-										<td style="width: 25%; text-align: left">
-											<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo html_encode(ENTRADA_URL."/community".$community_details["community_url"]); ?>'" />
-										</td>
+
 										<td style="width: 75%; text-align: right; vertical-align: middle">
 											<input type="submit" class="btn btn-primary" value="Save Changes" />
 										</td>

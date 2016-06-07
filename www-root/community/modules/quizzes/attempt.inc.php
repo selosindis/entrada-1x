@@ -112,8 +112,7 @@ if ($LOGGED_IN) {
 											$questions	= $db->GetAll($query);
 											if ($questions) {
 												if ((count($_POST["responses"])) != (count($questions))) {
-													$ERROR++;
-													$ERRORSTR[] = "In order to submit your quiz for marking, you must first answer all of the questions.";
+													add_error("In order to submit your quiz for marking, you must first answer all of the questions.");
 												}
 
 												foreach ($questions as $question) {
@@ -123,8 +122,7 @@ if ($LOGGED_IN) {
 													 */
 													if ((isset($_POST["responses"][$question["qquestion_id"]])) && ($qqresponse_id = clean_input($_POST["responses"][$question["qquestion_id"]], "int"))) {
 														if (!quiz_save_response($qprogress_id, $progress_record["aquiz_id"], $progress_record["content_id"], $progress_record["quiz_id"], $question["qquestion_id"], $qqresponse_id, $QUIZ_TYPE)) {
-															$ERROR++;
-															$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
+                                                            add_error("A problem was found storing a question response, please verify your responses and try again.");
 
 															$problem_questions[] = $question["qquestion_id"];
 														}
@@ -135,8 +133,7 @@ if ($LOGGED_IN) {
 													}
 												}
 											} else {
-												$ERROR++;
-												$ERRORSTR[] = "An error occurred while attempting to save your quiz responses. The system administrator has been notified of this error; please try again later.";
+                                                add_error("An error occurred while attempting to save your quiz responses. The system administrator has been notified of this error; please try again later.");
 
 												application_log("error", "Unable to find any quiz questions for quiz_id [".$progress_record["quiz_id"]."]. Database said: ".$db->ErrorMsg());
 											}
@@ -217,23 +214,20 @@ if ($LOGGED_IN) {
 													} else {
 														$url = ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"];
 
-														$SUCCESS++;
-														$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz. Your responses have been successfully recorded, and your grade and any feedback will be released <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+														add_success("Thank-you for completing the <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz. Your responses have been successfully recorded, and your grade and any feedback will be released <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
 
 														$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
 													}
 												} else {
 													application_log("error", "Unable to record the final quiz results for aquiz_id [".$RECORD_ID."] in the quiz_progress table. Database said: ".$db->ErrorMsg());
 
-													$ERROR++;
-													$ERRORSTR[] = "We were unable to record the final results for this quiz at this time. Please be assured that your responses are saved, but you will need to come back to this quiz to re-submit it. This problem has been reported to a system administrator; please try again later.";
+                                                    add_error("We were unable to record the final results for this quiz at this time. Please be assured that your responses are saved, but you will need to come back to this quiz to re-submit it. This problem has been reported to a system administrator; please try again later.");
 
 													echo display_error();
 												}
 											}
 										} else {
-											$ERROR++;
-											$ERRORSTR[] = "In order to submit your quiz for marking, you must first answer some of the questions.";
+                                            add_error("In order to submit your quiz for marking, you must first answer some of the questions.");
 										}
 									} else {
 										$quiz_progress_array	= array (
@@ -252,14 +246,12 @@ if ($LOGGED_IN) {
 
 										$completed_attempts += 1;
 
-										$ERROR++;
-										$ERRORSTR[] = "We were unable to save your previous quiz attempt because your time limit expired <strong>".date(DEFAULT_DATE_FORMAT, $quiz_end_time)."</strong>, and you submitted your quiz <strong>".date(DEFAULT_DATE_FORMAT)."</strong>.";
+                                        add_error("We were unable to save your previous quiz attempt because your time limit expired <strong>".date(DEFAULT_DATE_FORMAT, $quiz_end_time)."</strong>, and you submitted your quiz <strong>".date(DEFAULT_DATE_FORMAT)."</strong>.");
 
 										application_log("notice", "Unable to save qprogress_id [".$qprogress_id."] because it expired.");
 									}
 								} else {
-									$ERROR++;
-									$ERRORSTR[] = "We were unable to locate a quiz that is currently in progress.<br /><br />If you pressed your web-browsers back button, please refrain from doing this when you are posting quiz information.";
+                                    add_error("We were unable to locate a quiz that is currently in progress.<br /><br />If you pressed your web-browsers back button, please refrain from doing this when you are posting quiz information.");
 
 									application_log("error", "Unable to locate a quiz currently in progress when attempting to save a quiz.");
 								}
@@ -315,8 +307,7 @@ if ($LOGGED_IN) {
 										if ($db->AutoExecute("quiz_progress", $quiz_progress_array, "INSERT"))  {
 											$qprogress_id = $db->Insert_Id();
 										} else {
-											$ERROR++;
-											$ERRORSTR[] = "Unable to create a progress entry for this quiz, it is not advisable to continue at this time. The system administrator was notified of this error; please try again later.";
+                                            add_error("Unable to create a progress entry for this quiz, it is not advisable to continue at this time. The system administrator was notified of this error; please try again later.");
 
 											application_log("error", "Unable to create a quiz_progress entery when attempting complete a quiz. Database said: ".$db->ErrorMsg());
 										}
@@ -426,63 +417,270 @@ if ($LOGGED_IN) {
 											echo clean_input($quiz_record["quiz_notes"], "allowedtags");
 										}
 										?>
-										<form action="<?php echo ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"]; ?>?section=attempt&amp;id=<?php echo $RECORD_ID; ?>" method="post">
-										<input type="hidden" name="step" value="2" />
-										<?php
-										$query				= "	SELECT a.*
-																FROM `quiz_questions` AS a
-																WHERE a.`quiz_id` = ".$db->qstr($quiz_record["quiz_id"])."
-																AND a.`question_active` = '1'
-																ORDER BY ".((isset($quiz_record["random_order"]) && $quiz_record["random_order"] == 1)?"RAND()" :"a.`question_order` ASC");
-										$questions			= $db->GetAll($query);
-										$total_questions	= 0;
-										if ($questions) {
-											$total_questions = count($questions);
-											?>
-											<div class="quiz-questions" id="quiz-content-questions-holder">
-												<ol class="questions" id="quiz-questions-list">
-												<?php
-												foreach ($questions as $question) {
-													echo "<li id=\"question_".$question["qquestion_id"]."\"".((in_array($question["qquestion_id"], $problem_questions)) ? " class=\"notice\"" : "").">";
-													echo "	<div class=\"question noneditable\">\n";
-													echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "trim")."</span>";
-													echo "	</div>\n";
-													echo "	<ul class=\"responses\">\n";
-													$query		= "	SELECT a.*
-																	FROM `quiz_question_responses` AS a
-																	WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
-																	AND a.`response_active` = '1'
-																	ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
-													$responses	= $db->GetAll($query);
-													if ($responses) {
-                                                        foreach ($responses as $response) {
-                                                            echo "<li style=\"vertical-align: top;\">";
-                                                            echo "  <div style=\"float: left; width: 5%;\"><input type=\"radio\" id=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\" name=\"responses[".$question["qquestion_id"]."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question["qquestion_id"]] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["qquestion_id"]."', '".$response["qqresponse_id"]."') : false)\" /></div>";
-                                                            echo "  <div style=\"float: left; width: 95%;\"><label for=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label></div>";
-                                                            echo "  <div style=\"clear: both;\"></div>";
-                                                            echo "</li>\n";
-                                                        }
+
+										<form class="question-responses" action="<?php echo ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"]; ?>?section=attempt&amp;id=<?php echo $RECORD_ID; ?>" method="post">
+											<input type="hidden" name="step" value="2" />
+											<?php
+											$questions = Models_Quiz_Question::fetchAllRecords($quiz_record["quiz_id"]);
+											if (isset($questions) && isset($quiz_record["random_order"]) && $quiz_record["random_order"] == 1) {
+												$grouped_questions = array();
+												$i = 0;
+												$questions_ordered_array = array();
+												$unordered_questions = array();
+
+												foreach ($questions as $question_key => $question) {
+													if (!is_null($question->getQquestionGroupID())) {
+														if (!isset($grouped_questions[$question->getQquestionGroupID()])) {
+															$grouped_questions[$question->getQquestionGroupID()] = array("group" => true, "questions" => array());
+														}
+														$grouped_questions[$question->getQquestionGroupID()]["questions"][] = $question;
+														$questions_ordered_array[] = NULL;
+														unset($questions[$question_key]);
+													} else if ($question->getQuestiontypeID() == "1") {
+														$questions_ordered_array[] = NULL;
+														$unordered_questions[] = $question;
+														unset($questions[$question_key]);
+													} else {
+														$questions_ordered_array[] = $question;
 													}
-													echo "	</ul>\n";
-													echo "</li>\n";
+													$i++;
+												}
+
+												foreach ($grouped_questions as $group_id => $q_group) {
+													$unordered_questions[] = $q_group;
+												}
+												shuffle($unordered_questions);
+												$randomized_questions = array();
+												foreach ($unordered_questions as $question) {
+													if (is_array($question) && $question["group"]) {
+														foreach ($question["questions"] as $child_question) {
+															$randomized_questions[] = $child_question;
+														}
+													} else {
+														$randomized_questions[] = $question;
+													}
+												}
+												$index = 0;
+												foreach ($randomized_questions as $question) {
+													$question_added = false;
+													while (!$question_added) {
+														if (!isset($questions_ordered_array[$index]) || is_null($questions_ordered_array[$index])) {
+															$questions_ordered_array[$index] = $question;
+															$question_added = true;
+														}
+														$index++;
+													}
+												}
+												$questions = array();
+												$count = 1;
+												foreach ($questions_ordered_array as $question) {
+													if ($count < count($questions_ordered_array) || $question->getQuestiontypeID() != 3) {
+														$questions[] = $question;
+													}
+													$count++;
+												}
+											}
+
+											$total_questions	= 0;
+
+											if ($questions) {
+												$total_questions = count($questions);
+												?>
+												<style type="text/css">
+													.question-responses {
+														position:relative;
+													}
+													.pagination {
+														float:right;
+													}
+													.page.active {
+														display:block;
+													}
+													.page.inactive {
+														display:none;
+													}
+													ol.questions {
+														padding-left:20px;
+													}
+												</style>
+												<?php
+												$problem_pages = array();
+												$page_counter = 1;
+												$counter = 1;
+												$quiz_markup = "";
+												$used_qquestion_group_ids = array();
+												foreach ($questions as $question) {
+													if ($question->getQquestionGroupID()) {
+														if (!in_array($question->getQquestionGroupID(), $used_qquestion_group_ids)) {
+															$used_qquestion_group_ids[] = $question->getQquestionGroupID();
+															$grouped_qquestions = Models_Quiz_Question::fetchGroupedQuestions($question->getQuizID(), $question->getQquestionGroupID());
+															if ($grouped_qquestions) {
+																$quiz_markup .= "</ol><ol class=\"questions group\" start=\"".$counter."\">";
+																foreach ($grouped_qquestions as $question) {
+																	$quiz_markup .= "<li>".clean_input($question->getQuestionText(), "trim");
+																	$responses	= Models_Quiz_Question_Response::fetchAllRecords($question->getQquestionID());
+																	if ($responses) {
+																		$quiz_markup .= "<ul class=\"responses\">";
+																		foreach ($responses as $r) {
+																			$response = $r->toArray();
+																			$quiz_markup .= "<li  class=\"row-fluid\">";
+																			$quiz_markup .= "	<span class=\"span1\"><input type=\"radio\" id=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\" name=\"responses[".$question->getQquestionID()."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question->getQquestionID()] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question->getQquestionID()."', '".$response["qqresponse_id"]."') : false)\" /></span>";
+																			$quiz_markup .= "	<label class=\"span11\" for=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
+																			$quiz_markup .= "</li>\n";
+																		}
+																		$quiz_markup .= "</ul>";
+																	}
+																	$quiz_markup .= "</li>";
+																	$counter ++;
+																}
+																$quiz_markup .= "</ol><ol class=\"questions\" start=\"".$counter."\">\n";
+															}
+															$quiz_markup .= "</li>";
+														}
+													} else if ($question->getQuestiontypeID() == 3) {
+														$page_counter++;
+														$break_id = $question->getQquestionID();
+														$quiz_markup .= "</ol></div><div class=\"page inactive\" data-id=\"".$page_counter."\">";
+														$quiz_markup .= "<h2>Quiz Page ".$page_counter."</h2>";
+														$quiz_markup .= "<ol class=\"questions\" start=\"".$counter."\">";
+													} else if ($question->getQuestiontypeID() == 2) {
+														$quiz_markup .= "</ol>";
+														$quiz_markup .= "<div class=\"display-generic\">".$question->getQuestionText()."</div>";
+														$quiz_markup .= "<ol class=\"questions\" start=\"".$counter."\">";
+													} else {
+														if (in_array($question->getQquestionID(), $problem_questions) && !array_key_exists($page_counter, $problem_pages)) {
+															$problem_pages[$page_counter] = true;
+														}
+														$quiz_markup .= "<li id=\"question_".$question->getQquestionID()."\"".((in_array($question->getQquestionID(), $problem_questions)) ? " class=\"notice\"" : "")." data-page=\"".$page_counter."\">";
+														$quiz_markup .= "	<div class=\"question noneditable\">\n";
+														$quiz_markup .= "		<span id=\"question_text_".$question->getQquestionID()."\" class=\"question\">".clean_input($question->getQuestionText(), "trim")."</span>";
+														$quiz_markup .= "	</div>\n";
+														if ($question->getQuestiontypeID() == 1) {
+															$quiz_markup .= "	<ul class=\"responses\">\n";
+															$query		= "	SELECT a.*
+																					FROM `quiz_question_responses` AS a
+																					WHERE a.`qquestion_id` = ".$db->qstr($question->getQquestionID())."
+																					AND a.`response_active` = '1'
+																					ORDER BY ".(($question->getRandomizeResponses() == 1) ? "RAND()" : "a.`response_order` ASC");
+															$responses	= $db->GetAll($query);
+															if ($responses) {
+																foreach ($responses as $response) {
+																	$quiz_markup .= "<li style=\"list-style-type: none\" class=\"row-fluid\">";
+																	$quiz_markup .= "	<span class=\"span1\"><input type=\"radio\" id=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\" name=\"responses[".$question->getQquestionID()."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question->getQquestionID()] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question->getQquestionID()."', '".$response["qqresponse_id"]."') : false)\" /></span>";
+																	$quiz_markup .= "	<label class=\"span11\" for=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
+																	$quiz_markup .= "</li>\n";
+																}
+															}
+															$quiz_markup .= "	</ul>\n";
+														} else if ($question->getQuestiontypeID() == 2) {
+															$quiz_markup .= "<textarea id=\"response_".$question->getQquestionID()."\" name=\"responses[".$question->getQquestionID()."]\" maxlength=\"".$question->getCharLimit()."\" style=\"width:95%;\"></textarea>";
+														}
+														$quiz_markup .= "</li>\n";
+														$counter ++;
+													}
 												}
 												?>
-												</ol>
-											</div>
-											<?php
+												<div class="quiz-questions" id="quiz-content-questions-holder">
+													<?php
+													if ($page_counter > 1) {
+														?>
+														<div class="row-fluid pagination pagination-right pagination-top">
+															<ul>
+																<li><a href="#" class="prev">&laquo;</a></li>
+																<?php
+																for ($i = 1; $i <= $page_counter; $i++) {
+																	echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" id=\"page-selector-top-".$i."\" data-id=\"".$i."\"".((array_key_exists($i, $problem_pages)) && $problem_pages[$i] ? " class=\"notice\"" : "").">".$i."</a></li>";
+																}
+																?>
+																<li><a href="#" class="next">&raquo;</a></li>
+															</ul>
+														</div>
+													<?php
+													}
+													?>
+
+													<div class="page active" data-id="1">
+														<?php echo ($page_counter > 1 ? "<h2>Quiz Page 1</h2>" : ""); ?>
+														<ol class="questions" id="quiz-questions-list">
+															<?php echo $quiz_markup; ?>
+														</ol>
+													</div>
+
+													<?php
+													if ($page_counter > 1) {
+														?>
+														<div class="row-fluid pagination pagination-right pagination-bottom">
+															<ul>
+																<li><a href="#" class="prev">&laquo;</a></li>
+																<?php
+																for ($i = 1; $i <= $page_counter; $i++) {
+																	echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" id=\"page-selector-bottom-".$i."\" data-id=\"".$i."\"".((array_key_exists($i, $problem_pages)) && $problem_pages[$i] ? " class=\"notice\"" : "").">".$i."</a></li>";
+																}
+																?>
+																<li><a href="#" class="next">&raquo;</a></li>
+															</ul>
+														</div>
+														<?php
+													}
+													?>
+												</div>
+												<?php
 										} else {
-											$ERROR++;
-											$ERRORSTR[] = "There are no questions currently available for under this quiz. This problem has been reported to a system administrator; please try again later.";
+											add_error("There are no questions currently available for under this quiz. This problem has been reported to a system administrator; please try again later.");
 
 											application_log("error", "Unable to locate any questions for quiz [".$quiz_record["quiz_id"]."]. Database said: ".$db->ErrorMsg());
 										}
 										?>
-										<div style="border-top: 2px #CCCCCC solid; margin-top: 10px; padding-top: 10px">
-											<input class="btn" type="button" style="float: left; margin-right: 10px" onclick="window.location = '<?php echo ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"]; ?>'" value="Exit Quiz" />
-											<input class="btn btn-primary" type="submit" style="float: right" value="Submit Quiz" />
-										</div>
-										<div class="clear"></div>
+                                        <div class="row-fluid border-above-medium space-above pad-top">
+											<input class="btn" type="button" onclick="window.location = '<?php echo ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"]; ?>'" value="Exit Quiz" />
+                                            <input id="submit-button" type="submit" class="btn btn-primary pull-right"<?php echo ($page_counter > 1 ? " style=\"display: none;\"" : ""); ?> value="Submit Quiz" />
+                                        </div>
 										</form>
+										<script type="text/javascript">
+											var total_pages = jQuery(".pagination-top").length >= 1 ? jQuery(".pagination-top ul li").length - 2 : 1;
+											var active_page = 1;
+											jQuery(function(){
+												jQuery(".pagination ul li a").live("click", function() {
+													if (jQuery(this).hasClass("prev") || jQuery(this).hasClass("next")) {
+														old_page = active_page;
+														if (jQuery(this).hasClass("prev") && active_page > 1) {
+															active_page--;
+														} else if (jQuery(this).hasClass("next") && active_page != total_pages) {
+															active_page++;
+														}
+														if (old_page != active_page) {
+															jQuery(".pagination-top ul li").removeClass("active");
+															jQuery(".pagination-top ul li").eq(active_page).addClass("active");
+															jQuery(".pagination-bottom ul li").removeClass("active");
+															jQuery(".pagination-bottom ul li").eq(active_page).addClass("active");
+															jQuery(".page.active").fadeOut("fast", function() {
+																jQuery(".page.active").removeClass("active").addClass("inactive");
+																jQuery(".page[data-id="+ (active_page) + "]").fadeIn().removeClass("inactive").addClass("active");
+															});
+														}
+													} else {
+														if (active_page != jQuery(this).attr("data-id")) {
+															active_page = jQuery(this).attr("data-id");
+															jQuery(".pagination-top ul li").removeClass("active");
+															jQuery(".pagination-top ul li").eq(active_page).addClass("active");
+															jQuery(".pagination-bottom ul li").removeClass("active");
+															jQuery(".pagination-bottom ul li").eq(active_page).addClass("active");
+															jQuery(".page.active").fadeOut("fast", function() {
+																jQuery(".page.active").removeClass("active").addClass("inactive");
+																jQuery(".page.inactive[data-id="+ (active_page) + "]").fadeIn().removeClass("inactive").addClass("active");
+															});
+														}
+													}
+													if (active_page >= total_pages) {
+														jQuery('#submit-button').show();
+													} else {
+														jQuery('#submit-button').hide();
+													}
+													return false;
+												});
+											});
+										</script>
+
 										<script type="text/javascript">
 										function storeResponse(qid, rid) {
 											new Ajax.Request('<?php echo ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"]; ?>?section=save-response', {
@@ -517,8 +715,7 @@ if ($LOGGED_IN) {
 										$sidebar_html = quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"]);
 										new_sidebar_item("Quiz Statement", $sidebar_html, "page-anchors", "open", "1.9");
 									} else {
-										$ERROR++;
-										$ERRORSTR[] = "Unable to locate your progress information for this quiz at this time. The system administrator has been notified of this error; please try again later.";
+										add_error("Unable to locate your progress information for this quiz at this time. The system administrator has been notified of this error; please try again later.");
 
 										echo display_error();
 
@@ -527,56 +724,49 @@ if ($LOGGED_IN) {
 								break;
 							}
 						} else {
-							$ERROR++;
-							$ERRORSTR[] = "You were only able to attempt this quiz a total of <strong>".(int) $quiz_record["quiz_attempts"]." time".(($quiz_record["quiz_attempts"] != 1) ? "s" : "")."</strong>, and time limit for your final attempt expired before completion.<br /><br />Please contact a teacher if you require further assistance.";
+							add_error("You were only able to attempt this quiz a total of <strong>".(int) $quiz_record["quiz_attempts"]." time".(($quiz_record["quiz_attempts"] != 1) ? "s" : "")."</strong>, and time limit for your final attempt expired before completion.<br /><br />Please contact a teacher if you require further assistance.");
 
 							echo display_error();
 
 							application_log("notice", "Someone attempted to complete aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."]) more than the total number of possible attempts [".$quiz_record["quiz_attempts"]."] after their final attempt expired.");
 						}
 					} else {
-						$NOTICE++;
-						$NOTICESTR[] = "You were only able to attempt this quiz a total of <strong>".(int) $quiz_record["quiz_attempts"]." time".(($quiz_record["quiz_attempts"] != 1) ? "s" : "")."</strong>.<br /><br />Please contact a teacher if you require further assistance.";
+						add_notice("You were only able to attempt this quiz a total of <strong>".(int) $quiz_record["quiz_attempts"]." time".(($quiz_record["quiz_attempts"] != 1) ? "s" : "")."</strong>.<br /><br />Please contact a teacher if you require further assistance.");
 
 						echo display_notice();
 
 						application_log("notice", "Someone attempted to complete aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."]) more than the total number of possible attempts [".$quiz_record["quiz_attempts"]."].");
 					}
 				} else {
-					$NOTICE++;
-					$NOTICESTR[] = "You were only able to attempt this quiz until <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />Please contact a teacher if you require further assistance.";
+					add_notice("You were only able to attempt this quiz until <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />Please contact a teacher if you require further assistance.");
 
 					echo display_notice();
 
 					application_log("error", "Someone attempted to complete aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."] after the release date.");
 				}
 			} else {
-				$NOTICE++;
-				$NOTICESTR[] = "You cannot attempt this quiz until <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_date"])."</strong>.<br /><br />Please contact a teacher if you require further assistance.";
+                add_notice("You cannot attempt this quiz until <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_date"])."</strong>.<br /><br />Please contact a teacher if you require further assistance.");
 
 				echo display_notice();
 
 				application_log("error", "Someone attempted to complete aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."] prior to the release date.");
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "In order to attempt a quiz, you must provide a valid quiz identifier.";
+			add_error("In order to attempt a quiz, you must provide a valid quiz identifier.");
 
 			echo display_error();
 
 			application_log("error", "Failed to provide a valid aquiz_id identifer [".$RECORD_ID."] when attempting to take a quiz.");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "In order to attempt a quiz, you must provide a valid quiz identifier.";
+		add_error("In order to attempt a quiz, you must provide a valid quiz identifier.");
 
 		echo display_error();
 
 		application_log("error", "Failed to provide an aquiz_id identifier when attempting to take a quiz.");
 	}
 } else {
-	$ERROR++;
-	$ERRORSTR[] = "You must be logged in to attempt a quiz.";
+	add_error("You must be logged in to attempt a quiz.");
 
 	echo display_error();
 

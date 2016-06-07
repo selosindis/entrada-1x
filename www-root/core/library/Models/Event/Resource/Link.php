@@ -100,19 +100,41 @@ class Models_Event_Resource_Link extends Models_Base {
     public function getActive() {
         return $this->active;
     }
-    
+
+    /* @return bool|Models_Event_Resource_Link */
     public static function fetchRowByID ($id = null) {
         $self = new self();
         
-        $contraints = array (
-            array(
-                "key" => "elink_id",
-                "value" => $id,
-                "method" => "="
-            ),
+        $constraints = array (
+            array("key" => "elink_id", "value" => $id, "method" => "="),
         );
         
-        return $self->fetchRow($contraints);
+        return $self->fetchRow($constraints);
+    }
+
+    /* @return bool|Models_Event_Resource_Link */
+    public static function fetchRowByEventIDLink ($event_id = null, $link = null) {
+        $self = new self();
+
+        $constraints = array (
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
+            array("key" => "link", "value" => $link, "method" => "=")
+        );
+
+        return $self->fetchRow($constraints);
+    }
+
+    /* @return bool|Models_Event_Resource_Link */
+    public static function fetchRowByEventIDLinkUpdate ($event_id = null, $link = null, $updated_date = null) {
+        $self = new self();
+
+        $constraints = array (
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
+            array("key" => "link", "value" => $link, "method" => "="),
+            array("key" => "updated_date", "value" => $updated_date, "method" => "=")
+        );
+
+        return $self->fetchRow($constraints);
     }
     
     public function getViewed() {

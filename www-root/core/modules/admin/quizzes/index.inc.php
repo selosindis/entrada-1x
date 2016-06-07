@@ -46,14 +46,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
     }
     $quiz_data = array();
     $i = 0;
-    foreach ($quizzes as $quiz) {
-        $quiz_data[$i]["quiz_id"]           = $quiz->getQuizID();
-        $quiz_data[$i]["quiz_title"]        = $quiz->getQuizTitle();
-        $quiz_data[$i]["question_total"]    = count($quiz->getQuizQuestions());
-        $quiz_data[$i]["quiz_status"]       = $quiz->getQuizActive() ? "Active" : "Disabled";
-        $quiz_data[$i]["quiz_author"]       = $quiz->getQuizAuthor() ? $quiz->getQuizAuthor()->getFullName(false) : "";
-        $quiz_data[$i]["updated_date"]      = $quiz->getUpdatedDate();
-        $i++;
+
+    if ($quizzes) {
+		foreach ($quizzes as $quiz) {
+			$quiz_data[$i]["quiz_id"]           = $quiz->getQuizID();
+			$quiz_data[$i]["quiz_title"]        = $quiz->getQuizTitle();
+	
+			$quiz_questions = array_filter($quiz->getQuizQuestions(), function ($question) {
+				return $question->getQuestiontypeID() != 3;
+			});
+			
+			$quiz_data[$i]["question_total"]    = count($quiz_questions);
+			$quiz_data[$i]["quiz_status"]       = $quiz->getQuizActive() ? "Active" : "Disabled";
+			$quiz_data[$i]["quiz_author"]       = $quiz->getQuizAuthor() ? $quiz->getQuizAuthor()->getFullName(false) : "";
+			$quiz_data[$i]["updated_date"]      = $quiz->getUpdatedDate();
+			$i++;
+		}
     }
     
 	if (isset($_GET["ajax"]) && $_GET["ajax"] && isset($_GET["method"]) && $_GET["method"] == "list") {
@@ -69,7 +77,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				$sort_array = array();
 				foreach ($quiz_data as $quiz) {
 					$quiz_array = $quiz;
-					$sort_array[] = $quiz_array[$aColumns[clean_input($_GET["iSortCol_0"], "int")]];
+					$key = $aColumns[clean_input($_GET["iSortCol_0"], "int")];
+					if (isset($quiz_array[$key])) {
+						$sort_array[] = $quiz_array[$key];
+					} else {
+						$sort_array[] = NULL;
+					}
 				}
 				array_multisort($sort_array, (isset($_GET["sSortDir_0"]) && $_GET["sSortDir_0"] == "desc" ? SORT_DESC : SORT_ASC), (clean_input($_GET["iSortCol_0"], "int") == 3 ? SORT_NUMERIC : SORT_STRING), $quiz_data);
 			}
@@ -129,7 +142,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					'bServerSide': true,
 					'bProcessing': true,
 					'aoColumns': [
-						{ 'mDataProp': 'modified' },
+						{ 'mDataProp': 'modified', 'bSortable': false },
 						{ 'mDataProp': 'quiz_title' },
 						{ 'mDataProp': 'author' },
 						{ 'mDataProp': 'question_total' },
@@ -159,8 +172,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					'oLanguage': {
 						'sEmptyTable': 'There are currently no quizzes in the system.',
 						'sZeroRecords': 'No quizzes found.'
-					}
-
+					},
+                    'aaSorting': [[ 1, 'asc' ]]
 				}
 			);
 		}); 

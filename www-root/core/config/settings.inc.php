@@ -84,7 +84,7 @@ define("DATABASE_NAME", $config->database->entrada_database);					// The name of
 define("DATABASE_USER", $config->database->username);							// A username that can access this database.
 define("DATABASE_PASS", $config->database->password);							// The password for the username to connect to the database.
 
-define("ADODB_DIR", ENTRADA_ABSOLUTE."/core/library/Entrada/adodb");
+if (!defined('ADODB_DIR')) {    define("ADODB_DIR", ENTRADA_ABSOLUTE."/../vendor/adodb/adodb-php"); }
 
 define("ACADEMIC_YEAR_START_DATE", "September 1");								// The start month and day of your academic year.
 
@@ -130,7 +130,7 @@ define("AUTH_APP_ID", "1");														// Application ID for the Authenticatio
 define("AUTH_APP_IDS_STRING", "1");												// Application ID's to query for users in.
 define("AUTH_USERNAME", $config->auth_username);								// Application username to connect to the Authentication System.
 define("AUTH_PASSWORD", $config->auth_password);								// Application password to connect to the Authentication System.
-define("AUTH_METHOD", "local");													// The method used to authenticate users into the application (local or ldap).
+define("AUTH_METHOD", "local");													// The method used to authenticate users into the application (local, ldap, or sso).
 define("AUTH_DATABASE",	$config->database->auth_database);						// The name of the database that the authentication tables are located in. Must be able to connect to this using DATABASE_HOST, DATABASE_USER and DATABASE_PASS which are specified below.
 define("AUTH_MAX_LOGIN_ATTEMPTS", 5);											// The number of login attempts a user can make before they are locked out of the system for the lockout duration
 define("AUTH_LOCKOUT_TIMEOUT", 900);											// The amount of time in seconds a locked out user is prevented from logging in
@@ -148,14 +148,29 @@ define("LDAP_CGROUP_BASE_DN", "ou=cgroups,ou=groups,o=main,dc=yourschool,dc=ca")
 define("LDAP_USER_IDENTIFIER", "youruniquemember");
 define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : This field allows you to specify which local user_data field is used to search for a valid username.
 
-define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
-define("AUTH_CAS_HOSTNAME", "cas.schoolu.ca");									// Hostname of your CAS server.
-define("AUTH_CAS_PORT", 443);													// Port that CAS is running on.
-define("AUTH_CAS_URI", "cas");													// The URI where CAS is located on the CAS host.
+/**
+ * SSO related constants.
+ */
+define("AUTH_SSO_ENABLED", false);                                              // Enable SSO in addition to local or ldap login
+define("AUTH_SSO_TYPE", "Shibboleth");                                          // SSO Implementation used. One of "Cas" or "Shibboleth"
+define("AUTH_SSO_LOCAL_USER_QUERY_FIELD", "number");                            // The field name from the user_data table of the Authentication database used to match against the identifier supplied by SSO
 
-define("AUTH_CAS_COOKIE", "isCasOn");											// The name of the CAS cookie.
-define("AUTH_CAS_SESSION", "phpCAS");											// The session key set by phpCAS.
-define("AUTH_CAS_ID", "peopleid");												// The session key that holds the employee / student number.
+define("AUTH_ALLOW_CAS", false);						// DEPRECIATED: Whether or not you wish to allow CAS authorisation.
+define("AUTH_CAS_HOSTNAME", "cas.schoolu.ca");					// Hostname of your CAS server.
+define("AUTH_CAS_PORT", 443);							// Port that CAS is running on.
+define("AUTH_CAS_URI", "cas");							// The URI where CAS is located on the CAS host.
+define("AUTH_CAS_COOKIE", "isCasOn");						// The name of the CAS cookie.
+define("AUTH_CAS_SESSION", "phpCAS");						// The session key set by phpCAS.
+define("AUTH_CAS_ID", "peopleid");						    // The session key that holds the employee / student number.
+define("AUTH_CAS_SERVICE_VALIDATOR", "serviceValidate");			// CAS validator suffix request required if customized by your institution. 
+define("AUTH_CAS_SERVER_CA_CERT","");                                           // Path to CAS Server public CA certificate chain bundle file. Needed to secure CAS with Apache server 
+
+define("AUTH_SHIB_URL", "https://shibsp.dev");                                  // URL of the Shibboleth Service Provider (SP) service
+define("AUTH_SHIB_LOGIN_URI", "/Shibboleth.sso/Login");                         // The URI to request Shibboleth SP to authenticate the user
+define("AUTH_SHIB_LOGOUT_URI", "/Shibboleth.sso/Logout");                       // The URI to request Shibboleth SP to invalidate the user's session(s)
+define("AUTH_SHIB_SESSION", "Shib-Session-ID");                                 // The variable in $_SERVER containing the SP session if authentication succeeds
+define("AUTH_SHIB_ID", "shib-studentid");                                       // The variable in $_SERVER set by SP that holds the identity key provided by Shibboleth
+                                                                                //      This value will be compared against user_data.AUTH_SSO_LOCAL_USER_QUERY_FIELD column in auth database
 
 define("PASSWORD_RESET_URL", ENTRADA_URL."/password_reset");		    		// The URL that users are directed to if they have forgotten their password.
 define("PASSWORD_CHANGE_URL", "");	                                			// DEPRECATED: The URL that users are directed to if they wish to change their password.
@@ -173,8 +188,8 @@ define("SESSION_EXPIRES", 3600);
 define("DEFAULT_TEMPLATE", "default");											// This is the system template that will be loaded. System templates include language files, custom images, visual layouts, etc.
 define("DEFAULT_LANGUAGE", "en");												// This is the default language file that will be loaded. Language files must be placed in your DEFAULT_TEMPLATE."/languages directory. (i.e. en.lang.php)
 define("DEFAULT_CHARSET", "UTF-8");												// The character encoding which will be used on the website & in e-mails.
-define("DEFAULT_COUNTRY_ID", 39);												// The default contry id used to determine provinces / states, etc.
-define("DEFAULT_PROVINCE_ID", 9);												// The default provice id that is selected (use 0 for none).
+define("DEFAULT_COUNTRY_ID", 39);												// The default country_id used to determine provinces / states, etc.
+define("DEFAULT_PROVINCE_ID", 9);												// The default province_id that is selected (use 0 for none).
 
 define("DEFAULT_CITY", "City");
 define("DEFAULT_POSTALCODE", "0123456");
@@ -279,15 +294,20 @@ $GOOGLE_V3_REST_API["service_account_name"] = "";
 $GOOGLE_V3_REST_API["key_file_location"]    = "";
 
 /**
- * Weather Information provided by weather.com's XOAP service.
- * Register at: http://www.weather.com/services/xmloap.html
+ * Weather Information provided by Yahoo Weather API
+ * https://developer.yahoo.com/weather/documentation.html
  *
- * After you register, customize the URL below with your key.
+ * To find your WOEID, browse or search for your city from the Weather home page. The WOEID is in the URL for the
+ * forecast page for that city. You can also get the WOEID by entering your zip code on the home page. For example, if
+ * you search for Los Angeles on the Weather home page, the forecast page for that city is
+ * http://weather.yahoo.com/united-states/california/los-angeles-2442047/. The WOEID is 2442047.
  *
+ * The weather widget shows up on the Entrada Dashboard for users, when the cron/weather.php file is run in cron.
  */
-define("DEFAULT_WEATHER_FETCH", "http://weather.yahooapis.com/forecastrss?u=c&w=%LOCATIONCODE%");
+$WEATHER_TEMP_UNIT = "c";                                                       // Set this to c for celsius, f for fahrenheits
+define("DEFAULT_WEATHER_FETCH", "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%3D%LOCATIONCODE%%20and%20u%3D'" . $WEATHER_TEMP_UNIT . "'");
 
-$WEATHER_LOCATION_CODES = array("4145" => "Kingston, Ontario");					// These are the weather.com weather city / airport weather codes that are fetched and stored for use on the Dashboard.
+$WEATHER_LOCATION_CODES = array("4145" => "Kingston, Ontario");					// Add each WOEID you would like to fetch the weather as a key in this array.
 
 define("LOG_DIRECTORY", $config->entrada_storage . "/logs");					// Full directory path to the logs directory without a trailing slash.
 
@@ -307,6 +327,7 @@ define("MAX_UPLOAD_FILESIZE", 52428800);										// Maximum allowable filesize 
 
 define("COMMUNITY_STORAGE_GALLERIES", $config->entrada_storage . "/community-galleries");	// Full directory path where the community gallery images are stored without trailing slash.
 define("COMMUNITY_STORAGE_DOCUMENTS", $config->entrada_storage . "/community-shares");		// Full directory path where the community document shares are stored without trailing slash.
+define("COMMUNITY_STORAGE_DOCUMENTS_DISCUSSION", $config->entrada_storage . "/community-discussions");		// Full directory path where the community document discussion board files are stored without trailing slash.
 $COMMUNITY_ORGANISATIONS = array();															// Array of integer organisation IDs or specifying which organisations are eligble for registration in communities, circumventing APP_ID restrictions. An empty array means all organisations are eligible.
 
 define("ANNUALREPORT_STORAGE", $config->entrada_storage."/annualreports");		// Full directory path where the annual reports are stored without trailing slash.
@@ -324,8 +345,8 @@ define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and para
 define("DEBUG_MODE", true);														// Some places have extra debug code to show sample output. Set this to true if you want to see it.
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
-define("APPLICATION_NAME", "Entrada ME Open Edition");							// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.6.1"); 										// The current filesystem version of Entrada.
+define("APPLICATION_NAME", "Entrada ME Open Edition");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
+define("APPLICATION_VERSION", "1.7.5"); 										// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada ME Open Edition: An eLearning Ecosystem";
@@ -558,7 +579,7 @@ $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventconte
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
-$MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "read");
+$MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
 $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");

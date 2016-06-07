@@ -102,7 +102,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		</div>
 
 		<h2>Active Users</h2>
-		<table id="data_table_<?php echo $course_id; ?>" class="tableList" style="width: 750px" cellspacing="0" summary="Event Types of <?php echo html_encode($courses_included[$course_id]); ?>">
+		<table id="data_table_<?php echo $course_id; ?>" class="tableList" style="width: 750px" cellspacing="0" summary="<?php echo $translate->_("Event Types"); ?> of <?php echo html_encode($courses_included[$course_id]); ?>">
 		<colgroup>
 			<col class="modified" />
 			<col class="user" />
@@ -151,7 +151,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		</table>
 
 		<h2>Inactive Users</h2>
-		<table id="data_table_<?php echo $course_id; ?>" class="tableList" style="width: 750px" cellspacing="0" summary="Event Types of <?php echo html_encode($courses_included[$course_id]); ?>">
+		<table id="data_table_<?php echo $course_id; ?>" class="tableList" style="width: 750px" cellspacing="0" summary="<?php echo $translate->_("Event Types"); ?> of <?php echo html_encode($courses_included[$course_id]); ?>">
 		<colgroup>
 			<col class="modified" />
 			<col class="user" />
@@ -197,5 +197,3 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 
 }
-?>
-	

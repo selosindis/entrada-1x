@@ -511,8 +511,11 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								</colgroup>
 								<tfoot>
 									<tr>
+										<td colspan="2" style="padding-top: 15px; text-align: left">
+											<input type="button" class="btn button-right" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>'" />
+										</td>
 										<td colspan="2" style="padding-top: 15px; text-align: right">
-		                                    <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+		                                    <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
 										</td>
 									</tr>
 								</tfoot>

@@ -52,14 +52,14 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage?org=".$ORGANISATION['organisation_id'], "title" => $ORGANISATION["organisation_title"]);
 
 					$sidebar_html  = "<ul class=\"menu\">";
-                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/characteristics?org=".$ORGANISATION_ID."\">Assessment Characteristics</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/characteristics?org=".$ORGANISATION_ID."\">" . $translate->_("Assessment Characteristics") . "</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID."\">Clinical Rotation Categories</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes?org=".$ORGANISATION_ID."\">Curriculum Layout</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/objectives?org=".$ORGANISATION_ID."\">Curriculum Tags</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/departments?org=".$ORGANISATION_ID."\">Departments</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/descriptors?org=".$ORGANISATION_ID."\">Evaluation Response Descriptors</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/hottopics?org=".$ORGANISATION_ID."\">Hot Topics</a></li>\n";
-                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes?org=".$ORGANISATION_ID."\">Learning Event Types</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes?org=".$ORGANISATION_ID."\">" . $translate->_("Learning Event Types") . "</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqassessment?org=".$ORGANISATION_ID."\">Medbiq Assessment Methods</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqinstructional?org=".$ORGANISATION_ID."\">Medbiq Instructional Methods</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqresources?org=".$ORGANISATION_ID."\">Medbiq Resources</a></li>\n";

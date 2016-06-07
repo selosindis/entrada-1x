@@ -244,6 +244,30 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</div>
 					</div>
 
+					<div class="control-group">
+						<label for="instructors" class="form-nrequired control-label"><strong><?php echo $translate->_("faculty"); ?></strong></label>
+						<div class="controls">
+							<?php
+							$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+											FROM `course_contacts` AS a
+											LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+											ON b.`id` = a.`proxy_id`
+											WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
+											AND a.`contact_type` = 'associated_faculty'
+											AND b.`id` IS NOT NULL
+											ORDER BY a.`contact_order` ASC";
+							$results = $db->GetAll($squery);
+							if ($results) {
+								foreach ($results as $key => $sresult) {
+									echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
+								}
+							} else {
+								echo "To Be Announced";
+							}
+							?>
+						</div>
+					</div>
+
 					<?php
 					if((int) $course_details["pcoord_id"]) { ?>
 						<div class="control-group">
@@ -327,7 +351,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</script>
 
 					<a name="course-objectives-section"></a>
-					<h2 title="Course Objectives Section"><?php echo $translate->_("course"); ?> Objectives</h2>
+					<h2 title="<?php echo $translate->_("Course Objectives Section"); ?>"><?php echo $translate->_("course") . " " . $translate->_("Objectives"); ?></h2>
 					<div id="course-objectives-section">
 					<?php
 					if (clean_input($course_details["course_objectives"], array("allowedtags", "nows"))) {
@@ -335,7 +359,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						echo trim(strip_selected_tags($course_details["course_objectives"], array("font")));
 					}
                     ?>
-					<h3>Curriculum Objectives</h3>
+					<h3><?php echo $translate->_("Curriculum Objectives"); ?></h3>
 					<p>The learner will be able to:</p>
 					<div id="objectives_list">
 						<?php echo course_objectives_in_list($objectives, $top_level_id,$top_level_id); ?>
@@ -357,7 +381,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$results = $db->GetAll($query);
 					if ($results) {
 					?>
-					<h3>Clinical Presentations</h3>
+					<h3><?php echo $translate->_("Clinical Presentations"); ?></h3>
 					<ul class="objectives">
 					<?php
                     $HEAD[] = "<script type=\"text/javascript\" defer=\"defer\">Event.observe(window, 'load', function() {";
@@ -711,7 +735,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" title=\"Course Details\">" . $translate->_("course") . " Details</a></li>\n";
 				}
 				if ($course_objectives_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" title=\"Course Objectives\">" . $translate->_("course") . " Objectives</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" title=\"" . $translate->_("Course Objectives") . "\">" . $translate->_("course") . " " . $translate->_("Objectives") . "</a></li>\n";
 				}
 				if ($course_resources_section) {
 					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" title=\"Course Resources\">" . $translate->_("course") . " Resources</a></li>\n";

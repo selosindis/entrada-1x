@@ -311,7 +311,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						<tr>
 							<td>Event Title</td>
 							<td>Event Description</td>
-							<td class="border-r">Objectives</td>
+							<td class="border-r"><?php echo $translate->_("Objectives"); ?></td>
 							<td class="border-r">Presentations</td>
 							<td>Hot Topics</td>
 						</tr>

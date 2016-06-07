@@ -52,7 +52,6 @@ if (($router) && ($router->initRoute())) {
 		}
 	}
 
-	$GROUP_TARGETS["alumni"] = "Student Alumni";
 	$GROUP_TARGETS["faculty"] = "Faculty Members";
 	$GROUP_TARGETS["resident"] = "Student Residents";
 	$GROUP_TARGETS["staff"] = "Staff Members";

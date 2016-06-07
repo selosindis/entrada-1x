@@ -30,7 +30,8 @@ if ($RECORD_ID) {
 	$topic_record	= $db->GetRow($query);
 	if ($topic_record) {
 		if ((int) $topic_record["topic_active"]) {
-			if (discussion_topic_module_access($RECORD_ID, "delete-post")) {
+
+            if (discussion_topic_module_access($RECORD_ID, "delete-post")) {
 				/**
 				 * Get a list of all replies, so we can deactivate those in
 				 * history as well.

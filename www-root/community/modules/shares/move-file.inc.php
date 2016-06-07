@@ -19,6 +19,10 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_SHARES"))) {
 }
 
 if ($RECORD_ID) {
+    if (isset($_GET['current_share_id'])) {
+        $current_share_id = (int)$_GET['current_share_id'];
+    }
+    
 	if (isset($_GET["share_id"]) && ($share_id = ((int) $_GET["share_id"]))) {
 		$query			= "	SELECT a.*
 							FROM `community_share_files` AS a
@@ -57,7 +61,7 @@ if ($RECORD_ID) {
 					application_log("error", "The provided file id [".$RECORD_ID."] is deactivated.");
 				}
 
-				header("Location: ".COMMUNITY_URL.$COMMUNITY_URL.":".$share_record["page_url"]."?section=view-folder&id=".$share_id);
+                header("Location: ".COMMUNITY_URL.$COMMUNITY_URL.":".$share_record["page_url"]."?section=view-folder&id=".$current_share_id);
 				exit;
 			}
 		} else {

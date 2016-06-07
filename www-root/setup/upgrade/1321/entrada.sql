@@ -1,1 +1,0 @@
-UPDATE `settings` SET `value` = '1321' WHERE `shortname` = 'version_db';

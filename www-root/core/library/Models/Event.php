@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * A model for handeling events
+ * A model for handling events
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
@@ -52,6 +52,7 @@ class Models_Event extends Models_Base {
               $updated_by;
     
     protected $table_name = "events";
+    protected $primary_key = "event_id";
     protected $default_sort_column = "event_id";
     
     public function __construct($arr = NULL) {
@@ -170,16 +171,23 @@ class Models_Event extends Models_Base {
         $course = Models_Course::get($this->course_id);
         return $course->getOrganisationID();
     }
-    
+
+    public function setEventId($event_id) {
+        $this->event_id = $event_id;
+    }
+
+    /* @return bool|Models_Event */
     public static function get($event_id = null) {
         $self = new self();
         return $self->fetchRow(array("event_id" => $event_id));
     }
-    
+
+    /* @return ArrayObject|Models_Event[] */
     public function fetchAllByCourseID($course_id = null) {
         return $this->fetchAll(array("course_id" => $course_id));
     }
-    
+
+    /* @return ArrayObject|Models_Event[] */
     public function fetchAllByCourseIdStartDateFinishDate($course_id = null, $start_date = null, $finish_date = null) {
         return $this->fetchAll(
             array(
@@ -190,7 +198,8 @@ class Models_Event extends Models_Base {
             "=", "AND", "event_start"
         );
     }
-    
+
+    /* @return ArrayObject|Models_Event[] */
     public function fetchAllByCourseIdTitle($course_id = null, $title = null) {
         global $db;
         $events = false;
@@ -212,7 +221,8 @@ class Models_Event extends Models_Base {
         
         return $events;
     }
-    
+
+    /* @return ArrayObject|Models_Event[] */
     public function fetchAllByCourseIdTitleDates($course_id = null, $title = null, $cperiod_start_date = null, $cperiod_finish_date = null) {
         global $db;
         $events = false;
@@ -236,10 +246,54 @@ class Models_Event extends Models_Base {
         
         return $events;
     }
-    
+
+    /* @return ArrayObject|Models_Event_Audience[] */
     public function getEventAudience() {
         return Models_Event_Audience::fetchAllByEventID($this->event_id);
     }
     
+    /* @return ArrayObject|Models_Event[] */
+    public static function fetchAllRecurringByEventID($event_id = null) {
+        global $db;
+        $recurring_events_query = "
+                    SELECT * FROM `events`
+                    WHERE `recurring_id` = (
+                        SELECT `recurring_id`
+                        FROM `events`
+                        WHERE `event_id` = " . $db->qstr($event_id)."
+                    )
+                    AND `event_id` != " . $db->qstr($event_id);
+        $all_recurring_events = $db->GetAll($recurring_events_query);
+        if ($all_recurring_events) {
+            foreach ($all_recurring_events as $result) {
+                $event = new self($result);
+                $events[] = $event;
+            }
+        }
+        return $events;
+    }
+
+    public static function getRecurringEventIds($event_id = null) {
+        $data = array("recurring_events" => false);
+
+        if ($event_id != 0) {
+            //get any recurring events as well
+            $recurring_events = Models_Event::fetchAllRecurringByEventID($event_id);
+            if (isset($recurring_events) && is_array($recurring_events) && !empty($recurring_events)) {
+                $PROCESSED["recurring_events"] = $recurring_events;
+            }
+
+            if (isset($PROCESSED["recurring_events"])) {
+                $R_Events = array();
+                foreach ($PROCESSED["recurring_events"] as $events) {
+                    if (isset($events) && is_object($events)) {
+                        $R_Events[] = $events->getID();
+                    }
+                }
+                $data["recurring_events"] = $PROCESSED["recurring_events"];
+                $data["recurring_event_ids"] = $R_Events;
+            }
+            return $data;
+        }
+    }
 }
-?>

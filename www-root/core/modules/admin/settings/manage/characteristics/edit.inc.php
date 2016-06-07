@@ -33,10 +33,10 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/characteristics?".replace_query(array("section" => "edit"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit Characteristic");
+    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/characteristics?".replace_query(array("section" => "edit"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit " . $translate->_("Characteristic"));
     ?>
 
-    <h1>Edit Characteristic</h1>
+    <h1>Edit <?php echo $translate->_("Characteristic"); ?></h1>
 
     <?php
     $characteristic = false;
@@ -66,7 +66,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                 if (isset($_POST["type"]) && ($type = clean_input($_POST["type"], "alpha")) && (in_array($type, Models_Assessment_Characteristic::getTypeOptions()))) {
                     $PROCESSED["type"] = $type;
                 } else {
-                    add_error("The <strong>Characteristic Category</strong> is a required field.");
+                    add_error("The <strong>" . $translate->_("Characteristic") . " Category</strong> is a required field.");
                 }
 
                 /**
@@ -127,7 +127,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                     if (!$ERROR) {
                         $url = ENTRADA_URL . "/admin/settings/manage/characteristics?org=".$ORGANISATION_ID;
 
-                        add_success("You have successfully updated <strong>".html_encode($PROCESSED["title"])."</strong>.<br /><br />You will now be redirected to the Assessment Characteristics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+                        add_success("You have successfully updated <strong>".html_encode($PROCESSED["title"])."</strong>.<br /><br />You will now be redirected to the " . $translate->_("Assessment Characteristics") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
                         $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
                         application_log("success", "Updated Assessment Characteristic ID [".$id."].");
@@ -163,7 +163,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                 ?>
                 <form action="<?php echo ENTRADA_RELATIVE."/admin/settings/manage/characteristics?".replace_query(array("action" => "edit", "id" => $characteristic->getID(), "step" => 2, "org" => $ORGANISATION_ID)); ?>" method="post" class="form-horizontal">
                     <div class="control-group">
-                        <label for="eventtype_title" class="form-required control-label">Characteristic Category</label>
+                        <label for="eventtype_title" class="form-required control-label"><?php echo $translate->_("Characteristic"); ?> Category</label>
                         <div class="controls">
                             <select id="type" name="type" class="input-large">
                                 <?php
@@ -175,13 +175,13 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="eventtype_title" class="form-required control-label">Characteristic Title</label>
+                        <label for="eventtype_title" class="form-required control-label"><?php echo $translate->_("Characteristic"); ?> Title</label>
                         <div class="controls">
                             <input type="text" class="span10" id="title" name="title" value="<?php echo html_encode($characteristic->getTitle()); ?>" maxlength="60" />
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="eventtype_description" class="form-nrequired control-label">Characteristic Description</label>
+                        <label for="eventtype_description" class="form-nrequired control-label"><?php echo $translate->_("Characteristic"); ?> Description</label>
                         <div class="controls">
                             <textarea id="description" name="description" class="span10 expandable"><?php echo $characteristic->getDescription(); ?></textarea>
                         </div>

@@ -35,67 +35,11 @@ class Models_Quiz_Attached extends Models_Base {
     public function __construct($arr = NULL) {
         parent::__construct($arr);
     }
-    
-    public function getCompletedAttempts() {
-        global $db;
-        $query = "SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($this->aquiz_id);
-        $result = $db->GetOne($query);
-        if ($result) {
-            return $result;
-        } else {
-            return false;
-        }
+
+    public function getID() {
+        return $this->aquiz_id;
     }
-    
-    public static function getAttachedContact($quiz_id, $proxy_id) {
-        global $db;
-        
-        $query = "SELECT b.`proxy_id`
-                    FROM `attached_quizzes` AS a
-                    LEFT JOIN `event_contacts` AS b
-                    ON a.`content_type` = 'event'
-                    AND a.`content_id` = b.`event_id`
-                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-                    ON b.`proxy_id` = c.`id`
-                    WHERE a.`quiz_id` = ".$db->qstr($quiz_id)."
-                    AND b.`proxy_id` = ".$db->qstr($proxy_id);
-        return $db->GetRow();
-    }
-    
-    public function getViewed() {
-        global $db;
-        global $ENTRADA_USER;
-        
-        $query = "  SELECT `statistic_id`, `proxy_id`, `module`, `action`, `action_field`, `action_value`, `prune_after`, MAX(`timestamp`) AS `timestamp`
-                    FROM `statistics`
-                    WHERE `module` = 'events'
-                    AND `proxy_id` = ?
-                    AND `action` = 'quiz_complete'
-                    AND `action_field` = 'aquiz_id'
-                    AND `action_value` = ?";
-        
-        $result = $db->GetRow($query, array($ENTRADA_USER->getActiveId(), $this->aquiz_id));
-        if ($result) {
-            return new Models_Statistic($result);
-        } else {
-            return false;
-        }
-    }
-    
-    public static function fetchRowByID($id = null) {
-        $self = new self();
-        
-        $constraints = array(
-            array(
-               "key" => "aquiz_id",
-               "value" => $id,
-               "method" => "="
-            )
-        );
-        
-        return $self->fetchRow($constraints);
-    }
-    
+
     public function getAquizID() {
         return $this->aquiz_id;
     }
@@ -167,6 +111,77 @@ class Models_Quiz_Attached extends Models_Base {
     public function getUpdatedBy() {
         return $this->updated_by;
     }
+
+    /* @return bool|Models_Quiz_Attached */
+    public static function fetchRowByID($id = null) {
+        $self = new self();
+
+        $constraints = array(
+            array("key" => "aquiz_id", "value" => $id, "method" => "=")
+        );
+
+        return $self->fetchRow($constraints);
+    }
+
+    /* @return bool|Models_Quiz_Attached */
+    public static function fetchRowByEventIdTitleUpdate($content_id = null, $title = null, $update_date = null) {
+        $self = new self();
+
+        $constraints = array(
+            array("key" => "content_type", "value" => "event", "method" => "="),
+            array("key" => "content_id", "value" => $content_id, "method" => "="),
+            array("key" => "quiz_title", "value" => $title, "method" => "="),
+            array("key" => "update_date", "value" => $update_date, "method" => "=")
+        );
+
+        return $self->fetchRow($constraints);
+    }
+
+    public function getCompletedAttempts() {
+        global $db;
+        $query = "SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($this->aquiz_id);
+        $result = $db->GetOne($query);
+        if ($result) {
+            return $result;
+        } else {
+            return false;
+        }
+    }
+    
+    public static function getAttachedContact($quiz_id, $proxy_id) {
+        global $db;
+        
+        $query = "SELECT b.`proxy_id`
+                    FROM `attached_quizzes` AS a
+                    LEFT JOIN `event_contacts` AS b
+                    ON a.`content_type` = 'event'
+                    AND a.`content_id` = b.`event_id`
+                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+                    ON b.`proxy_id` = c.`id`
+                    WHERE a.`quiz_id` = ".$db->qstr($quiz_id)."
+                    AND b.`proxy_id` = ".$db->qstr($proxy_id);
+        return $db->GetRow();
+    }
+    
+    public function getViewed() {
+        global $db;
+        global $ENTRADA_USER;
+        
+        $query = "  SELECT `statistic_id`, `proxy_id`, `module`, `action`, `action_field`, `action_value`, `prune_after`, MAX(`timestamp`) AS `timestamp`
+                    FROM `statistics`
+                    WHERE `module` = 'events'
+                    AND `proxy_id` = ?
+                    AND `action` = 'quiz_complete'
+                    AND `action_field` = 'aquiz_id'
+                    AND `action_value` = ?";
+        
+        $result = $db->GetRow($query, array($ENTRADA_USER->getActiveId(), $this->aquiz_id));
+        if ($result) {
+            return new Models_Statistic($result);
+        } else {
+            return false;
+        }
+    }
     
     public function insert() {
         global $db;
@@ -214,7 +229,6 @@ class Models_Quiz_Attached extends Models_Base {
                     AND b.`proxy_id` = ".$db->qstr($proxy_id);
         return $db->getRow($query);
     }
-    
 }
 
 ?>

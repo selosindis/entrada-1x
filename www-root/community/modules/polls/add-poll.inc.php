@@ -410,7 +410,7 @@ switch($STEP) {
 			}
 		}
 		?>
-		<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&amp;step=2" method="post" onsubmit="selIt()">
+		<form style="width: 95%" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&amp;step=2" method="post" onsubmit="selIt()">
 			<table summary="Add <?php echo $terminology; ?>">
 				<colgroup>
 					<col style="width: 20%" />
@@ -445,7 +445,7 @@ switch($STEP) {
 					<tr>
 						<td><label for="poll_description" class="form-nrequired">Description</label></td>
 						<td>
-							<textarea id="poll_description" name="poll_description" style="width: 98%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["poll_description"])) ? html_encode($PROCESSED["poll_description"]) : ""); ?></textarea>
+							<textarea id="poll_description" name="poll_description" style="width: 98%; height: 60px; resize: vertical" cols="50" rows="5"><?php echo ((isset($PROCESSED["poll_description"])) ? html_encode($PROCESSED["poll_description"]) : ""); ?></textarea>
 						</td>
 					</tr>
 					<tr>
@@ -630,7 +630,7 @@ switch($STEP) {
 					</tr>
 					<tr>
 						<td colspan="2">
-							<table class="table table-bordered no-thead">
+							<table class="table table-bordered no-thead space-above space-below">
 								<colgroup>
 									<col style="width: 5%" />
 									<col style="width: auto" />

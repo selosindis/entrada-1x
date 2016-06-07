@@ -54,6 +54,102 @@ color:#036;
 color:#036;
 }
 
+
+/** db photo section **/
+img.db-profile-photo {
+    width: 32px;
+    height: 42px;
+    float: left;
+    margin-bottom: 5px;
+}
+
+img.db-profile-photo + span {
+    width: 70px;
+    height: 42px;
+    margin-left: 10px;
+    margin-top: 5px;
+    float: left;
+}
+/** end db photo section **/
+
+
+/** profile photos **/
+
+div.img-holder {
+position:relative;
+width:72px;
+height:100px;
+padding-top: 2px;
+padding-bottom: 2px;
+}
+
+div.img-holder img {
+position:absolute;
+background-color:#FFF;
+border:1px solid #999;
+max-width: none;
+}
+
+div.img-holder img.official {
+z-index:6;
+}
+
+div.img-holder img.uploaded, div.img-holder img.upload {
+z-index:5;
+}
+
+.people-search-thumb {
+	width: 72px; 
+	height: 100px;
+}
+
+div.img-holder a.zoomin {
+opacity:75;
+position:absolute;
+right:5px;
+bottom:5px;
+font-size:15px;
+z-index:6;
+text-decoration:none;
+color:#999;
+cursor:pointer;
+}
+
+div.img-holder a.zoomout {
+opacity:75;
+position:absolute;
+right:-125px;
+bottom:-180px;
+font-size:32px;
+z-index:9;
+text-decoration:none;
+color:#999;
+cursor:pointer;
+}
+
+div.img-holder a.img-selector,div.img-holder a.img-selector.one {
+position:absolute;
+left:5px;
+bottom:5px;
+font-size:9px;
+z-index:6;
+text-decoration:none;
+color:#999;
+border:1px solid #999;
+line-height:10px;
+padding:0 2px;
+}
+
+div.img-holder a.img-selector.two {
+left:19px;
+}
+
+div.img-holder a.img-selector + a.img-selector {
+	left:19px;
+}
+
+/**end profile photos **/
+
 .usage-container {
 border:1px #036 solid;
 background-color:#036;
@@ -141,7 +237,12 @@ ul.category-list li{
     cursor:pointer;
     margin-left:5px;
     margin-top:-2px;
+    font-weight:bold;
 }
+.ui-accordion .category-title {
+    margin-left: 15px;
+}
+
 .category-description{
     font-size: 11px;
     font-style: normal;
@@ -162,9 +263,6 @@ ul.category-list li{
 }
 .category-remove{
     cursor:pointer;
-}
-.category-title{
-    font-weight:bold;
 }
 .category-children{
     margin-top:5px;

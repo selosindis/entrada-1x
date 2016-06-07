@@ -110,18 +110,18 @@ class Entrada_Settings extends Entrada_Base {
             array(
                 "mode"      => "AND",
                 "key"       => "organisation_id",
-                "value"     => $organisation_id,
-                "method"    => "="
+                "method"    => "=",
+                "value"     => $organisation_id
             ),
             array(
                 "mode"      => "OR",
                 "key"       => "organisation_id",
-                "value"     => $organisation_id,
-                "method"    => "="
+                "method"    => "=",
+                "value"     => $organisation_id
             )
         );
 
-        $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
+        $objs = $self->fetchAll($constraints, "=", "AND");
         $output = array();
 
         if ($objs && @count($objs)) {
@@ -132,8 +132,13 @@ class Entrada_Settings extends Entrada_Base {
 
         return $output;
     }
-    
+
     public function fetchValueByShortname($shortname, $organisation_id = 1) {
+        $self = new self();
+        return $self->read($shortname, $organisation_id);
+    }
+
+    public function read($shortname, $organisation_id = 1) {
         global $db;
         
         $query = "SELECT * FROM `settings` 
@@ -144,10 +149,8 @@ class Entrada_Settings extends Entrada_Base {
         if ($result) {
             $self = new self($result);
             return $self->getValue();
-        } else {
-            return false;
         }
+
+        return false;
     }
-    
 }
-?>

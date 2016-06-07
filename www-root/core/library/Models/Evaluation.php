@@ -326,9 +326,7 @@ class Models_Evaluation {
                             <?php
                             if ($questiontype["questiontype_shortname"] == "vertical_matrix") {
                                 for ($i = 2; $i <= 10; $i++) {
-                                    ?>
-                                    <option <?php echo "value=\"".$i."\"".(isset($question_data["responses_count"]) && $question_data["responses_count"] == $i || (!isset($question_data["responses_count"]) && $i == 4) ? " selected=\"selected\"" : "").">".$i; ?></option>
-                                    <?php
+									echo "<option value=\"" . $i . "\"" . (isset($question_data["responses_count"]) && $question_data["responses_count"] == $i || (!isset($question_data["responses_count"]) && $i == 4) ? " selected=\"selected\"" : "") . ">" . $i . "</option>";
                                 }
                             } else {
                                 ?>
@@ -1530,10 +1528,12 @@ class Models_Evaluation {
 							}
 						}
 						$target_ids = array();
-						foreach ($target_data["evaluation_targets"] as $temp_target) {
-							if ($temp_target["target_type"] == "proxy_id") {
-								$target_ids[] = $temp_target["target_value"];
-							}
+						if (isset($target_data["evaluation_targets"]) && @count($target_data["evaluation_targets"])) {
+    						foreach ($target_data["evaluation_targets"] as $temp_target) {
+    							if ($temp_target["target_type"] == "proxy_id") {
+    								$target_ids[] = $temp_target["target_value"];
+    							}
+    						}
 						}
 						?>
 						<tr>
@@ -1861,11 +1861,13 @@ class Models_Evaluation {
 					case "rotation_core" :
 						$target_data["form_id"] = $form_id;
 						if (!isset($target_data["associated_rotation_ids"])) {
-							foreach ($target_data["evaluation_targets"] as $target) {
-								if ($target["target_type"] == "rotation_id") {
-									$target_data["associated_rotation_ids"][] = $target["target_value"];
-								}
-							}
+						    if (isset($target_data["evaluation_targets"]) && @count($target_data["evaluation_targets"])) {
+    							foreach ($target_data["evaluation_targets"] as $target) {
+    								if ($target["target_type"] == "rotation_id") {
+    									$target_data["associated_rotation_ids"][] = $target["target_value"];
+    								}
+    							}
+						    }
 						}
 						?>
 						<tr>
@@ -1954,11 +1956,13 @@ class Models_Evaluation {
 					case "preceptor" :
 						$target_data["form_id"] = $form_id;
 						if (!isset($target_data["associated_rotation_ids"])) {
-							foreach ($target_data["evaluation_targets"] as $target) {
-								if ($target["target_type"] == "rotation_id") {
-									$target_data["associated_rotation_ids"][] = $target["target_value"];
-								}
-							}
+						    if (isset($target_data["evaluation_targets"]) && @count($target_data["evaluation_targets"])) {
+    							foreach ($target_data["evaluation_targets"] as $target) {
+    								if ($target["target_type"] == "rotation_id") {
+    									$target_data["associated_rotation_ids"][] = $target["target_value"];
+    								}
+    							}
+						    }
 						}
 						?>
 						<tr>
@@ -2252,13 +2256,13 @@ class Models_Evaluation {
 								$('submittable_notice').update('<div class="display-notice"><ul><li>If you set the Min or Max Submittable for a Peer Evaluation to 0, the value will default to the number of targets available to evaluate.</li></ul></div>');
 							</div>
 						</td>
-					</tr
+					</tr>
 					<?php
 				} elseif ($target_details["target_shortname"] == "student" || $target_details["target_shortname"] == "resident") {
 					?>
 					<tr>
 						<td colspan="3">&nbsp;</td>
-					</tr
+					</tr>
 					<tr>
 						<td></td>
 						<td style="vertical-align: top"><label for="evalfaculty_name" class="form-required">Faculty Evaluators</label></td>

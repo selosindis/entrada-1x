@@ -507,6 +507,147 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                     }
                 }
 
+                $query = "	SELECT b.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`account_active`, c.`access_starts`, c.`access_expires`, c.`last_login`, c.`role`, c.`group`
+                            FROM `course_contacts` AS a
+                            JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                            ON b.`id` = a.`proxy_id`
+                            JOIN `".AUTH_DATABASE."`.`user_access` AS c
+                            ON c.`user_id` = b.`id`
+                            AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+                            JOIN `courses` AS d
+                            ON a.`course_id` = d.`course_id`
+                            AND d.`course_active` = 1
+                            WHERE a.`course_id` IN (".implode(", ", $course_ids).")
+                            AND a.`contact_type` = 'associated_faculty'
+                            GROUP BY b.`id`
+                            ORDER BY `contact_order` ASC";
+                $results = $db->GetAll($query);
+                if ($results) {
+                    echo "<h2>" . $translate->_("faculty") . "</h2>\n";
+                    foreach ($results as $key => $result) {
+                        echo "<div id=\"result-".$result["id"]."\" style=\"width: 100%; padding: 5px 0px 5px 5px; line-height: 16px; text-align: left;\">\n";
+                        echo "	<table style=\"width: 100%;\" class=\"profile-card\">\n";
+                        echo "	<colgroup>\n";
+                        echo "		<col style=\"width: 15%\" />\n";
+                        echo "		<col style=\"width: 25%\" />\n";
+                        echo "		<col style=\"width: 38%\" />\n";
+                        echo "		<col style=\"width: 22%\" />\n";
+                        echo "	<colgroup>";
+                        echo "	<tr>";
+                        echo "		<td>";
+                        echo "			<div id=\"img-holder-".$result["id"]."\" class=\"img-holder\">\n";
+
+                        $offical_file_active	= false;
+                        $uploaded_file_active	= false;
+
+                        /**
+                         * If the photo file actually exists, and either
+                         * 	If the user is in an administration group, or
+                         *  If the user is trying to view their own photo, or
+                         *  If the proxy_id has their privacy set to "Any Information"
+                         */
+                        if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
+                            $offical_file_active	= true;
+                        }
+
+                        /**
+                         * If the photo file actually exists, and
+                         * If the uploaded file is active in the user_photos table, and
+                         * If the proxy_id has their privacy set to "Basic Information" or higher.
+                         */
+                        $query			= "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($result["id"]);
+                        $photo_active	= $db->GetOne($query);
+                        if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && $photo_active && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
+                            $uploaded_file_active = true;
+                        }
+
+                        if ($uploaded_file_active) {
+                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                        } elseif ($offical_file_active) {
+                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                        }
+
+                        if ((!$offical_file_active) && (!$uploaded_file_active)) {
+                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+                        }
+
+                        echo "			</div>\n";
+                        echo "		</td>\n";
+                        echo "		<td style=\"font-size: 12px; color: #003366; vertical-align: top\">";
+                        echo "			<div style=\"font-weight: bold; font-size: 13px;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
+                        echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
+                        if ($result["privacy_level"] > 1 || $COMMUNITY_ADMIN) {
+                            echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
+
+                            if ($result["email_alt"]) {
+                                echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\" style=\"font-size: 10px;\">".html_encode($result["email_alt"])."</a>\n";
+                            }
+                        }
+                        echo "		</td>\n";
+                        echo "		<td style=\"padding-top: 1.3em;\">\n";
+                        echo "			<div>\n";
+                        echo "				<table class=\"address-info\" style=\"width: 100%;\">\n";
+                        if ($result["telephone"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
+                            echo "			<tr>\n";
+                            echo "				<td style=\"width: 30%;\">Telephone: </td>\n";
+                            echo "				<td>".html_encode($result["telephone"])."</td>\n";
+                            echo "			</tr>\n";
+                        }
+                        if ($result["fax"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
+                            echo "			<tr>\n";
+                            echo "				<td>Fax: </td>\n";
+                            echo "				<td>".html_encode($result["fax"])."</td>\n";
+                            echo "			</tr>\n\n";
+                        }
+                        if ($result["address"] && $result["city"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
+                            echo "			<tr>\n";
+                            echo "				<td><br />Address: </td>\n";
+                            echo "				<td><br />".html_encode($result["address"])."</td>\n";
+                            echo "			</tr>\n";
+                            echo "			<tr>\n";
+                            echo "				<td>&nbsp;</td>\n";
+                            echo "				<td>".html_encode($result["city"].($result["city"] && $result["province"] ? ", ".$result["province"] : ""))."</td>\n";
+                            echo "			</tr>\n";
+                            echo "			<tr>\n";
+                            echo "				<td>&nbsp;</td>\n";
+                            echo "				<td>".html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."</td>\n";
+                            echo "			</tr>\n";
+                        }
+                        if ($result["office_hours"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
+                            echo "			<tr><td colspan=\"2\">&nbsp;</td></tr>";
+                            echo "			<tr>\n";
+                            echo "				<td>Office Hours: </td>\n";
+                            echo "				<td>".nl2br(html_encode($result["office_hours"]))."</td>\n";
+                            echo "			</tr>\n\n";
+                        }
+                        echo "				</table>\n";
+                        echo "			</div>\n";
+                        echo "		</td>\n";
+                        echo "		<td style=\"padding-top: 1.3em; vertical-align: top\">\n";
+
+                        $query		= "	SELECT CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+                                        FROM `permissions` AS a
+                                        LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                        ON b.`id` = a.`assigned_to`
+                                        WHERE a.`assigned_by`=".$db->qstr($result["id"])."
+                                        AND (a.`valid_from` = '0' OR a.`valid_from` <= ".$db->qstr(time()).") AND (a.`valid_until` = '0' OR a.`valid_until` > ".$db->qstr(time()).")
+                                        ORDER BY `valid_until` ASC";
+                        $assistants	= $db->GetAll($query);
+                        if ($assistants) {
+                            echo "		<span class=\"content-small\">Administrative Assistants:</span>\n";
+                            echo "		<ul class=\"assistant-list\">";
+                            foreach ($assistants as $assistant) {
+                                echo "		<li><a href=\"mailto:".html_encode($assistant["email"])."\">".html_encode($assistant["fullname"])."</a></li>";
+                            }
+                            echo "		</ul>";
+                        }
+                        echo "		</td>\n";
+                        echo "	</tr>\n";
+                        echo "	</table>\n";
+                        echo "</div>\n";
+                    }
+                }
+
                /**
                 * If the history is enabled, display the course history on the home page.
                 */

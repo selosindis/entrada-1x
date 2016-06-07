@@ -28,6 +28,7 @@
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
     dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
     get_include_path(),
 )));
 

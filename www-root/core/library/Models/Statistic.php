@@ -22,6 +22,7 @@
  * @author Developer: Ryan Warner <rw65@queensu.ca>
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  */
+
 class Models_Statistic extends Models_Base {
     
     protected $statistic_id, $proxy_id, $timestamp, $module, $submodule, 
@@ -98,10 +99,9 @@ class Models_Statistic extends Models_Base {
         } else {
             return false;
         }
-        
     }
     
-    public static function getCommunityFileViews($module, $action_value) {
+    public static function getCommunityFileDownloads($module, $action_value) {
         global $db;
         
         $query = "SELECT DISTINCT (a.`proxy_id`), COUNT(*) AS views, b.`firstname`, b.`lastname`, MAX(a.`timestamp`) as last_viewed_time
@@ -122,6 +122,48 @@ class Models_Statistic extends Models_Base {
         }
     }
     
+    public static function getCommunityFolderViews($module, $action_value) {
+        global $db;
+        
+        $query = "SELECT DISTINCT (a.`proxy_id`), COUNT(*) AS views, b.`firstname`, b.`lastname`, MAX(a.`timestamp`) as last_viewed_time
+                    FROM `".DATABASE_NAME."`.`statistics` AS a
+                    JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                    ON a.`proxy_id` = b.`id`
+                    WHERE a.`module` = ?
+                    AND a.`action` = 'folder_view'
+                    AND a.`action_field` = 'cshare_id' 
+                    AND a.`action_value` = ?
+                    GROUP BY a.`proxy_id`
+                    ORDER BY b.`lastname` ASC";
+        $results = $db->GetAll($query, array($module, $action_value));
+        if ($results) {
+            return $results;
+        } else {
+            return false;
+        }
+    }
+    
+    public static function getCommunityLinkViews($module, $action_value) {
+        global $db;
+
+        $query = "SELECT DISTINCT (a.`proxy_id`), COUNT(*) AS views, b.`firstname`, b.`lastname`, MAX(a.`timestamp`) as last_viewed_time
+                    FROM `" . DATABASE_NAME . "`.`statistics` AS a
+                    JOIN `" . AUTH_DATABASE . "`.`user_data` AS b
+                    ON a.`proxy_id` = b.`id`
+                    WHERE a.`module` = ?
+                    AND a.`action` = 'link_view'
+                    AND a.`action_field` = 'cslink_id' 
+                    AND a.`action_value` = ?
+                    GROUP BY a.`proxy_id`
+                    ORDER BY b.`lastname` ASC";
+        $results = $db->GetAll($query, array($module, $action_value));
+        if ($results) {
+            return $results;
+        } else {
+            return false;
+        }
+    }
+
     public static function getEventFileViews($action_value) {
         global $db;
         
@@ -201,7 +243,51 @@ class Models_Statistic extends Models_Base {
         $result = $db->GetRow($query, array($params["module"], $params["action"], $params["action_field"], $params["action_value"]));
         return $result;
     }
-    
+
+    /**
+     * Method returns an array of the learner logins since the date specified.
+     *
+     * @param int $since
+     * @return mixed
+     */
+    public function getLearnerLogins($since = 0) {
+        global $db;
+
+        $query = "SELECT a.*, c.`number`, c.`firstname`, c.`lastname`, c.`email`
+                  FROM `statistics` AS a
+                  JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
+                  ON b.`user_id` = a.`proxy_id`
+                  AND b.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+                  AND b.`group` = 'student'
+                  JOIN `" . AUTH_DATABASE . "`.`user_data` AS c
+                  ON c.`id` = b.`user_id`
+                  WHERE a.`timestamp` >= " . (int) $since . "
+                  AND a.`module` = 'index'
+                  AND a.`action` = 'login'";
+
+        $statistics = $db->GetAll($query);
+
+        return $statistics;
+    }
+
+    public function getLearnerStats($since = 0) {
+        global $db;
+
+        $query = "SELECT a.*, c.id AS `proxy_id`, c.`number`, c.`firstname`, c.`lastname`, c.`email`
+                  FROM `statistics` AS a
+                  JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
+                  ON b.`user_id` = a.`proxy_id`
+                  AND b.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+                  AND b.`group` = 'student'
+                  JOIN `" . AUTH_DATABASE . "`.`user_data` AS c
+                  ON c.`id` = b.`user_id`
+                  WHERE a.`timestamp` >= " . (int) $since;
+
+        $statistics = $db->GetAll($query);
+
+        return $statistics;
+    }
+
     public static function fetchAllRecords($module, $action, $action_field, $proxy_id = NULL) {
         $self = new self();
 
@@ -249,4 +335,3 @@ class Models_Statistic extends Models_Base {
     
 }
 
-?>

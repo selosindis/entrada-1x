@@ -89,6 +89,14 @@ class Models_Event_Resource_LtiProvider extends Models_Base {
     public function getLtiNotes() {
         return $this->lti_notes;
     }
+
+    public function getReleaseDate() {
+        return $this->release_date;
+    }
+
+    public function getReleaseUntil() {
+        return $this->release_until;
+    }
     
     public function getUpdatedDate() {
         return $this->updated_date;
@@ -97,7 +105,8 @@ class Models_Event_Resource_LtiProvider extends Models_Base {
     public function getUpdatedBy() {
         return $this->updated_by;
     }
-    
+
+    /* @return ArrayObject|Models_Event_Resource_LtiProvider[] */
     public static function fetchAllByEventID($event_id = null) {
         $self = new self();
         
@@ -111,7 +120,8 @@ class Models_Event_Resource_LtiProvider extends Models_Base {
         
         return $self->fetchAll($contraints);
     }
-    
+
+    /* @return bool|Models_Event_Resource_LtiProvider */
     public static function fetchRowByID ($id = null) {
         $self = new self();
         
@@ -124,6 +134,19 @@ class Models_Event_Resource_LtiProvider extends Models_Base {
         );
         
         return $self->fetchRow($contraints);
+    }
+
+    /* @return bool|Models_Event_Resource_LtiProvider */
+    public static function fetchRowByEventIdTitleUpdate($event_id = null, $lti_title = null, $update_date = null) {
+        $self = new self();
+
+        $constraints = array(
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
+            array("key" => "lti_title", "value" => $lti_title, "method" => "="),
+            array("key" => "update_date", "value" => $update_date, "method" => "=")
+        );
+
+        return $self->fetchRow($constraints);
     }
     
     public function insert() {

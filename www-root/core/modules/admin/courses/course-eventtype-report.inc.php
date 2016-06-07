@@ -38,7 +38,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_COURSES")) {
 } else {
     if ($COURSE_ID) {
         ?>
-        <h1>Event Types Report</h1>
+        <h1><?php echo $translate->_("Event Types"); ?> Report</h1>
         <?php
         $query = "SELECT d.course_name, a.event_title, c.eventtype_title, b.duration
                     FROM events as a
@@ -56,7 +56,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_COURSES")) {
             <table class="table">
                 <tr>
                     <th>Event</th>
-                    <th>Event Type</th>
+                    <th><?php echo $translate->_("Event Type"); ?></th>
                     <th>Duration</th>
                 </tr>
                 <?php
@@ -82,7 +82,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_COURSES")) {
             echo display_notice();
         }
     } else {
-        add_error("In order to view an event type report you must provide a valid identifier.");
+        add_error("In order to view an " . $translate->_("Event Type") . " report you must provide a valid identifier.");
 
         echo display_error();
 

@@ -28,6 +28,7 @@
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
     dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
     get_include_path(),
 )));
 
@@ -232,7 +233,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 					}
 				}
 
-				echo lp_multiple_select_popup("cp", $presentations, array("title" => "Select Clinical Presentations:", "submit_text" => "Apply", "cancel" => true, "submit" => true));
+				echo lp_multiple_select_popup("cp", $presentations, array("title" => "Select " . $translate->_("Clinical Presentations") . ":", "submit_text" => "Apply", "cancel" => true, "submit" => true));
 			break;
 			case "co" : // Curriculum Objectives
 				$objectives = $organisation;
@@ -252,7 +253,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 					}
 				}
 
-				echo lp_multiple_select_popup("co", $objectives, array("title" => "Select Curriculum Objectives:", "submit_text" => "Apply", "cancel" => true, "submit" => true));
+				echo lp_multiple_select_popup("co", $objectives, array("title" => "Select " . $translate->_("Curriculum Objectives") . ":", "submit_text" => "Apply", "cancel" => true, "submit" => true));
 			break;
 			case "topic" : // Topics
 				$topics = $organisation;

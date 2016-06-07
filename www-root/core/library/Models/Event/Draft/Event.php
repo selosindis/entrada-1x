@@ -32,10 +32,15 @@ class Models_Event_Draft_Event extends Models_Base {
               $event_duration, $release_date, $release_until, $updated_date, $updated_by;
     
     protected $table_name = "draft_events";
+    protected $primary_key          = "devent_id";
     protected $default_sort_column = "event_start";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
+    }
+
+    public function getID() {
+        return $this->devent_id;
     }
     
     public function getDeventID() {

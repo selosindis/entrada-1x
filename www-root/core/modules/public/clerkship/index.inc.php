@@ -147,7 +147,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
-						<td class="type">Event Type</td>
+						<td class="type"><?php echo $translate->_("Event Type"); ?></td>
 						<td class="date-smallest">Start Date</td>
 						<td class="date-smallest">Finish Date</td>
 						<td class="region">Region</td>

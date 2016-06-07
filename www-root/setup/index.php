@@ -21,17 +21,14 @@
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
     dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
     get_include_path(),
 )));
 
 /**
- * Register the Zend autoloader so we use any part of Zend Framework without
- * the need to require the specific Zend Framework files.
+ * Register the Composer autoloader.
  */
-require_once("Zend/Loader/Autoloader.php");
-$loader = Zend_Loader_Autoloader::getInstance();
-
-require_once("Entrada/adodb/adodb.inc.php");
+require_once("autoload.php");
 
 require_once("includes/functions.inc.php");
 require_once("includes/constants.inc.php");
@@ -224,6 +221,7 @@ switch ($STEP) {
 				!@is_writable($entrada_storage."/cache") ||
 				!@is_writable($entrada_storage."/community-galleries") ||
 				!@is_writable($entrada_storage."/community-shares") ||
+                !@is_writable($entrada_storage."/community-discussions") ||
                 !@is_writable($entrada_storage."/eportfolio") ||
 				!@is_writable($entrada_storage."/event-files") ||
 				!@is_writable($entrada_storage."/logs") ||
@@ -239,6 +237,7 @@ switch ($STEP) {
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/cache<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/community-galleries<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/community-shares<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/community-discussions<br />\n";
                 $ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/eportfolio<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/event-files<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/logs<br />\n";

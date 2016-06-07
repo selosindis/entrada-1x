@@ -10,13 +10,14 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2008 University of Calgary. All Rights Reserved.
  *
-*/
+ */
 @set_time_limit(0);
 @set_include_path(implode(PATH_SEPARATOR, array(
-    dirname(__FILE__) . "/../core",
-    dirname(__FILE__) . "/../core/includes",
-    dirname(__FILE__) . "/../core/library",
-    get_include_path(),
+	dirname(__FILE__) . "/../core",
+	dirname(__FILE__) . "/../core/includes",
+	dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
+	get_include_path(),
 )));
 
 /**
@@ -37,24 +38,42 @@ $mail->addHeader("X-Section", "Communities Notify System",true);
  */
 function build_post($post) {
 	global $mail, $AGENT_CONTACTS, $db, $ENTRADA_TEMPLATE;
+
+	$author_email_address = "";
+	$author_id = $post["author_id"];
+	$type = $post["type"];
+	if ($type == "event") {
+		if ($author_id) {
+			$user_details = Models_User::fetchRowByID($author_id);
+			if ($user_details) {
+				$author_email_address = $user_details->getEmail();
+			}
+		}
+	}
+
+	if (isset($author_email_address) && $author_email_address != "") {
+		$from_email_address = $author_email_address;
+	} else {
+		$from_email_address = $AGENT_CONTACTS["community-notifications"]["email"];
+	}
+
 	$mail->clearFrom();
 	$mail->clearSubject();
-	$mail->setFrom($AGENT_CONTACTS["community-notifications"]["email"],
-					substr($post['community'], 0, 20). ' Community');
+	$mail->setFrom($from_email_address, $post['community']. ' Community');
 	$mail->setSubject($post['subject']);
 	switch ($post["type"]) {
 		case "announcement" :
 		case "event"		:
 			$search		= array(
-								"%AUTHOR_FULLNAME%",
-								"%TITLE%",
-								"%COMMUNITY_TITLE%",
-								"%CONTENT_BODY%",
-								"%URL%",
-								"%UNSUBSCRIBE_URL%",
-								"%APPLICATION_NAME%",
-								"%ENTRADA_URL%"
-							);
+				"%AUTHOR_FULLNAME%",
+				"%TITLE%",
+				"%COMMUNITY_TITLE%",
+				"%CONTENT_BODY%",
+				"%URL%",
+				"%UNSUBSCRIBE_URL%",
+				"%SENDER_NAME%",
+				"%ENTRADA_URL%"
+			);
 			$query 		= "	SELECT a.*, c.`community_id`, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`
 							FROM `community_".$post["type"]."s` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -82,28 +101,28 @@ function build_post($post) {
 					$COMMUNITY_URL = COMMUNITY_URL;
 				}
 				$replace	= array(
-									$result["fullname"],
-									$result[$post["type"]."_title"],
-									$result["community_title"],
-									clean_input($result[$post["type"]."_description"],array("notags")),
-									$COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?id=".$post["record_id"],
-									$COMMUNITY_URL.$result["community_url"].":".$result["page_url"],
-									APPLICATION_NAME,
-									$ENTRADA_URL
-								);
+					$result["fullname"],
+					$result[$post["type"]."_title"],
+					$result["community_title"],
+					clean_input($result[$post["type"]."_description"],array("notags")),
+					$COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?id=".$post["record_id"],
+					$COMMUNITY_URL.$result["community_url"].":".$result["page_url"],
+					$result["fullname"],
+					$ENTRADA_URL
+				);
 			}
 			break;
 		case "poll"		:
 			$search		= array(
-								"%AUTHOR_FULLNAME%",
-								"%TITLE%",
-								"%COMMUNITY_TITLE%",
-								"%CONTENT_BODY%",
-								"%URL%",
-								"%UNSUBSCRIBE_URL%",
-								"%APPLICATION_NAME%",
-								"%ENTRADA_URL%"
-							);
+				"%AUTHOR_FULLNAME%",
+				"%TITLE%",
+				"%COMMUNITY_TITLE%",
+				"%CONTENT_BODY%",
+				"%URL%",
+				"%UNSUBSCRIBE_URL%",
+				"%APPLICATION_NAME%",
+				"%ENTRADA_URL%"
+			);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`
 							FROM `community_polls` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -116,29 +135,29 @@ function build_post($post) {
 			$result		= $db->GetRow($query);
 			if ($result) {
 				$replace	= array(
-									$result["fullname"],
-									$result[$post["type"]."_title"],
-									$result["community_title"],
-									clean_input($result[$post["type"]."_description"],array("notags", "utf8_convert")),
-									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=vote-poll&id=".$post["record_id"],
-									COMMUNITY_URL.$result["community_url"].":".$result["page_url"],
-									APPLICATION_NAME,
-									ENTRADA_URL
-								);
+					$result["fullname"],
+					$result[$post["type"]."_title"],
+					$result["community_title"],
+					clean_input($result[$post["type"]."_description"],array("notags", "utf8_convert")),
+					COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=vote-poll&id=".$post["record_id"],
+					COMMUNITY_URL.$result["community_url"].":".$result["page_url"],
+					APPLICATION_NAME,
+					ENTRADA_URL
+				);
 			}
 			break;
 		case "file" :
 		case "file-comment" :
 		case "file-revision" :
 			$search		= array(
-								"%AUTHOR_FULLNAME%",
-								"%TITLE%",
-								"%FOLDER_TITLE%",
-								"%URL%",
-								"%UNSUBSCRIBE_URL%",
-								"%APPLICATION_NAME%",
-								"%ENTRADA_URL%"
-							);
+				"%AUTHOR_FULLNAME%",
+				"%TITLE%",
+				"%FOLDER_TITLE%",
+				"%URL%",
+				"%UNSUBSCRIBE_URL%",
+				"%APPLICATION_NAME%",
+				"%ENTRADA_URL%"
+			);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`, e.`folder_title`
 							FROM `community_share_files` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -153,27 +172,27 @@ function build_post($post) {
 			$result		= $db->GetRow($query);
 			if ($result) {
 				$replace	= array(
-									$result["fullname"],
-									$result["file_title"],
-									$result["folder_title"],
-									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-file&id=".$post["record_id"],
-									($post["type"] == "file" ? COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-folder&id=".$result["cshare_id"] : COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-file&id=".$post["record_id"] ),
-									APPLICATION_NAME,
-									ENTRADA_URL
-								);
+					$result["fullname"],
+					$result["file_title"],
+					$result["folder_title"],
+					COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-file&id=".$post["record_id"],
+					($post["type"] == "file" ? COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-folder&id=".$result["cshare_id"] : COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-file&id=".$post["record_id"] ),
+					APPLICATION_NAME,
+					ENTRADA_URL
+				);
 			}
 			break;
 		case "photo" :
 		case "photo-comment" :
 			$search		= array(
-								"%AUTHOR_FULLNAME%",
-								"%TITLE%",
-								"%GALLERY_TITLE%",
-								"%URL%",
-								"%UNSUBSCRIBE_URL%",
-								"%APPLICATION_NAME%",
-								"%ENTRADA_URL%"
-							);
+				"%AUTHOR_FULLNAME%",
+				"%TITLE%",
+				"%GALLERY_TITLE%",
+				"%URL%",
+				"%UNSUBSCRIBE_URL%",
+				"%APPLICATION_NAME%",
+				"%ENTRADA_URL%"
+			);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`, e.`gallery_title`
 							FROM `community_gallery_photos` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -188,28 +207,28 @@ function build_post($post) {
 			$result		= $db->GetRow($query);
 			if ($result) {
 				$replace	= array(
-									$result["fullname"],
-									$result["photo_title"],
-									$result["gallery_title"],
-									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-photo&id=".$post["record_id"],
-									($post["type"] == "photo" ? COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-gallery&id=".$result["cgallery_id"] : COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-photo&id=".$post["record_id"]),
-									APPLICATION_NAME,
-									ENTRADA_URL
-								);
+					$result["fullname"],
+					$result["photo_title"],
+					$result["gallery_title"],
+					COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-photo&id=".$post["record_id"],
+					($post["type"] == "photo" ? COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-gallery&id=".$result["cgallery_id"] : COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-photo&id=".$post["record_id"]),
+					APPLICATION_NAME,
+					ENTRADA_URL
+				);
 			}
 			break;
 		case "post" :
 		case "reply" :
 			$search		= array(
-								"%AUTHOR_FULLNAME%",
-								"%TITLE%",
-								"%FORUM_TITLE%",
-								"%CONTENT_BODY%",
-								"%URL%",
-								"%UNSUBSCRIBE_URL%",
-								"%APPLICATION_NAME%",
-								"%ENTRADA_URL%"
-							);
+				"%AUTHOR_FULLNAME%",
+				"%TITLE%",
+				"%FORUM_TITLE%",
+				"%CONTENT_BODY%",
+				"%URL%",
+				"%UNSUBSCRIBE_URL%",
+				"%APPLICATION_NAME%",
+				"%ENTRADA_URL%"
+			);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, b.`organisation_id`, c.`community_title`, c.`community_url`, e.`page_url`, f.`forum_title`, ".($post["type"] == "reply" ? "g" : "a").".`topic_title` AS `record_title`
 							FROM `community_discussion_topics` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -228,27 +247,27 @@ function build_post($post) {
 			$result		= $db->GetRow($query);
 			if ($result) {
 				$replace	= array(
-									$result["fullname"],
-									$result["record_title"],
-									$result["forum_title"],
-									clean_input($result["topic_description"],array("notags", "utf8_convert")),
-									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-post&id=".$post["record_id"],
-									($post["type"] == "post" ? COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-forum&id=".$result["cdiscussion_id"] : COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-post&id=".$post["record_id"]),
-									APPLICATION_NAME,
-									ENTRADA_URL
-								);
+					$result["fullname"],
+					$result["record_title"],
+					$result["forum_title"],
+					clean_input($result["topic_description"],array("notags", "utf8_convert")),
+					COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-post&id=".$post["record_id"],
+					($post["type"] == "post" ? COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-forum&id=".$result["cdiscussion_id"] : COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-post&id=".$post["record_id"]),
+					APPLICATION_NAME,
+					ENTRADA_URL
+				);
 			}
 			break;
 		case "join" :
 		case "leave" :
 			$search		= array(
-								"%AUTHOR_FULLNAME%",
-								"%COMMUNITY_TITLE%",
-								"%URL%",
-								"%UNSUBSCRIBE_URL%",
-								"%APPLICATION_NAME%",
-								"%ENTRADA_URL%"
-							);
+				"%AUTHOR_FULLNAME%",
+				"%COMMUNITY_TITLE%",
+				"%URL%",
+				"%UNSUBSCRIBE_URL%",
+				"%APPLICATION_NAME%",
+				"%ENTRADA_URL%"
+			);
 			$query 		= "	SELECT CONCAT_WS(a.firstname, a.lastname) as `fullname`, b.`community_title`, b.`community_url`, b.`community_title`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							LEFT JOIN `communities` AS b
@@ -257,13 +276,13 @@ function build_post($post) {
 			$result		= $db->GetRow($query);
 			if ($result) {
 				$replace	= array(
-									$result["fullname"],
-									$result["community_title"],
-									ENTRADA_URL."/people?id=".$post["author_id"],
-									ENTRADA_URL."/profile",
-									APPLICATION_NAME,
-									ENTRADA_URL
-								);
+					$result["fullname"],
+					$result["community_title"],
+					ENTRADA_URL."/people?id=".$post["author_id"],
+					ENTRADA_URL."/profile",
+					APPLICATION_NAME,
+					ENTRADA_URL
+				);
 			}
 			break;
 		default :
@@ -273,7 +292,7 @@ function build_post($post) {
 	$NOTIFICATION_MESSAGE = array();
 	$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/email/".$post['body']);
 
-    $mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean","decode")));
+	$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean","decode")));
 }
 
 /**

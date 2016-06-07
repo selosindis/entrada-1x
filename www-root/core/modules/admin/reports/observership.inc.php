@@ -143,7 +143,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	<?php
 	if ($STEP == 2) {
 		
-		$query = "SELECT a.`id`, a.`title`, a.`start`, a.`end`, 
+		$query = "SELECT a.`id`, a.`title`, a.`start`, a.`end`, `organisation`, `address_l1`,
 						CONCAT(b.`lastname`, ', ', b.`firstname`) AS `student_name`, 
 						IF (a.`preceptor_proxy_id` IS NULL OR a.`preceptor_proxy_id` = '', 
 							CONCAT(a.`preceptor_lastname`, ', ', a.`preceptor_firstname`), 
@@ -176,12 +176,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
                 ob_clear_open_buffers();
                 
                 $rows = array();
-                $rows[] = array("Observership", "Start", "End", "Student", "Preceptor", "Status");
+                $rows[] = array("Observership", "Start", "End", "Organisation", "Address Line 1", "Student", "Preceptor", "Status");
                 foreach ($results as $result) {
                     $rows[] = array(
                         $result["title"],
                         date("Y-m-d", $result["start"]),
                         !empty($result["end"]) ? date("Y-m-d", $result["end"]) : date("Y-m-d", $result["start"]),
+                        $result["organisation"],
+                        $result["address_l1"],
                         $result["student_name"],
                         $result["preceptor_name"],
                         $result["status"] . ($result["status"] == "approved" && $result["reflection_id"] ? "[reflection entered]" : "")

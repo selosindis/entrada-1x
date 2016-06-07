@@ -75,6 +75,7 @@ class User {
 			$access_id,
 			$group,
 			$role,
+			$private_hash,
             $active_id,
 			$active_group,
 			$active_role;
@@ -136,6 +137,14 @@ class User {
 	public function getUsername() {
 		return $this->username;
 	}
+
+    /**
+     * Returns the password of the user
+     * @return string
+     */
+    public function getPassword() {
+        return $this->password;
+    }
 
     /**
 	 * Returns the ID of the organisation to which the user belongs
@@ -342,18 +351,7 @@ class User {
 	 */
 	public function getProvince() {
 		if (is_null($this->cached_province)) {
-			if ($this->province_id && $this->country_id) {
-				if ($prov) {
-					$c_id = $prov->getParentID();
-					if ($c_id == $this->country_id) {
-						$this->cached_province = $prov;
-					}
-				} else {
-					$this->cached_province = new Region($this->province);
-				}
-			} else {
-				$this->cached_province = new Region($this->province);
-			}
+			$this->cached_province = new Region($this->province);
 		}
 
 		return $this->cached_province;
@@ -608,6 +606,19 @@ class User {
 		$active_id = $db->GetOne($query);
 		if ($active_id) {
 			$this->active_id = $active_id;
+		}
+	}
+
+	/**
+	 * Returns the currently active private_hash from the active entrada_auth.user_access record.
+	 *
+	 * @return array
+	 */
+	public function getActivePrivateHash() {
+		if ($_SESSION["permissions"][$this->getAccessId()]["private_hash"]) {
+			return $_SESSION["permissions"][$this->getAccessId()]["private_hash"];
+		} else {
+			return $this->private_hash;
 		}
 	}
 
@@ -869,7 +880,7 @@ class User {
         }
 		return $arr;
 	}
-    
+
 	public static function getAccessHash() {
 		global $db, $ENTRADA_USER;
 		//get all of the users groups and roles for each organisation
@@ -1132,7 +1143,11 @@ class User {
 		return $return;
 	}
 
-
+    /**
+     * Gets the abbreviated user object of the associated proxy_id. Data from user_data and user_access tables only
+     * @param int proxy_id
+     * @return User
+     */
     public static function fetchRowByID($proxy_id, $organisation_id = null, $auth_app_id = null) {
         global $db;
 
@@ -1149,7 +1164,7 @@ class User {
             .(isset($organisation_id) && $organisation_id ? " AND b.`organisation_id` = ?" : "")
             .(isset($auth_app_id) && $auth_app_id ? " AND b.`app_id` = ?" : "");
 
-        $constraints = array($proxy_id, time(), time(), AUTH_APP_ID);
+        $constraints = array($proxy_id, time(), time());
         if (isset($organisation_id) && $organisation_id) {
             $constraints[] = $organisation_id;
         }
@@ -1165,5 +1180,78 @@ class User {
         }
 
         return $user;
+    }
+
+	public static function fetchUsersByGroups($search_term = null, $group = null, $organisation_id = null, $excluded_ids = 0) {
+		global $db;
+
+		$groups_string = "";
+		if (is_array($group)) {
+			foreach ($group as $group_name) {
+				$groups_string .= ($groups_string ? ", " : "").$db->qstr($group_name);
+			}
+		}
+
+		$query = "	SELECT a.`id` AS `proxy_id`, a.`firstname`, a.`lastname`, b.`group`, b.`role`, a.`email`
+                    FROM `".AUTH_DATABASE."`.`user_data` AS a
+                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                    ON a.`id` = b.`user_id`
+                    WHERE a.`id` NOT IN (".$excluded_ids.")
+                    AND b.`account_active` = 'true'
+                    AND (b.`access_starts` = '0' OR b.`access_starts` <= ?)
+                    AND (b.`access_expires` = '0' OR b.`access_expires` > ?)
+                    AND (
+                            CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE ".$db->qstr("%".$search_term."%")." OR
+                            CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE ".$db->qstr("%".$search_term."%")." OR
+                            a.email LIKE ".$db->qstr("%".$search_term."%")."
+                        )".
+                    (isset($groups_string) && $groups_string ? "AND b.`group` IN (".$groups_string.")" : (isset($group) && $group ? "AND b.`group` = ?" : "")).
+					(isset($organisation_id) && $organisation_id ? "AND b.`organisation_id` = " . $db->qstr($organisation_id) : "")."
+                    GROUP BY a.`id`
+                    ORDER BY a.`firstname` ASC, a.`lastname` ASC";
+
+		$results = $db->GetAll($query, ($groups_string ? array(time(), time()) : ($group ? array(time(), time(), $group) : array(time(), time()))));
+		return $results;
+	}
+
+	public static function fetchAllResidents($search_term = null, $excluded_ids = 0) {
+		global $db;
+
+		$query = "	SELECT a.`id` AS `proxy_id`, a.`firstname`, a.`lastname`, b.`group`, b.`role`, a.`email`
+                    FROM `".AUTH_DATABASE."`.`user_data` AS a
+                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                    ON a.`id` = b.`user_id`
+                    WHERE a.`id` NOT IN (".$excluded_ids.")
+                    AND b.`account_active` = 'true'
+                    AND (b.`access_starts` = '0' OR b.`access_starts` <= ?)
+                    AND (b.`access_expires` = '0' OR b.`access_expires` > ?)
+                    AND (
+                            CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE ".$db->qstr("%".$search_term."%")." OR
+                            CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE ".$db->qstr("%".$search_term."%")." OR
+                            a.email LIKE ".$db->qstr("%".$search_term."%")."
+                        )
+                    AND (
+                    		b.`group` = 'resident' OR
+                    		(b.`group` = 'student' AND b.`organisation_id` = 8)
+						)
+                    GROUP BY a.`id`
+                    ORDER BY a.`firstname` ASC, a.`lastname` ASC";
+
+		$results = $db->GetAll($query, array(time(), time()));
+		return $results;
+	}
+
+    /**
+     * Gets the first proxy_id of the user entry matched by comparing value against supplied column
+     * @param value - the value to find in the database
+     * @param field_name - the field name in the user_data table to match against
+     * @return int proxy_id+
+     */
+    public static function fetchProxyBySuppliedField($value, $field_name = "number") {
+        global $db;
+        $query = "  SELECT `id` FROM `".AUTH_DATABASE."`.`user_data`
+                    WHERE `".$field_name."` = ?";
+        $id = $db->GetOne($query, array($value));
+        return $id;
     }
 }

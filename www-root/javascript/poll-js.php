@@ -21,15 +21,14 @@
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
     dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
     get_include_path(),
 )));
 
 /**
- * Register the Zend autoloader so we use any part of Zend Framework without
- * the need to require the specific Zend Framework files.
+ * Register the Composer autoloader.
  */
-require_once "Zend/Loader/Autoloader.php";
-$loader = Zend_Loader_Autoloader::getInstance();
+require_once("autoload.php");
 
 require_once("config/settings.inc.php");
 

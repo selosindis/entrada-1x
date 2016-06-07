@@ -1178,7 +1178,7 @@ if (!defined("PARENT_INCLUDED")) {
 					</ul>
 				</div>
 				<div class="right-pane span9">
-					<h1 id="manage-eportfolio-title">Manage Eportfolio</h1>
+					<h1 id="manage-eportfolio-title">Manage ePortfolio</h1>
 					<div id="portfolio-msg"></div>
 					<div id="portfolio-actions" class="btn-group hide">
 						<a href="#manage-modal" data-toggle="modal" class="btn add-folder"><i class="icon-folder-open" title="Edit"></i> Add Folder</a>

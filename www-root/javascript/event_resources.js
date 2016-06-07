@@ -16,6 +16,9 @@ jQuery(document).ready(function ($) {
     var resource_release_start_time_control = $("#event_resource_release_start_time_value");
     var resource_release_finish_control = $("#event_resource_release_finish_value");
     var resource_release_finish_time_control = $("#event_resource_release_finish_time_value");
+    var resource_recurring_bool = $("#re_bool").val();
+    var recurring_event_ids = JSON.parse($("#re_ids").val());
+    var resource_recurring_event_ids = recurring_event_ids;
     var resource_step_container = $("#event-resource-step");
     var event_resource_drop_overlay = $("#event_resource_drop_overlay");
     var event_resource_id_value = $("#resource_id");
@@ -218,16 +221,32 @@ jQuery(document).ready(function ($) {
         $(this).timepicker("show");
     });
     
+    $("#event-resource-step").on("click", ".r_events", function () {
+        var r_e_ids = $(".r_events:checked");
+        resource_recurring_event_ids = [];
+        $.each(r_e_ids, function (key, value) {
+            var id = $(value).data("id");
+            resource_recurring_event_ids.push(id);
+        });
+    });
+
     $("#event-resources-container").on("click", ".resource-link", function () {
         edit_mode = true;
         
         $("#event_resource_modal_title").html("Edit Event Resource");
         
         var event_resource_id = $(this).parent().attr("data-id");
+        var data_string;
+        if (resource_recurring_bool == 1) {
+            data_string = "method=event_resource&event_resource_id=" + event_resource_id + "&recurring_event_ids=" + JSON.stringify(resource_recurring_event_ids);
+        } else {
+            data_string = "method=event_resource&event_resource_id=" + event_resource_id;
+        }
+
         $("#event-resource-modal").modal("show");
         $.ajax({
             url: SITE_URL + "/admin/events?section=api-resource-wizard",
-            data: "method=event_resource&event_resource_id=" + event_resource_id,
+            data: data_string,
             type: 'GET',
             success: function (data) {
                 var jsonResponse = JSON.parse(data);
@@ -312,7 +331,6 @@ jQuery(document).ready(function ($) {
                             $("#event_resource_quiz_attempts_value").val(jsonResponse.data.quiz_attempts);
                             $("#event_resource_quiz_results_value").val(quiz_results);
                             
-                            
                         break;
                         case 9 : 
                             $("#event_resource_textbook_description_value").val(jsonResponse.data.description);
@@ -344,7 +362,6 @@ jQuery(document).ready(function ($) {
         });
         
     });
-    
     
     $("#event-resource-toggle").on("click", function (e) {
         $("#event-resources-delete-confirmation").empty();
@@ -400,14 +417,11 @@ jQuery(document).ready(function ($) {
         }
     });
     
-    
     $("#event-resource-next").on("click", function () {
         var step = parseInt(resource_step_control.val());
         var selected_resource_type = resource_type_value_control.val();
-
         $("#event-resource-msgs").empty();
-        
-            if (step == 5) {
+            if (step == 6) {
                 edit_mode = false;
                 resource_step_control.val("1");
                 resource_substep_control.val("1");
@@ -421,7 +435,7 @@ jQuery(document).ready(function ($) {
                 resource_release_finish_control.val("");
                 
                 event_resource_id_value.val("");
-                resource_attach_file.val("no")
+                resource_attach_file.val("no");
 
                 if ($(".resource_type_control").length) {
                     $(".resource_type_control").remove();
@@ -433,9 +447,15 @@ jQuery(document).ready(function ($) {
                 
                 show_step();
             } else {
+                var data_string;
+                if (resource_recurring_bool == 1) {
+                    data_string = "method=add&event_resource_type_value=" + selected_resource_type + "&step=" + step + "&" + $("#event_resource_form").serialize() + "&recurring_event_ids=" + JSON.stringify(resource_recurring_event_ids);
+                } else {
+                    data_string = "method=add&event_resource_type_value=" + selected_resource_type + "&step=" + step + "&" + $("#event_resource_form").serialize();
+                }
                 $.ajax({
                     url: SITE_URL + "/admin/events?section=api-resource-wizard",
-                    data: "method=add&event_resource_type_value=" + selected_resource_type + "&step=" + step + "&" + $("#event_resource_form").serialize(),
+                    data: data_string,
                     type: 'POST',
                     success: function (data) {
                         var jsonResponse = JSON.parse(data);
@@ -662,7 +682,49 @@ jQuery(document).ready(function ($) {
     
     $("#event-resources-container").on("click", ".delete-resource", function (e) {
         e.preventDefault();
-        display_notice(["Are you sure you want to <strong>delete</strong> this event resource?"], "#delete-event-resource-msgs", "append");
+
+        var data_id             = $(this).attr("data-id");
+        var recurring_event_ids = $("#re_ids").val();
+        var recurring_events    = $("#re_bool").val();
+
+        var msg = "Are you sure you want to <strong>delete</strong> this resource?";
+
+        if (recurring_events) {
+            var data_object = {
+                "method": "recurring_events_resource_view",
+                "data_id": data_id,
+                "recurring_event_ids": recurring_event_ids
+            };
+
+            $.ajax({
+                url: SITE_URL + "/admin/events?section=api-resource-wizard",
+                data: data_object,
+                type: 'GET',
+                success: function (data) {
+                    var jsonResponse = JSON.parse(data);
+
+                    if (jsonResponse.status === "success") {
+                        var html = jsonResponse.data.html;
+                        if (recurring_events) {
+                            msg += "<br/>You can also delete it from the following recurring events in this series.";
+                            $("#delete-event-resource-modal .modal-body").append(html);
+                            $("#delete-event-resource-modal").css({"max-height": 425});
+                            display_notice([msg], "#delete-event-resource-msgs", "append");
+                        }
+                    } else {
+                        display_error(jsonResponse.data, "#event-resource-msgs", "append");
+                    }
+                },
+                beforeSend: function () {
+
+                },
+                complete: function () {
+
+                }
+            });
+        }
+
+        display_notice([msg], "#delete-event-resource-msgs", "append");
         
         var delete_table = document.createElement("table");
         var delete_table_thead = document.createElement("thead");
@@ -686,19 +748,27 @@ jQuery(document).ready(function ($) {
         $("#delete-event-resource-modal .modal-body").append(delete_table);
         
         $("#delete-event-resource-modal").modal("show");
-        $("#delete-event-resource").attr({"data-id": $(this).attr("data-id")});
+        $("#delete-event-resource").attr({"data-id": data_id});
     });
     
-        $("#delete-event-resource-modal").on("hide", function () {
+    $("#delete-event-resource-modal").on("hide", function () {
         $("#delete-event-resource-msgs").empty();
         $("#delete-event-resource-modal .modal-body table").remove();
     });
     
     $("#delete-event-resource").on("click", function () {
         var entity_id = $(this).attr("data-id");
+        var data = $("#delete-event-resource-modal input.entity");
+        var entities = []
+        if (data) {
+            $.each(data, function(key, value) {
+                var entity_id = $(value).data("entity-id");
+                entities.push(entity_id);
+            });
+        }
         $.ajax({
             url: SITE_URL + "/admin/events?section=api-resource-wizard",
-            data: "method=delete&entity_id=" + entity_id ,
+            data: "method=delete&entity_id=" + entity_id + "&entities=" + entities,
             type: 'POST',
             success: function (data) {
                 var jsonResponse = JSON.parse(data);
@@ -729,7 +799,15 @@ jQuery(document).ready(function ($) {
         var substep = parseInt(resource_substep_control.val());
         
         if (substep == 1) {
-            resource_step_control.val(step -1);
+            if (step == 5) {
+                if (resource_recurring_bool == 1) {
+                    resource_step_control.val(step -1);
+                } else {
+                    resource_step_control.val(step -2);
+                }
+            } else {
+                resource_step_control.val(step -1);
+            }
         } else {
             resource_substep_control.val(substep -1);
         }
@@ -1060,6 +1138,42 @@ jQuery(document).ready(function ($) {
                 
             break;
             case 4 :
+                if (resource_recurring_bool == 1) {
+                    var data_object = {
+                        "method": "recurring_events_view",
+                        "recurring_event_ids": recurring_event_ids,
+                        "ids_checked": resource_recurring_event_ids
+                    };
+
+                    $.ajax({
+                        url: SITE_URL + "/admin/events?section=api-resource-wizard",
+                        data: data_object,
+                        type: 'GET',
+                        success: function (data) {
+                            var jsonResponse = JSON.parse(data);
+                            resource_substep_control.val(jsonResponse.data.sub_step);
+                            if (jsonResponse.status === "success") {
+                                if (jsonResponse.data.recurring_events === true) {
+                                    var html = jsonResponse.data.html;
+                                    var resource_recurring_heading = document.createElement("h3");
+                                    var resource_recurring_body = document.createElement("div");
+                                    var resource_recurring_ul = document.createElement("ul");
+                                    var recurring_header = "Select the recurring events you would like apply these changes to.";
+                                    $(resource_recurring_heading).attr({id: "resource_recurring_container"}).append(recurring_header);
+                                    $(resource_recurring_body).attr({id: "resource_recuring_body"}).append(resource_recurring_ul).append(html);
+                                    $(resource_step_container).append(resource_recurring_heading).append(resource_recurring_body);
+                                }
+                            } else {
+                                display_error(jsonResponse.data, "#event-resource-msgs", "append");
+                            }
+                        }
+                    });
+                } else {
+                    display_error(["You've arrived to a step you shouldn't see."], "#event-resource-msgs", "append")
+                }
+
+                break;
+            case 5 :
                 switch (selected_resource_type) {
                     case 1 :
                     case 5 :
@@ -1227,7 +1341,7 @@ jQuery(document).ready(function ($) {
 
                                 var upload_input = document.createElement("input");
                                 var upload_input_div = document.createElement("div");
-                                var darg_drop_p = document.createElement("p");
+                                var drag_drop_p = document.createElement("p");
                                 var upload_label = document.createElement("label");
                                 var upload_span = document.createElement("span");
 
@@ -1236,18 +1350,18 @@ jQuery(document).ready(function ($) {
                                 $(upload_input).attr({type: "file", id: "event_resource_upload", name: "file"}).addClass("hide");
                                 $(upload_label).addClass("btn btn-success span3").append("Browse").append(upload_input);
                                 $(upload_input_div).append(upload_label).append(upload_span).addClass("event-resource-upload-input-div");
-                                $(darg_drop_p).html("Please select a file to upload.").addClass("event-resource-upload-text").css("margin-top", "35px");
+                                $(drag_drop_p).html("Please select a file to upload.").addClass("event-resource-upload-text").css("margin-top", "35px");
 
                                 if (dragdrop) {
                                     var drag_drop_img_div = document.createElement("div");
                                     var drag_drop_img = document.createElement("img");
 
-                                    $(darg_drop_p).html("You can drag and drop files into this window to upload.").addClass("event-resource-upload-text");
+                                    $(drag_drop_p).html("You can drag and drop files into this window to upload.").addClass("event-resource-upload-text");
                                     $(drag_drop_img).attr({src: "../images/event-resource-file.png"}).addClass("event-resource-upload-img");
                                     $(drag_drop_img_div).append(drag_drop_img).addClass("event-resource-upload-div");
                                     resource_step_container.append(drag_drop_img_div);
                                 }
-                                resource_step_container.append(darg_drop_p);
+                                resource_step_container.append(drag_drop_p);
                                 resource_step_container.append(upload_input_div);
                                 
                                 $("#event-resource-next").attr({disabled: "disabled"}).html("Save Resource");
@@ -1850,7 +1964,7 @@ jQuery(document).ready(function ($) {
                     
                 }
             break;
-            case 5 :
+            case 6 :
                 get_event_resources ();
                 $(".modal-body").removeClass("upload");
                 $("#event_resource_entity_id").val("");
@@ -2075,7 +2189,7 @@ jQuery(document).ready(function ($) {
                             var quiz_results_link = document.createElement("a");
 
 
-                            $(quiz_results_i).addClass("icon-white icon-list-alt");
+                            $(quiz_results_i).addClass("fa fa-bar-chart");
                             $(resource_link_quiz_accesses_span).attr({
                                 "data-type": resource.resource_type,
                                 "data-value": resource.resource_id
@@ -2338,6 +2452,8 @@ jQuery(document).ready(function ($) {
             fd.append("file", file);
             fd.append("method", "add");
             fd.append("event_id", $("#event_id").val());
+            fd.append("resource_recurring_bool", resource_recurring_bool);
+            fd.append("resource_recurring_event_ids", resource_recurring_event_ids);
             fd.append("event_resource_required_value", resource_required_value_control.val());
             fd.append("event_resource_timeframe_value", resource_timeframe_value_control.val());
             fd.append("event_resource_release_value", resource_release_value_control.val());

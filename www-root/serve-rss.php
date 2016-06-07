@@ -35,6 +35,7 @@ header("Content-type: text/xml");
     dirname(__FILE__) . "/core",
     dirname(__FILE__) . "/core/includes",
     dirname(__FILE__) . "/core/library",
+    dirname(__FILE__) . "/core/library/vendor",
     get_include_path(),
 )));
 
@@ -120,7 +121,7 @@ switch ($ACTION) {
 		switch($USER_GROUP){
 			case "student" :
 			case "alumni" :				
-				$corrected_role = "students";
+				$corrected_role = "student";
 				break;
 			case "medtech" :
 				$corrected_role = "staff";
@@ -133,7 +134,7 @@ switch ($ACTION) {
 		
 		$notice_where_clause = "(
 						(
-						c.`audience_type` = 'all:users'
+						c.`audience_type` = 'all:all'
 						OR c.`audience_type` = 'all:".$corrected_role."'
 						OR
 						(

@@ -77,6 +77,7 @@ class Models_Event_Resource_Entity extends Models_Base {
         return $this->active;
     }
     
+    /* @return bool|Models_Event_Resource_Entity */
     public static function fetchRowByID($event_resource_entity_id = null, $active = 1) {
         $self = new self();
         
@@ -97,6 +98,7 @@ class Models_Event_Resource_Entity extends Models_Base {
         return $self->fetchRow($constraints);
     }
     
+    /* @return ArrayObject|Models_Event_Resource_Entity[] */
     public function fetchAllRecords($active = 1) {
         $self = new self();
         
@@ -111,6 +113,7 @@ class Models_Event_Resource_Entity extends Models_Base {
         return $self->fetchAll($constraints);
     }
     
+    /* @return ArrayObject|Models_Event_Resource_Entity[] */
     public static function fetchAllByEventID($event_id = null, $active = 1) {
         $self = new self();
         
@@ -131,6 +134,22 @@ class Models_Event_Resource_Entity extends Models_Base {
         return $self->fetchAll($constraints);
     }
     
+
+    /* @return bool|Models_Event_Resource_Entity */
+    public static function fetchRowByEventIdEntityTypeEntityValue ($event_id = null, $entity_type = null, $entity_value = null, $active = 1) {
+        $self = new self();
+
+        $constraints = array(
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
+            array("mode" => "AND", "key" => "entity_type", "value" => $entity_type, "method" => "="),
+            array("mode" => "AND", "key" => "entity_value", "value" => $entity_value, "method" => "="),
+            array("mode" => "AND", "key" => "active", "value" => $active, "method" => "=")
+        );
+
+        return $self->fetchRow($constraints);
+    }
+
+    /* @return bool|Models_Event_Resource_Entity */
     public static function fetchRowByEventIDEntityValue ($event_id = null, $entity_value = null) {
         $self = new self();
         
@@ -151,6 +170,7 @@ class Models_Event_Resource_Entity extends Models_Base {
         return $self->fetchRow($constraints);
     }
     
+    /* @return ArrayObject|Models_Event_Resource_Entity[] */
     public static function fetchAllByEventIDReleaseDates($event_id = null, $active = 1) {
         global $db;
         $entities = false;

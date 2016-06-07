@@ -154,8 +154,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						$division_id	= "Division";
 
                         $query = "SELECT a.`department_title`
-                                    FROM `".ENTRADA_AUTH."`.`departments` AS a
-                                    JOIN `".ENTRADA_AUTH."`.`user_departments` AS b
+                                    FROM `".AUTH_DATABASE."`.`departments` AS a
+                                    JOIN `".AUTH_DATABASE."`.`user_departments` AS b
                                     ON b.`dep_id` = a.`department_id`
                                     AND b.`user_id` = ".$db->qstr($result["proxy_id"]);
                         $dresult	= $db->GetRow($query);

@@ -29,11 +29,12 @@ class Entrada_Cli_Migrate extends Entrada_Cli {
      * @var array The valid actions that can be run with this utility.
      */
     protected $actions = array(
-        "create" => "Create a new Entrada database migration file.",
-        "pending" => "See a list of the pending database migrations in your installation.",
-        "up-s" => "Run all pending migrations against your database. Provide optional filename to output SQL instead of run it.",
-        "down-s" => "Rollback the last successful up migration. Provide optional filename to output SQL instead of run it.",
         "audit" => "Verifies that all present migrations have been run successfully.",
+        "create" => "Create a new Entrada database migration file.",
+        "down-s" => "Rollback the last successful up migration. Provide optional filename to output SQL instead of run it.",
+        "pending" => "See a list of the pending database migrations in your installation.",
+        "quiet" => "Perform --up or --down migrations without prompting for confirmation.",
+        "up-s" => "Run all pending migrations against your database. Provide optional filename to output SQL instead of run it.",
         "help" => "The migrate help menu.",
     );
 
@@ -116,6 +117,7 @@ TEMPLATECLASS;
             $this->renderPendingMigrations("up");
         } else {
             print $this->color("Nothing to do. You, my friend, are all up to date.", "green");
+            print "\n";
         }
 
         print "\n";
@@ -142,7 +144,11 @@ TEMPLATECLASS;
 
             print "\n\n";
 
-            $response = $this->prompt("Would you like to proceed? [Y/n]", array("y", "yes", "n", "no"), array("alpha", "lower"));
+            if ($this->quiet) {
+                $response = "y";
+            } else {
+                $response = $this->prompt("Would you like to proceed? [Y/n]", array("y", "yes", "n", "no"), array("alpha", "lower"));
+            }
 
             if (in_array($response, array("y", "yes"))) {
                 print "\n";
@@ -229,7 +235,7 @@ TEMPLATECLASS;
         global $db;
     
         $query = "USE `" . DATABASE_NAME . "`;";
-        $returnVal = $db->Execute ($query);
+        $returnVal = $db->Execute($query);
         return $returnVal;
     }
     
@@ -254,7 +260,11 @@ TEMPLATECLASS;
 
             print "\n\n";
 
-            $response = $this->prompt("Would you like to proceed? [Y/n]", array("y", "yes", "n", "no"), array("alpha", "lower"));
+            if ($this->quiet) {
+                $response = "y";
+            } else {
+                $response = $this->prompt("Would you like to proceed? [Y/n]", array("y", "yes", "n", "no"), array("alpha", "lower"));
+            }
 
             if (in_array($response, array("y", "yes"))) {
                 print "\n";
@@ -571,7 +581,10 @@ TEMPLATECLASS;
                 if ((trim($sql_line) != "") && (strpos($sql_line, "--") === false)) {
                     $sql_query .= $sql_line;
 
-                    if (preg_match("/;[\040]*\$/", $sql_line)) {
+                    /**
+                     * Look for the end of the current statement - semi-colon with only whitespace after.
+                     */
+                    if (preg_match('/;[\s]*$/', $sql_line)) {
                         $this->sql[] = $sql_query;
                         $sql_query = "";
                     }

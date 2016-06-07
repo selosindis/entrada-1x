@@ -45,7 +45,7 @@ class Models_Quiz_Question extends Models_Base {
     public static function fetchAllRecords($quiz_id, $question_active = 1) {
         global $db;
         
-        $output = false;
+        $output = array();
 
         $query = "SELECT a.* 
                     FROM `quiz_questions` AS a
@@ -54,7 +54,6 @@ class Models_Quiz_Question extends Models_Base {
         $results = $db->GetAll($query, array($quiz_id, $question_active));
         
         if (!empty($results)) {
-            $output = array();
             foreach ($results as $result) {
                 $output[] = new self($result);
             }
@@ -66,7 +65,7 @@ class Models_Quiz_Question extends Models_Base {
     public static function fetchAllMCQ($quiz_id, $question_active = 1) {
         global $db;
         
-        $output = false;
+        $output = array();
         
         $query = "SELECT a.*
                     FROM `quiz_questions` AS a
@@ -90,7 +89,7 @@ class Models_Quiz_Question extends Models_Base {
     public static function fetchNonMCQ($quiz_id, $question_active = 1) {
         global $db;
         
-        $output = false;
+        $output = array();
         
         $query = "SELECT a.*
                     FROM `quiz_questions` AS a
@@ -110,7 +109,7 @@ class Models_Quiz_Question extends Models_Base {
     public static function fetchGroupedQuestions($quiz_id, $qquestion_group_id, $question_active = 1) {
         global $db;
         
-        $output = false;
+        $output = array();
 
         $query = "SELECT a.*
                     FROM `quiz_questions` AS a
@@ -120,7 +119,6 @@ class Models_Quiz_Question extends Models_Base {
                     ORDER BY `question_order` ASC";
         $results = $db->GetAll($query, array($quiz_id, $qquestion_group_id, $question_active));
         if (!empty($results)) {
-            $output = array();
             foreach ($results as $result) {
                 $output[] = new self($result);
             }

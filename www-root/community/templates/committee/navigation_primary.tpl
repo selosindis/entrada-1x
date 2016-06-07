@@ -4,7 +4,7 @@
 			<div class="home"><a href="{$site_community_relative}{$menu_item.link_url}"{if $menu_item.link_new_window} target="_blank"{/if}><img src="{$template_relative}/images/home.png" alt="Home" /></a></div>
 		</div>
 		<div class="span11">
-			<ul class="nav">
+			<ul class="nav" style="width: 100%">
 			{foreach from=$site_primary_navigation key=key item=menu_item name=navigation}
 				{assign var="ctr" value=$ctr+1}
 				{if $ctr <= 100}

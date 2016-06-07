@@ -76,7 +76,8 @@ class Models_Event_Resource_TextbookReading extends Models_Base {
     public function getUpdatedBy() {
         return $this->updated_by;
     }
-    
+
+    /* @return bool|Models_Event_Resource_TextbookReading */
     public static function fetchRowByID ($id = null) {
         $self = new self();
         
@@ -89,6 +90,19 @@ class Models_Event_Resource_TextbookReading extends Models_Base {
         );
         
         return $self->fetchRow($contraints);
+    }
+
+    /* @return bool|Models_Event_Resource_TextbookReading */
+    public static function fetchRowByEventIdResourceUpdate($event_id = null, $resource = null, $update_date = null) {
+        $self = new self();
+
+        $constraints = array(
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
+            array("key" => "resource_textbook_reading", "value" => $resource, "method" => "="),
+            array("key" => "update_date", "value" => $update_date, "method" => "=")
+        );
+
+        return $self->fetchRow($constraints);
     }
     
     public function insert() {

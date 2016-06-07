@@ -77,7 +77,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
             $COURSE_LIST[$result["course_id"]] = html_encode(($result["course_code"] ? $result["course_code"] . ": " : "") . $result["course_name"]);
         }
 	}
-    $calendar_http_url = ENTRADA_URL."/calendars".(isset($_SESSION["details"]["private_hash"]) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : "")."/".html_encode($ENTRADA_USER->getUsername()).".ics"; 
+
+    $calendar_http_url = ENTRADA_URL."/calendars".(isset($_SESSION["details"]["private_hash"]) ? "/private-".html_encode($ENTRADA_USER->getActivePrivateHash()) : "")."/".html_encode($ENTRADA_USER->getUsername()).".ics";
     $calendar_webcal_url = str_ireplace(array("https://", "http://"), "webcal://", $calendar_http_url);
     ?>
    

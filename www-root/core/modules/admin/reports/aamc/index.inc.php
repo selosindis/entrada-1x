@@ -48,5 +48,5 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AAMC_CI"))) {
 		</p>
 		<div class="clearfix"></div>
 	</div>
-    <?php
+	<?php
 }

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * A model for handeling Course Groups
+ * A model for handling Course Groups
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
@@ -23,19 +23,25 @@
  * @copyright Copyright 2013 Queen's University. All Rights Reserved.
  */
 
-class Models_Group {
-    private $group_id,
-            $group_name,
-            $group_type,
-            $group_value,
-            $start_date,
-            $expire_date,
-            $group_active,
-            $updated_date,
-            $updated_by;
+class Models_Group extends Models_Base  {
+    protected   $group_id,
+                $group_name,
+                $group_type,
+                $group_value,
+                $start_date,
+                $expire_date,
+                $group_active,
+                $updated_date,
+                $updated_by;
     
-    protected $table_name = "groups";
-    
+    protected $table_name           = "groups";
+    protected $primary_key          = "group_id";
+    protected $default_sort_column  = "group_id";
+
+    public function __construct($arr = NULL) {
+        parent::__construct($arr);
+    }
+
     public function getID () {
         return $this->group_id;
     }
@@ -72,151 +78,14 @@ class Models_Group {
         return $this->updated_by;
     }
 
-
-    public function __construct($arr = NULL) {
-		if (is_array($arr)) {
-			$this->fromArray($arr);
-		}
-	}
-	
-	public function toArray() {
-		$arr = false;
-		$class_vars = get_class_vars(get_called_class());
-		if (isset($class_vars)) {
-			foreach ($class_vars as $class_var => $value) {
-				$arr[$class_var] = $this->$class_var;
-			}
-		}
-		return $arr;
-	}
-	
-	public function fromArray($arr) {
-		foreach ($arr as $class_var_name => $value) {
-			$this->$class_var_name = $value;
-		}
-		return $this;
-	}
-    
+    /* @return bool|Models_Group */
     public static function fetchRowByID($group_id) {
         $self = new self();
-        return $self->fetchRow(array("group_id" => $group_id, "active" => 1));
-    }
-    
-    /**
-     * @param array $constraints
-     * @param string $default_method
-     * @param string $default_mode
-     * @return bool|Models_InformationStatement
-     */
-    private function fetchRow($constraints = array("group_id" => "0"), $default_method = "=", $default_mode = "AND") {
-        global $db;
-
-        $self = false;
-        if (is_array($constraints) && !empty($constraints)) {
-            $where = array();
-            $replacements = "";
-            $class_vars = array_keys(get_class_vars(get_called_class()));
-            foreach ($constraints as $index => $constraint) {
-                $key = false;
-                $value = false;
-                if (is_array($constraint) && in_array($constraint["key"], $class_vars)) {
-                    $mode = (isset($constraint["mode"]) && in_array(strtoupper($constraint["mode"]), array("OR", "AND")) ? $constraint["mode"] : $default_mode);
-                    $key = clean_input($constraint["key"], array("trim", "striptags"));
-                    $method = (isset($constraint["method"]) && in_array(strtoupper($constraint["method"]), array("=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS")) ? $constraint["method"] : $default_method);
-                    if (strtoupper($method) == "BETWEEN" && is_array($constraint["value"]) && @count($constraint["value"]) == 2) {
-                        $value = clean_input($constraint["value"][0], array("trim", "striptags"))." AND ".clean_input($constraint["value"][1], array("trim", "striptags"));
-                    } elseif ($constraint["value"]) {
-                        $value = clean_input($constraint["value"], array("trim", "striptags"));
-                    } elseif ($constraint["value"] || $constraint["value"] === "0" || $constraint["value"] === 0) {
-                        $value = clean_input($constraint["value"], array("trim", "striptags"));
-                    } else {
-                        $value = NULL;
-                    }
-                } elseif (!is_array($constraint) && in_array($index, $class_vars)) {
-                    $key = clean_input($index, array("trim", "striptags"));
-                    $value = clean_input($constraint, array("trim", "striptags"));
-                    $method = $default_method;
-                    $mode = $default_mode;
-                }
-                if (isset($key) && $key && isset($value) && ($value || $value === 0 || $value === "0")) {
-                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode))." `".$key."` ".(isset($method) && $method ? $method : $default_method)." ?";
-                    $where[] = $value;
-                }
-            }
-            if (!empty($where)) {
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements;
-                $result = $db->GetRow($query, $where);
-                if ($result) {
-                    $self = new self();
-                    $self = $self->fromArray($result);
-                }
-            }
-        }
-        return $self;
+        return $self->fetchRow(array(
+            array("key" => "group_id", "value" => $group_id, "method" => "=")
+        ));
     }
 
-
-    /**
-     * @param array $constraints
-     * @param string $default_method
-     * @param string $default_mode
-     * @return array
-     */
-    private function fetchAll($constraints = array("group_id" => "0"), $default_method = "=", $default_mode = "AND") {
-        global $db;
-        $output = array();
-        if (is_array($constraints) && !empty($constraints)) {
-            $where = array();
-            $replacements = "";
-            $class_vars = array_keys(get_class_vars(get_called_class()));
-            foreach ($constraints as $index => $constraint) {
-                $key = false;
-                $value = false;
-                if (is_array($constraint) && in_array($constraint["key"], $class_vars)) {
-                    $mode = (isset($constraint["mode"]) && in_array(strtoupper($constraint["mode"]), array("OR", "AND")) ? $constraint["mode"] : $default_mode);
-                    $key = "`".clean_input($constraint["key"], array("trim", "striptags"))."`";
-                    $method = (isset($constraint["method"]) && in_array(strtoupper($constraint["method"]), array("=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS")) ? $constraint["method"] : $default_method);
-                    if (strtoupper($method) == "BETWEEN" && is_array($constraint["value"]) && @count($constraint["value"]) == 2) {
-                        $value = array(
-                            clean_input($constraint["value"][0], array("trim", "striptags")),
-                            clean_input($constraint["value"][1], array("trim", "striptags"))
-                        );
-                    } elseif ($constraint["value"]) {
-                        $value = clean_input($constraint["value"], array("trim", "striptags"));
-                    } elseif ($constraint["value"] || $constraint["value"] === "0") {
-                        $value = clean_input($constraint["value"], array("trim", "striptags"));
-                    } else {
-                        $value = NULL;
-                    }
-                } elseif (!is_array($constraint) && in_array($index, $class_vars)) {
-                    $key = "`".clean_input($index, array("trim", "striptags"))."`";
-                    $value = clean_input($constraint, array("trim", "striptags"));
-                    $method = $default_method;
-                    $mode = $default_mode;
-                }
-                if (isset($key) && $key && isset($value) && ($value || $value === 0)) {
-                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode))." ".$key." ".(isset($method) && $method ? $method : $default_method).($method == "BETWEEN" ? " ? AND ?" : " ?");
-                    if (is_array($value) && @count($value) == 2) {
-                        $where[] = $value[0];
-                        $where[] = $value[1];
-                    } else {
-                        $where[] = $value;
-                    }
-                }
-            }
-            if (!empty($where)) {
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements;
-                $results = $db->GetAll($query, $where);
-                if ($results) {
-                    foreach ($results as $result) {
-                        $output[] = new self($result);
-                    }
-                }
-            }
-        }
-        return $output;
-    }
-    
     public static function getGroupMembers ($group_id = null, $active = 1) {
         global $db;
         $members = false;
@@ -270,5 +139,27 @@ class Models_Group {
         }
         return $member;
     }
+
+    public static function fetchAllByGroupType($group_type, $organisation_id, $search_term) {
+        global $db;
+
+        $output = array();
+
+        $query = "  SELECT a.*
+                    FROM `groups` AS a
+                    JOIN `group_organisations` AS b
+                    ON a.`group_id` = b.`group_id`
+                    WHERE a.`group_type` = " . $db->qstr($group_type) . "
+                    AND b.`organisation_id` = " . $db->qstr($organisation_id) . "
+                    AND a.`group_name` LIKE ".$db->qstr("%".$search_term."%");
+
+        $results = $db->GetAll($query);
+        if ($results) {
+            foreach ($results as $result) {
+                $output[] = new self($result);
+            }
+        }
+
+        return $output;
+    }
 }
-?>

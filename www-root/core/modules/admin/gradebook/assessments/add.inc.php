@@ -243,7 +243,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					}
 					//characteristic check
 					if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int"))) == 0) {
-						add_error("The <strong>Assessment Characteristic</strong> field is a required field.");
+						add_error("The <strong>" . $translate->_("Assessment Characteristic") . "</strong> field is a required field.");
 					} else if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int")))) {
 						$PROCESSED["characteristic_id"] = $assessment_characteristic;
 					}
@@ -626,10 +626,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tr>
 								<tr>
 									<td></td>
-									<td><label for="assessment_characteristic" class="form-required">Characteristic:</label></td>
+									<td><label for="assessment_characteristic" class="form-required"><?php echo $translate->_("Characteristic"); ?>:</label></td>
 									<td>
 										<select id="assessment_characteristic" name="assessment_characteristic">
-											<option value="">-- Select Assessment Characteristic --</option>
+											<option value="">-- Select <?php echo $translate->_("Assessment Characteristic"); ?> --</option>
 											<?php
 											$query = "	SELECT *
                                                             FROM `assessments_lu_meta`
@@ -1003,14 +1003,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								}
 							</style>
 							<a name="assessment-objectives-section"></a>
-							<h2 title="Assessment Objectives Section" class="collapsed">Assessment Objectives</h2>
+							<h2 title="Assessment <?php echo $translate->_("Objectives"); ?> Section" class="collapsed">Assessment <?php echo $translate->_("Objectives"); ?></h2>
 							<div id="assessment-objectives-section">
 								<?php
 								$objective_name = $translate->_("events_filter_controls");
 								$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
 								?>
 								<div class="objectives half left">
-									<h3>Objective Sets</h3>
+									<h3><?php echo $translate->_("Objective Sets"); ?></h3>
 									<ul class="tl-objective-list" id="objective_list_0">
 										<?php
 										foreach ($objectives as $objective) {
@@ -1079,11 +1079,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								}
 								?>
 								<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="assessment" data-resource-id="<?php echo $ASSESSMENT_ID;?>">
-									<h3>Mapped Objectives</h3>
+									<h3>Mapped <?php echo $translate->_("Objectives"); ?></h3>
 									<div class="clearfix">
 										<ul class="page-action" style="float: right">
 											<li class="last">
-												<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional Objectives</a>
+												<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional <?php echo $translate->_("Objectives"); ?></a>
 											</li>
 										</ul>
 									</div>
@@ -1096,7 +1096,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										?>
 										<div id="clinical-list-wrapper">
 											<a name="clinical-objective-list"></a>
-											<h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
+											<h2 id="flat-toggle"  title="<?php echo $translate->_("Clinical Objective List"); ?>" class="collapsed list-heading">Other <?php echo $translate->_("Objectives"); ?></h2>
 											<div id="clinical-objective-list">
 												<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
 													<?php
@@ -1114,7 +1114,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 																	<?php
 																	$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
 																	if ($set) {
-																		echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+																		echo "From the ".$translate->_("Objective Set").": <strong>".$set["objective_name"]."</strong><br/>";
 																	}
 
 																	echo $objective["objective_description"];
@@ -1138,7 +1138,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 									<div id="assessment-list-wrapper" <?php echo ($explicit_assessment_objectives)?"":" style=\"display:none;\"";?>>
 										<a name="assessment-objective-list"></a>
-										<h2 id="assessment-toggle"  title="Assessment Objective List" class="collapsed list-heading">Assessment Specific Objectives</h2>
+										<h2 id="assessment-toggle"  title="<?php echo $translate->_("Assessment Objective List"); ?>" class="collapsed list-heading"><?php echo $translate->_("Assessment Specific Objectives"); ?></h2>
 										<div id="assessment-objective-list">
 											<ul class="objective-list mapped-list" id="mapped_assessment_objectives" data-importance="assessment">
 												<?php
@@ -1157,7 +1157,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 																<?php
 																$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
 																if ($set) {
-																	echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+																	echo "From the ".$translate->_("Objective Set").": <strong>".$set["objective_name"]."</strong><br/>";
 																}
 
 																echo $objective["objective_description"];

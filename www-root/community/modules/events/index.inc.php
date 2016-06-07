@@ -323,7 +323,7 @@ function setDateValue(field, date) {
 		}
 	} else {
 		?>
-		<div class="calendar-nav">
+		<div class="calendar-nav space-below">
 			<div class="btn-group">
 				<?php echo "<a class=\"btn\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dstamp" => ($display_duration["start"] - 2)))."\" title=\"Previous ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\"><i class=\"icon-chevron-left\" style=\"margin-top:3px;\"></i></a>"; ?>
 				<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "day") ? "<a class=\"btn btn-primary\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "day"))."\">Day</a>" : "<a class=\"btn\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "day"))."\">Day</a>"); ?>
@@ -378,36 +378,48 @@ function setDateValue(field, date) {
 		if ($results) {
 			$last_date = 0;
 			$total_events = count($results);
-			
-			echo "<table class=\"calendar\" style=\"width: 100%\">\n";
+			?>
+		
+			<?php
+			echo "<table class=\"calendar space-above medium\" style=\"width: 100%\">\n";
 			echo "<colgroup>\n";
-			echo "	<col style=\"width: 15%\" />\n";
-			echo "	<col style=\"width: 85%\" />\n";
+			echo "	<col style=\"width: 20%\" />\n";
+			echo "	<col style=\"width: 80%\" />\n";
 			echo "</colgroup>\n";
 			echo "<tbody>\n";
+			echo "<tr>\n";
+			echo "	<td style=\"vertical-align: top\">";
 			
 			foreach ($results as $key => $result) {
 				if (($last_date < strtotime("00:00:00", $result["event_start"])) || ($last_date > strtotime("23:59:59", $result["event_start"]))) {
 					$last_date = $result["event_start"];
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\"><h3>".date("l, F dS, Y", $result["event_start"])."</h3></td>\n";
+
+					echo "	</td>\n";
 					echo "</tr>\n";
+
+					echo "<tr>\n";
+					echo "	<td style=\"vertical-align: top\">";
+					echo "		<div class=\"day-wrap\">";
+					echo "			<span class=\"schedule-day\">".date("d", $result["event_start"])."</span>";
+					echo "		</div>";
+					echo "		<div class=\"date-meta-wrap\">";
+					echo "			<span class=\"schedule-week\">".date("l", $result["event_start"])."</span>";
+					echo "			<span class=\"schedule-date\">".date("F, Y", $result["event_start"])."</span>";
+					echo "		</div>";
+					echo "	</td>\n";
+					echo "	<td style=\"vertical-align: top\">";
 				}
 
-				echo "<tr>\n";
-				echo "	<td style=\"vertical-align: top;\">\n";
+				echo "		<a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$PAGE_URL."?id=".$result["cevent_id"]."\" id=\"event-".$result["cevent_id"]."-title\" class=\"event-title\">".html_encode($result["event_title"])."</a>\n";
 
+				echo "		<div class=\"tagline\">";
 				if (strtotime("00:00:00", $result["event_start"]) != strtotime("00:00:00", $result["event_finish"])) {
-					echo date(DEFAULT_DATE_FORMAT, $result["event_start"])."<br />";
-					echo date(DEFAULT_DATE_FORMAT, $result["event_finish"]);
+					echo date(DEFAULT_DATE_FORMAT, $result["event_start"]) . " to " . date(DEFAULT_DATE_FORMAT, $result["event_finish"]);
 				} else {
 					echo date("H:i", $result["event_start"])." - ".date("H:i", $result["event_finish"]);
 				}
-				echo "	</td>\n";
-				echo "	<td>\n";
-				echo "		<a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$PAGE_URL."?id=".$result["cevent_id"]."\" id=\"event-".$result["cevent_id"]."-title\">".html_encode($result["event_title"])."</a>\n";
+				echo "<br />";
 
-				echo "		<div class=\"tagline\">";
 				if (isset($result["event_location"]) && trim($result["event_location"]) != "") {
 					echo "Location: " . $result["event_location"];
 				}
@@ -416,11 +428,10 @@ function setDateValue(field, date) {
 				echo "		</div>";
 
 				echo "		<div>".limit_chars(strip_tags(str_replace("<br />", " ", $result["event_description"])), 150)."</div>";
-
 				echo "		<hr />";
-				echo "	</td>\n";
-				echo "</tr>\n";
 			}
+			echo "	</td>\n";
+			echo "</tr>\n";
 			echo "</tbody>\n";
 			echo "</table>\n";
 			if ($LOGGED_IN) {

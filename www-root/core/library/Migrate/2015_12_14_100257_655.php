@@ -38,10 +38,6 @@ class Migrate_2015_12_14_100257_655 extends Entrada_Cli_Migrate {
      * @return int
      */
     public function audit() {
-        if ((Entrada_Settings::fetchValueByShortname("version_db") >= 16100) && version_compare("1.6.1", Entrada_Settings::fetchValueByShortname("version_entrada"), ">=")) {
-            return 1;
-        }
-
-        return 0;
+        return -1;
     }
 }

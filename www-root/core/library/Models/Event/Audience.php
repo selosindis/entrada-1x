@@ -22,83 +22,216 @@
  *
  */
 
-class Models_Event_Audience {
+class Models_Event_Audience extends Models_Base {
+    protected   $eaudience_id,
+                $event_id,
+                $audience_type,
+                $audience_value,
+                $custom_time,
+                $custom_time_start,
+                $custom_time_end,
+                $updated_date,
+                $updated_by;
 
-    private $eaudience_id,
-            $event_id,
-            $audience_type,
-            $audience_value,
-            $updated_date,
-            $updated_by;
+    protected $audience_name;
 
-    /**
-     * It's a constructor...
-     * @param type $arr
-     */
+    protected $table_name           = "event_audience";
+    protected $primary_key          = "eaudience_id";
+    protected $default_sort_column  = "eaudience_id";
+
     public function __construct($arr = NULL) {
-        if (is_array($arr)) {
-            $this->fromArray($arr);
+        parent::__construct($arr);
+    }
+
+    public function getID() {
+        return $this->eaudience_id;
+    }
+
+    public function getEventAudienceID() {
+        return $this->eaudience_id;
+    }
+
+    public function getEventID() {
+        return $this->event_id;
+    }
+
+    public function getAudienceType() {
+        return $this->audience_type;
+    }
+
+    public function getAudienceValue() {
+        return $this->audience_value;
+    }
+
+    public function getCustomTime() {
+        return $this->custom_time;
+    }
+
+    public function getCustomTimeStart() {
+        return $this->custom_time_start;
+    }
+
+    public function getCustomTimeEnd() {
+        return $this->custom_time_end;
+    }
+
+    public function setEventId($event_id) {
+        $this->event_id = $event_id;
+    }
+
+    public function setUpdatedBy($id) {
+        $this->updated_by = $id;
+    }
+
+    public function setUpdatedDate($time) {
+        $this->updated_date = $time;
+    }
+
+    public function setCustomTime($custom_time) {
+        $this->custom_time = $custom_time;
+    }
+
+    public function setCustomTimeStart($custom_time_start) {
+        $this->custom_time_start = $custom_time_start;
+    }
+
+    public function setCustomTimeEnd($custom_time_end) {
+        $this->custom_time_end = $custom_time_end;
+    }
+
+    public function getAudienceName() {
+        if (NULL === $this->audience_name) {
+            $audience_value = $this->audience_value;
+            $audience_type  = $this->audience_type;
+            switch ($audience_type) {
+                case "cohort" :
+                    $cohort = Models_Group::fetchRowByID($audience_value);
+                    if ($cohort) {
+                        $this->audience_name = $cohort->getGroupName();
+                    }
+                break;
+                case "group_id" :
+                    $cgroup = Models_Course_Group::fetchRowByID($audience_value);
+                    if ($cgroup) {
+                        $this->audience_name = $cgroup->getGroupName();
+                    }
+                    break;
+                case "proxy_id" :
+                    $student = User::fetchRowByID($audience_value);
+                    if ($student) {
+                        $this->audience_name = $student->getFullname();
+                    }
+                    break;
+            }
+        }
+
+        return $this->audience_name;
+    }
+
+    /* @return bool|Models_Event_Audience */
+    public static function fetchRowByID($eaudience_id = NULL) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "eaudience_id", "value" => $eaudience_id, "method" => "=")
+        ));
+    }
+
+    /* @return bool|Models_Event_Audience */
+    public static function fetchRowByEventIdTypeValue($event_id, $event_type, $event_value) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
+            array("key" => "audience_type", "value" => $event_type, "method" => "="),
+            array("key" => "audience_value", "value" => $event_value, "method" => "=")
+        ));
+    }
+
+    /* @return ArrayObject|Models_Event_Audience[] */
+    public static function fetchAllByEventIdType($event_id, $audience_type) {
+        $self = new self();
+        return $self->fetchAll(array(
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
+            array("key" => "audience_type", "value" => $audience_type, "method" => "=")
+        ));
+    }
+
+    /* @return ArrayObject|Models_Event_Audience[] */
+    public static function fetchAllByEventID($event_id = NULL) {
+        $self = new self();
+        return $self->fetchAll(array(
+            array("key" => "event_id", "value" => $event_id, "method" => "=")
+        ));
+    }
+
+    public function delete() {
+        global $db;
+        $sql = "DELETE FROM `" . $this->database_name . "`.`" . $this->table_name . "`
+                WHERE `" . $this->primary_key . "` = " . $db->qstr($this->getID());
+
+        if ($db->Execute($sql)) {
+            return true;
+        } else {
+            application_log("error", "Error deleting  ".get_called_class()." id[" . $this->getID() . "]. DB Said: " . $db->ErrorMsg());
+            return false;
         }
     }
 
-    /**
-     * Returns objects values in an array.
-     * @return Array
-     */
-    public function toArray() {
-        $arr = false;
-        $class_vars = get_class_vars(get_called_class());
-        if (isset($class_vars)) {
-            foreach ($class_vars as $class_var => $value) {
-                $arr[$class_var] = $this->$class_var;
-            }
+    public static function buildSimpleArray($audience_array) {
+        if (isset($audience_array) && is_array($audience_array)) {
+            $new_audience = array(
+                "audience_type"     => $audience_array["audience_type"],
+                "audience_value"    => (int)$audience_array["audience_value"],
+                "custom_time"       => (int)$audience_array["custom_time"],
+                "custom_time_start" => (int)$audience_array["custom_time_start"],
+                "custom_time_end"   => (int)$audience_array["custom_time_end"]
+            );
         }
-        return $arr;
+        return $new_audience;
     }
 
-    /**
-     * Uses key-value pair to set object values
-     * @return Models_Form
-     */
-    public function fromArray($arr) {
-        $class_vars = array_keys(get_class_vars(get_called_class()));
-        foreach ($arr as $class_var_name => $value) {
-            if (in_array($class_var_name, $class_vars)) {
-                $this->$class_var_name = $value;
+    public static function buildInsertUpdateDelete($array) {
+        $return = array(
+            "insert" => "",
+            "update" => "",
+            "delete" => ""
+        );
+
+        if (isset($array) && is_array($array)) {
+            $insert = array();
+            $update = array();
+            $delete = array();
+            $add    = $array["add"];
+            $remove = $array["remove"];
+            if (isset($add) && is_array($add) && !empty($add)) {
+                foreach($add as $key => $item) {
+                    // If the key is not set in the remove
+                    if (is_array($remove)) {
+                        if (!array_key_exists($key, $remove)) {
+                            $insert[$key] = unserialize($item);
+                        } else {
+                            $update[$key] = unserialize($item);
+                            unset($remove[$key]);
+                        }
+                    }
+                }
+                if (is_array($remove) && !empty($remove)) {
+                    foreach ($remove as $item) {
+                        $delete[$key] = unserialize($item);
+                    }
+                }
+            } else if (isset($remove) && is_array($remove) && !empty($remove)) {
+                // There is no add and there are some to remove, so they're delete not update
+                foreach($remove as $key => $item) {
+                    $delete[$key] = unserialize($item);
+                }
             }
+            $return = array(
+                "insert" => $insert,
+                "update" => $update,
+                "delete" => $delete
+            );
         }
-        return $this;
-    }
-    
-    public static function fetchRow($eaudience_id) {
-        global $db;
-        
-        $event_audience = false;
-        
-        $query = "SELECT * FROM `event_audience` WHERE `eaudience_id` = ?";
-        $result = $db->GetRow($query, array($eaudience_id));
-        if ($result) {
-            $event_audience = new self($result);
-        }
-        
-        return $event_audience;
-    }
-    
-    public static function fetchAllByEventID($event_id) {
-        global $db;
-        
-        $event_audience = false;
-        
-        $query = "SELECT * FROM `event_audience` WHERE `event_id` = ?";
-        $results = $db->GetAll($query, array($event_id));
-        if ($results) {
-            $event_audience = array();
-            foreach ($results as $result) {
-                $event_audience[] = new self($result);
-            }
-        }
-        
-        return $event_audience;
+        return $return;
     }
 
     /**
@@ -133,18 +266,10 @@ class Models_Event_Audience {
 
         return false;
     }
-    
-    public function getEventAudienceID() {
-        return $this->eaudience_id;
-    }
-    
-    public function getAudienceType() {
-        return $this->audience_type;
-    }
 
     public function getAudience($event_start = 0) {
         global $db;
-        
+
         $audience = false;
 
         $event_start = (int) $event_start;
@@ -158,14 +283,14 @@ class Models_Event_Audience {
                     $audience_data["audience_type"] = $this->audience_type;
                     $audience = new Models_Audience($audience_data);
                 }
-            break;
+                break;
             case "cohort" :
                 $query = "SELECT `group_id`, `group_name` FROM `groups` WHERE `group_id` = ?";
                 $result = $db->GetRow($query, array($this->audience_value));
                 if ($result) {
                     $audience_data["audience_name"] = $result["group_name"];
                     $audience_data["audience_type"] = $this->audience_type;
-                    $query = "SELECT b.`id`, b.`firstname`, b.`lastname` 
+                    $query = "SELECT b.`id`, b.`firstname`, b.`lastname`
                                 FROM `group_members` AS a
                                 JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                 ON a.`proxy_id` = b.`id`
@@ -175,19 +300,19 @@ class Models_Event_Audience {
                     if ($results) {
                         $audience_data["audience_members"] = $results;
                     }
-                    
+
                     if (!empty($audience_data)) {
                         $audience = new Models_Audience($audience_data);
                     }
                 }
-            break;
+                break;
             case "group_id" :
                 $query = "SELECT `cgroup_id`, `group_name` FROM `course_groups` WHERE `cgroup_id` = ?";
                 $result = $db->GetRow($query, array($this->audience_value));
                 if ($result) {
                     $audience_data["audience_name"] = $result["group_name"];
                     $audience_data["audience_type"] = $this->audience_type;
-                    $query = "SELECT b.`id`, b.`firstname`, b.`lastname` 
+                    $query = "SELECT b.`id`, b.`firstname`, b.`lastname`
                                 FROM `course_group_audience` AS a
                                 JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                 ON a.`proxy_id` = b.`id`
@@ -197,12 +322,12 @@ class Models_Event_Audience {
                     if ($results) {
                         $audience_data["audience_members"] = $results;
                     }
-                    
+
                     if (!empty($audience_data)) {
                         $audience = new Models_Audience($audience_data);
                     }
                 }
-            break;
+                break;
             case "course_id" :
                 $query = "SELECT *
                             FROM `course_audience` AS a
@@ -219,13 +344,13 @@ class Models_Event_Audience {
                         $audience_data["audience_name"] = $result["course_name"];
                         $audience_data["audience_type"] = $this->audience_type;
                     }
-                    
+
                     $members = array();
                     foreach ($course_audiences as $course_audience) {
                         if ($course_audience && $course_audience["audience_type"] == "group_id") {
-                            
+
                             $query = "SELECT b.`id`, b.`firstname`, b.`lastname`
-                                        FROM `group_members` AS a 
+                                        FROM `group_members` AS a
                                         JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                         ON a.`proxy_id` = b.`id`
                                         WHERE a.`group_id` = ?
@@ -236,19 +361,19 @@ class Models_Event_Audience {
                             }
                         }
                     }
-                    
+
                     $audience_data["audience_members"] = $members;
 
                     if (!empty($audience_data)) {
                         $audience = new Models_Audience($audience_data);
                     }
                 }
-            break;
+                break;
             default:
                 continue;
-            break;
+                break;
         }
-        
+
         return $audience;
     }
 }

@@ -18,6 +18,7 @@
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
     dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
     get_include_path(),
 )));
 
@@ -35,7 +36,7 @@ require_once "Entrada/lti/oauth/oauth-signature-method.interface.php";
 require_once "Entrada/lti/oauth/method/oauth-signature-method-hmac-sha1.class.php";
 require_once "Entrada/lti/LTIConsumer.class.php";
 
-require_once("Entrada/smarty/Smarty.class.php");
+require_once("Entrada/authentication/community_acl.inc.php");
 
 ob_start("on_checkout");
 
@@ -49,6 +50,7 @@ $COMMUNITY_ID = 0;
 $COMMUNITY_URL = "";
 $COMMUNITY_TEMPLATE	= "default";	// The default template (in the templates directory) to load.
 $COMMUNITY_THEME = "default";		// Optioanl default theme to load within a template.
+$COMMUNITY_ACL = new Entrada_Community_ACL();
 
 $COMMUNITY_PAGES = array();
 $COMMUNITY_MODULE = "default";		// Default module to load when a community starts.
@@ -406,6 +408,47 @@ if ($COMMUNITY_URL) {
 							 * $USER_ACCESS variable to 2; for the access of a community member.
 							 */
 							$USER_ACCESS = 2;
+						}
+					} else {
+						$query = "	SELECT `community_type_options` FROM `org_community_types`
+                                    WHERE `octype_id` = ? AND `organisation_id` = ?";
+
+						$type_options_serialized = $db->GetRow($query, array($community_details["octype_id"], $ENTRADA_USER->getActiveOrganisation()));
+						$type_options = json_decode($type_options_serialized["community_type_options"]);
+
+						if ($type_options_serialized && ($type_options = json_decode($type_options_serialized["community_type_options"])) && @count($type_options)) {
+							foreach ($type_options as $type_option => $active) {
+								if ($type_option == "course_website" && $active) {
+									/**
+									 * This community is a course website, therefore users with specific group and role combinations
+									 * need community member level access, and medtech:admin need community admin level access.
+									 */
+									$course_website_groups = Entrada_Settings::fetchByShortname("course_webpage_open_to_groups", $ENTRADA_USER->getActiveOrganisation());
+									if ($course_website_groups) {
+										$course_webpage_open_to_groups = json_decode($course_website_groups->getValue());
+										if ($course_webpage_open_to_groups) {
+											$user_group_role = $ENTRADA_USER->getActiveGroup() . ":" . $ENTRADA_USER->getActiveRole();
+											if (in_array($user_group_role, $course_webpage_open_to_groups)) {
+												$COMMUNITY_MEMBER = true;
+												$COMMUNITY_MEMBER_SINCE = time();
+												if ($user_group_role == "medtech:admin") {
+													/**
+													 * $USER_ACCESS variable to 3; for the access of a community administrator.
+													 */
+													$USER_ACCESS = 3;
+
+													$COMMUNITY_ADMIN = true;
+												} else {
+													/**
+													 * $USER_ACCESS variable to 2; for the access of a community member.
+													 */
+													$USER_ACCESS = 2;
+												}
+											}
+										}
+									}
+								}
+							}
 						}
 					}
 				} else {
@@ -869,7 +912,9 @@ if ($COMMUNITY_URL) {
 					$query	= "SELECT `cpage_id`, `page_title`, `page_content` FROM `community_pages` WHERE `page_url` = ".(isset($PAGE_URL) && $PAGE_URL ? $db->qstr($PAGE_URL) : "''")." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
 					$result	= $db->GetRow($query);
 					if ($result) {
-						$page_text .= "<a id=\"community-edit-button\" href=\"". COMMUNITY_URL.$COMMUNITY_URL .":pages?action=edit&amp;page=". $result["cpage_id"] ."\" class=\"btn btn-primary pull-right\">Edit Page</a>\n";
+						if ($COMMUNITY_ADMIN) {
+							$page_text .= "<a id=\"community-edit-button\" href=\"" . COMMUNITY_URL . $COMMUNITY_URL . ":pages?action=edit&amp;page=" . $result["cpage_id"] . "\" class=\"btn btn-primary pull-right\">Edit Page</a>\n";
+						}
 
 						if (trim($result["page_title"]) != "") {
 							$page_text .= "<h1>".html_encode($result["page_title"])."</h1>";
@@ -1070,10 +1115,7 @@ if ($COMMUNITY_URL) {
 		 */
 		header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found");
 
-		$ERROR++;
-		$ERRORSTR[] = "The community URL that you are trying to access does not exist or has been removed the system. Please use the <a href=\"".ENTRADA_URL."/communities\">Communities Search</a> feature to find the community that you are looking for.";
-
-		$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/communities\\'', 15000)";
+		add_error("The " . APPLICATION_NAME . " community that you are trying to access does not exist or has been removed from the system.<br /><br />Please use the <a href=\"".ENTRADA_URL."/communities\">Communities Search</a> feature to find the community that you are looking for.");
 
 		$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);
 		$smarty->assign("page_title", "Community Not Found");

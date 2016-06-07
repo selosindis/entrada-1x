@@ -252,9 +252,10 @@ CONFIGTEXT;
 		$query = "";
 		if ($handle = @fopen($dump_file, "r")) do {
 			$sql_line = fgets($handle);
+
 			if ((trim($sql_line) != "") && (strpos($sql_line, "--") === false)) {
 				$query .= $sql_line;
-				if (preg_match("/;[\040]*\$/", $sql_line)) {
+				if (preg_match('/;[\s]*$/', $sql_line)) {
 					$search = array("%ADMIN_FIRSTNAME%", "%ADMIN_LASTNAME%", "%ADMIN_EMAIL%", "%ADMIN_USERNAME%", "%ADMIN_PASSWORD_HASH%", "%AUTH_USERNAME%", "%AUTH_PASSWORD%");
 					$replace = array($this->admin_firstname, $this->admin_lastname, $this->admin_email, $this->admin_username, $this->admin_password_hash, $this->auth_username, $this->auth_password);
 					$query = str_replace($search, $replace, $query);

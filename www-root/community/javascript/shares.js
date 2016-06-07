@@ -18,6 +18,20 @@ function addFile() {
 	return;
 }
 
+function addLink() {
+	if (addLinkHTML) {
+		var link_id	= $$('#link_list div.link-upload').length;
+		var newItem		= new Template(addLinkHTML);
+
+		$('link_list').insert(newItem.evaluate({'link_id' : link_id, 'link_number' : (link_id + 1)}));
+
+		$('link_'+link_id).select('h2').each(function (el) {
+			new CollapseHeadings(el);
+		});
+	}
+
+	return;
+}
 
 function uploadFile() {
 	/*if($('display-upload-button')) {
@@ -36,6 +50,11 @@ function uploadFile() {
 	return;
 }
 
+function uploadLink() {
+	$('upload-link-form').submit();
+	return;
+}
+
 function fetchFilename(file_id) {
 	var fn = $('uploaded_file_'+file_id).value;
 	if (fn == ''){
@@ -51,6 +70,24 @@ function fetchFilename(file_id) {
 
 			$('file_'+file_id+'_title').value = filename;
 		$('file_'+file_id+'_title').focus();
+	}
+}
+
+function fetchLinkname(link_id) {
+	var fn = $('link_url_'+link_id).value;
+	if (fn == ''){
+		$('link_url_'+link_id).value = '';
+	} else {
+			var linkname = fn.match(/[\/|\\]([^\\\/]+)$/);
+
+			if (linkname == null) {
+				linkname = fn; // Opera
+			} else {
+				linkname = linkname[1];
+			}
+
+			$('link_'+link_id+'_title').value = linkname;
+		$('link_'+link_id+'_title').focus();
 	}
 }
 
@@ -89,3 +126,56 @@ function acceptButton(cb) {
     }
     return;
 }
+
+function loadLink(url) {
+    jQuery.ajax({
+        type: "POST",
+        url: url,
+        dataType: "json",
+        success: function(data) {
+            if (data["feedback"] == "success") {
+                var messageHTML = data["html"];
+                jQuery("#loadLink").html(messageHTML);
+            } else {
+                var messageHTML = "<div id='display-error-box' class='alert alert-block alert-error'><button class='close' data-dismiss='alert' type='button'>×</button><ul><li id='messageText'>Subject and message failed to load successfully. Error Message: " + data["errorMSG"] + "</li></ul></div>";
+                jQuery("#messageContainer2").show().html(messageHTML);
+            }
+        }
+    });
+}
+
+jQuery(document).ready(function() {                                
+    jQuery(document).on({
+         click: function () {
+            var target_value = jQuery(this).val();
+
+            if (target_value == 1) {
+                // hide iframe
+                jQuery('#iframe_resize').hide();
+            } else {
+                //show iframe
+                jQuery('#iframe_resize').show();
+            }
+         }
+     }, ".access_method"); //pass the element as an argument to .on
+
+    jQuery("#resizer-notes-link").click(function() {
+        if (jQuery("#iframe-dev-notes").is(':visible')) {
+            jQuery("#iframe-dev-notes td.dev-notes").hide();
+			jQuery("#iframe-dev-notes").hide();
+        } else {
+            jQuery("#iframe-dev-notes").show();
+			jQuery("#iframe-dev-notes td.dev-notes").show();
+        }
+    });
+
+    jQuery("#variables-notes-link").click(function() {
+        if (jQuery("#variables-dev-notes").is(':visible')) {
+            jQuery("#variables-dev-notes").hide();
+			jQuery("#variables-dev-notes td.dev-notes").hide();
+        } else {
+            jQuery("#variables-dev-notes").show();
+			jQuery("#variables-dev-notes td.dev-notes").show();
+        }
+    });
+});

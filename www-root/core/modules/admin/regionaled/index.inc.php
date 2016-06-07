@@ -86,7 +86,7 @@ if (!defined("IN_REGIONALED")) {
 					<tr>
 						<td class="modified">&nbsp;</td>
 						<td class="teacher">Student</td>
-						<td class="actions">Event Type</td>
+						<td class="actions"><?php echo $translate->_("Event Type"); ?></td>
 						<td class="title">Rotation Name</td>
 						<td class="actions">Region</td>
 						<td class="actions">Start Date</td>

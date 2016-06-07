@@ -291,7 +291,7 @@ if ($RECORD_ID) {
 					?>
 					<script type="text/javascript">
 					var addPhotoHTML =	'<div id="photo_#{photo_id}" class="photo-upload">' +
-										'	<table class="upload">' +
+										'	<table class="upload" style="width: 100%">' +
 										'	<colgroup>' +
 										'		<col style="width: 20%" />' +
 										'		<col style="width: 80%" />' +
@@ -319,7 +319,7 @@ if ($RECORD_ID) {
 										'		<tr>' +
 										'			<td><label for="photo_description_#{photo_id}" class="form-nrequired">Photo Description</label></td>' +
 										'			<td>' +
-										'				<textarea id="photo_description_#{photo_id}" name="photo_description[#{photo_id}]" style="width: 98%; height: 60px" cols="50" rows="5"></textarea>' +
+										'				<textarea id="photo_description_#{photo_id}" name="photo_description[#{photo_id}]" style="width: 97%; height: 60px; resize: vertical" cols="50" rows="5"></textarea>' +
 										'			</td>' +
 										'		</tr>' +
 										'		<tr>' +
@@ -341,7 +341,7 @@ if ($RECORD_ID) {
 											'	                            <input type="checkbox" name="enable_notifications[<?php echo $tmp_photo_id; ?>]" id="enable_notifications_<?php echo $tmp_photo_id; ?>" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>' +
 										    '                    		</td>' +
 										    '                    		<td>' +
-										    '                    			<label for="enable_notifications_<?php echo $tmp_photo_id; ?>" class="form-nrequired">Receive notifications when this users comment on this photo</label>' +
+										    '                    			<label for="enable_notifications_<?php echo $tmp_photo_id; ?>" class="form-nrequired">Receive notifications when users comment on this photo</label>' +
 										    '                    		</td>' +
 										    '                    	</tr>' +
 									        '                	</tbody>' +
@@ -455,7 +455,7 @@ if ($RECORD_ID) {
 												} else {
 													?>
 													<div id="photo_<?php echo $tmp_photo_id; ?>" class="photo-upload">
-														<table class="upload">
+														<table class="upload" style="width: 100%">
 															<colgroup>
 																	<col style="width: 20%" />
 																	<col style="width: 80%" />
@@ -494,8 +494,8 @@ if ($RECORD_ID) {
 																	<td>
 																		<label for="photo_description_<?php echo $tmp_photo_id; ?>" class="form-nrequired">Photo Description</label>
 																	</td>
-																	<td style="vertical-align: top">
-																		<textarea id="photo_description_<?php echo $tmp_photo_id; ?>" name="photo_description[<?php echo $tmp_photo_id; ?>]" style="width: 98%; height: 60px" cols="50" rows="5"><?php echo ((isset($photo_upload["description"])) ? html_encode($photo_upload["description"]) : ""); ?></textarea>
+																	<td style="vertical-align: top;">
+																		<textarea id="photo_description_<?php echo $tmp_photo_id; ?>" name="photo_description[<?php echo $tmp_photo_id; ?>]" style="width: 97%; height: 60px; resize: vertical" cols="50" rows="5"><?php echo ((isset($photo_upload["description"])) ? html_encode($photo_upload["description"]) : ""); ?></textarea>
 																	</td>
 																</tr>
 																<?php
@@ -514,7 +514,7 @@ if ($RECORD_ID) {
 																                            <input type="checkbox" name="enable_notifications[<?php echo $tmp_photo_id; ?>]" id="enable_notifications_<?php echo $tmp_photo_id; ?>" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?>/>
 														                        		</td>
 														                        		<td>
-														                        			<label for="enable_notifications_<?php echo $tmp_photo_id; ?>" class="form-nrequired">Receive notifications when this users comment on this photo</label>
+														                        			<label for="enable_notifications_<?php echo $tmp_photo_id; ?>" class="form-nrequired">Receive notifications when users comment on this photo</label>
 														                        		</td>
 														                        	</tr>
 													                        	</tbody>

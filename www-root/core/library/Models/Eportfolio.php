@@ -103,10 +103,16 @@ class Models_Eportfolio {
 						JOIN `portfolios` AS e
 						ON d.`portfolio_id` = e.`portfolio_id`
 						WHERE a.`from` = ".$db->qstr($advisor)."
-						GROUP BY e.`portfolio_id`";
+						GROUP BY e.`portfolio_id`
+						ORDER BY e.`portfolio_name` ASC";
 		} else {
-			$query = "SELECT * FROM `portfolios` WHERE ".(!is_null($organisation_id) ? " `organisation_id` = ".$db->qstr($organisation_id)." AND " : "")."`active` = ".$db->qstr($active);
+			$query = "SELECT *
+						FROM `portfolios`
+						WHERE ".(!is_null($organisation_id) ? " `organisation_id` = ".$db->qstr($organisation_id)." AND " : "")."
+						`active` = ".$db->qstr($active) ."
+						ORDER BY `portfolio_name` ASC";
 		}
+
 
 		$results = $db->GetAll($query);
 		if ($results) {

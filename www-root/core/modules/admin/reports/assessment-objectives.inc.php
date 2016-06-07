@@ -282,7 +282,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						<tr>
 							<td>Assessment Title</td>
 							<td>Description</td>
-							<td class="border-r">Objectives</td>
+							<td class="border-r"><?php echo $translate->_("Objectives"); ?></td>
 							<td class="border-r">Presentations</td>
 						</tr>
 					</thead>

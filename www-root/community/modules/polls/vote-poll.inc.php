@@ -71,8 +71,7 @@ if ($RECORD_ID) {
 										foreach ($response as $single_result) {
 											if ($response_count > $question["maximum_responses"] && !$shown_to_exceed) {
 												$shown_to_exceed = true;
-												$ERROR++;
-												$ERRORSTR[] = "You may only choose up to ".$question["maximum_responses"]." responses to question #".$count;
+												add_error("You may only choose up to ".$question["maximum_responses"]." responses to question #".$count);
 											} elseif (($choice = clean_input($single_result, array("trim","int")))) {
 												$chosen_responses[$total_response_count]["key"] = $key;
 												$chosen_responses[$total_response_count]["result"] = $choice;
@@ -81,22 +80,19 @@ if ($RECORD_ID) {
 											}
 										}
 										if ($response_count < $question["minimum_responses"]) {
-											$ERROR++;
-											$ERRORSTR[] = "You must choose at least ".$question["minimum_responses"]." responses to question #".$count;
+											add_error("You must choose at least ".$question["minimum_responses"]." responses to question #".$count);
 										}
 									} elseif (($choice = clean_input($response, array("trim", "int")))) {
 										$chosen_responses[$total_response_count]["result"] = $choice;
 										$chosen_responses[$total_response_count]["key"] =  $key;
 										$total_response_count++;
 									} else {
-										$ERROR++;
-										$ERRORSTR[] = "You haven't made a choice for question #".$count.".";
+										add_error("You haven't made a choice for question #".$count.".");
 									}
 									$count++;
 								}
 							} else {
-								$ERROR++;
-								$ERRORSTR[] = "You haven't selected answers for all the questions, please try again.";
+								add_error("You haven't selected answers for all the questions, please try again.");
 							}
 							
 							if (!$ERROR) {

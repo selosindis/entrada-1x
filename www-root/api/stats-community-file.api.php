@@ -28,6 +28,7 @@
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
     dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
     get_include_path(),
 )));
 
@@ -37,22 +38,8 @@
 require_once("init.inc.php");
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 
-    //$PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
-
-//    if ($_POST["sortID"] == "name") {
-//        $sortOrder = "users.lastname";
-//    }
-//    if ($_POST["sortID"] == "date") {
-//        $sortOrder = "lastViewedTime";
-//    }
-//    if ($_POST["sortID"] == "view") {
-//        $sortOrder = "views";
-//    }                          
-//    if(isset($_POST["EFILE_ID"])) {
-//        $EFILE_ID = $_POST["EFILE_ID"];
-//    }
     if (isset($_POST["action"]) && $_POST["action"] != "") {
-        $action = $_POST["action_field"];
+        $action = $_POST["action"];
     }
     
     if (isset($_POST["action_field"]) && $_POST["action_field"] != "") {
@@ -68,24 +55,36 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
     }
     
     $html = "";
-    $file_views = Models_Statistic::getCommunityFileViews($module, $action_value);
-    if ($file_views) {
-        foreach ($file_views as $file_view) {
-            $html .= "<tr>";
-            $html .= "<td>" . $file_view["lastname"] . ", " . $file_view["firstname"] . "</td>";
-            $html .= "<td class='centered'>" . $file_view["views"] . "</td>";
-            $html .= "<td>" . date("Y-m-d H:i", $file_view["last_viewed_time"]) . "</td>";
-        $html .= "</tr>";
+        
+    switch ($action) {
+        case "link_view":
+            $views = Models_Statistic::getCommunityLinkViews($module, $action_value);
+            break;
+        case "folder_view":
+            $views = Models_Statistic::getCommunityFolderViews($module, $action_value);
+            break;
+        case "file_download":
+        default:
+            $views = Models_Statistic::getCommunityFileDownloads($module, $action_value);
+            break;
+        
+    }
+    
+    if ($views) {
+        foreach ($views as $view) {
+            $output[] = array(
+                $view["lastname"] . ", " . $view["firstname"],
+                $view["views"],
+                date("Y-m-d H:i", $view["last_viewed_time"])
+
+            );
         }
+        $export = array("status" => "success", "data" => $output);
     } else {
-        $html .= "<tr>";
-            $html .= "<td colspan='3'>This file has not yet been viewed by users.</td>";
-        $html .= "</tr>";
+        $export = array("status" => "success", "data" => array("This item has not been viewed"));
     }
      
-    $record = array();
-    $record["html"] = $html;
     header("Content-type: application/json");
-    echo json_encode($record);
+    echo json_encode($export);
 }
 ?>

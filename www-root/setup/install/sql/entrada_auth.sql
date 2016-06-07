@@ -1,7 +1,12 @@
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `acl_permissions` (
@@ -18,10 +23,11 @@ CREATE TABLE `acl_permissions` (
   `assertion` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`permission_id`),
   KEY `entity_type` (`entity_type`,`entity_value`)
-) ENGINE=MyISAM AUTO_INCREMENT=134 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=138 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `acl_permissions` VALUES (1,'community',NULL,NULL,NULL,1,1,1,NULL,NULL,'NotGuest'),(2,'course',NULL,'group','student',1,NULL,0,NULL,NULL,'CourseEnrollment'),(3,'course',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'ResourceOrganisation&NotGuest'),(4,'dashboard',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(5,'discussion',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(6,'library',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(7,'people',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(8,'podcast',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(9,'profile',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(10,'search',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(11,'event',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'ResourceOrganisation&NotGuest'),(12,'resourceorganisation',1,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(13,'coursecontent',NULL,'role','pcoordinator',1,NULL,NULL,1,NULL,'CourseOwner'),(14,'evaluation',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(15,'evaluationform',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(16,'evaluationformquestion',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(17,'event',NULL,'role','pcoordinator',1,1,NULL,NULL,NULL,'CourseOwner'),(18,'event',NULL,'role','pcoordinator',1,NULL,NULL,1,1,'EventOwner'),(19,'event',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'EventEnrollment&NotGuest'),(20,'event',NULL,'group','student',1,NULL,0,NULL,NULL,'NotEventEnrollment'),(21,'eventcontent',NULL,'role','pcoordinator',1,NULL,NULL,1,NULL,'EventOwner'),(22,'coursecontent',NULL,'role','director',1,NULL,NULL,1,NULL,'CourseOwner'),(23,'coursecontent',NULL,'role','lecturer',1,NULL,NULL,1,NULL,'CourseOwner'),(24,'eventcontent',NULL,'role','lecturer',1,NULL,NULL,1,NULL,'EventOwner'),(25,'eventcontent',NULL,'role','director',1,NULL,NULL,1,NULL,'EventOwner'),(26,'eventcontent',NULL,'group:role','faculty:admin',1,NULL,NULL,1,NULL,'EventOwner'),(27,NULL,NULL,'group:role','medtech:admin',1,1,1,1,1,NULL),(28,'notice',NULL,'group:role','faculty:director',1,1,NULL,1,1,'ResourceOrganisation'),(29,'notice',NULL,'group:role','faculty:admin',1,1,NULL,1,1,'ResourceOrganisation'),(30,'notice',NULL,'group:role','staff:admin',1,1,NULL,1,1,'ResourceOrganisation'),(31,'notice',NULL,'group:role','staff:pcoordinator',1,1,NULL,1,1,'ResourceOrganisation'),(32,'resourceorganisation',1,'organisation:group:role','1:faculty:director',1,1,NULL,NULL,NULL,NULL),(33,'resourceorganisation',1,'organisation:group:role','1:faculty:admin',1,1,NULL,NULL,NULL,NULL),(34,'resourceorganisation',1,'organisation:group:role','1:staff:admin',1,1,NULL,NULL,NULL,NULL),(35,'resourceorganisation',1,'organisation:group:role','1:staff:pcoordinator',1,1,NULL,NULL,NULL,NULL),(36,'resourceorganisation',NULL,NULL,NULL,1,NULL,NULL,0,NULL,NULL),(37,'poll',NULL,'role','admin',1,1,NULL,1,1,NULL),(38,'poll',NULL,'role','pcoordinator',1,1,NULL,1,1,NULL),(39,'quiz',NULL,'group:role','faculty:director',1,NULL,NULL,1,1,'QuizOwner'),(40,'firstlogin',NULL,NULL,NULL,1,NULL,1,NULL,NULL,NULL),(41,'community',NULL,NULL,NULL,1,NULL,NULL,1,1,'CommunityOwner'),(42,'quiz',NULL,'group:role','faculty:admin',1,NULL,NULL,1,1,'QuizOwner'),(43,'quiz',NULL,'group:role','faculty:lecturer',1,NULL,NULL,1,1,'QuizOwner'),(44,'quiz',NULL,'group:role','resident:lecturer',1,NULL,NULL,1,1,'QuizOwner'),(45,'quiz',NULL,'group:role','staff:admin',1,NULL,NULL,1,1,'QuizOwner'),(46,'quiz',NULL,'group:role','staff:pcoordinator',1,NULL,NULL,1,1,'QuizOwner'),(47,NULL,NULL,'group:role','guest:communityinvite',1,0,0,0,0,NULL),(48,'clerkship',NULL,'group','student',1,NULL,1,NULL,NULL,'Clerkship'),(49,'clerkship',NULL,'group','staff',1,NULL,1,NULL,NULL,NULL),(50,'clerkship',NULL,'group','faculty',1,NULL,1,NULL,NULL,NULL),(51,NULL,NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(52,'resourceorganisation',1,'organisation:group:role','1:staff:admin',1,1,1,1,1,NULL),(53,'clerkship',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(54,'clerkship',NULL,'group:role','faculty:clerkship',1,1,1,1,1,NULL),(55,'quiz',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(56,'quiz',NULL,'group','faculty',1,1,NULL,NULL,NULL,NULL),(57,'quiz',NULL,'group','staff',1,1,NULL,NULL,NULL,NULL),(58,'quiz',NULL,'group:role','resident:lecturer',1,1,NULL,NULL,NULL,NULL),(59,'photo',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'Photo'),(60,'photo',NULL,'group','faculty',1,NULL,1,NULL,NULL,NULL),(61,'photo',NULL,'group','staff',1,NULL,1,NULL,NULL,NULL),(62,'clerkshipschedules',NULL,'group','faculty',1,NULL,1,NULL,NULL,NULL),(63,'clerkshipschedules',NULL,'group','staff',1,NULL,1,NULL,NULL,NULL),(64,'reportindex',NULL,'organisation:group:role','1:staff:admin',1,NULL,1,NULL,NULL,NULL),(65,'report',NULL,'organisation:group:role','1:staff:admin',1,NULL,1,NULL,NULL,NULL),(66,'assistant_support',NULL,'group:role','faculty:director',1,1,1,1,1,NULL),(67,'assistant_support',NULL,'group:role','faculty:clerkship',1,1,1,1,1,NULL),(68,'assistant_support',NULL,'group:role','faculty:admin',1,1,1,1,1,NULL),(69,'assistant_support',NULL,'group:role','faculty:lecturer',1,1,1,1,1,NULL),(70,'assistant_support',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(71,'assistant_support',NULL,'group:role','staff:pcoordinator',1,1,1,1,1,NULL),(72,'lottery',NULL,'group','student',1,NULL,1,NULL,NULL,'ClerkshipLottery'),(73,'lottery',NULL,'group:role','staff:admin',1,NULL,1,NULL,NULL,NULL),(74,'lottery',NULL,'group:role','faculty:director',1,NULL,1,NULL,NULL,NULL),(75,'logbook',NULL,'group:role','staff:pcoordinator',1,NULL,1,1,NULL,NULL),(76,'annualreport',NULL,'group','faculty',1,1,1,1,1,NULL),(77,'gradebook',NULL,'role','pcoordinator',1,NULL,1,NULL,NULL,'GradebookOwner'),(78,'gradebook',NULL,'group:role','faculty:admin',1,NULL,1,NULL,NULL,'GradebookOwner'),(79,'gradebook',NULL,'group:role','faculty:director',1,NULL,1,NULL,NULL,'GradebookOwner'),(80,'dashboard',NULL,NULL,NULL,1,NULL,NULL,1,NULL,'NotGuest'),(81,'regionaled',NULL,'group','resident',1,NULL,1,NULL,NULL,'HasAccommodations'),(82,'regionaled',NULL,'group','student',1,NULL,1,NULL,NULL,'HasAccommodations'),(83,'regionaled_tab',NULL,'group','resident',1,NULL,1,NULL,NULL,'HasAccommodations'),(84,'awards',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(85,'mspr',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(86,'mspr',NULL,'group','student',1,NULL,1,1,NULL,NULL),(87,'user',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(88,'incident',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(89,'task',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(90,'task',NULL,'group:role','faculty:director',1,NULL,1,1,1,'TaskOwner'),(91,'task',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'TaskRecipient'),(92,'task',NULL,'role','pcoordinator',1,NULL,1,1,1,'TaskOwner'),(93,'task',NULL,'group:role','faculty:director',1,1,NULL,NULL,NULL,'CourseOwner'),(94,'task',NULL,'role','pcoordinator',1,1,NULL,NULL,NULL,'CourseOwner'),(95,'taskverification',NULL,NULL,NULL,1,NULL,NULL,1,NULL,'TaskVerifier'),(96,'task',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'TaskVerifier'),(97,'tasktab',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'ShowTaskTab'),(98,'mydepartment',NULL,'group','faculty',1,1,1,1,1,'DepartmentHead'),(99,'myowndepartment',NULL,'user','1',1,1,1,1,1,NULL),(100,'annualreportadmin',NULL,'group:role','medtech:admin',1,1,1,1,1,NULL),(101,'gradebook',NULL,'group','student',1,NULL,1,NULL,NULL,NULL),(102,'metadata',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(103,'evaluation',NULL,'group','faculty',1,NULL,1,NULL,NULL,'IsEvaluated'),(104,'evaluation',NULL,'group','faculty',1,NULL,1,NULL,NULL,'EvaluationReviewer'),(105,'evaluationform',NULL,'group','faculty',1,1,1,1,NULL,'EvaluationFormAuthor&ResourceOrganisation'),(106,'evaluationquestion',NULL,'group','faculty',1,1,1,1,NULL,'ResourceOrganisation'),(107,'evaluationquestion',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(108,'encounter_tracking',NULL,'group','student',NULL,NULL,1,NULL,NULL,'LoggableFound'),(109,'encounter_tracking',NULL,'role','admin',NULL,NULL,0,NULL,NULL,NULL),(110,'coursecontent',NULL,'group:role','staff:admin',NULL,NULL,0,NULL,NULL,'NotCourseOwner'),(111,'coursecontent',NULL,'group','faculty',NULL,NULL,0,NULL,NULL,'NotCourseOwner'),(112,'gradebook',NULL,'group','faculty',NULL,NULL,1,1,NULL,'GradebookDropbox'),(113,'gradebook',NULL,'group:role','staff:admin',NULL,NULL,1,1,NULL,'GradebookDropbox'),(114,'assignment',NULL,'group','faculty',NULL,NULL,1,1,NULL,'AssignmentContact'),(115,'assessment',NULL,'group','faculty',NULL,NULL,NULL,1,NULL,'AssessmentContact'),(116,'assignment',NULL,'group:role','staff:admin',NULL,NULL,1,1,NULL,'AssignmentContact'),(117,'assessment',NULL,'group:role','staff:admin',NULL,NULL,NULL,1,NULL,'AssessmentContact'),(118,'eportfolio',NULL,'group:role','medtech:admin',1,1,1,1,1,'EportfolioOwner'),(119,'eportfolio',NULL,'group','student',1,NULL,1,NULL,NULL,'EportfolioOwner'),(120,'eportfolio',NULL,'group','resident',1,NULL,1,NULL,NULL,'EportfolioOwner'),(121,'eportfolio',NULL,'group','alumni',1,NULL,1,NULL,NULL,'EportfolioOwner'),(122,'eportfolio',NULL,'group','faculty',1,NULL,1,NULL,NULL,'EportfolioOwner'),(123,'eportfolio-review',NULL,'group:role','medtech:admin',1,1,1,1,NULL,'EportfolioArtifactReviewer'),(124,'eportfolio-artifact-entry',NULL,'group','student',1,1,1,1,1,'EportfolioArtifactEntryOwner'),(125,'eportfolio-review',NULL,'group','faculty',1,1,1,1,1,NULL),(126,'eportfolio-mentor-view',NULL,'group','faculty',1,1,1,1,1,NULL),(127,'eportfolio-artifact-entry',NULL,'group','student',1,1,1,NULL,NULL,'EportfolioArtifactSharePermitted'),(128,'eportfolio-manage',NULL,'group:role','medtech:admin',1,1,1,NULL,NULL,NULL),(129,'eportfolio-artifact-entry',NULL,'group','faculty',1,1,1,NULL,NULL,NULL),(130,'eportfolio-review-interface',NULL,'group','faculty',1,1,1,1,1,NULL),(131,'masquerade',NULL,'group:role','medtech:admin',1,1,1,1,1,NULL),(132,'observerships',NULL,'role','admin',1,1,1,1,1,NULL),(133,'observerships',NULL,'role','student',1,1,1,1,0,NULL);
+INSERT INTO `acl_permissions` VALUES (1,'community',NULL,NULL,NULL,1,1,1,NULL,NULL,'NotGuest'),(2,'course',NULL,'group','student',1,NULL,0,NULL,NULL,'CourseEnrollment'),(3,'course',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'ResourceOrganisation&NotGuest'),(4,'dashboard',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(5,'discussion',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(6,'library',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(7,'people',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(8,'podcast',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(9,'profile',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(10,'search',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(11,'event',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'ResourceOrganisation&NotGuest'),(12,'resourceorganisation',1,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(13,'coursecontent',NULL,'role','pcoordinator',1,NULL,NULL,1,NULL,'CourseOwner'),(14,'evaluation',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(15,'evaluationform',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(16,'evaluationformquestion',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(17,'event',NULL,'role','pcoordinator',1,1,NULL,NULL,NULL,'CourseOwner'),(18,'event',NULL,'role','pcoordinator',1,NULL,NULL,1,1,'EventOwner'),(19,'event',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'EventEnrollment&NotGuest'),(20,'event',NULL,'group','student',1,NULL,0,NULL,NULL,'NotEventEnrollment'),(21,'eventcontent',NULL,'role','pcoordinator',1,NULL,NULL,1,NULL,'EventOwner'),(22,'coursecontent',NULL,'role','director',1,NULL,NULL,1,NULL,'CourseOwner'),(23,'coursecontent',NULL,'role','lecturer',1,NULL,NULL,1,NULL,'CourseOwner'),(24,'eventcontent',NULL,'role','lecturer',1,NULL,NULL,1,NULL,'EventOwner'),(25,'eventcontent',NULL,'role','director',1,NULL,NULL,1,NULL,'EventOwner'),(26,'eventcontent',NULL,'group:role','faculty:admin',1,NULL,NULL,1,NULL,'EventOwner'),(27,NULL,NULL,'group:role','medtech:admin',1,1,1,1,1,NULL),(28,'notice',NULL,'group:role','faculty:director',1,1,NULL,1,1,'ResourceOrganisation'),(29,'notice',NULL,'group:role','faculty:admin',1,1,NULL,1,1,'ResourceOrganisation'),(30,'notice',NULL,'group:role','staff:admin',1,1,NULL,1,1,'ResourceOrganisation'),(31,'notice',NULL,'group:role','staff:pcoordinator',1,1,NULL,1,1,'ResourceOrganisation'),(32,'resourceorganisation',1,'organisation:group:role','1:faculty:director',1,1,NULL,NULL,NULL,NULL),(33,'resourceorganisation',1,'organisation:group:role','1:faculty:admin',1,1,NULL,NULL,NULL,NULL),(34,'resourceorganisation',1,'organisation:group:role','1:staff:admin',1,1,NULL,NULL,NULL,NULL),(35,'resourceorganisation',1,'organisation:group:role','1:staff:pcoordinator',1,1,NULL,NULL,NULL,NULL),(36,'resourceorganisation',NULL,NULL,NULL,1,NULL,NULL,0,NULL,NULL),(136,'poll',NULL,'group:role','faculty:admin',1,1,NULL,1,1,NULL),(38,'poll',NULL,'role','pcoordinator',1,1,NULL,1,1,NULL),(39,'quiz',NULL,'group:role','faculty:director',1,NULL,NULL,1,1,'QuizOwner'),(40,'firstlogin',NULL,NULL,NULL,1,NULL,1,NULL,NULL,NULL),(41,'community',NULL,NULL,NULL,1,NULL,NULL,1,1,'CommunityOwner'),(42,'quiz',NULL,'group:role','faculty:admin',1,NULL,NULL,1,1,'QuizOwner'),(43,'quiz',NULL,'group:role','faculty:lecturer',1,NULL,NULL,1,1,'QuizOwner'),(44,'quiz',NULL,'group:role','resident:lecturer',1,NULL,NULL,1,1,'QuizOwner'),(45,'quiz',NULL,'group:role','staff:admin',1,NULL,NULL,1,1,'QuizOwner'),(46,'quiz',NULL,'group:role','staff:pcoordinator',1,NULL,NULL,1,1,'QuizOwner'),(47,NULL,NULL,'group:role','guest:communityinvite',1,0,0,0,0,NULL),(48,'clerkship',NULL,'group','student',1,NULL,1,NULL,NULL,'Clerkship'),(49,'clerkship',NULL,'group','staff',1,NULL,1,NULL,NULL,NULL),(50,'clerkship',NULL,'group','faculty',1,NULL,1,NULL,NULL,NULL),(51,NULL,NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(52,'resourceorganisation',1,'organisation:group:role','1:staff:admin',1,1,1,1,1,NULL),(53,'clerkship',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(54,'clerkship',NULL,'group:role','faculty:clerkship',1,1,1,1,1,NULL),(55,'quiz',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'NotGuest'),(56,'quiz',NULL,'group','faculty',1,1,NULL,NULL,NULL,NULL),(57,'quiz',NULL,'group','staff',1,1,NULL,NULL,NULL,NULL),(58,'quiz',NULL,'group:role','resident:lecturer',1,1,NULL,NULL,NULL,NULL),(59,'photo',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'Photo'),(60,'photo',NULL,'group','faculty',1,NULL,1,NULL,NULL,NULL),(61,'photo',NULL,'group','staff',1,NULL,1,NULL,NULL,NULL),(62,'clerkshipschedules',NULL,'group','faculty',1,NULL,1,NULL,NULL,NULL),(63,'clerkshipschedules',NULL,'group','staff',1,NULL,1,NULL,NULL,NULL),(64,'reportindex',NULL,'organisation:group:role','1:staff:admin',1,NULL,1,NULL,NULL,NULL),(65,'report',NULL,'organisation:group:role','1:staff:admin',1,NULL,1,NULL,NULL,NULL),(66,'assistant_support',NULL,'group:role','faculty:director',1,1,1,1,1,NULL),(67,'assistant_support',NULL,'group:role','faculty:clerkship',1,1,1,1,1,NULL),(68,'assistant_support',NULL,'group:role','faculty:admin',1,1,1,1,1,NULL),(69,'assistant_support',NULL,'group:role','faculty:lecturer',1,1,1,1,1,NULL),(70,'assistant_support',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(71,'assistant_support',NULL,'group:role','staff:pcoordinator',1,1,1,1,1,NULL),(72,'lottery',NULL,'group','student',1,NULL,1,NULL,NULL,'ClerkshipLottery'),(73,'lottery',NULL,'group:role','staff:admin',1,NULL,1,NULL,NULL,NULL),(74,'lottery',NULL,'group:role','faculty:director',1,NULL,1,NULL,NULL,NULL),(75,'logbook',NULL,'group:role','staff:pcoordinator',1,NULL,1,1,NULL,NULL),(76,'annualreport',NULL,'group','faculty',1,1,1,1,1,NULL),(77,'gradebook',NULL,'role','pcoordinator',1,NULL,1,NULL,NULL,'GradebookOwner'),(78,'gradebook',NULL,'group:role','faculty:admin',1,NULL,1,NULL,NULL,'GradebookOwner'),(79,'gradebook',NULL,'group:role','faculty:director',1,NULL,1,NULL,NULL,'GradebookOwner'),(80,'dashboard',NULL,NULL,NULL,1,NULL,NULL,1,NULL,'NotGuest'),(81,'regionaled',NULL,'group','resident',1,NULL,1,NULL,NULL,'HasAccommodations'),(82,'regionaled',NULL,'group','student',1,NULL,1,NULL,NULL,'HasAccommodations'),(83,'regionaled_tab',NULL,'group','resident',1,NULL,1,NULL,NULL,'HasAccommodations'),(84,'awards',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(85,'mspr',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(86,'mspr',NULL,'group','student',1,NULL,1,1,NULL,NULL),(87,'user',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(88,'incident',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(89,'task',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(90,'task',NULL,'group:role','faculty:director',1,NULL,1,1,1,'TaskOwner'),(91,'task',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'TaskRecipient'),(92,'task',NULL,'role','pcoordinator',1,NULL,1,1,1,'TaskOwner'),(93,'task',NULL,'group:role','faculty:director',1,1,NULL,NULL,NULL,'CourseOwner'),(94,'task',NULL,'role','pcoordinator',1,1,NULL,NULL,NULL,'CourseOwner'),(95,'taskverification',NULL,NULL,NULL,1,NULL,NULL,1,NULL,'TaskVerifier'),(96,'task',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'TaskVerifier'),(97,'tasktab',NULL,NULL,NULL,1,NULL,1,NULL,NULL,'ShowTaskTab'),(98,'mydepartment',NULL,'group','faculty',1,1,1,1,1,'DepartmentHead'),(99,'myowndepartment',NULL,'user','1',1,1,1,1,1,NULL),(100,'annualreportadmin',NULL,'group:role','medtech:admin',1,1,1,1,1,NULL),(101,'gradebook',NULL,'group','student',1,NULL,1,NULL,NULL,NULL),(102,'metadata',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(103,'evaluation',NULL,'group','faculty',1,NULL,1,NULL,NULL,'IsEvaluated'),(104,'evaluation',NULL,'group','faculty',1,NULL,1,NULL,NULL,'EvaluationReviewer'),(105,'evaluationform',NULL,'group','faculty',1,1,1,1,NULL,'EvaluationFormAuthor&ResourceOrganisation'),(106,'evaluationquestion',NULL,'group','faculty',1,1,1,1,NULL,'ResourceOrganisation'),(107,'evaluationquestion',NULL,'group:role','staff:admin',1,1,1,1,1,'ResourceOrganisation'),(108,'encounter_tracking',NULL,'group','student',NULL,NULL,1,NULL,NULL,'LoggableFound'),(109,'encounter_tracking',NULL,'role','admin',NULL,NULL,0,NULL,NULL,NULL),(110,'coursecontent',NULL,'group:role','staff:admin',NULL,NULL,0,NULL,NULL,'NotCourseOwner'),(111,'coursecontent',NULL,'group','faculty',NULL,NULL,0,NULL,NULL,'NotCourseOwner'),(112,'gradebook',NULL,'group','faculty',NULL,NULL,1,1,NULL,'GradebookDropbox'),(113,'gradebook',NULL,'group:role','staff:admin',NULL,NULL,1,1,NULL,'GradebookDropbox'),(114,'assignment',NULL,'group','faculty',NULL,NULL,1,1,NULL,'AssignmentContact'),(115,'assessment',NULL,'group','faculty',NULL,NULL,NULL,1,NULL,'AssessmentContact'),(116,'assignment',NULL,'group:role','staff:admin',NULL,NULL,1,1,NULL,'AssignmentContact'),(117,'assessment',NULL,'group:role','staff:admin',NULL,NULL,NULL,1,NULL,'AssessmentContact'),(118,'eportfolio',NULL,'group:role','medtech:admin',1,1,1,1,1,'EportfolioOwner'),(119,'eportfolio',NULL,'group','student',1,NULL,1,NULL,NULL,'EportfolioOwner'),(120,'eportfolio',NULL,'group','resident',1,NULL,1,NULL,NULL,'EportfolioOwner'),(121,'eportfolio',NULL,'group','alumni',1,NULL,1,NULL,NULL,'EportfolioOwner'),(122,'eportfolio',NULL,'group','faculty',1,NULL,1,NULL,NULL,'EportfolioOwner'),(123,'eportfolio-review',NULL,'group:role','medtech:admin',1,1,1,1,NULL,'EportfolioArtifactReviewer'),(124,'eportfolio-artifact-entry',NULL,'group','student',1,1,1,1,1,'EportfolioArtifactEntryOwner'),(125,'eportfolio-review',NULL,'group','faculty',1,1,1,1,1,NULL),(126,'eportfolio-mentor-view',NULL,'group','faculty',1,1,1,1,1,NULL),(127,'eportfolio-artifact-entry',NULL,'group','student',1,1,1,NULL,NULL,'EportfolioArtifactSharePermitted'),(128,'eportfolio-manage',NULL,'group:role','medtech:admin',1,1,1,NULL,NULL,NULL),(129,'eportfolio-artifact-entry',NULL,'group','faculty',1,1,1,NULL,NULL,NULL),(130,'eportfolio-review-interface',NULL,'group','faculty',1,1,1,1,1,NULL),(131,'masquerade',NULL,'group:role','medtech:admin',1,1,1,1,1,NULL),(134,'observerships',NULL,'group:role','faculty:admin',1,1,1,1,1,NULL),(133,'observerships',NULL,'role','student',1,1,1,1,0,NULL),(135,'observerships',NULL,'group:role','staff:admin',1,1,1,1,1,NULL),(137,'poll',NULL,'group:role','staff:admin',1,1,NULL,1,1,NULL);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `department_heads` (
@@ -31,6 +37,7 @@ CREATE TABLE `department_heads` (
   PRIMARY KEY (`department_heads_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -64,6 +71,7 @@ CREATE TABLE `departments` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `departments` VALUES (1,1,5,0,'Medical IT','','','Kingston','ON',9,'CA',39,'','','','','',NULL,1,0,0);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `entity_type` (
@@ -74,6 +82,7 @@ CREATE TABLE `entity_type` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `entity_type` VALUES (1,'Faculty'),(2,'School'),(3,'Department'),(4,'Division'),(5,'Unit');
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `location_ipranges` (
@@ -85,6 +94,7 @@ CREATE TABLE `location_ipranges` (
   KEY `location_id` (`location_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -109,6 +119,7 @@ CREATE TABLE `locations` (
   PRIMARY KEY (`location_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -139,6 +150,7 @@ CREATE TABLE `organisations` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `organisations` VALUES (1,'Your University','University Avenue','','Kingston','ON','CA','K7L3N6','613-533-2000','','','http://www.yourschool.ca',NULL,'default',NULL,NULL,NULL,NULL,1,1);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `password_reset` (
@@ -152,6 +164,7 @@ CREATE TABLE `password_reset` (
   UNIQUE KEY `hash` (`hash`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -172,6 +185,7 @@ CREATE TABLE `registered_apps` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `registered_apps` VALUES (1,'%AUTH_USERNAME%',MD5('%AUTH_PASSWORD%'),'%','%',1,'Entrada');
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sessions` (
@@ -186,6 +200,7 @@ CREATE TABLE `sessions` (
   KEY `sess2_expireref` (`expireref`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -202,6 +217,7 @@ CREATE TABLE `statistics` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `system_group_organisation` (
@@ -212,16 +228,19 @@ CREATE TABLE `system_group_organisation` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `system_group_organisation` VALUES (1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `system_groups` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `group_name` varchar(45) NOT NULL,
+  `visible` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `system_groups` VALUES (1,'student'),(2,'alumni'),(3,'faculty'),(4,'resident'),(5,'staff'),(6,'medtech'),(7,'guest');
+INSERT INTO `system_groups` VALUES (1,'student',1),(2,'alumni',1),(3,'faculty',1),(4,'resident',1),(5,'staff',1),(6,'medtech',1),(7,'guest',0);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `system_roles` (
@@ -233,6 +252,7 @@ CREATE TABLE `system_roles` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `system_roles` VALUES (1,(YEAR(CURRENT_DATE())+4),1),(2,(YEAR(CURRENT_DATE())+3),1),(3,(YEAR(CURRENT_DATE())+2),1),(4,(YEAR(CURRENT_DATE())+1),1),(5,(YEAR(CURRENT_DATE())),1),(6,(YEAR(CURRENT_DATE())-1),1),(7,(YEAR(CURRENT_DATE())-2),1),(8,(YEAR(CURRENT_DATE())-3),1),(9,(YEAR(CURRENT_DATE())-4),1),(10,(YEAR(CURRENT_DATE())+4),2),(11,(YEAR(CURRENT_DATE())+3),2),(12,(YEAR(CURRENT_DATE())+2),2),(13,(YEAR(CURRENT_DATE())+1),2),(14,(YEAR(CURRENT_DATE())),2),(15,(YEAR(CURRENT_DATE())-1),2),(16,(YEAR(CURRENT_DATE())-2),2),(17,(YEAR(CURRENT_DATE())-3),2),(18,(YEAR(CURRENT_DATE())-4),2),(19,'faculty',3),(20,'lecturer',3),(21,'director',3),(22,'admin',3),(23,'resident',4),(24,'lecturer',4),(25,'staff',5),(26,'pcoordinator',5),(27,'admin',5),(28,'staff',6),(29,'admin',6),(30,'communityinvite',7);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user_access` (
@@ -266,6 +286,7 @@ CREATE TABLE `user_access` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `user_access` VALUES (1,1,1,1,'true',1216149930,0,0,'',NULL,NULL,'admin','medtech','YToxOntzOjE2OiJhbGxvd19wb2RjYXN0aW5nIjtzOjM6ImFsbCI7fQ==','fbbeb05c0bdeb9fe489765034ae76b58','');
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user_data` (
@@ -302,6 +323,9 @@ CREATE TABLE `user_data` (
   `grad_year` int(11) DEFAULT NULL,
   `gender` int(1) NOT NULL DEFAULT '0',
   `clinical` int(1) NOT NULL DEFAULT '0',
+  `uuid` varchar(36) DEFAULT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
@@ -317,11 +341,13 @@ CREATE TABLE `user_data` (
   KEY `gender` (`gender`),
   KEY `country_id` (`country_id`),
   KEY `province_id` (`province_id`),
+  KEY `idx_uuid` (`uuid`),
   FULLTEXT KEY `firstname_2` (`firstname`,`lastname`,`email`)
 ) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `user_data` VALUES (1,0,'%ADMIN_USERNAME%','%ADMIN_PASSWORD_HASH%',NULL,1,NULL,'','%ADMIN_FIRSTNAME%','%ADMIN_LASTNAME%',NULL,'%ADMIN_EMAIL%','',NULL,NULL,'','','','','','','',NULL,NULL,'System Administrator',NULL,0,0,1,NULL,NULL,0,1,0,0);
+INSERT INTO `user_data` VALUES (1,0,'%ADMIN_USERNAME%','%ADMIN_PASSWORD_HASH%',NULL,1,NULL,'','%ADMIN_FIRSTNAME%','%ADMIN_LASTNAME%',NULL,'%ADMIN_EMAIL%','',NULL,NULL,'','','','','','','',NULL,NULL,'System Administrator',NULL,0,0,1,NULL,NULL,0,1,'f409d69e-261f-11e6-9759-5732f32c0181',0,0,0,0);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user_data_resident` (
@@ -340,6 +366,7 @@ CREATE TABLE `user_data_resident` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user_departments` (
@@ -356,6 +383,7 @@ CREATE TABLE `user_departments` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `user_departments` VALUES (1,1,1,'System Administrator',0);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user_incidents` (
@@ -372,6 +400,7 @@ CREATE TABLE `user_incidents` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user_photos` (
@@ -386,6 +415,7 @@ CREATE TABLE `user_photos` (
   KEY `photo_active` (`photo_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -405,5 +435,8 @@ CREATE TABLE `user_preferences` (
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 

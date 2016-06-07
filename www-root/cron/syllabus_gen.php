@@ -19,6 +19,7 @@ date_default_timezone_set("America/New_York");
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
     dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
     get_include_path(),
 )));
 
@@ -214,7 +215,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 						}
 
 						if (count($output)) {
-							$eventtypes_html = "<h1>Learning Event Types</h1>";
+							$eventtypes_html = "<h1>" . $translate->_("Learning Event Types") . "</h1>";
 //							@todo: move this to external api call
 //							$eventtypes_html .= "<div class=\"center\"><img src=\"".str_replace("https","http",ENTRADA_URL)."/cron/syllabus_gen.php?mode=graph&course_id=".$course->getID()."&start_date=".strtotime($start_string)."&end_date=".strtotime($end_string)."\" /></div>";
 							foreach ($output as $course_id => $result) {
@@ -226,7 +227,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 								$eventtypes_html .= "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">";
 								$eventtypes_html .= "<thead>";
 								$eventtypes_html .= "<tr>";
-								$eventtypes_html .= "<th style=\"text-align:left;\"><strong>Event Type</strong></td>";
+								$eventtypes_html .= "<th style=\"text-align:left;\"><strong>" . $translate->_("Event Type") . "</strong></td>";
 								$eventtypes_html .= "<th style=\"text-align:left;\"><strong>Event Count</strong></td>";
 								$eventtypes_html .= "<th style=\"text-align:left;\"><strong>Hour Count</strong></td>";
 								$eventtypes_html .= "</tr>";		

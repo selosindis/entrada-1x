@@ -68,10 +68,20 @@ if ($ASSIGNMENT_ID) {
                         foreach ($results as $file) {
                             $submission_file = FILE_STORAGE_PATH."/A".$file["afversion_id"];
                             if (file_exists($submission_file) && is_readable($submission_file)) {
+								$extension = pathinfo($file["file_filename"], PATHINFO_EXTENSION);
                                 if ((int)$assignment['max_file_uploads'] > 1) {
-                                    $inner_filename = $zip_prefix."/".$file["number"]."_".$file["username"]."/".$file["file_filename"];
+									if ($assignment["anonymous_marking"]) {
+										$inner_filename = $zip_prefix."/".$file["number"] . "/" . $file["afversion_id"] . "." . $extension;
+									} else {
+										$inner_filename = $zip_prefix."/".$file["number"]. "_" . $file["username"] . "/" . $file["file_filename"];
+									}
+
                                 } else {
-                                    $inner_filename = $zip_prefix."/".$file["number"]."_".$file["username"]."_".$file["file_filename"];
+									if ($assignment["anonymous_marking"]) {
+										$inner_filename = $zip_prefix . "/" . $file["number"] . "_"  . $file["afversion_id"] . "." . $extension;
+									} else {
+										$inner_filename = $zip_prefix . "/" . $file["number"] . "_" . $file["username"] . "_" . $file["file_filename"];
+									}
                                 }
                                 $zip->addFile($submission_file, $inner_filename);	
                             }							

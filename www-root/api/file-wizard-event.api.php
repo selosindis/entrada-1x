@@ -30,6 +30,7 @@
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
     dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../core/library/vendor",
     get_include_path(),
 )));
 
@@ -107,16 +108,51 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
 				application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to the file wizard.");
 			} else {
+                $recurring_events_query = "
+                    SELECT * FROM `events`
+                    WHERE `recurring_id` = (
+                        SELECT `recurring_id`
+                        FROM `events`
+                        WHERE `event_id` = ".$db->qstr($EVENT_ID)."
+                    )
+                    AND `event_id` != ".$db->qstr($EVENT_ID);
+                $all_recurring_events = $db->GetAll($recurring_events_query);
+                if ($all_recurring_events) {
+                    if ($EFILE_ID && $ACTION === 'edit') {
+                        $recurring_events = array();
+                        $original_file_info = $db->GetRow("SELECT * FROM `event_files` WHERE `efile_id` = ".$db->qstr($EFILE_ID));
+                        
+                        foreach ($all_recurring_events as $recurring_event) {
+                            if ($db->GetOne("SELECT `efile_id` FROM `event_files`
+                                    WHERE `event_id`=".$db->qstr($recurring_event['event_id'])."
+                                    AND `file_name`=".$db->qstr($original_file_info['file_name'])."
+                                    AND `updated_date`=".$db->qstr($original_file_info['updated_date']))) {
+                                $recurring_events[] = $recurring_event;
+                            }
+                        }
+                    } else {
+                        $recurring_events = $all_recurring_events;
+                    }
+                }
+                
+                if ($recurring_events) {
+                    ?>
+                    <script type="text/javascript">
+                        maxSteps = 4;
+                    </script>
+                    <?php
+                }
+
 				switch($ACTION) {
 					case "edit" :
 						/**
 						 * Edit file form.
 						 */
 
-						if($EFILE_ID) {
+						if ($EFILE_ID) {
 							$query	= "SELECT * FROM `event_files` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `efile_id` = ".$db->qstr($EFILE_ID);
 							$result	= $db->GetRow($query);
-							if($result) {
+							if ($result) {
 								// Error Checking
 								switch($STEP) {
 									case 2 :
@@ -281,8 +317,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										$PROCESSED["updated_date"]	= time();
 										$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
-										if(!$ERROR) {
-											if((isset($_POST["update_file"])) && ($_POST["update_file"] == "yes")) {
+										if (!$ERROR) {
+											if ((isset($_POST["update_file"])) && ($_POST["update_file"] == "yes")) {
 												$query	= "
 														SELECT *
 														FROM `event_files`
@@ -290,23 +326,23 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														AND `file_name` = ".$db->qstr($PROCESSED["file_name"])."
 														AND `efile_id` <> ".$db->qstr($EFILE_ID);
 												$result	= $db->GetRow($query);
-												if($result) {
+												if ($result) {
 													$modal_onload[]		= "alert('A file named ".addslashes($PROCESSED["file_name"])." already exists in this teaching event.\\n\\nIf this is an updated version, please delete the old file before adding this one.')";
 
 													$ERROR++;
 													$ERRORSTR[]		= "q5";
 													$JS_INITSTEP	= 3;
 												} else {
-													if(!DEMO_MODE) {
-														if($db->AutoExecute("event_files", $PROCESSED, "UPDATE", "efile_id = ".$db->qstr($EFILE_ID)." AND event_id = ".$db->qstr($EVENT_ID))) {
+													if (!DEMO_MODE) {
+														if ($db->AutoExecute("event_files", $PROCESSED, "UPDATE", "efile_id = ".$db->qstr($EFILE_ID)." AND event_id = ".$db->qstr($EVENT_ID))) {
 															last_updated("event", $EVENT_ID);
 	
-															if((@is_dir(FILE_STORAGE_PATH)) && (@is_writable(FILE_STORAGE_PATH))) {
-																if(@file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
+															if ((is_dir(FILE_STORAGE_PATH)) && (is_writable(FILE_STORAGE_PATH))) {
+																if (file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
 																	application_log("notice", "File ID [".$EFILE_ID."] already existed and was overwritten with newer file.");
 																}
 	
-																if(@move_uploaded_file($_FILES["filename"]["tmp_name"], FILE_STORAGE_PATH."/".$EFILE_ID)) {
+																if (move_uploaded_file($_FILES["filename"]["tmp_name"], FILE_STORAGE_PATH."/".$EFILE_ID)) {
 																	application_log("success", "File ID ".$EFILE_ID." was successfully added to the database and filesystem for event [".$EVENT_ID."].");
 																} else {
 																	$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
@@ -365,7 +401,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 																$DEMO_FILE = DEMO_FILE;
 																break;
 														}
-														if($db->AutoExecute("event_files", $PROCESSED, "UPDATE", "efile_id = ".$db->qstr($EFILE_ID)." AND event_id = ".$db->qstr($EVENT_ID))) {
+														if ($db->AutoExecute("event_files", $PROCESSED, "UPDATE", "efile_id = ".$db->qstr($EFILE_ID)." AND event_id = ".$db->qstr($EVENT_ID))) {
 															application_log("success", "File ID ".$EFILE_ID." was successfully added to the database and filesystem for course [".$EVENT_ID."].");
 														} else {
 															$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
@@ -394,6 +430,76 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												}
 											}
 										}
+                                        
+                                        //Recurring events
+                                        if (!$ERROR && $recurring_events && isset($_POST['recurring_event_ids']) && is_array($_POST['recurring_event_ids'])) {
+                                            $source_file_path = FILE_STORAGE_PATH."/".$EFILE_ID;
+                                            $original_event_start = (int)$db->GetOne("SELECT `event_start` FROM `events` WHERE `event_id`=".$db->qstr($EVENT_ID));
+
+                                            $updating_recurring_events = array();
+                                            foreach ($recurring_events as $temp_event) {
+                                                if (in_array($temp_event['event_id'], $_POST['recurring_event_ids'])) {
+                                                    $updating_recurring_events[] = $temp_event;
+                                                }
+                                            }
+
+                                            foreach ($updating_recurring_events as $recurring_event) {
+                                                $PROCESSED_RECURRING_EVENT = $PROCESSED;
+                                                $PROCESSED_RECURRING_EVENT['event_id'] = $recurring_event['event_id'];
+                                                if (isset($PROCESSED['release_date']) && $PROCESSED['release_date']) {
+                                                    $PROCESSED_RECURRING_EVENT['release_date'] = (int)$recurring_event['event_start'] + ((int)$PROCESSED['release_date'] - $original_event_start);
+                                                }
+                                                if (isset($PROCESSED['release_until']) && $PROCESSED['release_until']) {
+                                                    $PROCESSED_RECURRING_EVENT['release_until'] = (int)$recurring_event['event_start'] + ((int)$PROCESSED['release_until'] - $original_event_start);
+                                                }
+                                                
+                                                $recurring_file_query = "SELECT `efile_id`
+                                                                         FROM `event_files` 
+                                                                         WHERE `event_id` = ".$db->qstr($recurring_event['event_id'])."
+                                                                         AND `file_name` = ".$db->qstr($original_file_info['file_name'])."
+                                                                         AND `updated_date` = ".$db->qstr($original_file_info['updated_date']);
+                                                $recurring_file_id = $db->GetOne($recurring_file_query);
+                                                if (!$recurring_file_id) {
+                                                    application_log("notice", "Synced file not found for recurring event id {$recurring_event['event_id']}.");
+                                                    continue;
+                                                }
+                                                
+                                                $duplicate_name_query = "SELECT `efile_id`
+                                                                         FROM `event_files`
+                                                                         WHERE `event_id` = ".$db->qstr($recurring_event['event_id'])."
+                                                                         AND `file_name` = ".$db->qstr($PROCESSED['file_name'])."
+                                                                         AND `efile_id` <> ".$db->qstr($recurring_file_id);
+                                                if ($db->GetOne($duplicate_name_query)) {
+                                                    application_log("error", "Can't sync file id $recurring_file_id in recurring event id {$recurring_event['event_id']} because a file already exists in that event with the new file name.");
+                                                    continue;
+                                                }
+
+                                                if ($db->AutoExecute("event_files", $PROCESSED_RECURRING_EVENT, "UPDATE", "`efile_id`=".$db->qstr($recurring_file_id))) {
+                                                    last_updated("event", $recurring_event['event_id']);
+
+                                                    if ((isset($_POST["update_file"])) && ($_POST["update_file"] == "yes")) {
+                                                        if ((is_dir(FILE_STORAGE_PATH)) && (is_writable(FILE_STORAGE_PATH))) {
+                                                            if (file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
+                                                                application_log("notice", "File ID [".$EFILE_ID."] already existed and was overwritten with newer file.");
+                                                            }
+
+                                                            if (copy(FILE_STORAGE_PATH."/".$EFILE_ID, FILE_STORAGE_PATH."/".$recurring_file_id)) {
+                                                                application_log("success", "File ID ".$recurring_file_id." was successfully updated in the database and filesystem for related recurring event [{$recurring_event['event_id']}].");
+                                                            } else {
+                                                                $modal_onload[]	= "alert('The updated file was not successfully saved for a related recurring event. The MEdTech Unit has been informed of this error, please try again later.')";
+                                                                application_log("error", "The copy function failed to copy file over to final location for related recurring event.");
+                                                            }
+                                                        } else {
+                                                            $modal_onload[]	= "alert('The updated file was not successfully saved for a related recurring event. The MEdTech Unit has been informed of this error, please try again later.')";
+                                                            application_log("error", "Either the FILE_STORAGE_PATH doesn't exist on the server or is not writable by PHP.");
+                                                        }
+                                                    }
+                                                } else {
+                                                    $modal_onload[]	= "alert('The updated file was not successfully saved for a related recurring event. The MEdTech Unit has been informed of this error, please try again later.')";
+                                                    application_log("error", "Unable to update the file into the database for related recurring event ID [{$recurring_event['event_id']}]. Database said: ".$db->ErrorMsg());
+                                                }
+                                            }
+                                        }
 
 										if($ERROR) {
 											$STEP = 1;
@@ -469,7 +575,26 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												<h3 class="border-below">File Wizard <span class="content-small space-left large"><strong>Editing</strong> <?php echo html_encode($PROCESSED["file_title"]); ?></span></h3>
 												<div id="body">
 													<h2 id="step-title"></h2>
-													<div id="step1" style="display: none">
+                                            
+                                                    <?php if ($recurring_events) { ?>
+                                                    <div id="step1" style="display: none">
+                                                        <div class="wizard-question">
+                                                            <div style="font-size: 14px">Select the recurring events you would like apply these changes to.</div>
+
+                                                            <?php foreach ($recurring_events as $recurring_event) { ?>
+                                                            <div style="padding-left: 65px">
+                                                                <label class="checkbox">
+                                                                    <input type="checkbox" id="recurring_event_<?php echo $recurring_event["event_id"] ?>" class="recurring_events" name="recurring_event_ids[]" value="<?php echo $recurring_event["event_id"]; ?>"<?php echo (!isset($_POST["recurring_event_ids"]) || in_array($recurring_event["event_id"], $_POST["recurring_event_ids"]) ? " checked=\"checked\"" : ""); ?> />
+                                                                    <?php echo html_encode($recurring_event["event_title"]); ?>
+                                                                    on <?php echo html_encode(date(DEFAULT_DATE_FORMAT, $recurring_event["event_start"])); ?>
+                                                                </label>
+                                                            </div>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </div>
+                                                    <?php } ?>
+                                                    
+													<div id="step<?php echo $recurring_events ? 2 : 1; ?>" style="display: none">
 														<div id="q1" class="wizard-question<?php echo ((in_array("q1", $ERRORSTR)) ? " display-error" : ""); ?>">
 															<div style="font-size: 14px">What type of file is this document?</div>
 															<div style="padding-left: 65px">
@@ -513,7 +638,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														</div>
 													</div>
 	
-													<div id="step2" style="display: none">
+													<div id="step<?php echo $recurring_events ? 3 : 2; ?>" style="display: none">
 														<div id="q4" class="wizard-question<?php echo ((in_array("q4", $ERRORSTR)) ? " display-error" : ""); ?>">
 															<div style="font-size: 14px">Would you like to add timed release dates to this file?</div>
 															<div style="padding-left: 65px">
@@ -537,7 +662,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														</div>
 													</div>
 	
-													<div id="step3" style="display: none">
+													<div id="step<?php echo $recurring_events ? 4 : 3; ?>" style="display: none">
 														<div id="q5" class="wizard-question<?php echo ((in_array("q5", $ERRORSTR)) ? " display-error" : ""); ?>">
 															<div style="font-size: 14px">Would you like to replace the current file with a new one?</div>
 															<div style="padding-left: 65px">
@@ -789,16 +914,16 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										$ERRORSTR[]		= "q5";
 										$JS_INITSTEP	= 3;
 									} else {
-										if(!DEMO_MODE) {
-											if(($db->AutoExecute("event_files", $PROCESSED, "INSERT")) && ($EFILE_ID = $db->Insert_Id())) {
+										if (!DEMO_MODE) {
+											if (($db->AutoExecute("event_files", $PROCESSED, "INSERT")) && ($EFILE_ID = $db->Insert_Id())) {
 												last_updated("event", $EVENT_ID);
 	
-												if((@is_dir(FILE_STORAGE_PATH)) && (@is_writable(FILE_STORAGE_PATH))) {
-													if(@file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
+												if ((is_dir(FILE_STORAGE_PATH)) && (is_writable(FILE_STORAGE_PATH))) {
+													if(file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
 														application_log("notice", "File ID [".$EFILE_ID."] already existed and was overwritten with newer file.");
 													}
 	
-													if(@move_uploaded_file($_FILES["filename"]["tmp_name"], FILE_STORAGE_PATH."/".$EFILE_ID)) {
+													if (move_uploaded_file($_FILES["filename"]["tmp_name"], FILE_STORAGE_PATH."/".$EFILE_ID)) {
 														application_log("success", "File ID ".$EFILE_ID." was successfully added to the database and filesystem for event [".$EVENT_ID."].");
 													} else {
 														$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
@@ -859,12 +984,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											if(($db->AutoExecute("event_files", $PROCESSED, "INSERT")) && ($EFILE_ID = $db->Insert_Id())) {
 												last_updated("event", $EVENT_ID);
 	
-												if((@is_dir(FILE_STORAGE_PATH)) && (@is_writable(FILE_STORAGE_PATH))) {
-													if(@file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
+												if((is_dir(FILE_STORAGE_PATH)) && (is_writable(FILE_STORAGE_PATH))) {
+													if(file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
 														application_log("notice", "File ID [".$EFILE_ID."] already existed and was overwritten with newer file.");
 													}
 													
-													if(@copy($DEMO_FILE, FILE_STORAGE_PATH."/".$EFILE_ID)) {
+													if(copy($DEMO_FILE, FILE_STORAGE_PATH."/".$EFILE_ID)) {
 														application_log("success", "Success, however, since this is the Entrada demo site we do not allow uploading of files. Instead we've linked the information you just entered to a file that already exists on the demo server for demonstration purposes.");
 													} else {
 														$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
@@ -896,6 +1021,62 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 									}
 								}
+                                
+                                //Recurring events
+                                if (!$ERROR && $recurring_events && isset($_POST['recurring_event_ids']) && is_array($_POST['recurring_event_ids'])) {
+                                    $source_file_path = FILE_STORAGE_PATH."/".$EFILE_ID;
+                                    $original_event_start = (int)$db->GetOne("SELECT `event_start` FROM `events` WHERE `event_id`=".$db->qstr($EVENT_ID));
+                                    
+                                    $updating_recurring_events = array();
+                                    foreach ($recurring_events as $temp_event) {
+                                        if (in_array($temp_event['event_id'], $_POST['recurring_event_ids'])) {
+                                            $updating_recurring_events[] = $temp_event;
+                                        }
+                                    }
+                                    
+                                    foreach ($updating_recurring_events as $recurring_event) {
+                                        $PROCESSED_RECURRING_EVENT = $PROCESSED;
+                                        $PROCESSED_RECURRING_EVENT['event_id'] = $recurring_event['event_id'];
+                                        if (isset($PROCESSED['release_date']) && $PROCESSED['release_date']) {
+                                            $PROCESSED_RECURRING_EVENT['release_date'] = (int)$recurring_event['event_start'] + ((int)$PROCESSED['release_date'] - $original_event_start);
+                                        }
+                                        if (isset($PROCESSED['release_until']) && $PROCESSED['release_until']) {
+                                            $PROCESSED_RECURRING_EVENT['release_until'] = (int)$recurring_event['event_start'] + ((int)$PROCESSED['release_until'] - $original_event_start);
+                                        }
+                                                
+                                        $duplicate_name_query = "SELECT `efile_id`
+                                                                 FROM `event_files`
+                                                                 WHERE `event_id` = ".$db->qstr($recurring_event['event_id'])."
+                                                                 AND `file_name` = ".$db->qstr($PROCESSED['file_name']);
+                                        if ($db->GetOne($duplicate_name_query)) {
+                                            application_log("error", "Can't sync file in recurring event id {$recurring_event['event_id']} because a file already exists in that event with the new file name.");
+                                            continue;
+                                        }
+                                        
+                                        if ($db->AutoExecute("event_files", $PROCESSED_RECURRING_EVENT, "INSERT") && ($EFILE_ID = $db->Insert_Id())) {
+                                            last_updated("event", $recurring_event['event_id']);
+
+                                            if ((is_dir(FILE_STORAGE_PATH)) && (is_writable(FILE_STORAGE_PATH))) {
+                                                if(file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
+                                                    application_log("notice", "File ID [".$EFILE_ID."] already existed and was overwritten with newer file.");
+                                                }
+
+                                                if (copy($source_file_path, FILE_STORAGE_PATH."/".$EFILE_ID)) {
+                                                    application_log("success", "File ID ".$EFILE_ID." was successfully added to the database and filesystem for related recurring event [{$recurring_event['event_id']}].");
+                                                } else {
+                                                    $modal_onload[]	= "alert('The new file was not successfully saved for a related recurring event. The MEdTech Unit has been informed of this error, please try again later.')";
+                                                    application_log("error", "The move_uploaded_file function failed to move temporary file over to final location for related recurring event.");
+                                                }
+                                            } else {
+                                                $modal_onload[]	= "alert('The new file was not successfully saved for a related recurring event. The MEdTech Unit has been informed of this error, please try again later.')";
+                                                application_log("error", "Either the FILE_STORAGE_PATH doesn't exist on the server or is not writable by PHP.");
+                                            }
+                                        } else {
+                                            $modal_onload[]	= "alert('The new file was not successfully saved for a related recurring event. The MEdTech Unit has been informed of this error, please try again later.')";
+                                            application_log("error", "Unable to insert the file into the database for related recurring event ID [{$recurring_event['event_id']}]. Database said: ".$db->ErrorMsg());
+                                        }
+                                    }
+                                }
 
 								if($ERROR) {
 									$STEP = 1;
@@ -961,7 +1142,26 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										<h3 class="border-below">File Wizard <span class="content-small space-left large"><strong>Adding</strong> new event file</span></h3>
 										<div id="body">
 											<h2 id="step-title"></h2>
-											<div id="step1" style="display: none">
+                                            
+                                            <?php if ($recurring_events) { ?>
+                                            <div id="step1" style="display:none">
+                                                <div class="wizard-question">
+                                                    <div style="font-size: 14px">Select the recurring events you would like to copy this file to.</div>
+
+                                                    <?php foreach ($recurring_events as $recurring_event) { ?>
+                                                    <div style="padding-left: 65px">
+                                                        <label class="checkbox">
+                                                            <input type="checkbox" id="recurring_event_<?php echo $recurring_event["event_id"] ?>" class="recurring_events" name="recurring_event_ids[]" value="<?php echo $recurring_event["event_id"]; ?>"<?php echo (!isset($_POST["recurring_event_ids"]) || in_array($recurring_event["event_id"], $_POST["recurring_event_ids"]) ? " checked=\"checked\"" : ""); ?> />
+                                                            <?php echo html_encode($recurring_event["event_title"]); ?>
+                                                            on <?php echo html_encode(date(DEFAULT_DATE_FORMAT, $recurring_event["event_start"])); ?>
+                                                        </label>
+                                                    </div>
+                                                    <?php } ?>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
+                                            
+											<div id="step<?php echo $recurring_events ? 2 : 1; ?>" style="display: none">
 												<div id="q1" class="wizard-question<?php echo ((in_array("q1", $ERRORSTR)) ? " display-error" : ""); ?>">
 													<div style="font-size: 14px">What type of file are you adding?</div>
 													<div style="padding-left: 65px">
@@ -1005,7 +1205,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												</div>
 											</div>
 	
-											<div id="step2" style="display: none">
+											<div id="step<?php echo $recurring_events ? 3 : 2; ?>" style="display: none">
 												<div id="q4" class="wizard-question<?php echo ((in_array("q4", $ERRORSTR)) ? " display-error" : ""); ?>">
 													<div style="font-size: 14px">Would you like to add timed release dates to this file?</div>
 													<div style="padding-left: 65px">
@@ -1029,7 +1229,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												</div>
 											</div>
 	
-											<div id="step3" style="display: none">
+											<div id="step<?php echo $recurring_events ? 4 : 3; ?>" style="display: none">
 												<div id="q5" class="wizard-question<?php echo ((in_array("q5", $ERRORSTR)) ? " display-error" : ""); ?>">
 													<div style="font-size: 14px">Please select the file to upload from your computer:</div>
 													<div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">

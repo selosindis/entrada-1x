@@ -45,7 +45,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 	$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/curriculum/explorer", "title" => "Explorer");
 
     search_subnavigation("explorer");
-	?>
+    ?>
     <h1>Curriculum Explorer</h1>
 
     <div class="alert alert-info">

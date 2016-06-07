@@ -129,7 +129,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								foreach ($results as $result) {
 									if (!$db->AutoExecute("event_eventtypes", $result, "INSERT")) {
 										$ERROR++;
-										$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Type</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+										$ERRORSTR[] = "There was an error while trying to save the selected <strong>" . $translate->_("Event Type") . "</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
 
 										application_log("error", "Unable to insert a new event_eventtype record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
 										break 2;
@@ -137,13 +137,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 							}
 
-							$query = "	SELECT $EVENT_ID `event_id`, a.`audience_type`, a.`audience_value`, $updated_date `updated_date`, $USER_ID `updated_by`
+							$query = "	SELECT $EVENT_ID `event_id`, a.`audience_type`, a.`audience_value`, a.`custom_time`, a.`custom_time_start`, a.`custom_time_end`, $updated_date `updated_date`, $USER_ID `updated_by`
 										FROM `event_audience` a
 										WHERE a.`event_id` = ".$db->qstr($event_id)."
 										ORDER BY a.`eaudience_id` ASC";
 							$results = $db->GetAll($query);
 							if ($results) {
 								foreach ($results as $result) {
+                                    //if a custom time is set, get the updated time and set it
+                                    if ($result['custom_time']) {
+                                        $custom_time_dif_start = $result['custom_time_start'] - $original_start;
+                                        $custom_time_dif_end = $result['custom_time_end'] - $original_start;
+                                        
+                                        $result['custom_time_start'] = $event_info["event_start"] + $custom_time_dif_start;
+                                        $result['custom_time_end'] = $event_info["event_start"] + $custom_time_dif_end;
+                                    } else {
+                                        $result['custom_time_start'] = 0;
+                                        $result['custom_time_end'] = 0;
+                                    }
+                                    
 									if (!$db->AutoExecute("event_audience", $result, "INSERT")) {
 										$ERROR++;
 										$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Audience</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
@@ -318,7 +330,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								foreach ($results as $result) {
 									if (!$db->AutoExecute("event_objectives", $result, "INSERT")) {
 										$ERROR++;
-										$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Objective</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+										$ERRORSTR[] = "There was an error while trying to save the selected <strong>" . $translate->_("Event Objective") . "</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
 
 										application_log("error", "Unable to insert a new event_objectives record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
 										break 2;
@@ -336,6 +348,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									if (!$db->AutoExecute("event_related", $result, "INSERT")) {
 										$ERROR++;
 										$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Related</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
+
+										application_log("error", "Unable to insert a new event_related record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
+										break 2;
+									}
+								}
+							}
+
+                            //copies MeSH keywords
+							$query	= "	SELECT * FROM `event_keywords` WHERE `event_id` = ".$db->qstr($event_id)." ORDER BY `ekeyword_id` ASC";
+							$results = $db->GetAll($query);
+
+							if ($results) {
+								foreach ($results as $result) {
+                                    unset($result["ekeyword_id"]);
+									$result["event_id"]			= $EVENT_ID;
+                                    $result['keyword_id']       = $result['keyword_id'];
+									$result["updated_date"]		= $updated_date;
+									$result["updated_by"]		= $USER_ID;
+									if (!$db->AutoExecute("event_keywords", $result, "INSERT")) {
+										$ERROR++;
+										$ERRORSTR[] = $query . "There was an error while trying to save the selected <strong>Event Keywords</strong> for this event $EVENT_ID.<br /><br />The system administrator was informed of this error; please try again later.";
 
 										application_log("error", "Unable to insert a new event_related record while copying a new event $EVENT_ID. Database said: ".$db->ErrorMsg());
 										break 2;
@@ -568,7 +601,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<td class="modified" style="font-size: 12px">&nbsp;</td>
 							<td class="date sortedASC" style="font-size: 12px"><div class="noLink">Date &amp; Time</div></td>
 							<td class="phase" style="font-size: 12px">Phase</td>
-							<td class="teacher" style="font-size: 12px">Teacher</td>
+							<td class="teacher" style="font-size: 12px"><?php echo $translate->_("Teacher"); ?></td>
 							<td class="title" style="font-size: 12px">Event Title</td>
 							<td class="attachment" style="font-size: 12px">&nbsp;</td>
 						</tr>

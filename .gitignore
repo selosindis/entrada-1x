@@ -13,4 +13,7 @@ nbproject
 *.eclipse.*.prefs
 *.swp
 .settings
-/vendor/
+/www-root/core/library/vendor
+composer.phar
+composer.lock
+/developers/unit-tests/coverage

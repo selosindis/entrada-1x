@@ -50,6 +50,10 @@ class Models_CurriculumPeriod extends Models_Base {
     public function getCurriculumPeriodTitle () {
         return $this->curriculum_period_title;
     }
+
+    public function getAudienceValue () {
+        return $this->audience_value;
+    }
     
     public function getActive () {
         return $this->active;
@@ -88,7 +92,7 @@ class Models_CurriculumPeriod extends Models_Base {
                     AND b.`course_id` = ?
                     GROUP BY a.`cperiod_id`
                     ORDER BY a.`start_date` DESC";
-        
+
         $results = $db->GetAll($query, array($curriciulum_type_id, $active, $course_id));
         if ($results) {
             foreach ($results as $result) {

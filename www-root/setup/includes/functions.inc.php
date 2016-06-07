@@ -181,7 +181,7 @@ function clean_input($string, $rules = array()) {
 				case "allowedtags" :	// Cleans and validates HTML, requires HTMLPurifier: http://htmlpurifier.org
 				case "nicehtml" :
 				case "html" :
-					require_once("Entrada/htmlpurifier/HTMLPurifier.auto.php");
+					//require_once("Entrada/htmlpurifier/HTMLPurifier.auto.php");
 
 					$html = new HTMLPurifier();
 

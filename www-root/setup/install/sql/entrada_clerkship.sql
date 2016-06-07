@@ -1,7 +1,12 @@
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `apartment_accounts` (
@@ -21,6 +26,7 @@ CREATE TABLE `apartment_accounts` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `apartment_contacts` (
@@ -34,6 +40,7 @@ CREATE TABLE `apartment_contacts` (
   KEY `apartment_id` (`apartment_id`,`proxy_id`,`department_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -50,6 +57,7 @@ CREATE TABLE `apartment_photos` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `apartment_regionaled_users` (
@@ -59,6 +67,7 @@ CREATE TABLE `apartment_regionaled_users` (
   KEY `proxy_id` (`proxy_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -89,6 +98,7 @@ CREATE TABLE `apartment_schedule` (
   KEY `cost_recovery` (`cost_recovery`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -136,6 +146,7 @@ CREATE TABLE `apartments` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `categories` (
@@ -174,6 +185,7 @@ CREATE TABLE `categories` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `categories` VALUES (1,0,NULL,12,'School of Medicine',NULL,NULL,NULL,NULL,0,0,0,0,'published',0,NULL,0,0,0),(2,1,NULL,13,'All Students',NULL,NULL,NULL,NULL,0,1924927200,0,0,'published',0,NULL,0,0,0),(3,2,NULL,17,'Example Stream',NULL,9,9,NULL,0,1924927200,0,0,'published',0,NULL,0,0,0),(4,3,NULL,32,'Pediatrics',NULL,9,9,NULL,0,1924927200,0,0,'published',4,NULL,4,0,0),(5,3,NULL,32,'Obstetrics & Gynecology',NULL,9,9,NULL,0,1924927200,0,0,'published',3,NULL,3,0,0),(6,3,NULL,32,'Perioperative',NULL,9,9,NULL,0,1924927200,0,0,'published',5,NULL,5,0,0),(7,3,NULL,32,'Surgery - Urology',NULL,9,9,NULL,0,1924927200,0,0,'published',7,NULL,7,0,0),(8,3,NULL,32,'Surgery - Orthopedic',NULL,9,9,NULL,0,1924927200,0,0,'published',8,NULL,8,0,0),(9,3,NULL,32,'Family Medicine',NULL,9,9,NULL,0,1924927200,0,0,'published',1,NULL,1,0,0),(10,3,NULL,32,'Psychiatry',NULL,9,9,NULL,0,1924927200,0,0,'published',6,NULL,6,0,0),(11,3,NULL,32,'Medicine',NULL,9,9,NULL,0,1924927200,0,0,'published',2,NULL,2,0,0),(12,3,NULL,32,'Integrated',NULL,2,2,NULL,0,1924927200,0,0,'published',9,NULL,9,0,0);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `category_departments` (
@@ -187,6 +199,7 @@ CREATE TABLE `category_departments` (
   KEY `contact_id` (`contact_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -214,6 +227,7 @@ CREATE TABLE `category_type` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `category_type` VALUES (1,30,'Institution','',0,0,0,0,0,0,0,0),(2,30,'Faculty','',0,0,0,0,0,0,0,0),(12,30,'School','',0,0,0,0,0,0,0,0),(13,30,'Graduating Year','',0,0,0,0,0,0,0,0),(14,30,'Phase','',0,0,0,0,0,0,0,0),(15,30,'Unit','',0,0,0,0,0,0,0,0),(16,30,'Block','',0,0,0,0,0,0,0,0),(17,30,'Stream','',0,0,0,0,0,0,0,0),(19,30,'Selective','',0,0,0,0,0,0,0,0),(20,30,'Course Grouping','',0,0,0,0,0,0,0,0),(21,30,'Course','',0,0,0,0,0,0,0,0),(22,30,'Date Period','',0,0,0,0,0,0,0,0),(23,0,'Downtime','',0,0,0,0,0,0,0,1),(24,23,'Holiday Period','',0,0,0,0,0,0,0,0),(25,23,'Vacation Period','',0,0,0,0,0,0,0,0),(26,23,'Sick Leave','',0,0,0,0,0,0,0,0),(27,23,'Maternity Leave','',0,0,0,0,0,0,0,0),(28,23,'Personal Leave','',0,0,0,0,0,0,0,0),(29,23,'Leave Of Absense','',0,0,0,0,0,0,0,0),(30,0,'Default Types','',0,0,0,0,0,0,0,0),(31,30,'Elective','',0,0,0,0,0,0,0,0),(32,30,'Rotation','',0,0,0,0,0,0,0,0);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `electives` (
@@ -250,6 +264,7 @@ CREATE TABLE `electives` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `eval_answers` (
@@ -265,6 +280,7 @@ CREATE TABLE `eval_answers` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `eval_approved` (
@@ -278,6 +294,7 @@ CREATE TABLE `eval_approved` (
   KEY `completed_id` (`completed_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -293,6 +310,7 @@ CREATE TABLE `eval_completed` (
   KEY `completed_status` (`completed_status`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -312,6 +330,7 @@ CREATE TABLE `eval_forms` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `eval_questions` (
@@ -327,6 +346,7 @@ CREATE TABLE `eval_questions` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `eval_results` (
@@ -340,6 +360,7 @@ CREATE TABLE `eval_results` (
   KEY `answer_id` (`answer_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -368,6 +389,7 @@ CREATE TABLE `evaluations` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `event_contacts` (
@@ -393,6 +415,7 @@ CREATE TABLE `event_contacts` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `event_locations` (
@@ -412,6 +435,7 @@ CREATE TABLE `event_locations` (
   KEY `elocation_order` (`elocation_order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -449,6 +473,7 @@ CREATE TABLE `events` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `global_lu_rotations` (
@@ -462,6 +487,7 @@ CREATE TABLE `global_lu_rotations` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `global_lu_rotations` VALUES (1,'Family Medicine',50,50,0),(2,'Medicine',50,50,0),(3,'Obstetrics & Gynecology',50,50,0),(4,'Pediatrics',50,50,0),(5,'Perioperative',50,50,0),(6,'Psychiatry',50,50,0),(7,'Surgery-Urology',50,50,0),(8,'Surgery-Orthopedic',50,50,0),(9,'Integrated',50,50,0);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_deficiency_plans` (
@@ -478,6 +504,7 @@ CREATE TABLE `logbook_deficiency_plans` (
   PRIMARY KEY (`ldeficiency_plan_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -501,6 +528,7 @@ CREATE TABLE `logbook_entries` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_entry_checklist` (
@@ -514,6 +542,7 @@ CREATE TABLE `logbook_entry_checklist` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_entry_evaluations` (
@@ -526,6 +555,7 @@ CREATE TABLE `logbook_entry_evaluations` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_entry_objectives` (
@@ -536,6 +566,7 @@ CREATE TABLE `logbook_entry_objectives` (
   KEY `lentry_id` (`lentry_id`,`objective_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -551,6 +582,7 @@ CREATE TABLE `logbook_entry_procedures` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_location_types` (
@@ -562,6 +594,7 @@ CREATE TABLE `logbook_location_types` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_location_types` VALUES (1,1,1),(2,1,3),(3,2,6),(4,1,5),(5,1,9),(6,2,2),(7,2,4),(8,2,5),(9,2,7),(10,2,8),(11,3,10),(12,3,11);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_lu_agerange` (
@@ -573,6 +606,7 @@ CREATE TABLE `logbook_lu_agerange` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_lu_agerange` VALUES (1,0,'  < 1'),(2,0,' 1 - 4'),(3,0,' 5 - 14'),(4,0,'15 - 24'),(5,0,'25 - 34'),(6,0,'35 - 44'),(7,0,'45 - 54'),(8,0,'55 - 64'),(9,0,'65 - 74'),(10,0,'  75+'),(11,5,'  < 1m'),(12,5,'  < 1w'),(13,5,'  < 6m'),(14,5,'  < 12m'),(15,5,'  < 60m'),(16,5,'  5-12'),(17,5,'13 - 19'),(18,5,'20 - 64'),(19,6,' 5 - 11'),(20,6,'12 - 17'),(21,6,'18 - 34');
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_lu_checklist` (
@@ -587,6 +621,7 @@ CREATE TABLE `logbook_lu_checklist` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_lu_checklist` VALUES (1,2,1,1,0,'Checklist for Family Medicine:'),(2,2,2,2,2,'Learning Plan (see core doc, p. 26)'),(3,2,3,1,1,'Midpoint Review (to be completed by 3rd Friday of rotation)'),(4,2,5,2,2,'Review Logbook with Preceptor'),(5,2,6,2,2,'Review Learning Plan'),(6,2,7,2,2,'Formative MCQ Exam (on 3rd Friday of rotation)'),(7,2,8,1,1,'In the final (6th) week:'),(8,2,9,2,2,'Show completed logbook'),(9,2,10,2,2,'Present Project  to clinic (by 6th Friday; see core doc, p. 28)'),(10,2,11,2,2,'Present Project to peers/examiners (by 6th Fri; core doc, p.28)'),(11,2,12,2,2,'Have completed 4 mini-CEX (see core doc, p. 28)'),(12,2,13,2,2,'Final ITER (due on 6th Friday of rotation)'),(13,2,14,2,2,'Summative MCQ Exam (on 6th Friday of rotation)'),(14,1,1,1,0,'Checklist for Emergency Medicine:'),(15,1,2,2,2,'Daily Shift Reports'),(16,1,3,1,1,'Midpoint Review '),(17,1,4,2,2,'Review Logbook with Preceptor'),(18,1,5,1,1,'In the final week:'),(19,1,6,2,2,'Show completed logbook'),(20,1,7,2,2,'Final ITER '),(21,1,8,2,2,'Summative MCQ Exam '),(22,3,1,1,0,'Checklist for Internal Medicine:'),(23,3,2,1,1,'Midpoint Review (to be completed by 6th Friday of rotation)'),(24,3,3,2,2,'Review Logbook with Preceptor'),(25,3,4,2,2,'Formative MCQ Exam (on 6th Friday of rotation)'),(26,3,5,2,2,'Formative Mid-term OSCE'),(27,3,6,1,1,'In the final (12th) week:'),(28,3,7,2,2,'Show completed logbook'),(29,3,8,2,2,'Final ITER (due on 12th Friday of rotation)'),(30,3,9,2,2,'Summative MCQ Exam'),(31,4,1,1,0,'Checklist for Obstetrics & Gynecology:'),(32,4,2,1,1,'Midpoint Review (to be completed by 2nd week of rotation)'),(33,4,3,2,2,'Review Logbook with Preceptor'),(34,4,4,2,2,'Formative MCQ Exam (on 2nd week of rotation)'),(35,4,5,1,1,'In the final (4th) week:'),(36,4,6,2,2,'Show completed logbook'),(37,4,7,2,2,'Final ITER (due on 4th Friday of rotation)'),(38,4,8,2,2,'Summative MCQ Exam'),(39,5,1,1,0,'Checklist for Pediatrics:'),(40,5,2,1,1,'Midpoint Review (to be completed by mid rotation)'),(41,5,3,2,2,'Review Logbook with Preceptor'),(42,5,4,2,2,'Formative OSCE (mid-point of rotation)'),(43,5,5,1,1,'In the final week:'),(44,5,6,2,2,'Show completed logbook'),(45,5,7,2,2,'Final ITER'),(46,5,8,2,2,'Summative MCQ Exam'),(47,6,1,1,0,'Checklist for Psychiatry:'),(48,6,2,1,1,'Midpoint Review (to be completed by mid rotation)'),(49,6,3,2,2,'Review Logbook with Preceptor'),(50,6,4,2,2,'Formative VOSCE (mid-point of rotation)'),(51,6,5,1,1,'In the final week:'),(52,6,6,2,2,'Show completed logbook'),(53,6,7,2,2,'Final ITER'),(54,6,8,2,2,'Summative MCQ Exam'),(55,6,9,2,2,'Evaluation of Psychiatric Interviewing Skills'),(56,7,1,1,0,'Checklist for Surgery / Anesthesia:'),(57,7,2,1,1,'Midpoint Review (to be completed by mid rotation)'),(58,7,3,2,2,'Review Logbook with Preceptor'),(59,7,4,2,2,'Formative MCQ (mid-point of rotation)'),(60,7,5,1,1,'In the final week:'),(61,7,6,2,2,'Show completed logbook'),(62,7,7,2,2,'Final ITER'),(63,7,8,2,2,'Summative MCQ Exam');
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_lu_evaluations` (
@@ -600,6 +635,7 @@ CREATE TABLE `logbook_lu_evaluations` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_lu_location_types` (
@@ -611,6 +647,7 @@ CREATE TABLE `logbook_lu_location_types` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_lu_location_types` VALUES (1,'Ambulatory','Amb'),(2,'Inpatient','Inp'),(3,'Alternative','Alt');
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_lu_locations` (
@@ -621,6 +658,7 @@ CREATE TABLE `logbook_lu_locations` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_lu_locations` VALUES (1,'Office / Clinic'),(2,'Hospital Ward'),(3,'Emergency'),(4,'OR'),(5,'OSCE'),(6,'Bedside Teaching Rounds'),(7,'Case Base Teaching Rounds'),(8,'Patients Home'),(9,'Nursing Home'),(10,'Community Site'),(11,'Computer Interactive Case'),(12,'Day Surgery'),(13,'Mega code'),(14,'Seminar Blocks'),(15,'HPS'),(16,'Nursery');
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_lu_procedures` (
@@ -631,6 +669,7 @@ CREATE TABLE `logbook_lu_procedures` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_lu_procedures` VALUES (1,'ABG'),(2,'Dictation-discharge'),(3,'Dictation-letter'),(4,'Cervical exam/labour'),(5,'Delivery, norm vaginal'),(6,'Delivery, placenta'),(7,'PAP smear'),(8,'Pelvic exam'),(9,'Perineal repair'),(10,'Pessary insert/remove'),(11,'Growth curve'),(12,'Infant/child immun'),(13,'Otoscopy, child'),(14,'Cast/splint'),(15,'ETT intubation'),(16,'Facemask ventilation'),(17,'IV catheter'),(18,'IV setup'),(19,'OR monitors'),(20,'PCA setup'),(21,'Slit lamp exam'),(22,'Suturing'),(23,'Venipuncture'),(24,'NG tube'),(25,'Surgical technique/OR assist');
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_lu_sites` (
@@ -642,6 +681,7 @@ CREATE TABLE `logbook_lu_sites` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_lu_sites` VALUES (1,1,'Brockville General Hospital'),(2,1,'Brockville Pyschiatric Hospital'),(3,1,'CHEO'),(4,1,'Hotel Dieu Hospital'),(5,1,'Kingston General Hospital'),(6,1,'Lakeridge Health'),(7,1,'Markam Stouffville Hospital'),(8,1,'Ongwanada'),(9,1,'Peterborough Regional Health Centre'),(10,1,'Providence Continuing Care Centre'),(11,1,'Queensway Carleton Hospital'),(12,1,'Quinte Health Care'),(13,1,'Weenebayko General Hospital'),(14,1,'Queen\'s University');
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_mandatory_objective_locations` (
@@ -653,6 +693,7 @@ CREATE TABLE `logbook_mandatory_objective_locations` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_mandatory_objective_locations` VALUES (1,98,1),(2,99,1),(3,100,1),(4,101,1),(5,102,1),(6,103,1),(7,104,1),(8,105,1),(9,106,1),(10,107,1),(11,108,1),(12,109,1),(13,110,1),(14,111,1),(15,112,1),(16,113,1),(17,77,1),(18,77,2),(19,78,1),(20,78,2),(21,79,1),(22,79,2),(23,80,1),(24,80,2),(25,81,1),(26,81,2),(27,82,1),(28,82,2),(29,83,1),(30,83,2),(31,84,1),(32,84,2),(33,85,2),(34,86,1),(35,86,2),(36,87,1),(37,87,2),(38,88,1),(39,88,2),(40,89,1),(41,89,2),(42,90,1),(43,90,2),(44,91,1),(45,91,2),(46,92,1),(47,92,2),(48,93,1),(49,93,2),(50,95,1),(51,95,2),(52,97,1),(53,97,2),(54,66,1),(55,67,1),(56,68,2),(57,69,2),(58,70,2),(59,71,1),(60,72,1),(61,73,1),(62,74,1),(63,75,1),(64,76,1),(65,13,2),(66,44,2),(67,49,1),(68,49,2),(69,51,1),(70,37,1),(71,37,2),(72,42,1),(73,42,2),(74,26,1),(75,26,2),(76,12,1),(77,12,2),(78,27,1),(79,27,2),(80,28,1),(81,28,2),(82,30,1),(83,30,2),(84,14,1),(85,15,1),(86,16,1),(87,17,1),(88,17,2),(89,18,1),(90,19,1),(91,19,2),(92,20,1),(93,21,1),(94,22,1),(95,22,2),(96,23,1),(97,23,2),(98,24,1),(99,24,2),(100,25,1),(101,25,2),(102,1,1),(103,2,1),(104,4,1),(105,4,2),(106,5,1),(107,6,1),(108,6,2),(109,7,1),(110,8,1),(111,9,1),(112,9,2),(113,10,1),(114,10,2),(115,11,1),(116,11,2),(117,13,1);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_mandatory_objectives` (
@@ -670,6 +711,7 @@ CREATE TABLE `logbook_mandatory_objectives` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_mandatory_objectives` VALUES (1,8,201,1,2011,0),(2,8,202,1,2011,0),(3,8,203,1,2011,0),(4,8,207,1,2011,0),(5,8,208,1,2011,0),(6,8,209,1,2011,0),(7,8,210,1,2011,0),(8,8,211,1,2011,0),(9,8,212,1,2011,0),(10,8,213,1,2011,0),(11,8,214,1,2011,0),(12,6,215,1,2011,0),(13,8,216,1,2011,0),(14,7,204,1,2011,0),(15,7,205,1,2011,0),(16,7,206,1,2011,0),(17,7,207,1,2011,0),(18,7,208,1,2011,0),(19,7,209,1,2011,0),(20,7,210,1,2011,0),(21,7,211,1,2011,0),(22,7,212,1,2011,0),(23,7,213,1,2011,0),(24,7,214,1,2011,0),(25,7,216,1,2011,0),(26,6,217,1,2011,0),(27,6,218,1,2011,0),(28,6,219,1,2011,0),(29,5,220,1,2011,0),(30,6,221,1,2011,0),(31,5,222,1,2011,0),(32,5,223,1,2011,0),(33,5,224,1,2011,0),(34,5,225,1,2011,0),(35,5,226,1,2011,0),(36,5,227,2,2011,0),(37,5,228,1,2011,0),(38,5,229,2,2011,0),(39,5,230,1,2011,0),(40,5,201,1,2011,0),(41,5,202,1,2011,0),(42,5,233,1,2011,0),(43,4,234,1,2011,0),(44,4,235,1,2011,0),(45,4,236,1,2011,0),(46,4,237,1,2011,0),(47,4,238,1,2011,0),(48,4,239,1,2011,0),(49,4,240,1,2011,0),(50,4,241,1,2011,0),(51,4,242,1,2011,0),(52,4,243,1,2011,0),(53,4,244,1,2011,0),(54,4,245,1,2011,0),(55,4,246,1,2011,0),(56,4,247,1,2011,0),(57,4,248,1,2011,0),(58,4,249,1,2011,0),(59,4,250,1,2011,0),(60,4,251,1,2011,0),(61,4,252,1,2011,0),(62,4,253,1,2011,0),(63,4,254,1,2011,0),(64,4,255,1,2011,0),(65,4,256,1,2011,0),(66,3,257,1,2011,0),(67,3,258,1,2011,0),(68,3,259,1,2011,0),(69,3,260,1,2011,0),(70,3,261,1,2011,0),(71,3,262,1,2011,0),(72,3,263,1,2011,0),(73,3,264,1,2011,0),(74,3,265,1,2011,0),(75,3,266,1,2011,0),(76,3,267,1,2011,0),(77,2,268,1,2011,0),(78,2,269,1,2011,0),(79,2,270,1,2011,0),(80,2,271,1,2011,0),(81,2,272,1,2011,0),(82,2,273,1,2011,0),(83,2,274,1,2011,0),(84,2,275,1,2011,0),(85,2,276,1,2011,0),(86,2,277,1,2011,0),(87,2,278,1,2011,0),(88,2,279,1,2011,0),(89,2,280,1,2011,0),(90,2,281,1,2011,0),(91,2,282,1,2011,0),(92,2,283,1,2011,0),(93,2,284,1,2011,0),(94,2,285,1,2011,0),(95,2,286,1,2011,0),(96,2,287,1,2011,0),(97,2,288,1,2011,0),(98,1,289,1,2011,0),(99,1,290,1,2011,0),(100,1,291,1,2011,0),(101,1,292,1,2011,0),(102,1,293,1,2011,0),(103,1,294,1,2011,0),(104,1,295,3,2011,0),(105,1,296,1,2011,0),(106,1,221,1,2011,0),(107,1,276,1,2011,0),(108,1,299,1,2011,0),(109,1,300,1,2011,0),(110,1,242,1,2011,0),(111,1,281,1,2011,0),(112,1,303,1,2011,0),(113,1,284,1,2011,0);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_notification_history` (
@@ -681,6 +723,7 @@ CREATE TABLE `logbook_notification_history` (
   PRIMARY KEY (`lnhistory_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -698,6 +741,7 @@ CREATE TABLE `logbook_overdue` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_preferred_procedure_locations` (
@@ -709,6 +753,7 @@ CREATE TABLE `logbook_preferred_procedure_locations` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_preferred_procedure_locations` VALUES (1,3,2),(2,2,2),(3,7,1),(4,5,2),(5,10,1),(6,8,1),(7,6,2),(8,4,2),(9,17,2),(10,15,2),(11,18,2),(12,16,2),(13,14,1),(14,19,2),(15,26,2),(16,24,2),(17,27,2),(18,29,2);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_preferred_procedures` (
@@ -727,6 +772,7 @@ CREATE TABLE `logbook_preferred_procedures` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `logbook_preferred_procedures` VALUES (1,2,0,1,1,2011,0),(2,2,0,2,1,2011,0),(3,2,0,3,1,2011,0),(4,3,0,4,1,2011,0),(5,3,0,5,1,2011,0),(6,3,0,6,1,2011,0),(7,3,0,7,1,2011,0),(8,3,0,8,1,2011,0),(9,3,0,9,1,2011,0),(10,3,0,10,1,2011,0),(11,4,0,11,1,2011,0),(12,4,0,12,1,2011,0),(13,4,0,13,1,2011,0),(14,5,0,14,1,2011,0),(15,5,0,15,1,2011,0),(16,5,0,16,3,2011,0),(17,5,0,17,3,2011,0),(18,5,0,18,1,2011,0),(19,5,0,19,1,2011,0),(20,5,0,20,1,2011,0),(21,5,0,21,1,2011,0),(22,5,0,22,1,2011,0),(23,5,0,23,2,2011,0),(24,7,0,24,1,2011,0),(25,7,0,25,4,2011,0),(26,7,0,22,1,2011,0),(27,8,0,24,1,2011,0),(28,8,0,25,4,2011,0),(29,8,0,22,1,2011,0);
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_rotation_comments` (
@@ -741,6 +787,7 @@ CREATE TABLE `logbook_rotation_comments` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_rotation_notifications` (
@@ -754,6 +801,7 @@ CREATE TABLE `logbook_rotation_notifications` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_rotation_sites` (
@@ -763,6 +811,7 @@ CREATE TABLE `logbook_rotation_sites` (
   PRIMARY KEY (`lrsite_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -774,6 +823,7 @@ CREATE TABLE `logbook_virtual_patient_objectives` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logbook_virtual_patients` (
@@ -783,6 +833,7 @@ CREATE TABLE `logbook_virtual_patients` (
   PRIMARY KEY (`lvpatient_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -795,6 +846,7 @@ CREATE TABLE `lottery_clerk_streams` (
   PRIMARY KEY (`lcstream_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -811,6 +863,7 @@ CREATE TABLE `lottery_clerks` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `notification_log` (
@@ -824,6 +877,7 @@ CREATE TABLE `notification_log` (
   PRIMARY KEY (`nlog_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -847,6 +901,7 @@ CREATE TABLE `notification_messages` (
   KEY `nmessage_status` (`nmessage_status`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -874,6 +929,7 @@ CREATE TABLE `notification_monitor` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `notifications` (
@@ -896,6 +952,7 @@ CREATE TABLE `notifications` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `other_teachers` (
@@ -911,6 +968,7 @@ CREATE TABLE `other_teachers` (
   KEY `email` (`email`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -939,5 +997,8 @@ INSERT INTO `regions` VALUES (1,'Alexandria',9,39,'Ontario',0,1,1,0,0),(2,'Almon
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 

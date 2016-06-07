@@ -28,6 +28,7 @@
     dirname(__FILE__) . "/core",
     dirname(__FILE__) . "/core/includes",
     dirname(__FILE__) . "/core/library",
+    dirname(__FILE__) . "/core/library/vendor",
     get_include_path(),
 )));
 
@@ -44,43 +45,59 @@ $PATH_INFO = ((isset($_SERVER["PATH_INFO"])) ? clean_input($_SERVER["PATH_INFO"]
 $PATH_SEPARATED = explode("/", $PATH_INFO);
 
 /**
- * Process CAS authentication
+ * If we are here because of a submit on the login form, the ssobypass POST variable will be set
  */
-if (defined("AUTH_ALLOW_CAS") && (AUTH_ALLOW_CAS == true)) {
-	if (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
-		if (($ACTION == "cas") || isset($_COOKIE[AUTH_CAS_COOKIE])) {
-			phpCAS::forceAuthentication();
-		}
+$sso_bypass = (!empty($_POST["ssobypass"]) ? true : false);
 
-		if (phpCAS::isSessionAuthenticated()) {
-			if (isset($_SESSION[AUTH_CAS_SESSION][AUTH_CAS_ID])) {
-				$result = cas_credentials($_SESSION[AUTH_CAS_SESSION][AUTH_CAS_ID]);
-				if ($result) {
-					$CAS_AUTHENTICATED = true;
-
-					$username = $result["username"];
-					$password = $result["password"];
-
-					$ACTION = "login";
-				}
-			} else {
-				phpCAS::logout(ENTRADA_URL."?action=cas&state=failed");
-			}
-		}
-
-		if (($ACTION == "cas") && isset($_GET["state"]) && ($_GET["state"] == "failed")) {
-			add_error("Your login credentials are not recognized.<br /><br />Please contact a system administrator for further information.");
-
-			$ACTION = "login";
-		}
-	}
+/**
+ * Do SSO login processing, if enabled
+ */
+if (!$sso_bypass && defined("AUTH_SSO_ENABLED") && (bool) AUTH_SSO_ENABLED && defined("AUTH_SSO_TYPE")) {
+    if (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
+        $mySso = Entrada_Sso_Sso::getInstance(AUTH_SSO_TYPE);
+        if ($mySso) {
+            /**
+             * If the SSO tokens are present, extract the details and try to map to a user in the Entrada database.
+             * Once we have that mapping, the normal login process is followed to authorize the user and set up the session
+             */
+            if ($mySso->isSsoAuthenticated()) {
+                $result = $mySso->validateUser();
+                if ($result) {
+                    $SSO_AUTHENTICATED = true;
+                    $username = $result["username"];
+                    $password = $result["password"];
+                    $USER_ACCESS_ID = $result["id"];
+                } else {
+                    add_error("Your login credentials are not recognized.<br /><br />Please contact a system administrator for further information.");
+                    $SSO_ERROR = true;
+                }
+                $ACTION = "login";
+            } else {
+                /**
+                 * Redirect to the SSO provider for the following three situations:
+                 * - SSO Login button selected on the login screen (&action="ssologin") or provided as a GET parameter
+                 * - The SSO provider requires it (based on the SSO implementation)
+                 * - The only available AUTH_METHOD is "sso". In which case, there is no local login possible
+                 */
+                if (($ACTION == "ssologin") || $mySso->requiresLogin() || (defined("AUTH_METHOD") && AUTH_METHOD == "sso")) {
+                    $mySso->login(ENTRADA_URL . (($PROCEED_TO) ? "/?url=" . rawurlencode($PROCEED_TO) : ""));
+                }
+            }
+        } else {
+            add_error("Unable to initialize SSO type: ".AUTH_SSO_TYPE."<br /><br />Please contact a system administrator for further information.");
+            $SSO_ERROR = true;
+        }
+    }
 }
 
 if ($ACTION == "login") {
 	require_once("Entrada/xoft/xoft.class.php");
 	require_once("Entrada/authentication/authentication.class.php");
 
-	if (!defined("AUTH_ALLOW_CAS") || !AUTH_ALLOW_CAS || !$CAS_AUTHENTICATED) {
+    /**
+     * Only check for locked out users if they are not using SSO
+     */
+	if (!$SSO_AUTHENTICATED) {
 		$username = clean_input($_POST["username"], "credentials");
 		$password = clean_input($_POST["password"], "trim");
 
@@ -131,7 +148,11 @@ if ($ACTION == "login") {
 		$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 		$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
 		$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
-		$auth->setUserAuthentication($username, $password, AUTH_METHOD);
+        /**
+         * if we have authenticated with SSO, override the AUTH_METHOD string, which doesn't apply. There is no chaining for SSO
+         */
+        $method = ($SSO_AUTHENTICATED) ? "sso" : AUTH_METHOD;
+        $auth->setUserAuthentication($username, $password, $method);
 		$result = $auth->Authenticate(
 			array(
 				"id",
@@ -393,10 +414,6 @@ if ($ACTION == "login") {
     unset($_SESSION);
     session_destroy();
 
-    if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
-        phpCAS::logout(ENTRADA_URL);
-    }
-
     /**
      * If logging out of the masquerade, log back in as admin and redirect
      */
@@ -406,6 +423,17 @@ if ($ACTION == "login") {
 
         header("Location: ".ENTRADA_URL."/admin/users");
         exit;
+    }
+
+    /**
+     * SSO Logout delayed until the very end, in case you are using masquerade, in which case the session is re-established
+     * for the original user (which is the one that SSO may have authenticated in the first place)
+     */
+    if ((defined("AUTH_SSO_ENABLED")) && (AUTH_SSO_ENABLED == true) && defined("AUTH_SSO_TYPE")) {
+        $mySso = Entrada_Sso_Sso::getInstance(AUTH_SSO_TYPE);
+        if ($mySso) {
+            $mySso->logout();
+        }
     }
 
     header("Location: ".ENTRADA_URL);

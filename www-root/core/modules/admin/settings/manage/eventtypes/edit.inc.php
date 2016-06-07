@@ -37,15 +37,15 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 } else {
 
     ?>
-    <h1>Edit Event Type</h1>
+    <h1>Edit <?php echo $translate->_("Event Type"); ?></h1>
     <?php
     
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?".replace_query(array("section" => "edit"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit Event Type");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?".replace_query(array("section" => "edit"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit " . $translate->_("Event Type"));
     
 	if (isset($_GET["type_id"]) && ($type = clean_input($_GET["type_id"], array("notags", "trim")))) {
 		$PROCESSED["eventtype_id"] = $type;
 	} else {
-        add_error("No Event Type found with the specified ID.");
+        add_error("No " . $translate->_("Event Type") . " found with the specified ID.");
     }
     
     $event_type = Models_EventType::get($PROCESSED["eventtype_id"]);
@@ -68,7 +68,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				$PROCESSED["eventtype_title"] = $eventtype_title;
 			} else {
 				$ERROR++;
-				$ERRORSTR[] = "The <strong>Event Type Name</strong> is a required field.";
+				$ERRORSTR[] = "The <strong>" . $translate->_("Event Type") . " Name</strong> is a required field.";
 			}
 
 			/**
@@ -101,12 +101,12 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 						
                         if (!$eto->delete()) {
                             application_log("error", "An error occured while attempting to delete the organisation eventtype " . $eto->getEventTypeID() . " DB said: " . $db->ErrorMsg());
-                            add_error("An error while attempting to delete the organisation event type");
+                            add_error("An error while attempting to delete the organisation " . $translate->_("Event Type"));
                         } else {
                             $eto->setEventTypeID($eventtype_id);
                             if(!$eto->insert()) {
                                 application_log("error", "An error occured while attempting to insert the organisation eventtype " . $eto->getEventTypeID() . " DB said: " . $db->ErrorMsg());
-                                add_error("An error while attempting to insert the organisation event type");
+                                add_error("An error while attempting to insert the organisation " . $translate->_("Event Type"));
                             }
                         }
                         
@@ -143,7 +143,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                         }
                     } else {
                         application_log("error", "An error occured while attempting to insert the eventtype " . $PROCESSED["eventtype_id"] . " DB said: " . $db->ErrorMsg());
-                        add_error("An error while attempting to insert the event type");
+                        add_error("An error while attempting to insert the " . $translate->_("Event Type"));
                     }
 				} else {
                     $eventtype->update();
@@ -152,7 +152,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				if (!$ERROR) {	
 					$url = ENTRADA_URL . "/admin/settings/manage/eventtypes?org=".$ORGANISATION_ID;
 					$SUCCESS++;
-					$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["eventtype_title"])."</strong> to the system.<br /><br />You will now be redirected to the Event Types index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+					$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["eventtype_title"])."</strong> to the system.<br /><br />You will now be redirected to the " . $translate->_("Learning Event Types") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 					$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 					application_log("success", "New Event Type [".$PROCESSED["eventtype_id"]."] added to the system.");
 				}
@@ -193,13 +193,13 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
             if (isset($event_type) && $event_type) { ?>
             <form class="form-horizontal" action="<?php echo ENTRADA_URL."/admin/settings/manage/eventtypes"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
                 <div class="control-group">
-                    <label for="eventtype_title" class="form-required control-label">Event Type Name:</label>
+                    <label for="eventtype_title" class="form-required control-label"><?php echo $translate->_("Event Type"); ?> Name:</label>
                     <div class="controls">
                         <input type="text" id="eventtype_title" name="eventtype_title" value="<?php echo ($event_type ? html_encode($event_type->getEventTypeTitle()) : ""); ?>" maxlength="60" />
                     </div>
                 </div>
                 <div class="control-group">
-                    <label for="eventtype_description" class="form-nrequired control-label">Event Type Description: </label>
+                    <label for="eventtype_description" class="form-nrequired control-label"><?php echo $translate->_("Event Type"); ?> Description: </label>
                     <div class="controls">
                         <textarea id="eventtype_description" name="eventtype_description" style="width: 98%; height: 200px"><?php echo ($event_type ? html_encode($event_type->getEventTypeDescription()): ""); ?></textarea>
                     </div>

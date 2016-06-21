@@ -11,5 +11,5 @@ For more information please visit our website: http://www.entrada-project.org
 
 ## Installing Entrada ME
 
-For detailed information on installing or upgrading Entrada ME please visit the wiki at:
-http://docs.entrada-project.org/developer/getting-started/#installing-entrada
+For information on installing Entrada ME Open Edition please visit the wiki at:
+https://github.com/EntradaProject/entrada-1x/wiki/First-Time-Installation

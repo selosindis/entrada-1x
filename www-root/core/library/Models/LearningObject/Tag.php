@@ -28,8 +28,9 @@ class Models_LearningObject_Tag extends Models_Base {
     protected $lo_file_tag_id, $lo_file_id, $tag, $updated_date, $updated_by, 
               $active = 1;
     
-    protected $table_name = "learning_object_file_tags";
-    protected $default_sort_column = "tag";
+    protected static $table_name = "learning_object_file_tags";
+    protected static $default_sort_column = "tag";
+    protected static $primary_key = "lo_file_tag_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);

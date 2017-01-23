@@ -101,7 +101,14 @@ class Entrada_ACL extends ACL_Factory {
             "encounter_tracking",
 			"eportfolio",
 			"eportfolio-artifact",
-			"masquerade"
+			"masquerade",
+            "assessments",
+            "assessmentcomponent",
+            "rotationschedule",
+            "assessor",
+            "assessmentresult",
+            "assessmentprogress",
+            "academicadvisor"
 		)
 	);
 	/**
@@ -141,7 +148,7 @@ class Entrada_ACL extends ACL_Factory {
 					FROM `".AUTH_DATABASE."`.`user_data` AS b
 					JOIN `".AUTH_DATABASE."`.`user_access` AS c
 					ON c.`user_id` = b.`id`
-					AND b.`id` = " . $userdetails["id"] . "
+					AND b.`id` = " . $db->qstr($userdetails["id"]) . "
 					AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
 					AND c.`account_active`='true'
 					AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
@@ -267,8 +274,49 @@ class Entrada_ACL extends ACL_Factory {
 		$current_details["group"] = $ENTRADA_USER->getActiveGroup();
 		$current_details["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
 		$user->details = $current_details;
-
 		return $this->isAllowed($user, $resource, $action, $assert);
+	}
+
+	/**
+	 * Placed at the beginning of a route file, this checks if the current user is authorized and has the right permissions to interact with that page.
+	 * @param  string  $resource           Ex. "gradebook"
+	 * @param  string  $action             Ex. "read", "update"
+	 * @param  boolean $assert             
+	 * @param  array   $constants_to_check Ex. array("IN_PARENT", "IN_GRADEBOOK")
+	 * @return boolean                     If user is authorized and has permissions to proceed, return true
+	 */
+	function isUserAuthorized($resource, $action, $assert = true, $constants_to_check = array()) {
+
+		// First, check for constants such as 'IN_PARENT' or 'IN_GRADEBOOK'
+		if (!empty($constants_to_check)) {
+			foreach ($constants_to_check as $constant) {
+				if (!defined($constant)) {
+					return false;
+				}
+			}
+		}
+
+		// Next, check if user is authorized. If not, redirect to homepage
+		if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+			header("Location: ".ENTRADA_URL);
+			return false;
+
+		// Next check if user has the permissions necessary
+		} elseif (!$this->amIAllowed($resource, $action, $assert)) {
+			$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
+
+			$ERROR++;
+			$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+
+			echo display_error();
+
+			application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
+
+			return false;
+		}
+
+		// Returns true when user passes all of the auth conditions
+		return true;
 	}
 
 	/**
@@ -400,6 +448,100 @@ class MultipleAssertion implements Zend_Acl_Assert_Interface {
 		return true;
 	}
 }
+
+/**
+ * Assessor Assertion
+ *
+ * Used to assert that the assessor is allowed to complete the form associated with the supplied progress id.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Don Zuiker <don.zuiker@queensu.ca>
+ * @copyright Copyright 2015 Queen's University. All Rights Reserved.
+ */
+class AssessorAssertion implements Zend_Acl_Assert_Interface {
+    /**
+     * Asserts that an Assessor has access to an Assessment.
+     *
+     * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+     * @param Zend_Acl_Role_Interface $role The role being queried
+     * @param Zend_Acl_Resource_Interface $resource The resource being queried
+     * @param string $privilege The privilege being queried
+     * @return boolean
+     */
+    public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+
+        if (!($resource instanceof AssessorResource)) {
+            return false;
+        }
+        if (!isset($resource->dassessment_id)) {
+            return false;
+        }
+
+        $role = $acl->_entrada_last_query_role;
+        if (!isset($role->details["id"])) {
+            return false;
+        }
+        
+        $distribution_assessment = Models_Assessments_Assessor::fetchRowByID($resource->dassessment_id);
+        if ($distribution_assessment){
+            if ($distribution_assessment->getAssessorType() == "internal" && $distribution_assessment->getAssessorValue() == $role->details["id"]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if the $user_id is a director or program coordinator of a course.
+     *
+     * @param string|integer $user_id The proxy_id to be checked
+     * @param string|integer $aprogress_id The course id to be checked
+	 * @param integer $adistribution_id
+     * @return boolean
+     */
+    static function _checkAssessor($user_id, $aprogress_id, $adistribution_id) {
+        //Logic taken from the old permissions_check() function.
+        global $db;
+
+        //ToDo: Add check for other types of assessors.
+        $query	=  "SELECT *
+                    FROM `cbl_assessment_distribution_assessors` a
+                    JOIN `cbl_assessment_distributions` b
+                    ON a.`adistribution_id` = b.`adistribution_id`
+                    WHERE a.`adistribution_id` = ?
+                    AND a.`assessor_value` = ?
+                    AND a.`assessor_type` = 'proxy_id'
+                    AND (a.`assessor_end` IS NULL
+                        OR a.`assessor_end` > ?)
+                    AND b.`deleted_date` IS NULL";
+        $result = $db->GetRow($query, array($adistribution_id, $user_id, time()));
+
+        if ($result) {
+            if ($aprogress_id) {
+                $query	=  "SELECT *
+                            FROM `cbl_assessment_progress` a
+                            WHERE a.`aprogress_id` = ?
+                            AND a.`proxy_id` = ?
+                            AND a.`deleted_date` IS NULL";
+
+                $result = $db->GetRow($query, array($aprogress_id, $user_id));
+
+                if ($result) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
 
 /**
  * Course Owner Assertion
@@ -1197,6 +1339,74 @@ class GradebookOwnerAssertion extends CourseOwnerAssertion {
 		return $this->_checkCourseOwner($user_id, $course_id);
 	}
 }
+
+/**
+ * Gradebook TA Assertion
+ *
+ * Used to assert that the course referenced by the course resource is accessible by the user referenced by the user role.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Eugene Bivol <ebivol@gmail.ca>
+ * @copyright Copyright 2016 Queen's University. All Rights Reserved.
+ */
+class GradebookTAAssertion extends CourseOwnerAssertion {
+
+	/**
+	 * Asserts that the role references the director, coordinator, or secondary director of the course resource
+	 *
+	 * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+	 * @param Zend_Acl_Role_Interface $role The role being queried
+	 * @param Zend_Acl_Resource_Interface $resource The resource being queried
+	 * @param string $privilege The privilege being queried
+	 * @return boolean
+	 */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if (isset($resource->course_id)) {
+			$course_id = $resource->course_id;
+		} else if (isset($acl->_entrada_last_query->course_id)) {
+			$course_id = $acl->_entrada_last_query->course_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if ($resource_type !== "gradebook" && $resource_type !== "assessment") {
+				//This only asserts for users on gradebooks.
+				return false;
+			}
+
+			$course_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+
+		$role_id = $role->getRoleId();
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		$user = Models_User_Access::fetchRowByID($access_id);
+
+		if (!isset($user) || !$user ) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$user = Models_User_Access::fetchRowByID($access_id);
+		}
+		
+		if (isset($user)) {
+			$course_contact = Models_Course_Contact::fetchRowByProxyIDContactType($user->getUserID(), "ta");
+			if($course_contact) {
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
 
 /**
  * GradebookDropbox Assertion
@@ -2479,6 +2689,195 @@ class UserResource extends EntradaAclResource {
 }
 
 /**
+ * Assessor resource object for the EntradaACL.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @copyright Copyright 2015 Queen's University. All Rights Reserved.
+ */
+class AssessorResource extends EntradaAclResource {
+
+    var $dassessment_id;
+
+    /**
+     * Constructs this Assessor resource with the supplied parameters
+     * @param integer $aprogress_id
+     * @param boolean $assert whether or not to make an assertion
+     */
+    function __construct($dassessment_id, $assert = null) {
+        $this->dassessment_id = $dassessment_id;
+        if (isset($assert)) {
+            $this->assert = $assert;
+        }
+    }
+
+    /**
+     * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+     * Will return based on specific property of this resource instance.
+     * @return string
+     */
+    public function getResourceId() {
+        return "assessor".($this->specific ? $this->dassessment_id : "");
+    }
+}
+
+/**
+ * Assessment result resource object for the EntradaACL.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @copyright Copyright 2015 Queen's University. All Rights Reserved.
+ */
+class AssessmentResultResource extends EntradaAclResource {
+    /**
+     * The aprogress_id for this resource
+     * @var integer
+     */
+    var $aprogress_id;
+
+    /**
+     * Constructs this Assessor resource with the supplied parameters
+     * @param integer $aprogress_id
+     * @param boolean $assert whether or not to make an assertion
+     */
+    function __construct($aprogress_id, $assert = null) {
+        $this->aprogress_id = $aprogress_id;
+        if (isset($assert)) {
+            $this->assert = $assert;
+        }
+    }
+
+    /**
+     * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+     * Will return based on specific property of this resource instance.
+     * @return string
+     */
+    public function getResourceId() {
+        return "assessmentresult".($this->specific ? $this->aprogress_id : "");
+    }
+}
+
+
+class AssessmentResultAssertion implements Zend_Acl_Assert_Interface {
+    public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+        if (!($resource instanceof AssessmentResultResource)) {
+            return false;
+        }
+        if (!isset($resource->aprogress_id)) {
+            return false;
+        }
+
+        $role = $acl->_entrada_last_query_role;
+        if (!isset($role->details["id"])) {
+            return false;
+        }
+        $assessment_progress = Models_Assessments_Progress::fetchRowByID($resource->aprogress_id);
+        if ($assessment_progress) {
+            if ($assessment_progress->getAssessorType() == "internal" && ($assessment_progress->getAssessorValue() == $role->details["id"] || Models_Course_Group::facultyMemberIsTutor($role->details["id"], $assessment_progress->getAssessorValue(), $role->details["organisation_id"]))) {
+                return true;
+            } else {
+                $distribution_target = Models_Assessments_Distribution_Target::fetchRowByID($assessment_progress->getAdtargetID());
+                if ($distribution_target && $assessment_progress->getProgressValue() == "complete" && (in_array($distribution_target->getTargetType(), array("proxy_id", "group_id", "cgroup_id", "course_id", "schedule_id", "organisation_id")) && (in_array($distribution_target->getTargetScope(), array("faculty","internal_learners","external_learners","all_learners")) || $distribution_target->getTargetType() == "proxy_id")) && ($assessment_progress->getTargetRecordID() == $role->details["id"] || Models_Course_Group::facultyMemberIsTutor($role->details["id"], $assessment_progress->getTargetRecordID(), $role->details["organisation_id"]))) {
+                    return true;
+                }
+            }
+			$distribution_authors = Models_Assessments_Distribution_Author::fetchAllByDistributionID($assessment_progress->getAdistributionID());
+			if (isset($distribution_authors) && @count($distribution_authors) >= 1) {
+				foreach ($distribution_authors as $distribution_author) {
+					if ($distribution_author->getAuthorType() == "proxy_id" && $distribution_author->getAuthorID() == $role->details["id"]) {
+						return true;
+					} elseif ($distribution_author->getAuthorType() == "course_id" && Models_Course::checkCourseOwner($distribution_author->getAuthorID(), $role->details["id"])) {
+						return true;
+					}
+				}
+			}
+			$distribution_reviewers = Models_Assessments_Distribution_Reviewer::fetchAllByDistributionID($assessment_progress->getAdistributionID());
+			if (isset($distribution_reviewers) && @count($distribution_reviewers) >= 1) {
+				foreach ($distribution_reviewers as $distribution_reviewer) {
+					if ($distribution_reviewer->getProxyID() == $role->details["id"]) {
+						return true;
+					}
+				}
+			}
+			$distribution = Models_Assessments_Distribution::fetchRowByID($assessment_progress->getAdistributionID());
+			if ($distribution) {
+				if ($distribution->getCourseID() && Models_Course::checkCourseOwner($distribution->getCourseID(), $role->details["id"])) {
+					return true;
+				}
+			}
+        }
+
+        return false;
+    }
+}
+
+/**
+ * Assessment progress resource object for the EntradaACL.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @copyright Copyright 2015 Queen's University. All Rights Reserved.
+ */
+class AssessmentProgressResource extends EntradaAclResource {
+    /**
+     * The aprogress_id for this resource
+     * @var integer
+     */
+    var $aprogress_id;
+
+    /**
+     * Constructs this Assessor resource with the supplied parameters
+     * @param integer $aprogress_id
+     * @param boolean $assert whether or not to make an assertion
+     */
+    function __construct($aprogress_id, $assert = null) {
+        $this->aprogress_id = $aprogress_id;
+        if (isset($assert)) {
+            $this->assert = $assert;
+        }
+    }
+
+    /**
+     * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+     * Will return based on specific property of this resource instance.
+     * @return string
+     */
+    public function getResourceId() {
+        return "assessmentprogress".($this->specific ? $this->aprogress_id : "");
+    }
+}
+
+
+class AssessmentProgressAssertion implements Zend_Acl_Assert_Interface {
+    public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+        if (!($resource instanceof AssessmentProgressResource)) {
+            return false;
+        }
+        if (!isset($resource->aprogress_id)) {
+            return false;
+        }
+
+        $role = $acl->_entrada_last_query_role;
+        if (!isset($role->details["id"])) {
+            return false;
+        }
+
+        $assessment_progress = Models_Assessments_Progress::fetchRowByID($resource->aprogress_id);
+        if ($assessment_progress){
+            if ($assessment_progress->getAssessorType() == "internal" && $assessment_progress->getAssessorValue() == $role->details["id"]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+
+/**
  * Smart course resource object for the EntradaACL.
  *
  * @author Organisation: Queen's University
@@ -2953,7 +3352,7 @@ class EvaluationReviewerAssertion implements Zend_Acl_Assert_Interface {
 			$user_id = $db->GetOne($query);
 		}
 
-		$permissions = Models_Evaluation::getReviewPermissions($evaluation_id);
+		$permissions = Classes_Evaluation::getReviewPermissions($evaluation_id);
 		if (count($permissions)) {
 			return true;
 		} else {
@@ -3004,7 +3403,7 @@ class EvaluationFormAuthorAssertion implements Zend_Acl_Assert_Interface {
 			$user_id = $db->GetOne($query);
 		}
 
-		$permissions = Models_Evaluation::getFormAuthorPermissions($eform_id);
+		$permissions = Classes_Evaluation::getFormAuthorPermissions($eform_id);
 		if ($permissions) {
 			return true;
 		} else {
@@ -3164,5 +3563,214 @@ class LoggableFoundAssertion implements Zend_Acl_Assert_Interface {
 class EportfolioOwnerAssertion implements Zend_Acl_Assert_Interface {
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
 		return true;
+	}
+}
+class AssessmentComponentResource extends EntradaAclResource {
+    
+    /**
+     * The assessment resource ID ie. item_id, form_id or rubric_id
+     * @var integer
+     */
+    var $assessment_resource_id;
+    
+    /**
+     * The assessment resource type ie. item, form, or rubric
+     * @var integer
+     */
+    var $assessment_resource_type;
+
+    /**
+     * Constructs this assessments resource with the supplied values
+     * @param integer $assessment_resource_id The assessments resource ID to represent
+     * @param string $assessment_resource_type The assessments resource type to represent
+     * @param boolean $assert Wheather or not to make an assertion
+     */
+    function __construct($assessment_resource_id = null, $assessment_resource_type = null, $assert = null) {
+        
+        $this->assessment_resource_id = $assessment_resource_id;
+        
+        $this->assessment_resource_type = $assessment_resource_type;
+         
+
+        if (isset($assert)) {
+            
+            $this->assert = $assert;
+        }
+    }
+
+    /**
+     * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+     * Will return based on specifc property of this resource instance.
+     * @return string
+     */
+    public function getResourceId() {
+        return "assessmentcomponent".($this->specific ? $this->assessment_resource_id : "");
+    }
+}
+
+class AssessmentComponentAssertion implements Zend_Acl_Assert_Interface {
+    public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+        global $db, $ENTRADA_USER;
+        
+        if (isset($resource->assessment_resource_id)) {
+            $assessment_resource_id = $resource->assessment_resource_id;
+        } else if (isset($acl->_entrada_last_query->assessment_resource_id)) {
+            $assessment_resource_id = $acl->_entrada_last_query->assessment_resource_id;
+        } else {
+            //Parse out the resource ID
+            $resource_id = $resource->getResourceId();
+            $assessment_resource_id = preg_replace('/[^0-9]+/', "", $resource_id);
+        }
+        
+        $resource_authors = false;
+        
+        switch ($resource->assessment_resource_type) {
+            case "item" :
+                $resource_authors = Models_Assessments_Item_Author::fetchAllByItemID($assessment_resource_id, $ENTRADA_USER->getActiveOrganisation());
+            break;
+            case "form" :
+                $resource_authors = Models_Assessments_Form_Author::fetchAllByFormID($assessment_resource_id, $ENTRADA_USER->getActiveOrganisation());
+            break;
+            case "rubric" :
+                $resource_authors = Models_Assessments_Rubric_Author::fetchAllByRubricID($assessment_resource_id, $ENTRADA_USER->getActiveOrganisation());
+            break;
+        }
+        
+        $is_owner = false;
+        
+        if ($resource_authors) {
+            foreach ($resource_authors as $author) {
+                switch ($author->getAuthorType()) {
+                    case "course_id" :
+                        
+                        $is_course_owner = Models_Course::checkCourseOwner($author->getAuthorID(), $ENTRADA_USER->getActiveID());
+                        
+                        if ($is_course_owner) {
+                            $is_owner = true;
+                        }
+
+                    break;
+                    case "proxy_id" :
+                        
+                        if ((int) $author->getAuthorID() === (int) $ENTRADA_USER->getActiveID()) {
+                            $is_owner = true;
+                        }
+                        
+                    break;
+                    case "organisation_id" :
+                        
+                        if ((int) $author->getAuthorID() === (int) $ENTRADA_USER->getActiveOrganisation()) {
+                            $is_owner = true;
+                        }
+                        
+                    break;
+                }
+            }
+        }
+        
+        return $is_owner;
+        
+	}
+}
+
+class CourseGroupResource extends EntradaAclResource {
+	var $cgroup_id;
+
+	function __construct($cgroup_id, $assert = null) {
+		$this->cgroup_id = $cgroup_id;
+	}
+
+	public function getResourceId() {
+		return "coursegroup".($this->specific ? $this->cgroup_id : "");
+	}
+}
+
+class CourseGroupContact implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+
+		if (!($resource instanceof CourseGroupResource)) {
+			return false;
+		}
+		if (!isset($resource->cgroup_id)) {
+			return false;
+		}
+
+		$role = $acl->_entrada_last_query_role;
+		if (!isset($role->details["id"])) {
+			return false;
+		}
+
+		$course_group_contact = Models_Course_Group_Contact::fetchRowByProxyIDCGroupID($role->details["id"], $resource->cgroup_id);
+		if ($course_group_contact) {
+			return true;
+		}
+
+		return false;
+	}
+}
+
+class AcademicAdvisorResource extends EntradaAclResource {
+	var $proxy_id;
+
+	function __construct($proxy_id, $assert = null) {
+		$this->proxy_id = $proxy_id;
+	}
+
+	public function getResourceId() {
+		return "academicadvisor".($this->specific ? $this->proxy_id : "");
+	}
+}
+
+class AcademicAdvisorAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if (!($resource instanceof AcademicAdvisorResource)) {
+			return false;
+		}
+		if (!isset($resource->proxy_id)) {
+			return false;
+		}
+
+		$role = $acl->_entrada_last_query_role;
+		if (!isset($role->details["id"])) {
+			return false;
+		}
+		if (!isset($role->details["organisation_id"])) {
+			return false;
+		}
+		$course_group_contact = Models_Course_Group::facultyMemberIsTutor($role->details["id"], $resource->proxy_id, $role->details["organisation_id"]);
+		if ($course_group_contact) {
+			return true;
+		}
+        $courses = Models_Course::getUserCourses($role->details["id"], $role->details["organisation_id"]);
+        if ($courses) {
+            foreach ($courses as $course) {
+                if (CourseOwnerAssertion::_checkCourseOwner($role->details["id"], $course->getID())) {
+                    $audience = $course->getAudience();
+                    foreach ($audience as $audience_member) {
+                        if ($audience_member->getAudienceType() == "group_id") {
+                            $group_members = $audience_member->getMembers();
+                            if ($group_members) {
+                                foreach ($group_members as $member) {
+                                    if ($member->getID() == $resource->proxy_id) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        } else {
+                            if ($audience_member->getAudienceValue() == $resource->proxy_id) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+		return false;
 	}
 }

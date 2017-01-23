@@ -650,7 +650,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</td>
 				</tr>
 				<?php
-					echo Models_Evaluation::getEditQuestionControls($PROCESSED);
+					echo Classes_Evaluation::getEditQuestionControls($PROCESSED);
 				?>
 			</tbody>
 			</table>

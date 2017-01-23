@@ -44,17 +44,19 @@ class Models_Event extends Models_Base {
               $event_start,
               $event_finish,
               $event_duration,
+              $audience_visible,
+              $attendance_required,
               $release_date,
               $release_until,
-              $audience_visible,
+              $event_color,
               $draft_id,
               $updated_date,
               $updated_by;
-    
-    protected $table_name = "events";
-    protected $primary_key = "event_id";
-    protected $default_sort_column = "event_id";
-    
+
+    protected static $table_name = "events";
+    protected static $primary_key = "event_id";
+    protected static $default_sort_column = "event_id";
+
     public function __construct($arr = NULL) {
         parent::__construct($arr);
     }
@@ -143,6 +145,14 @@ class Models_Event extends Models_Base {
         return $this->event_duration;
     }
     
+    public function getAudienceVisible() {
+        return $this->audience_visible;
+    }
+
+    public function getAttendanceRequired() {
+        return $this->attendance_required;
+    }
+    
     public function getReleaseDate () {
         return $this->release_date;
     }
@@ -150,9 +160,9 @@ class Models_Event extends Models_Base {
     public function getReleaseUntil () {
         return $this->release_until;
     }
-    
-    public function getAudienceVisible() {
-        return $this->audience_visible;
+
+    public function getColor() {
+        return $this->event_color;
     }
     
     public function getDraftID () {
@@ -169,7 +179,11 @@ class Models_Event extends Models_Base {
     
     public function getOrganisationID() {
         $course = Models_Course::get($this->course_id);
-        return $course->getOrganisationID();
+        if ($course) {
+            return $course->getOrganisationID();
+        } else {
+            return false;
+        }
     }
 
     public function setEventId($event_id) {
@@ -187,16 +201,45 @@ class Models_Event extends Models_Base {
         return $this->fetchAll(array("course_id" => $course_id));
     }
 
-    /* @return ArrayObject|Models_Event[] */
-    public function fetchAllByCourseIdStartDateFinishDate($course_id = null, $start_date = null, $finish_date = null) {
-        return $this->fetchAll(
-            array(
+    public static function fetchAllByCourseIDEventtypeID($course_id, $eventtype_id) {
+        $self = new self();
+        return $self->fetchAll(array(
                 array("key" => "course_id", "value" => $course_id, "method" => "="),
-                array("mode" => "AND", "key" => "event_start", "value" => $start_date, "method" => ">="),
-                array("mode" => "AND", "key" => "event_finish", "value" => $finish_date, "method" => "<=")
-            ), 
-            "=", "AND", "event_start"
+                array("key" => "eventtype_id", "value" => $eventtype_id, "method" => "=")
+            )
         );
+    }
+
+    public function fetchAllByCourseIdStartDateFinishDate($course_id = 0, $start_date = 0, $finish_date = 0, $released_only = true) {
+        global $db;
+
+        $course_id = (int) $course_id;
+        $start_date = (int) $start_date;
+        $finish_date = (int) $finish_date;
+        $released_only = (bool) $released_only;
+
+        $events = false;
+
+        $query = "SELECT *
+                    FROM `events`
+                    WHERE `course_id` = ?
+                    AND `event_start` >= ?
+                    AND `event_finish` <= ?";
+        if ($released_only) {
+            $query .= " AND (`release_date` = '0' OR `release_date` <= UNIX_TIMESTAMP())
+                        AND (`release_until` = '0' OR `release_until` >= UNIX_TIMESTAMP())";
+        }
+        $query .= " ORDER BY `event_start` ASC";
+
+        $results = $db->GetAll($query, array($course_id, $start_date, $finish_date));
+        if ($results) {
+            foreach ($results as $result) {
+                $event = new self($result);
+                $events[] = $event;
+            }
+        }
+
+        return $events;
     }
 
     /* @return ArrayObject|Models_Event[] */
@@ -250,6 +293,10 @@ class Models_Event extends Models_Base {
     /* @return ArrayObject|Models_Event_Audience[] */
     public function getEventAudience() {
         return Models_Event_Audience::fetchAllByEventID($this->event_id);
+    }
+
+    public function getEventType () {
+        return Models_EventType::get($this->eventtype_id);
     }
     
     /* @return ArrayObject|Models_Event[] */

@@ -194,7 +194,12 @@ class GoogleMailingList extends MailingListBase
 		$this->service = $service;
 		$this->settings = $settings;
 		if ($this->type == "discussion" || $this->type == "announcements") {
-			$found_group = $this->service->groups->get($this->list_name . "@" . (isset($GOOGLE_APPS["domain"]) && $GOOGLE_APPS["domain"] ? $GOOGLE_APPS["domain"] : ""));
+			try {
+				$found_group = $this->service->groups->get($this->list_name . "@" . (isset($GOOGLE_APPS["domain"]) && $GOOGLE_APPS["domain"] ? $GOOGLE_APPS["domain"] : ""));
+			} catch (Google_Exception $e) {
+				//Do nothing, we just need to catch the exception thrown when the mailing list doesn't exist already
+			}
+
 			if (!isset($found_group) || !$found_group) {
 				$this->create_group($this->type, $this->list_name);
 			}

@@ -65,7 +65,7 @@ if (!defined("IN_PROFILE")) {
 		fade_element("out", "display-notice-box");
 		echo display_notice();
 	}
-	require_once("Models/notifications/NotificationUser.class.php");
+	require_once("Classes/notifications/NotificationUser.class.php");
 	echo "<h1>Notification Preferences</h1>";
 	$query = "SELECT `nuser_id` FROM `notification_users` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 	$notification_user_ids = $db->GetAll($query);

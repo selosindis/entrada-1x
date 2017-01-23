@@ -58,7 +58,7 @@ class Models_Quiz_Attached_CommunityPage extends Models_Quiz_Attached {
         return $output;
     }
     
-    public static function fetchRowByID($aquiz_id) {
+    public static function fetchRowByID($aquiz_id = null) {
         global $db;
         
         $output = false;
@@ -77,7 +77,7 @@ class Models_Quiz_Attached_CommunityPage extends Models_Quiz_Attached {
                     ORDER BY b.`community_title` ASC";
         $results = $db->GetRow($query);
         if ($results) {
-            $output = new self($result);
+            $output = new self($results);
         }
         
         return $output;

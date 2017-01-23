@@ -3,6 +3,7 @@
 <phpunit colors="true" bootstrap="../../www-root/core/library/vendor/autoload.php">
     <testsuites>
         <testsuite name="Entrada">
+            <directory>./classes</directory>
             <directory>./models</directory>
             <directory>./views</directory>
             <directory>./functions</directory>
@@ -13,6 +14,7 @@
     </php>
     <filter>
         <whitelist addUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">../../www-root/core/library/Entrada/Curriculum</directory>
             <directory suffix=".php">../../www-root/core/library/Models</directory>
             <directory suffix=".php">../../www-root/core/library/Views/</directory>
             <file>../../www-root/core/includes/functions.inc.php</file>

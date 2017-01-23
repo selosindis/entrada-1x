@@ -599,6 +599,10 @@ Timeline._Band.prototype.createLayerDiv = function(zIndex) {
 
 Timeline._Band.prototype.removeLayerDiv = function(div) {
     this._innerDiv.removeChild(div.parentNode);
+    var track = this._timeline._containerDiv.querySelector(".track") || "";
+    if (track){
+        this._timeline._containerDiv.removeChild(track);
+    }
 };
 
 Timeline._Band.prototype.closeBubble = function() {
@@ -619,8 +623,8 @@ Timeline._Band.prototype.openBubbleForPoint = function(pageX, pageY, width, heig
 
 Timeline._Band.prototype._onMouseDown = function(innerFrame, evt, target) {
     this.closeBubble();
-    
     this._dragging = true;
+    innerFrame.classList.add("timeline-dragging");
     this._dragX = evt.clientX;
     this._dragY = evt.clientY;
 };
@@ -641,6 +645,7 @@ Timeline._Band.prototype._onMouseMove = function(innerFrame, evt, target) {
 Timeline._Band.prototype._onMouseUp = function(innerFrame, evt, target) {
     this._dragging = false;
     this._keyboardInput.focus();
+    innerFrame.classList.remove("timeline-dragging");
 };
 
 Timeline._Band.prototype._onMouseOut = function(innerFrame, evt, target) {
@@ -665,15 +670,19 @@ Timeline._Band.prototype._onKeyDown = function(keyboardInput, evt, target) {
         case 27: // ESC
             break;
         case 37: // left arrow
-        case 38: // up arrow
             this._scrollSpeed = Math.min(50, Math.abs(this._scrollSpeed * 1.05));
             this._moveEther(this._scrollSpeed);
             break;
+        case 38: // up arrow
+            this._innerDiv.querySelector('div[name="events"]').scrollTop -= 10;
+            break;
         case 39: // right arrow
-        case 40: // down arrow
             this._scrollSpeed = -Math.min(50, Math.abs(this._scrollSpeed * 1.05));
             this._moveEther(this._scrollSpeed);
             break;
+        case 40: // down arrow
+            this._innerDiv.querySelector('div[name="events"]').scrollTop += 10;
+            break
         default:
             return;
         }

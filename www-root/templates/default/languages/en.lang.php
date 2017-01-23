@@ -38,10 +38,27 @@ return array (
 			),
 			"courses" => array ("title" => "Courses"),
 			"events" => array ("title" => "Learning Events"),
-			"logbook" => array ("title" => "Logbook", "resource" => "encounter_tracking", "permission" => "read"),
-			"clerkship" => array ("title" => "Clerkship", "resource" => "clerkship", "permission" => "read"),
+			"clerkship" => array (
+			    "title" => "Clerkship",
+			    "resource" => "clerkship",
+			    "permission" => "read",
+			    "children" => array (
+			        "clerkship" => array (
+                        "title" => "Schedules",
+                    ),
+                    "clerkship/logbook" => array (
+                        "resource" => "clerkship",
+                        "permission" => "read",
+                        "limit-to-groups" => "student",
+                        "title" => "Logbook",
+                    ),
+                    "evaluations" => array (
+                        "title" => "Evaluations",
+                    )
+                )
+			),
 			"people" => array ("title" => "People Search"),
-			"annualreport" => array ("title" => "My Annual Report", "resource" => "annualreport", "permission" => "read")
+			"annualreport" => array ("title" => "My Annual Report", "resource" => "annualreport", "permission" => "read", "limit-to-groups" => "faculty")
 		),
 		"admin" => array (
 			"observerships" => array ("title" => "Manage Observerships")
@@ -69,6 +86,7 @@ return array (
 	"available_courses" => "Available Courses",
 	"all_courses" => "All Courses",
 	"no_courses" => "No Courses",
+    "Course" => "Program",
 	"SSO Login" => "SSO Login",
 
 	/*
@@ -130,6 +148,12 @@ return array (
 		),
 	),
 
+    /*
+     * Course and event colours
+     */
+    "event_color_palette" => array("#0055B7", "#00A7E1", "#40B4E5", "#6EC4E8", "#97D4E9"),
+    "course_color_palette" => array("#0055B7", "#00A7E1", "#40B4E5", "#6EC4E8", "#97D4E9"),
+
 	/*
 	 * Dashboard Module
 	 */
@@ -138,7 +162,7 @@ return array (
 			array ("title" => "Entrada Project", "url" => "http://www.entrada-project.org/feed/", "removable" => false),
 			array ("title" => "Zend Developer Zone", "url" => "http://feeds.feedburner.com/PHPDevZone", "removable" => true),
 			array ("title" => "Insider Medicine", "url" => "http://insidermedicine.ca/xml/Patient/insidermedicine_English.xml", "removable" => true),
-			array ("title" => "Google News Top Stories", "url" => "https://news.google.ca/news/feeds?pz=1&cf=all&ned=ca&hl=en&output=rss", "removable" => true)
+			array ("title" => "Google News Top Stories", "url" => "https://news.google.com/news?cf=all&hl=en&pz=1&topic=tc&output=rss", "removable" => true)
 		),
 		"medtech" => array (
 			// array ("title" => "Admin Feed Example", "url" => "http://www.yourschool.ca/admin.rss", "removable" => false)
@@ -203,6 +227,7 @@ return array (
     "public_communities_title" => "Entrada Communities",
     "public_communities_create" => "Create a Community",
     "public_communities_count" => "<strong>Powering</strong> %s communities",
+    "Community Permissions" => "Community Permissions",
     "community_history_add_announcement" => "A new announcement (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
     "community_history_edit_announcement" => "Announcement (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been updated.",
     "community_history_add_forum" => "A new discussion forum (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
@@ -257,6 +282,9 @@ return array (
     "Quit this community" => "Quit this community",
     "Log In" => "Log In",
     "Additional Pages" => "Additional Pages",
+    "Permission Masks" => "Permission Masks",
+    "Community Login" => "Community Login",
+    "Course Navigation" => "Course Navigation",
 
 	/*
 	 * MSPR Module
@@ -283,17 +311,65 @@ return array (
      */
 	"course" => "Course",
 	"courses" => "Courses",
-    "course_director" => "Course Director",
-    "course_directors" => "Course Directors",
-    "curriculum_coordinator" => "Curriculum Coordinator",
-    "curriculum_coordinators" => "Curriculum Coordinators",
-	"faculty" => "Faculty",
-    "program_coordinator" => "Program Coordinator",
-    "program_coordinators" => "Program Coordinators",
-    "evaluation_rep" => "Evaluation Rep",
-    "student_rep" => "Student Rep",
+    "Course Director" => "Course Director",
+    "Course Directors" => "Course Directors",
+    "Curriculum Coordinator" => "Curriculum Coordinator",
+    "Curriculum Coordinators" => "Curriculum Coordinators",
+	"Faculty" => "Faculty",
+    "Program Coordinator" => "Program Coordinator",
+    "Program Coordinators" => "Program Coordinators",
+    "Evaluation Rep" => "Evaluation Rep",
+    "Student Rep" => "Student Rep",
+    "Add A New Course" => "Add A New Course",
+    "Delete Courses" => "Delete Courses",
+    "Search Courses..." => "Search Courses...",
+    "Loading Courses..." => "Loading Courses...",
+    "No Courses Found" => "No Courses Found",
+    "No Courses Selected to delete" => "No Courses Selected to delete",
+    "Please confirm you would like to delete the selected Courses(s)?" => "Please confirm you would like to delete the selected Courses(s)?",
+    "Load More Courses" => "Load More Courses",
 
 	"evaluation_filtered_words" => "Dr. Doctor; Firstname Lastname",
+
+	/*
+	 * Course Group Module
+	 *
+	 */
+	"Course Groups" => "Course Groups",
+	"Add Group" => "Add Group",
+	"Group Details" => "Group Details",
+	"Group Name Prefix" => "Group Name Prefix",
+	"Group Type" => "Group Type",
+	"Create" => "Create",
+	"empty groups" => "empty groups",
+	"Automatically populate groups" => "Automatically populate groups",
+	"Selected learners within" => "Selected learners within",
+	"Populate based on" => "Populate based on",
+	"Number of Groups" => "Number of Groups",
+	"Group Size" => "Group Size",
+	"No method supplied" => "No method supplied",
+	"No Groups Found." => "No Groups Found.",
+	"Invalid GET method." => "Invalid GET method.",
+	"Assign Period" => "Assign Period",
+	"Delete Groups" => "Delete Groups",
+	"Add New Groups" => "Add New Groups",
+	"Download as CSV" => "Download as CSV",
+	"Search the Course Groups" => "Search the Course Groups",
+	"No groups to display" => "No groups to display",
+	"No Group Selected to delete." => "No Group Selected to delete.",
+	"Please confirm that you would like to proceed with the selected Group(s)?" => "Please confirm that you would like to proceed with the selected Group(s)?",
+	"Assign Curriculum Period" => "Assign Curriculum Period",
+	"Please select only Group(s) without curriculum period assigned." => "Please select only Group(s) without curriculum period assigned.",
+	"Please confirm that you would like to assign the curriculum period to the selected Group(s)?" => "Please confirm that you would like to assign the curriculum period to the selected Group(s)?",
+	"Print" => "Print",
+	"Male" => "Male",
+	"Female" => "Female",
+	"View Members" => "View Members",
+	"Delete Members" => "Delete Members",
+	"Name" => "Name",
+	"Group & Role" => "Group & Role",
+	"No members to display" => "No members to display",
+	"Add Members" => "Add Members",
 
 	/*
 	 * Curriculum Explorer
@@ -332,15 +408,426 @@ return array (
         <p>Title: %assignment_title%</p>
         <p>Description:<br />%assignment_description%</p>",
 
-	/**
-	 * Community Text
-	 *
-	 */
-	"community" => array(
-		"discussion" => array(
-			"error_open"	=> "Error updating Discussion Boards Open.",
-			"error_request" => "Invalid request method."
+	"Cancel" => "Cancel",
+	"Add" => "Add",
+	"Assign" => "Assign",
+	"Submit" => "Submit",
+	"Save" => "Save",
+	"Back" => "Back",
+	"Delete" => "Delete",
+	"Done" => "Done",
+	"Close" => "Close",
 
+    /**
+     * Assessments Module
+     */
+    "assessments" => array(
+        "title" => "Assessment & Evaluation",
+        "breadcrumb" => array(
+            "title" => "Assessment & Evaluation"
+        ),
+        "forms" => array(
+            "title" => "Forms",
+            "breadcrumb" => array(
+                "title" => "Forms"
+            ),
+            "buttons" => array(
+                "add_form" => "Add Form",
+                "delete_form" => "Delete Form"
+            ),
+            "placeholders" => array(
+                "form_bank_search" => "Begin Typing to Search the Forms..."
+            ),
+            "add-form" => array(
+                "title" => "Create New Form",
+                "breadcrumb" => array(
+                    "title" => "Add Form"
+                ),
+            ),
+            "edit-form" => array(
+                "title" => "Editing Form:",
+                "breadcrumb" => array(
+                    "title" => "Edit Form"
+                ),
+                "form_not_found" => "Sorry, there was a problem loading the form using that ID.",
+                "no_form_elements" => "There are currently no items attached to this form."
+            ),
+            "add-permission" => array(
+                "title" => "Add Permission",
+                "breadcrumb" => array(
+                    "title" => "Add Permission"
+                ),
+                "labels" => array(
+                    "label_contact_type"    => "Contact Type",
+                    "label_contact_name"    => "Contact Name"
+                ),
+                "contact_types" => array(
+                    "proxy_id"          => "Individual",
+                    "organisation_id"   => "Organisation",
+                    "course_id"         => "Course"
+                )
+            ),
+            "form" => array(
+                "label_form_type"           => "Form Type",
+                "label_form_title"          => "Form Title",
+                "label_form_description"    => "Form Description",
+                "label_form_permissions"    => "Form Permissions",
+                "title_form_items"          => "Form Items",
+                "title_form_info"           => "Form Information",
+                "title_modal_delete_element" => "Delete Element",
+                "btn_add_single_item"       => "Add Individual Item(s)",
+                "btn_add_free_text"         => "Add Free Text",
+                "btn_add_item"              => "Add Item",
+                "btn_add_rubric"            => "Add Grouped Item",
+                "btn_add_data_src"          => "Add Data Source",
+                "btn_add_form_el"           => "Add Text",
+                "text_no_attached_items"    => "There are currently no items attached to this form.",
+                "text_modal_delete_element" => "Would you like to delete this form element?",
+                "text_modal_no_form_items_selected" => "No Forms Items Selected to delete.",
+                "text_modal_delete_form_items" => "Please confirm you would like to delete the selected <span></span> Form Item(s).",
+                "text_modal_delete_form_items_success" => "You have successfully deleted the selected <span></span> Form Item(s).",
+                "text_modal_delete_form_items_error" => "Unfortunately, an error was encountered while attempting to remove the selected <span></span> Form Item(s).",
+            ),
+            "add-element" => array(
+                "title" => "Add Form Element",
+                "breadcrumb" => array(
+                    "title" => "Add Element"
+                ),
+                "failed_to_create" => "Sorry, we were unable to add this element to the form.",
+                "already_attached" => "Sorry, the element you are attempting to add is already attached to the form.",
+                "no_available_items" => "There are no items available to attach to this form.",
+                "add_element_notice" => "Please check off the items you wish to add to your form and click the Add Elements button below."
+            ),
+            "index" => array(
+                "delete_success" => "Forms have been successfully deleted. You will now be taken back to the Forms index.",
+                "delete_error" => "There was a problem deleting the forms you selected. An administrator has been informed, please try again later.",
+                "title_heading" => "Form Title",
+                "created_heading" => "Date Created",
+                "items_heading" => "Items",
+                "no_forms_found" => "You currently have no forms to display. To Add a new form click the Add Form button above.",
+                "text_modal_no_forms_selected" => "No Forms Selected to delete.",
+                "text_modal_delete_forms" => "Please confirm you would like to delete the selected Form(s).",
+                "no_forms_found" => "You currently have no forms to display. To Add a new form click the Add Form button above.",
+                "title_modal_delete_forms" => "Delete Forms"
+            )
+        ),
+        "items" => array (
+            "title" => "Items",
+            "breadcrumb" => array(
+                "title" => "Items"
+            ),
+            "buttons" => array(
+                "add_item" => "Add A New Item",
+                "item_list_view_toggle_title" => "Toggle Item List View",
+                "item_detail_view_toggle_title" => "Toggle Item Detail View",
+                "delete_items" => "Delete Items"
+            ),
+            "placeholders" => array(
+                "item_bank_search" => "Begin Typing to Search the Items..."
+            ),
+            "add-item" => array(
+                "title" => "Create New Item",
+                "breadcrumb" => array(
+                    "title" => "Add Item"
+                ),
+            ),
+            "edit-item" => array(
+                "title" => "Editing Item:",
+                "item_not_found" => "Unfortunately, there was a problem loading the item using that ID.",
+                "breadcrumb" => array(
+                    "title" => "Edit Item"
+                ),
+            ),
+            "add-permission" => array(
+                "title" => "Add Item Permission",
+                "breadcrumb" => array(
+                    "title" => "Add Item Permission"
+                ),
+                "labels" => array(
+                    "label_contact_type"    => "Contact Type",
+                    "label_contact_name"    => "Contact Name"
+                ),
+                "contact_types" => array(
+                    "proxy_id"          => "Individual",
+                    "organisation_id"   => "Organisation",
+                    "course_id"         => "Course"
+                )
+            ),
+            "form" => array(
+                "label_item_type"           => "Item Type",
+                "label_item_text"           => "Item Text",
+                "label_item_code"           => "Item Code",
+                "label_allow_comments"      => "Allow comments for this Item",
+                "label_optional_comments"	=> "Comments are optional",
+                "label_mandatory_comments"	=> "Require comments for any response",
+                "label_flagged_comments"	=> "Require comments for flagged responses",
+                "label_responses"           => "Number of Responses",
+                "label_item_permissions"    => "Item Permissions",
+                "label_item_objectives"     => "Curriculum Tags",
+                "btn_add_item"              => "Add New Item",
+                "btn_attach_item"           => "Attach Selected",
+                "btn_add_attach_item"       => "Add &amp; Attach New Item"
+            ),
+            "index" => array(
+                "title" => "Items",
+                "breadcrumb" => array(
+                    "title" => "Items"
+                ),
+                "failed_to_create" => "Sorry, we were unable to add this item to the form.",
+                "already_attached" => "Sorry, the item you are attempting to add is already attached to the form.",
+                "cannot_attach_rubric_item_to_form" => "You cannot attach Grouped Item Items directly to Forms.",
+                "no_available_items" => "There are no items available to attach to this form.",
+                "add_item_notice" => "Please check off the items you wish to add to your form and click the Add Elements button below.",
+                "no_items_found" => "You currently have no items to display. To Add a new Item select Add and Attach New Item from the dropdown button above.",
+                "no_items_selected" => "No Items selected to attach",
+                "title_modal_delete_items" => "Delete Items",
+                "text_modal_no_items_selected" => "No Items Selected to delete.",
+                "text_modal_delete_items" => "Please confirm you would like to delete the selected Items(s)?",
+            ),
+            "add-items" => array(
+                "title" => "Add Item",
+                "breadcrumb" => array(
+                    "title" => "Add Item"
+                ),
+                "failed_to_create" => "Sorry, we were unable to add this item to the form.",
+                "already_attached" => "Sorry, the item you are attempting to add is already attached to the form."
+            ),
+            "responses" => array(
+                "label_response_text" => "Response Text",
+                "label_response_category" => "Response Category",
+                "label_response_performance_flag" => "Flag",
+                "label_row" => "Response"
+            )
+        ),
+        "rubrics" => array(
+            "title" => "Grouped Items",
+            "breadcrumb" => array(
+                "title" => "Grouped Items"
+            ),
+            "buttons" => array(
+                "add_rubric" => "Add Grouped Item",
+                "rubric_list_view_toggle_title" => "Toggle Grouped Item List View",
+                "rubric_detail_view_toggle_title" => "Toggle Grouped Item Detail View"
+            ),
+            "placeholders" => array (
+                "rubric_bank_search" => "Begin Typing to Search the Grouped Items...",
+            ),
+            "add-rubric" => array(
+                "title" => "Create New Grouped Item",
+                "breadcrumb" => array(
+                    "title" => "Add Grouped Item"
+                ),
+            ),
+            "edit-rubric" => array(
+                "title" => "Editing Grouped Item:",
+                "breadcrumb" => array(
+                    "title" => "Edit Grouped Item"
+                ),
+            ),
+            "add-permission" => array(
+                "title" => "Add Permission",
+                "breadcrumb" => array(
+                    "title" => "Add Permission"
+                ),
+                "labels" => array(
+                    "label_contact_type"    => "Contact Type",
+                    "label_contact_name"    => "Contact Name"
+                )
+            ),
+            "add-element" => array(
+                "title" => "Add Elements to Grouped Item",
+                "breadcrumb" => array(
+                    "title" => "Add Elements to Grouped Item"
+                )
+            ),
+            "rubric" => array(
+                "label_rubric_type"           => "Grouped Item Type",
+                "label_rubric_title"          => "Grouped Item Title",
+                "label_scale_title"         => "Title",
+                "label_rubric_description"    => "Grouped Item Description",
+                "label_rubric_permissions"    => "Grouped Item Permissions",
+                "title_rubric_items"          => "Grouped Item Items",
+                "title_modal_delete_item" => "Delete Element",
+                "btn_add_item"              => "Add Item",
+                "btn_add_rubric"            => "Add Grouped Item",
+                "btn_add_scale"             => "Add Grouped Item",
+                "btn_delete_scale"          => "Delete Grouped Item",
+                "btn_add_data_src"          => "Add Data Source",
+                "btn_add_rubric_el"           => "Add Grouped Item Item",
+                "text_no_attached_items"    => "There are currently no items attached to this rubric.",
+                "text_modal_delete_item" => "Would you like to delete this Grouped Item element?",
+                "no_available_items" => "There are no items to display.",
+                "delete_rubric_item_modal"  => "Are you sure you want to delete this Grouped Item Item?"
+            ),
+            "index" => array(
+                "text_modal_delete_rubrics" => "Please confirm you would like to delete the selected Grouped Item(s)?",
+                "title_modal_delete_rubrics" => "Delete Grouped Items",
+                "text_modal_no_rubrics_selected" => "No Grouped Items Selected to delete.",
+                "no_rubrics_found" => "You currently have no Grouped Items to display. To Add a new Grouped Item click the Add Grouped Item button above.",
+                "btn_attach_rubric" => "Attach Grouped Item",
+                "btn_create_and_attach_item" => "Create and Attach"
+            )
+        ),
+        "distributions" => array(
+            "title" => "Distributions",
+            "breadcrumb" => array(
+                "title" => "Distributions"
+            ),
+        ),
+        "schedule" => array(
+            "title" => "Schedules",
+            "breadcrumb" => array(
+                "title" => "Schedules"
+            ),
+            "edit-schedule" => array(
+                "title" => "Edit Schedule",
+                "breadcrumb" => array(
+                    "title" => "Edit"
+                ),
+                "schedule_information" => "Schedule Information",
+                "children_organisation_title" => "Academic Years",
+                "children_academic_year_title" => "Streams",
+                "children_stream_title" => "Blocks",
+                "no_children" => "There are currently no child schedules.",
+                "errors" => array(
+                    "title" => "The title can not be empty.",
+                    "start_date" => "Start date must come before end date.",
+                    "schedule_type" => "Invalid schedule type.",
+                    "organisation_id" => "An organisation ID is required."
+                )
+            ),
+            "add-schedule" => array(
+                "title" => "Add Schedule",
+                "breadcrumb" => array(
+                    "title" => "Add"
+                )
+            )
+        )
+    ),
+
+	/**
+	 *  profile Module
+	 */
+	"profile" => array(
+		"title" => "My Profile",
+		"breadcrumb" => array(
+			"title" => "My Profile"
+		),
+		"buttons" => array(
+			"delete_anotification" => "Delete Active Notifications"
+		),
+		"placeholders" => array(
+			"anotification_bank_search" => "Search the Active Notifications..."
+		),
+		"index" => array(
+			"title_modal_delete_anotification" => "Delete Active Notifications",
+			"text_modal_no_anotifications_selected" => "No Active Notifications Selected to delete.",
+			"text_modal_delete_anotifications" => "Please confirm you would like to delete the selected Active Notification(s)?",
+			"no_anotifications_found" => "You currently have no active notifications to display.",
 		)
-	)
+	),
+
+
+	"rotationschedule" => array(
+        "title" => "Rotation Schedule",
+        "breadcrumb" => array(
+            "title" => "Rotation Schedule"
+        ),
+        "import" => array(
+            "title" => "Rotation Schedule",
+            "breadcrumb" => array(
+                "title" => "Rotation Schedule"
+            )
+        ),
+        "edit-draft" => array(
+            "title" => "Edit Draft",
+            "add-slot" => "Add Slot"
+        ),
+        "edit" => array(
+            "title" => "Edit Schedule",
+            "add-slot" => "Add Slot"
+        ),
+        "drafts" => array(
+            "title" => "My Drafts"
+        )
+    ),
+	"default" => array(
+		"btn_submit"    => "Submit",
+		"btn_save"      => "Save",
+		"btn_add"       => "Add",
+		"btn_back"      => "Back",
+		"btn_cancel"    => "Cancel",
+		"btn_delete"    => "Delete",
+		"btn_done"      => "Done",
+		"btn_close"     => "Close",
+		"btn_add_elements" => "Add Elements",
+		"invalid_req_method" => "Invalid request method.",
+		"invalid_get_method" => "Invalid GET method.",
+		"invalid_post_method" => "Invalid POST method.",
+		"contact_types" => array(
+			"proxy_id"          => "Individual",
+			"organisation_id"   => "Organisation",
+			"course_id"         => "Course"
+		),
+		"date_created" => "Date Created",
+		"btn_my_drafts" => "My Drafts",
+		"btn_publish"   => "Publish Draft",
+		"btn_unpublish"   => "Withdraw Rotation Schedule",
+		"btn_import"    => "Import",
+		"btn_new"       => "New",
+		"deactivate"    => "Deactivate",
+		"activate"    => "Activate"
+	),
+
+    /**
+     * Community Text
+     *
+     */
+    "community" => array(
+        "discussion" => array(
+            "error_open"	=> "Error updating Discussion Boards Open.",
+            "error_request" => "Invalid request method."
+        ),
+    ),
+
+    /**
+     *  Admin - Settings - Grading Scale
+     */
+    "Grading Scale" => "Grading Scale",
+    "Add New Grading Scale" => "Add New Grading Scale",
+    "Edit Grading Scale" => "Edit Grading Scale",
+    "Delete Grading Scale" => "Delete Grading Scale",
+    "Add Range" => "Add Range",
+
+    "Twitter" => "Twitter",
+    "Twitter Handle" => "Twitter Handle",
+    "Twitter Hastags" => "Twitter Hastags",
+
+    "Manage Organisations" => "Manage Organisations",
+    "Add New Organisation" => "Add New Organisation",
+    "Delete Selected" => "Delete Selected",
+
+    "Add Organisation" => "Add Organisation",
+    "Organisation Name" => "Organisation Name",
+    "Description" => "Description",
+    "Country" => "Country",
+    "Province / State" => "Province / State",
+    "Please select a <b>Country</b> from above first." => "Please select a <b>Country</b> from above first.",
+    "City" => "City",
+    "Postal Code" => "Postal Code",
+    "Address 1" => "Address 1",
+    "Address 2" => "Address 2",
+    "Telephone" => "Telephone",
+    "Fax" => "Fax",
+    "E-Mail Address" => "E-Mail Address",
+    "Website" => "Website",
+    "Interface Template" => "Interface Template",
+    "AAMC Institution ID" => "AAMC Institution ID",
+    "AAMC Institution Name" => "AAMC Institution Name",
+    "AAMC Program ID" => "AAMC Program ID",
+    "AAMC Program Name" => "AAMC Program Name",
+
+    "Organisation Details" => "Organisation Details",
+    "Delete Organisations" => "Delete Organisations"
+
 );

@@ -82,6 +82,7 @@ event audience time override
 }
 
 #audience_list li {
+    height: 24px;
     position: relative;
 }
 

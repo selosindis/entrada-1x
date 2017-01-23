@@ -23,7 +23,7 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-require_once 'core/library/Models/mspr/Observership.class.php';
+require_once 'core/library/Classes/mspr/Observership.class.php';
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 	exit;
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {

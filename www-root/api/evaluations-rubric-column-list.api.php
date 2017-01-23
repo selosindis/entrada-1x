@@ -39,6 +39,6 @@ if (isset($_GET["categories"]) && $_GET["categories"]) {
 $question_data["categories_count"] = $categories;
 $question_data["columns_count"] = $columns;
 
-echo Models_Evaluation::getRubricColumnList($question_data);
+echo Classes_Evaluation::getRubricColumnList($question_data);
 
 ?>

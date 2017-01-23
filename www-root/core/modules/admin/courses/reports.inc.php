@@ -39,9 +39,17 @@ if (!defined("PARENT_INCLUDED")) {
 	define("IN_COURSE_REPORTS",	true);
 
 	$PREFERENCES	= preferences_load($MODULE);
-	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false)), "title" => "Edit " . $translate->_("course")." Content");
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/courses/reports?id=".$COURSE_ID, "title" => "Manage " . $translate->_("course") . " Reports");
+
+    if((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
+        $course_details_object = Models_Course::get($COURSE_ID);
+        if ($course_details_object) {
+            $course_details = $course_details_object->toArray();
+
+            $BREADCRUMB[] = array("title" => $course_details["course_code"]);
+        }
+    }
+
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/courses/reports?id=".$COURSE_ID, "title" => $translate->_("Reports"));
 	
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();

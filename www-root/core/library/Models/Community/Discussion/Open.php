@@ -30,9 +30,9 @@ class Models_Community_Discussion_Open extends Models_Base {
                 $proxy_id,
                 $discussion_open;
 
-    protected $table_name = "community_discussions_open";
-    protected $primary_key = "cdopen_id";
-    protected $default_sort_column = "cdopen_id";
+    protected static $table_name = "community_discussions_open";
+    protected static $primary_key = "cdopen_id";
+    protected static $default_sort_column = "cdopen_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);

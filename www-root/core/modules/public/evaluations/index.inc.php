@@ -40,8 +40,8 @@ if (isset($_GET["view"]) && $_GET["view"] == "review") {
 	$view = "index";
 }
 
-$evaluations = Models_Evaluation::getEvaluatorEvaluations($ENTRADA_USER->getId(), $ENTRADA_USER->getActiveOrganisation());
-$review_evaluations = Models_Evaluation::getReviewerEvaluations();
+$evaluations = Classes_Evaluation::getEvaluatorEvaluations($ENTRADA_USER->getId(), $ENTRADA_USER->getActiveOrganisation());
+$review_evaluations = Classes_Evaluation::getReviewerEvaluations();
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
 
 if (isset($_GET["request"]) && $_GET["request"]) {
@@ -50,7 +50,7 @@ if (isset($_GET["request"]) && $_GET["request"]) {
 		$evaluation = $db->GetRow($query);
         if ($evaluation) {
             $evaluation_title = $evaluation["evaluation_title"];
-            $target_evaluations = Models_Evaluation::getTargetEvaluations();
+            $target_evaluations = Classes_Evaluation::getTargetEvaluations();
             $found = false;
             if ($target_evaluations) {
                 foreach ($target_evaluations as $target_evaluation) {
@@ -102,8 +102,8 @@ if (isset($_GET["request"]) && $_GET["request"]) {
                             $PROCESSED_REQUEST["request_fulfilled"] = 0;
 
                             if ($db->AutoExecute("evaluation_requests", $PROCESSED_REQUEST, "INSERT") && ($request_id = $db->Insert_Id())) {
-                                require_once("Models/notifications/Notification.class.php");
-                                require_once("Models/notifications/NotificationUser.class.php");
+                                require_once("Classes/notifications/Notification.class.php");
+                                require_once("Classes/notifications/NotificationUser.class.php");
                                 $notification_user = NotificationUser::get($associated_evaluator, "evaluation_request", $RECORD_ID, $ENTRADA_USER->getId());
                                 if (!$notification_user) {
                                     $notification_user = NotificationUser::add($associated_evaluator, "evaluation_request", $RECORD_ID, $ENTRADA_USER->getId());
@@ -145,7 +145,7 @@ if (isset($_GET["request"]) && $_GET["request"]) {
 	}
 }
 
-$evaluation_requests = Models_Evaluation::getTargetRequests($ENTRADA_USER->GetID(), false, false, true);
+$evaluation_requests = Classes_Evaluation::getTargetRequests($ENTRADA_USER->GetID(), false, false, true);
 if ($evaluation_requests) {
     $notice_msg = "The following Evaluation Request Codes are still active but unused: <br />";
     foreach ($evaluation_requests as $evaluation_request) {
@@ -158,7 +158,7 @@ if ($evaluation_requests) {
 
 if ($evaluations && $view != "review") {
 	?>
-	<h1>My Evaluations and Assessments</h1>
+	<h1><?php echo $translate->_("My Clerkship Evaluations"); ?></h1>
 	<?php
 	if ($review_evaluations) {
 		$sidebar_html  = "<ul class=\"menu\">\n";
@@ -275,7 +275,7 @@ if ($evaluations && $view != "review") {
 	});
 	</script>";
 	?>
-	<h1>Evaluations and Assessments available for review</h1>
+	<h1><?php echo $translate->_("Evaluations Available for Review"); ?></h1>
 	<?php
 	if ($evaluations) {
 		$sidebar_html  = "<ul class=\"menu\">\n";
@@ -329,7 +329,7 @@ if ($evaluations && $view != "review") {
 
 
 $request_evaluations = array();
-$target_evaluations = Models_Evaluation::getTargetEvaluations();
+$target_evaluations = Classes_Evaluation::getTargetEvaluations();
 if ($target_evaluations) {
 	foreach ($target_evaluations as $target_evaluation) {
 		if (isset($target_evaluation["allow_target_request"]) && $target_evaluation["allow_target_request"]) {

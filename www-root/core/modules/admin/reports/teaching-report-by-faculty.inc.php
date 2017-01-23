@@ -77,6 +77,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 				WHERE  b.`app_id` = ".$db->qstr(AUTH_APP_ID).$organisation_where."
 				AND b.`group` = 'faculty'
+				GROUP BY a.`id`
 				ORDER BY `fullname`";
 	if ($int_use_cache) {
 		$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);

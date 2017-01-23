@@ -75,15 +75,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                         }
                     break;
                     case "weekly" :
-                        if ((isset($_POST["weekday"])) && ($weekday = ((int) $_POST["weekday"])) && $weekday >= 1 && $weekday <= 7) {
+                        if ((isset($_POST["weekly_weekdays"])) && ($weekday = ((int) $_POST["weekly_weekdays"])) && $weekday >= 1 && $weekday <= 7) {
                             $PROCESSED["day"] = $weekday;
                         } else {
                             add_error("The <strong>Weekday</strong> field is required.");
                         }
                     break;
                     case "monthly" :
-                        if ((isset($_POST["offset"])) && ($weekday = ((int) $_POST["offset"])) && $offset >= 1 && $offset <= 5) {
-                            $PROCESSED["offset"] = $offset_tmp;
+                        if ((isset($_POST["offset"])) && ($offset = ((int) $_POST["offset"])) && $offset >= 1 && $offset <= 5) {
+                            $PROCESSED["offset"] = $offset;
                         } else {
                             add_error("The <strong>Week Offset</strong> field is required.");
                         }
@@ -192,6 +192,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                                 jQuery('#weekday_'+ jQuery(this).data("value")).remove();
                             }
                         });
+                        $(".weekly a").on("click", function(e) {
+                            $("#weekly_weekdays").val($(this).attr("data-value"));
+                        });
                     });
                     
                     function loadDateType() {
@@ -248,7 +251,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                         <div class="control-group row-fluid">
                             <label for="days-container" class="form-required span3">Weekday</label>
                             <span class="controls span8">
-                                <div class="btn-group" id="days-container" data-toggle="buttons-radio">
+                                <div class="weekly btn-group" id="days-container" data-toggle="buttons-radio">
                                     <a class="btn toggle-days<?php echo ($day->getDateType() == "weekly" && $day->getDay() == 1 ? " active" : ""); ?>" data-value="1">Monday</a>
                                     <a class="btn toggle-days<?php echo ($day->getDateType() == "weekly" && $day->getDay() == 2 ? " active" : ""); ?>" data-value="2">Tuesday</a>
                                     <a class="btn toggle-days<?php echo ($day->getDateType() == "weekly" && $day->getDay() == 3 ? " active" : ""); ?>" data-value="3">Wednesday</a>
@@ -257,6 +260,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                                     <a class="btn toggle-days<?php echo ($day->getDateType() == "weekly" && $day->getDay() == 6 ? " active" : ""); ?>" data-value="6">Saturday</a>
                                     <a class="btn toggle-days<?php echo ($day->getDateType() == "weekly" && $day->getDay() == 7 ? " active" : ""); ?>" data-value="7">Sunday</a>
                                 </div>
+                                <input type="hidden" id="weekly_weekdays" name="weekly_weekdays"/>
                             </span>
                         </div>
                     </div>
@@ -267,14 +271,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                                 <div class="btn-group" id="days-container" data-toggle="buttons-checkbox">
                                     <span class="controls span8">
                                         <label for="week_offset" class="span11">Repeat every 
-                                        <select class="input-small" id="week_offset" name="week_offset">
+                                        <select class="input-small" id="offset" name="offset">
                                             <option value="1"<?php echo ($day->getDateType() == "monthly" && $day->getOffset() == 1 ? " selected=\"selected\"" : ""); ?>>First</option>
                                             <option value="2"<?php echo ($day->getDateType() == "monthly" && $day->getOffset() == 2 ? " selected=\"selected\"" : ""); ?>>Second</option>
                                             <option value="3"<?php echo ($day->getDateType() == "monthly" && $day->getOffset() == 3 ? " selected=\"selected\"" : ""); ?>>Third</option>
                                             <option value="4"<?php echo ($day->getDateType() == "monthly" && $day->getOffset() == 4 ? " selected=\"selected\"" : ""); ?>>Fourth</option>
                                             <option value="5"<?php echo ($day->getDateType() == "monthly" && $day->getOffset() == 5 ? " selected=\"selected\"" : ""); ?>>Last</option>
                                         </select>
-                                        <select class="input-small" id="monthly_weekday" name="monthly_weekday">
+                                        <select class="input-small" id="weekday" name="weekday">
                                             <option value="1"<?php echo ($day->getDateType() == "monthly" && $day->getOffset() && $day->getDay() == 1 ? " selected=\"selected\"" : ""); ?>>Monday</option>
                                             <option value="2"<?php echo ($day->getDateType() == "monthly" && $day->getOffset() && $day->getDay() == 2 ? " selected=\"selected\"" : ""); ?>>Tuesday</option>
                                             <option value="3"<?php echo ($day->getDateType() == "monthly" && $day->getOffset() && $day->getDay() == 3 ? " selected=\"selected\"" : ""); ?>>Wednesday</option>
@@ -334,7 +338,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                     <br />
                     <div class="row-fluid">
                         <span class="span3">
-                            <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship'" />
+                            <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/restricteddays?org=<?php echo $ORGANISATION_ID; ?>'" />
                         </span>
                         <span class="span9">
                             <input type="submit" class="btn btn-primary pull-right" value="Submit" />

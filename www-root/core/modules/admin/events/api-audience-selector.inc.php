@@ -79,7 +79,7 @@ if (!defined("IN_EVENTS")) {
 									$query = "	SELECT *
 												FROM `groups`
 												WHERE `group_id` = ".$db->qstr($group_id)."
-												AND `group_type` = 'cohort'
+												AND (`group_type` = 'cohort' OR `group_type` = 'course_list')
 												AND `group_active` = 1";
 									$result	= $db->GetRow($query);
 									if ($result) {
@@ -99,7 +99,7 @@ if (!defined("IN_EVENTS")) {
 							ON b.`group_id` = a.`group_id`
 							WHERE a.`group_active` = '1'
 							AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-							AND a.`group_type` = 'cohort'
+							AND (a.`group_type` = 'cohort' OR a.`group_type` = 'course_list')
 							ORDER BY a.`group_name` DESC";
 				$groups_results = $db->GetAll($query);
 				if ($groups_results) {
@@ -113,7 +113,7 @@ if (!defined("IN_EVENTS")) {
 						$groups[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $group["group_name"], "value" => "cohort_" . $group["group_id"], "checked" => $checked);
 					}
 
-					echo lp_multiple_select_popup("cohorts", $groups, array("title" => "Select Cohorts of Learners:", "submit_text" => "Close", "submit" => true, "type" => 'audience'));
+					echo lp_multiple_select_popup("cohorts", $groups, array("title" => "Select Cohorts/Course Lists of Learners:", "submit_text" => "Close", "submit" => true, "type" => 'audience'));
 				} else {
 					echo display_notice("There are no cohorts of learners available.");
 				}

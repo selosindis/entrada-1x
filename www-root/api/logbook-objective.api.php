@@ -24,39 +24,38 @@
  */
 require_once("init.inc.php");
 
-if (isset($_POST["id"]) && $_SESSION["isAuthorized"]) {
-	$objective_id = clean_input($_POST["id"], array("int"));
-	if ($objective_id) {
-		$query = "SELECT a.* FROM `global_lu_objectives` AS a
-					JOIN `objective_organisation` AS b
-					ON a.`objective_id` = b.`objective_id`
-					WHERE a.`objective_active` = '1' 
-					AND a.`objective_id` = ".$db->qstr($objective_id)." 
-					AND 
-					(
-						a.`objective_parent` = '200' 
-						OR a.`objective_parent` IN 
-						(
-							SELECT `objective_id` FROM `global_lu_objectives` 
-							WHERE `objective_active` = '1' 
-							AND `objective_parent` = '200'
-						)
-					)
-					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
-		$objective = $db->GetRow($query);
-		if ($objective) {
-			?>
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"] && isset($_POST["id"])) {
+    $objective_id = clean_input($_POST["id"], array("int"));
+
+    if ($objective_id) {
+        // @todo What the heck is objective_parent = 200, and why the heck is it hard coded into this file?
+        $query = "SELECT a.* FROM `global_lu_objectives` AS a
+                    JOIN `objective_organisation` AS b
+                    ON a.`objective_id` = b.`objective_id`
+                    WHERE a.`objective_active` = '1' 
+                    AND a.`objective_id` = ".$db->qstr($objective_id)." 
+                    AND 
+                    (
+                        a.`objective_parent` = '200' 
+                        OR a.`objective_parent` IN 
+                        (
+                            SELECT `objective_id` FROM `global_lu_objectives` 
+                            WHERE `objective_active` = '1' 
+                            AND `objective_parent` = '200'
+                        )
+                    )
+                    AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+        $objective = $db->GetRow($query);
+        if ($objective) {
+            ?>
             <div class="row-fluid" id="objective_<?php echo $objective_id; ?>_row">
-                <span class="span1">
+                <label class="checkbox">
                     <input type="checkbox" class="objective_delete" value="<?php echo $objective_id; ?>" />
-                </span>
-                <label class="offset1 span10" for="delete_objective_<?php echo $objective_id; ?>">
-                    <?php echo $objective["objective_name"]?>
+                    <?php echo html_encode($objective["objective_name"]); ?>
                 </label>
                 <input type="hidden" name="objectives[<?php echo $objective_id; ?>]" value="<?php echo $objective_id; ?>" />
             </div>
-			<?php
-		}
-	}
+            <?php
+        }
+    }
 }
-?>

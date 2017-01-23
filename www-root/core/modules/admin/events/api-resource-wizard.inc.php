@@ -2121,6 +2121,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                 foreach ($PROCESSED["entities"] as $entity_id) {
                                     $resource_entity = Models_Event_Resource_Entity::fetchRowByID($entity_id);
                                     if ($resource_entity) {
+                                        $resource_entity_array = $resource_entity->toArray();
                                         $entity = $resource_entity->getResource();
                                         if (!$resource_entity->delete() && $entity) {
                                             if(!$entity->delete()) {
@@ -2185,14 +2186,14 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                         }
                                     }
 
-                                    switch ($resource_entity->getEntityType()) {
+
+                                    switch ($resource_entity_array["entity_type"]) {
                                         case 1 :
                                         case 5 :
                                         case 6 :
                                         case 11 :
-                                        case 12 :
-                                            if(@file_exists(FILE_STORAGE_PATH."/".$resource_entity->getEntityValue())) {
-                                                @unlink(FILE_STORAGE_PATH."/".$resource_entity->getEntityValue());
+                                            if (@file_exists(FILE_STORAGE_PATH . "/" . $resource_entity_array["entity_value"])) {
+                                                @unlink(FILE_STORAGE_PATH . "/" . $resource_entity_array["entity_value"]);
                                             }
                                             break;
                                     }
@@ -2239,140 +2240,154 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                         }
 
                                         $resource = Models_Event_Resource_File::fetchRowByID($entity->getEntityValue());
-                                        $resource_array = array(
-                                            "entity_id" => $entity->getID(),
-                                            "resource_id" => $resource->getID(),
-                                            "title" => ($resource->getFileTitle() != "" ? $resource->getFileTitle() : $resource->getFileName()),
-                                            "file_name" => $resource->getFileName(),
-                                            "file_size" => readable_size($resource->getFileSize()),
-                                            "description" => $resource->getFileNotes(),
-                                            "accesses" => $resource->getAccesses(),
-                                            "access_method" => $resource->getAccessMethod(),
-                                            "timeframe" => $resource->getTimeframe(),
-                                            "required" => $resource->getRequired(),
-                                            "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
-                                            "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
-                                            "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
-                                            "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
-                                            "resource_type" => $entity->getEntityType(),
-                                            "resource_type_title" => $resource_type_title
-                                        );
+                                        if ($resource) {
+                                            $resource_array = array(
+                                                "entity_id" => $entity->getID(),
+                                                "resource_id" => $resource->getID(),
+                                                "title" => ($resource->getFileTitle() != "" ? $resource->getFileTitle() : $resource->getFileName()),
+                                                "file_name" => $resource->getFileName(),
+                                                "file_size" => readable_size($resource->getFileSize()),
+                                                "description" => $resource->getFileNotes(),
+                                                "accesses" => $resource->getAccesses(),
+                                                "access_method" => $resource->getAccessMethod(),
+                                                "timeframe" => $resource->getTimeframe(),
+                                                "required" => $resource->getRequired(),
+                                                "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
+                                                "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
+                                                "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
+                                                "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
+                                                "resource_type" => $entity->getEntityType(),
+                                                "resource_type_title" => $resource_type_title
+                                            );
+                                        }
                                         break;
                                     case 8 :
                                         $resource = Models_Quiz_Attached::fetchRowByID($entity->getEntityValue());
-                                        $resource_array = array(
-                                            "entity_id" => $entity->getID(),
-                                            "resource_id" => $resource->getAQuizID(),
-                                            "title" => $resource->getQuizTitle(),
-                                            "url" => ENTRADA_RELATIVE . "/file-event.php?id=" . (int) $resource->getAquizID(),
-                                            "quiz_id" => $resource->getQuizID(),
-                                            "description" => $resource->getQuizNotes(),
-                                            "require_attendance" => $resource->getRequireAttendance(),
-                                            "random_order" => $resource->getRandomOrder(),
-                                            "quiz_timeout" => $resource->getQuizTimeout(),
-                                            "quiz_attempts" => $resource->getQuizAttempts(),
-                                            "quiztype_id" => $resource->getQuiztypeID(),
-                                            "accesses" => $resource->getAccesses(),
-                                            "timeframe" => $resource->getTimeframe(),
-                                            "required" => $resource->getRequired(),
-                                            "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
-                                            "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
-                                            "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
-                                            "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
-                                            "resource_type" => $entity->getEntityType(),
-                                            "resource_type_title" => "Quiz"
-                                        );
+                                        if ($resource) {
+                                            $resource_array = array(
+                                                "entity_id" => $entity->getID(),
+                                                "resource_id" => $resource->getAQuizID(),
+                                                "title" => $resource->getQuizTitle(),
+                                                "url" => ENTRADA_RELATIVE . "/file-event.php?id=" . (int) $resource->getAquizID(),
+                                                "quiz_id" => $resource->getQuizID(),
+                                                "description" => $resource->getQuizNotes(),
+                                                "require_attendance" => $resource->getRequireAttendance(),
+                                                "random_order" => $resource->getRandomOrder(),
+                                                "quiz_timeout" => $resource->getQuizTimeout(),
+                                                "quiz_attempts" => $resource->getQuizAttempts(),
+                                                "quiztype_id" => $resource->getQuiztypeID(),
+                                                "accesses" => $resource->getAccesses(),
+                                                "timeframe" => $resource->getTimeframe(),
+                                                "required" => $resource->getRequired(),
+                                                "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
+                                                "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
+                                                "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
+                                                "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
+                                                "resource_type" => $entity->getEntityType(),
+                                                "resource_type_title" => "Quiz"
+                                            );
+                                        }
                                         break;
                                     case 4 :
                                         $resource = Models_Event_Resource_Homework::fetchRowByID($entity->getEntityValue());
-                                        $resource_array = array(
-                                            "entity_id" => $entity->getID(),
-                                            "resource_id" => $resource->getID(),
-                                            "description" => $resource->getResourceHomework(),
-                                            "timeframe" => $resource->getTimeframe(),
-                                            "required" => $resource->getRequired(),
-                                            "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
-                                            "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
-                                            "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
-                                            "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
-                                            "resource_type" => $entity->getEntityType(),
-                                            "resource_type_title" => "Homework"
-                                        );
+                                        if ($resource) {
+                                            $resource_array = array(
+                                                "entity_id" => $entity->getID(),
+                                                "resource_id" => $resource->getID(),
+                                                "description" => $resource->getResourceHomework(),
+                                                "timeframe" => $resource->getTimeframe(),
+                                                "required" => $resource->getRequired(),
+                                                "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
+                                                "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
+                                                "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
+                                                "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
+                                                "resource_type" => $entity->getEntityType(),
+                                                "resource_type_title" => "Homework"
+                                            );
+                                        }
                                         break;
                                     case 2 :
                                         $resource = Models_Event_Resource_Classwork::fetchRowByID($entity->getEntityValue());
-                                        $resource_array = array(
-                                            "entity_id" => $entity->getID(),
-                                            "resource_id" => $resource->getID(),
-                                            "description" => $resource->getResourceClasswork(),
-                                            "timeframe" => $resource->getTimeframe(),
-                                            "required" => $resource->getRequired(),
-                                            "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
-                                            "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
-                                            "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
-                                            "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
-                                            "resource_type" => $entity->getEntityType(),
-                                            "resource_type_title" => "Class Work"
-                                        );
+                                        if ($resource) {
+                                            $resource_array = array(
+                                                "entity_id" => $entity->getID(),
+                                                "resource_id" => $resource->getID(),
+                                                "description" => $resource->getResourceClasswork(),
+                                                "timeframe" => $resource->getTimeframe(),
+                                                "required" => $resource->getRequired(),
+                                                "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
+                                                "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
+                                                "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
+                                                "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
+                                                "resource_type" => $entity->getEntityType(),
+                                                "resource_type_title" => "Class Work"
+                                            );
+                                        }
                                         break;
                                     case 9 :
                                         $resource = Models_Event_Resource_TextbookReading::fetchRowByID($entity->getEntityValue());
-                                        $resource_array = array(
-                                            "entity_id" => $entity->getID(),
-                                            "resource_id" => $resource->getID(),
-                                            "description" => $resource->getResourceTextbookReading(),
-                                            "timeframe" => $resource->getTimeframe(),
-                                            "required" => $resource->getRequired(),
-                                            "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
-                                            "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
-                                            "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
-                                            "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
-                                            "resource_type" => $entity->getEntityType(),
-                                            "resource_type_title" => "Textbook Reading"
-                                        );
+                                        if ($resource) {
+                                            $resource_array = array(
+                                                "entity_id" => $entity->getID(),
+                                                "resource_id" => $resource->getID(),
+                                                "description" => $resource->getResourceTextbookReading(),
+                                                "timeframe" => $resource->getTimeframe(),
+                                                "required" => $resource->getRequired(),
+                                                "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
+                                                "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
+                                                "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
+                                                "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
+                                                "resource_type" => $entity->getEntityType(),
+                                                "resource_type_title" => "Textbook Reading"
+                                            );
+                                        }
                                         break;
                                     case 3 :
                                     case 7 :
                                         $resource = Models_Event_Resource_Link::fetchRowByID($entity->getEntityValue());
-                                        $resource_array = array(
-                                            "entity_id" => $entity->getID(),
-                                            "resource_id" => $resource->getID(),
-                                            "link" => $resource->getLink(),
-                                            "title" => ($resource->getLinkTitle() != "" ? $resource->getLinkTitle() : $resource->getLink()),
-                                            "url" => ENTRADA_RELATIVE . "/link-event.php?id=" . (int) $resource->getID(),
-                                            "description" => $resource->getLinkNotes(),
-                                            "timeframe" => $resource->getTimeframe(),
-                                            "proxyify" => $resource->getProxify(),
-                                            "required" => $resource->getRequired(),
-                                            "accesses" => $resource->getAccesses(),
-                                            "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
-                                            "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
-                                            "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
-                                            "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
-                                            "resource_type" => $entity->getEntityType(),
-                                            "resource_type_title" => "External Link"
-                                        );
+                                        if ($resource) {
+                                            $resource_array = array(
+                                                "entity_id" => $entity->getID(),
+                                                "resource_id" => $resource->getID(),
+                                                "link" => $resource->getLink(),
+                                                "title" => ($resource->getLinkTitle() != "" ? $resource->getLinkTitle() : $resource->getLink()),
+                                                "url" => ENTRADA_RELATIVE . "/link-event.php?id=" . (int) $resource->getID(),
+                                                "description" => $resource->getLinkNotes(),
+                                                "timeframe" => $resource->getTimeframe(),
+                                                "proxyify" => $resource->getProxify(),
+                                                "required" => $resource->getRequired(),
+                                                "accesses" => $resource->getAccesses(),
+                                                "release_date" => ($resource->getReleaseDate() != "0" ? date("Y-m-d", $resource->getReleaseDate()) : ""),
+                                                "release_until" => ($resource->getReleaseUntil() != "0" ? date("Y-m-d", $resource->getReleaseUntil()) : ""),
+                                                "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
+                                                "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
+                                                "resource_type" => $entity->getEntityType(),
+                                                "resource_type_title" => "External Link"
+                                            );
+                                        }
                                         break;
                                     case 10 :
                                         $resource = Models_Event_Resource_LtiProvider::fetchRowByID($entity->getEntityValue());
-                                        $resource_array = array(
-                                            "entity_id" => $entity->getID(),
-                                            "resource_id" => $resource->getID(),
-                                            "title" => $resource->getLtiTitle(),
-                                            "link" => $resource->getLaunchUrl(),
-                                            "description" => $resource->getLtiNotes(),
-                                            "lti_key" => $resource->getLtiKey(),
-                                            "lti_secret" => $resource->getLtiSecret(),
-                                            "lti_params" => $resource->getLtiParams(),
-                                            "timeframe" => $resource->getTimeframe(),
-                                            "required" => $resource->getRequired(),
-                                            "release_date" => ($resource->getValidFrom() != "0" ? date("Y-m-d", $resource->getValidFrom()) : ""),
-                                            "release_until" => ($resource->getValidUntil() != "0" ? date("Y-m-d", $resource->getValidUntil()) : ""),
-                                            "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
-                                            "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
-                                            "resource_type" => $entity->getEntityType(),
-                                            "resource_type_title" => "LTI Provider"
-                                        );
+                                        if ($resource) {
+                                            $resource_array = array(
+                                                "entity_id" => $entity->getID(),
+                                                "resource_id" => $resource->getID(),
+                                                "title" => $resource->getLtiTitle(),
+                                                "link" => $resource->getLaunchUrl(),
+                                                "description" => $resource->getLtiNotes(),
+                                                "lti_key" => $resource->getLtiKey(),
+                                                "lti_secret" => $resource->getLtiSecret(),
+                                                "lti_params" => $resource->getLtiParams(),
+                                                "timeframe" => $resource->getTimeframe(),
+                                                "required" => $resource->getRequired(),
+                                                "release_date" => ($resource->getValidFrom() != "0" ? date("Y-m-d", $resource->getValidFrom()) : ""),
+                                                "release_until" => ($resource->getValidUntil() != "0" ? date("Y-m-d", $resource->getValidUntil()) : ""),
+                                                "start_time" => ($resource->getReleaseDate() != "0" ? date("H:i", $resource->getReleaseDate()) : ""),
+                                                "finish_time" => ($resource->getReleaseUntil() != "0" ? date("H:i", $resource->getReleaseUntil()) : ""),
+                                                "resource_type" => $entity->getEntityType(),
+                                                "resource_type_title" => "LTI Provider"
+                                            );
+                                        }
                                         break;
                                 }
                                 echo json_encode(array("status" => "success", "data" => $resource_array));
@@ -2648,6 +2663,8 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                 $html .= "</table>";
 
                                 $data["html"] = $html;
+                            } else {
+                                $data["resource"] = false;
                             }
 
                             echo json_encode(array("status" => "success", "data" => $data));
@@ -2703,218 +2720,232 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                         case 5 :
                                         case 6 :
                                         case 11 :
-                                        case 12 :
-                                            $resource_type_title = "";
-                                            if ($entity->getEntityType() == 1) {
-                                                $resource_type_title = "Podcast";
-                                            } else if ($entity->getEntityType() == 5) {
-                                                $resource_type_title = "Lecture Notes";
-                                            } else if ($entity->getEntityType() == 6) {
-                                                $resource_type_title = "Lecture Slides";
-                                            } else if ($entity->getEntityType() == 11) {
-                                                $resource_type_title = "Other";
-                                            } else if ($entity->getEntityType() == 12) {
-                                                $resource_type_title = "Podcast";
-                                            }
-
-                                            $resource_views = Models_Statistic::getEventFileViews($entity->getEntityValue());
-
-                                            $views = 0;
-                                            if ($resource_views) {
-                                                $views = count($resource_views);
-                                            }
-
                                             $resource = Models_Event_Resource_File::fetchRowByID($entity->getEntityValue());
-                                            $resource_array = array(
-                                                "entity_id" => $entity->getID(),
-                                                "resource_id" => $resource->getID(),
-                                                "title" => ($resource->getFileTitle() != "" ? $resource->getFileTitle() : $resource->getFileName()),
-                                                "url" => ENTRADA_RELATIVE . "/file-event.php?id=" . (int) $resource->getID(),
-                                                "file_name" => $resource->getFileName(),
-                                                "file_size" => readable_size($resource->getFileSize()),
-                                                "description" => $resource->getFileNotes(),
-                                                "access_method" => $resource->getAccessMethod(),
-                                                "accesses" => $views,
-                                                "timeframe" => $resource->getTimeframe(),
-                                                "required" => $resource->getRequired(),
-                                                "resource_type" => $entity->getEntityType(),
-                                                "resource_type_title" => $resource_type_title
-                                            );
+                                            if ($resource && is_object($resource)) {
+                                                $resource_type_title = "";
+                                                if ($entity->getEntityType() == 1) {
+                                                    $resource_type_title = "Podcast";
+                                                } else if ($entity->getEntityType() == 5) {
+                                                    $resource_type_title = "Lecture Notes";
+                                                } else if ($entity->getEntityType() == 6) {
+                                                    $resource_type_title = "Lecture Slides";
+                                                } else if ($entity->getEntityType() == 11) {
+                                                    $resource_type_title = "Other";
+                                                } else if ($entity->getEntityType() == 12) {
+                                                    $resource_type_title = "Podcast";
+                                                }
 
-                                            $resource_array["release_date"] = "";
-                                            $resource_array["release_until"] = "";
-                                            if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
-                                                $resource_array["release_date"] =  "This file will be available for downloading <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
-                                            } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
-                                                $resource_array["release_until"] = "This file was only available for download until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                $resource_views = Models_Statistic::getEventFileViews($entity->getEntityValue());
+
+                                                $views = 0;
+                                                if ($resource_views) {
+                                                    $views = count($resource_views);
+                                                }
+
+                                                $resource = Models_Event_Resource_File::fetchRowByID($entity->getEntityValue());
+                                                $resource_array = array(
+                                                    "entity_id" => $entity->getID(),
+                                                    "resource_id" => $resource->getID(),
+                                                    "title" => ($resource->getFileTitle() != "" ? $resource->getFileTitle() : $resource->getFileName()),
+                                                    "url" => ENTRADA_RELATIVE . "/file-event.php?id=" . (int) $resource->getID(),
+                                                    "file_name" => $resource->getFileName(),
+                                                    "file_size" => readable_size($resource->getFileSize()),
+                                                    "description" => $resource->getFileNotes(),
+                                                    "access_method" => $resource->getAccessMethod(),
+                                                    "accesses" => $views,
+                                                    "timeframe" => $resource->getTimeframe(),
+                                                    "required" => $resource->getRequired(),
+                                                    "resource_type" => $entity->getEntityType(),
+                                                    "resource_type_title" => $resource_type_title
+                                                );
+
+                                                $resource_array["release_date"] = "";
+                                                $resource_array["release_until"] = "";
+                                                if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
+                                                    $resource_array["release_date"] =  "This file will be available for downloading <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
+                                                } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
+                                                    $resource_array["release_until"] = "This file was only available for download until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                }
                                             }
                                             break;
                                         case 8 :
                                             $resource = Models_Quiz_Attached::fetchRowByID($entity->getEntityValue());
+                                            if ($resource && is_object($resource)) {
+                                                $complete_attemptes = Models_Quiz_Progress::getDistinctAttempts($resource->getAquizID());
 
-                                            $complete_attemptes = Models_Quiz_Progress::getDistinctAttempts($resource->getAquizID());
+                                                $views = 0;
+                                                if ($complete_attemptes) {
+                                                    $views = $complete_attemptes;
+                                                }
 
-                                            $views = 0;
-                                            if ($complete_attemptes) {
-                                                $views = $complete_attemptes;
-                                            }
+                                                $resource_array = array(
+                                                    "entity_id" => $entity->getID(),
+                                                    "resource_id" => $resource->getAquizID(),
+                                                    "title" => $resource->getQuizTitle(),
+                                                    "quiz_id" => $resource->getQuizID(),
+                                                    "description" => $resource->getQuizNotes(),
+                                                    "require_attendance" => $resource->getRequireAttendance(),
+                                                    "random_order" => $resource->getRandomOrder(),
+                                                    "quiz_timeout" => $resource->getQuizTimeout(),
+                                                    "quiz_attempts" => $resource->getQuizAttempts(),
+                                                    "quiztype_id" => $resource->getQuiztypeID(),
+                                                    "accesses" => $views,
+                                                    "timeframe" => $resource->getTimeframe(),
+                                                    "required" => $resource->getRequired(),
+                                                    "resource_type" => $entity->getEntityType(),
+                                                    "resource_type_title" => "Quiz"
+                                                );
 
-                                            $resource_array = array(
-                                                "entity_id" => $entity->getID(),
-                                                "resource_id" => $resource->getAquizID(),
-                                                "title" => $resource->getQuizTitle(),
-                                                "quiz_id" => $resource->getQuizID(),
-                                                "description" => $resource->getQuizNotes(),
-                                                "require_attendance" => $resource->getRequireAttendance(),
-                                                "random_order" => $resource->getRandomOrder(),
-                                                "quiz_timeout" => $resource->getQuizTimeout(),
-                                                "quiz_attempts" => $resource->getQuizAttempts(),
-                                                "quiztype_id" => $resource->getQuiztypeID(),
-                                                "accesses" => $views,
-                                                "timeframe" => $resource->getTimeframe(),
-                                                "required" => $resource->getRequired(),
-                                                "resource_type" => $entity->getEntityType(),
-                                                "resource_type_title" => "Quiz"
-                                            );
+                                                $resource_array["release_date"] = "";
+                                                $resource_array["release_until"] = "";
 
-                                            $resource_array["release_date"] = "";
-                                            $resource_array["release_until"] = "";
-
-                                            if ((int) $resource->getReleaseDate() && (int) $resource->getReleaseUntil()) {
-                                                $resource_array["release_until"] .= "This quiz ".($resource->getReleaseUntil() > time() ? "is" : "was only")." available from <strong>".date(DEFAULT_DATE_FORMAT, html_encode($resource->getReleaseDate()))."</strong> to <strong>".date(DEFAULT_DATE_FORMAT, html_encode($resource->getReleaseUntil()))."</strong>.";
-                                            } elseif ((int) $resource->getReleaseDate()) {
-                                                $resource_array["release_until"] .= "This quiz ".($resource->getReleaseDate() > time() ? "will become" : "became")." available on <strong>".date(DEFAULT_DATE_FORMAT, html_encode($resource->getReleaseDate()))."</strong>.";
-                                            } elseif ((int) $resource->getReleaseUntil()) {
-                                                $resource_array["release_until"] .= "This quiz ".($resource->getReleaseUntil() > time() ? "is" : "was only")." available until <strong>".date(DEFAULT_DATE_FORMAT, html_encode($resource->getReleaseUntil()))."</strong>.";
-                                            } else {
-                                                $resource_array["release_until"] = "This quiz is available indefinitely.";
+                                                if ((int) $resource->getReleaseDate() && (int) $resource->getReleaseUntil()) {
+                                                    $resource_array["release_until"] .= "This quiz ".($resource->getReleaseUntil() > time() ? "is" : "was only")." available from <strong>".date(DEFAULT_DATE_FORMAT, html_encode($resource->getReleaseDate()))."</strong> to <strong>".date(DEFAULT_DATE_FORMAT, html_encode($resource->getReleaseUntil()))."</strong>.";
+                                                } elseif ((int) $resource->getReleaseDate()) {
+                                                    $resource_array["release_until"] .= "This quiz ".($resource->getReleaseDate() > time() ? "will become" : "became")." available on <strong>".date(DEFAULT_DATE_FORMAT, html_encode($resource->getReleaseDate()))."</strong>.";
+                                                } elseif ((int) $resource->getReleaseUntil()) {
+                                                    $resource_array["release_until"] .= "This quiz ".($resource->getReleaseUntil() > time() ? "is" : "was only")." available until <strong>".date(DEFAULT_DATE_FORMAT, html_encode($resource->getReleaseUntil()))."</strong>.";
+                                                } else {
+                                                    $resource_array["release_until"] = "This quiz is available indefinitely.";
+                                                }
                                             }
                                             break;
                                         case 4 :
                                             $resource = Models_Event_Resource_Homework::fetchRowByID($entity->getEntityValue());
-                                            $resource_array = array(
-                                                "entity_id" => $entity->getID(),
-                                                "resource_id" => $resource->getID(),
-                                                "title" => "Homework",
-                                                "description" => $resource->getResourceHomework(),
-                                                "timeframe" => $resource->getTimeframe(),
-                                                "required" => $resource->getRequired(),
-                                                "resource_type" => $entity->getEntityType(),
-                                                "resource_type_title" => "Homework"
-                                            );
+                                            if ($resource && is_object($resource)) {
+                                                $resource_array = array(
+                                                    "entity_id" => $entity->getID(),
+                                                    "resource_id" => $resource->getID(),
+                                                    "title" => "Homework",
+                                                    "description" => $resource->getResourceHomework(),
+                                                    "timeframe" => $resource->getTimeframe(),
+                                                    "required" => $resource->getRequired(),
+                                                    "resource_type" => $entity->getEntityType(),
+                                                    "resource_type_title" => "Homework"
+                                                );
 
-                                            $resource_array["release_date"] = "";
-                                            $resource_array["release_until"] = "";
-                                            if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
-                                                $resource_array["release_date"] =  "This homework will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
-                                            } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
-                                                $resource_array["release_until"] = "This homework was only available until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                $resource_array["release_date"] = "";
+                                                $resource_array["release_until"] = "";
+                                                if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
+                                                    $resource_array["release_date"] =  "This homework will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
+                                                } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
+                                                    $resource_array["release_until"] = "This homework was only available until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                }
                                             }
                                             break;
                                         case 2 :
                                             $resource = Models_Event_Resource_Classwork::fetchRowByID($entity->getEntityValue());
-                                            $resource_array = array(
-                                                "entity_id" => $entity->getID(),
-                                                "resource_id" => $resource->getID(),
-                                                "title" => "Class Work",
-                                                "description" => $resource->getResourceClasswork(),
-                                                "timeframe" => $resource->getTimeframe(),
-                                                "required" => $resource->getRequired(),
-                                                "resource_type" => $entity->getEntityType(),
-                                                "resource_type_title" => "Class Work"
-                                            );
+                                            if ($resource && is_object($resource)) {
+                                                $resource_array = array(
+                                                    "entity_id" => $entity->getID(),
+                                                    "resource_id" => $resource->getID(),
+                                                    "title" => "Class Work",
+                                                    "description" => $resource->getResourceClasswork(),
+                                                    "timeframe" => $resource->getTimeframe(),
+                                                    "required" => $resource->getRequired(),
+                                                    "resource_type" => $entity->getEntityType(),
+                                                    "resource_type_title" => "Class Work"
+                                                );
 
-                                            $resource_array["release_date"] = "";
-                                            $resource_array["release_until"] = "";
-                                            if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
-                                                $resource_array["release_date"] =  "This classwork will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
-                                            } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
-                                                $resource_array["release_until"] = "This classwork was only available until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                $resource_array["release_date"] = "";
+                                                $resource_array["release_until"] = "";
+                                                if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
+                                                    $resource_array["release_date"] =  "This classwork will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
+                                                } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
+                                                    $resource_array["release_until"] = "This classwork was only available until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                }
                                             }
                                             break;
                                         case 9 :
                                             $resource = Models_Event_Resource_TextbookReading::fetchRowByID($entity->getEntityValue());
-                                            $resource_array = array(
-                                                "entity_id" => $entity->getID(),
-                                                "resource_id" => $resource->getID(),
-                                                "title" => "Textbook Reading",
-                                                "description" => $resource->getResourceTextbookReading(),
-                                                "timeframe" => $resource->getTimeframe(),
-                                                "required" => $resource->getRequired(),
-                                                "resource_type" => $entity->getEntityType(),
-                                                "resource_type_title" => "Textbook Reading"
-                                            );
+                                            if ($resource && is_object($resource)) {
+                                                $resource_array = array(
+                                                    "entity_id" => $entity->getID(),
+                                                    "resource_id" => $resource->getID(),
+                                                    "title" => "Textbook Reading",
+                                                    "description" => $resource->getResourceTextbookReading(),
+                                                    "timeframe" => $resource->getTimeframe(),
+                                                    "required" => $resource->getRequired(),
+                                                    "resource_type" => $entity->getEntityType(),
+                                                    "resource_type_title" => "Textbook Reading"
+                                                );
 
-                                            $resource_array["release_date"] = "";
-                                            $resource_array["release_until"] = "";
-                                            if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
-                                                $resource_array["release_date"] =  "This textbook reading resource will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
-                                            } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
-                                                $resource_array["release_until"] = "This textbook reading resource was only available until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                $resource_array["release_date"] = "";
+                                                $resource_array["release_until"] = "";
+                                                if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
+                                                    $resource_array["release_date"] =  "This textbook reading resource will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
+                                                } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
+                                                    $resource_array["release_until"] = "This textbook reading resource was only available until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                }
                                             }
                                             break;
                                         case 3 :
                                         case 7 :
                                             $resource = Models_Event_Resource_Link::fetchRowByID($entity->getEntityValue());
+                                            if ($resource && is_object($resource)) {
+                                                $resource_views = Models_Statistic::getEventLinkViews($entity->getEntityValue());
 
-                                            $resource_views = Models_Statistic::getEventLinkViews($entity->getEntityValue());
+                                                $views = 0;
+                                                if ($resource_views) {
+                                                    $views = count($resource_views);
+                                                }
 
-                                            $views = 0;
-                                            if ($resource_views) {
-                                                $views = count($resource_views);
-                                            }
+                                                $resource_array = array(
+                                                    "entity_id" => $entity->getID(),
+                                                    "resource_id" => $resource->getID(),
+                                                    "title" => ($resource->getLinkTitle() != "" ? $resource->getLinkTitle() : $resource->getLink()),
+                                                    "link" => $resource->getLink(),
+                                                    "url" => ENTRADA_RELATIVE . "/link-event.php?id=" . (int) $resource->getID(),
+                                                    "description" => $resource->getLinkNotes(),
+                                                    "proxyify" => $resource->getProxify(),
+                                                    "timeframe" => $resource->getTimeframe(),
+                                                    "required" => $resource->getRequired(),
+                                                    "accesses" => $views,
+                                                    "resource_type" => $entity->getEntityType(),
+                                                    "resource_type_title" => "External Link"
+                                                );
 
-                                            $resource_array = array(
-                                                "entity_id" => $entity->getID(),
-                                                "resource_id" => $resource->getID(),
-                                                "title" => ($resource->getLinkTitle() != "" ? $resource->getLinkTitle() : $resource->getLink()),
-                                                "link" => $resource->getLink(),
-                                                "url" => ENTRADA_RELATIVE . "/link-event.php?id=" . (int) $resource->getID(),
-                                                "description" => $resource->getLinkNotes(),
-                                                "proxyify" => $resource->getProxify(),
-                                                "timeframe" => $resource->getTimeframe(),
-                                                "required" => $resource->getRequired(),
-                                                "accesses" => $views,
-                                                "resource_type" => $entity->getEntityType(),
-                                                "resource_type_title" => "External Link"
-                                            );
-
-                                            $resource_array["release_date"] = "";
-                                            $resource_array["release_until"] = "";
-                                            if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
-                                                $resource_array["release_date"] =  "This link will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
-                                            } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
-                                                $resource_array["release_until"] = "This link was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                $resource_array["release_date"] = "";
+                                                $resource_array["release_until"] = "";
+                                                if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
+                                                    $resource_array["release_date"] =  "This link will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
+                                                } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
+                                                    $resource_array["release_until"] = "This link was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                }
                                             }
                                             break;
                                         case 10 :
                                             $resource = Models_Event_Resource_LtiProvider::fetchRowByID($entity->getEntityValue());
-                                            $resource_array = array(
-                                                "entity_id" => $entity->getID(),
-                                                "resource_id" => $resource->getID(),
-                                                "title" => ($resource->getLtiTitle() != "" ? $resource->getLtiTitle() : $resource->getLaunchUrl()),
-                                                "link" => $resource->getLaunchUrl(),
-                                                "description" => $resource->getLtiNotes(),
-                                                "lti_key" => $resource->getLtiKey(),
-                                                "lti_secret" => $resource->getLtiSecret(),
-                                                "lti_params" => $resource->getLtiParams(),
-                                                "timeframe" => $resource->getTimeframe(),
-                                                "required" => $resource->getRequired(),
-                                                "resource_type" => $entity->getEntityType(),
-                                                "resource_type_title" => "LTI Provider"
-                                            );
+                                            if ($resource && is_object($resource)) {
+                                                $resource_array = array(
+                                                    "entity_id" => $entity->getID(),
+                                                    "resource_id" => $resource->getID(),
+                                                    "title" => ($resource->getLtiTitle() != "" ? $resource->getLtiTitle() : $resource->getLaunchUrl()),
+                                                    "link" => $resource->getLaunchUrl(),
+                                                    "description" => $resource->getLtiNotes(),
+                                                    "lti_key" => $resource->getLtiKey(),
+                                                    "lti_secret" => $resource->getLtiSecret(),
+                                                    "lti_params" => $resource->getLtiParams(),
+                                                    "timeframe" => $resource->getTimeframe(),
+                                                    "required" => $resource->getRequired(),
+                                                    "resource_type" => $entity->getEntityType(),
+                                                    "resource_type_title" => "LTI Provider"
+                                                );
 
-                                            $resource_array["release_date"] = "";
-                                            $resource_array["release_until"] = "";
-                                            if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
-                                                $resource_array["release_date"] =  "This LTI provider will be available for downloading <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
-                                            } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
-                                                $resource_array["release_until"] = "This LTI provider was only available for download until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                $resource_array["release_date"] = "";
+                                                $resource_array["release_until"] = "";
+                                                if (((int) $resource->getReleaseDate()) && ($resource->getReleaseDate() > time())) {
+                                                    $resource_array["release_date"] =  "This LTI provider will be available for downloading <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseDate())."</strong>.";
+                                                } elseif (((int) $resource->getReleaseUntil()) && ($resource->getReleaseUntil() < time())) {
+                                                    $resource_array["release_until"] = "This LTI provider was only available for download until <strong>".date(DEFAULT_DATE_FORMAT, $resource->getReleaseUntil())."</strong>.";
+                                                }
                                             }
                                             break;
                                     }
 
-                                    $entities[$resource->getTimeframe()][] = $resource_array;
+                                    if ($resource) {
+                                        $entities[$resource->getTimeframe()][] = $resource_array;
+                                    }
                                 }
                                 echo json_encode(array("status" => "success", "data" => $entities));
                             } else {

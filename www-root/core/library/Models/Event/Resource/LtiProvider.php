@@ -39,8 +39,9 @@ class Models_Event_Resource_LtiProvider extends Models_Base {
             $updated_date,
             $updated_by;
     
-    protected $table_name = "event_lti_consumers";
-    protected $default_sort_column = "id";
+    protected static $table_name = "event_lti_consumers";
+    protected static $default_sort_column = "id";
+    protected static $primary_key = "id";
     
     public function getID() {
         return $this->id;
@@ -152,7 +153,7 @@ class Models_Event_Resource_LtiProvider extends Models_Base {
     public function insert() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->id = $db->Insert_ID();
             return $this;
         } else {
@@ -164,7 +165,7 @@ class Models_Event_Resource_LtiProvider extends Models_Base {
     public function update() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`id` = ".$db->qstr($this->id))) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`id` = ".$db->qstr($this->id))) {
             return $this;
         } else {
             return false;
@@ -174,7 +175,7 @@ class Models_Event_Resource_LtiProvider extends Models_Base {
     public function delete() {
         global $db;
         
-        $query = "DELETE FROM `".$this->table_name."` WHERE `id` = ?";
+        $query = "DELETE FROM `".static::$table_name."` WHERE `id` = ?";
         if ($db->Execute($query, $this->id)) {
             return true;
         } else {

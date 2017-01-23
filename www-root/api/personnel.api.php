@@ -31,7 +31,20 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	} else {
 		$fullname = "";
 	}
-	
+
+	if (isset($_POST["term"]) && ($tmp_input = clean_input($_POST["term"], array("trim", "notags")))) {
+		$term = $tmp_input;
+	} elseif (isset($_GET["term"]) && ($tmp_input = clean_input($_GET["term"], array("trim", "notags")))) {
+		$term = $tmp_input;
+	} else {
+		$term = "";
+	}
+
+	if (empty($fullname) && !empty($term))
+	{
+		$fullname = $term;
+	}
+
 	if (isset($_POST["email"]) && ($tmp_input = clean_input($_POST["email"], array("trim", "notags")))) {
 		$email = $tmp_input;
 	} elseif (isset($_GET["email"]) && ($tmp_input = clean_input($_GET["email"], array("trim", "notags")))) {
@@ -55,7 +68,21 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
     } else {
         $organisation_id = null;
     }
+	$out = "html";
 
+	if (isset($_POST["out"]) && ($tmp_input = clean_input($_POST["out"], array("trim", "notags")))) {
+		$out = $tmp_input;
+	} elseif (isset($_GET["out"]) && ($tmp_input = clean_input($_GET["out"], array("trim", "notags")))) {
+		$out = $tmp_input;
+	}
+
+	$out = "html";
+
+	if (isset($_POST["out"]) && ($tmp_input = clean_input($_POST["out"], array("trim", "notags")))) {
+		$out = $tmp_input;
+	} elseif (isset($_GET["out"]) && ($tmp_input = clean_input($_GET["out"], array("trim", "notags")))) {
+		$out = $tmp_input;
+	}
 	if ($fullname) {
 		$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`, c.`organisation_title`, b.`group`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -68,6 +95,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
         if ($organisation_id) {
             $query .= " AND c.`organisation_id` = ".$db->qstr($organisation_id);
         }
+
 		switch ($type) {
 			case "facultyorstaff":
 				$query .= "	AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer') OR b.`group` = 'staff' OR b.`group` = 'medtech')";
@@ -95,10 +123,21 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			case "coordinator" :
 				$query .= "	AND b.`group` = 'staff' AND b.`role` = 'admin'";
 			break;
+			case "program_coordinator" :
+			case "pcoordinator" :
+				$query .= " AND b.`role` = 'pcoordinator'";
+			break;
+			case "evaluationrep" :
+				$query .= " AND b.`group` = 'faculty'";
+			break;
+			case "ta" :
+			case "studentrep" :
+				$query .= " AND b.`group` = 'student'";
+			break;
 			case "evaluators" :
 				$evaluator_ids_string = "";
 				if (isset($_GET["id"]) && ($evaluation_id = clean_input($_GET["id"], "int"))) {
-					$evaluators = Models_Evaluation::getEvaluators($evaluation_id);
+					$evaluators = Classes_Evaluation::getEvaluators($evaluation_id);
 					if ($evaluators) {
 						foreach ($evaluators as $evaluator) {
 							$evaluator_ids_string .= ($evaluator_ids_string ? ", " : "").$db->qstr($evaluator["proxy_id"]);
@@ -114,17 +153,31 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					AND (b.`access_expires`='0' OR b.`access_expires` >= ".$db->qstr(time()).")
 					GROUP BY a.`id`
 					ORDER BY `fullname` ASC";
-		echo "<ul>\n";
+
 		$results = $db->GetAll($query);
+
+		$output = "";
 		if ($results) {
-			foreach($results as $result) {
-				echo "\t<li id=\"".(int) $result["proxy_id"]."\">".html_encode($result["fullname"])."<span class=\"informal content-small\"><br />".html_encode($result["organisation_title"])." - ".html_encode(ucfirst($result["group"]))
-						."<br />".html_encode($result["email"])."</span></li>\n";
+			if ($out == "html") {
+				$output .= "<ul>\n";
+				foreach ($results as $result) {
+					$output .= "\t<li id=\"" . (int)$result["proxy_id"] . "\">" . html_encode($result["fullname"]) . "<span class=\"informal content-small\"><br />" . html_encode($result["organisation_title"]) . " - " . html_encode(ucfirst($result["group"]))
+					. "<br />" . html_encode($result["email"]) . "</span></li>\n";
+				}
+ 				$output .= "</ul>\n";
+ 			} else {
+				$output .= json_encode($results);
 			}
 		} else {
-			echo "\t<li id=\"0\"><span class=\"informal\">&quot;<strong>".html_encode($fullname)."&quot;</strong> was not found</span></li>";
+			if ($out == "html") {
+				$output .= "<ul>\n";
+				$output .= "\t<li id=\"0\"><span class=\"informal\">&quot;<strong>".html_encode($fullname)."&quot;</strong> was not found</span></li>";
+				$output .= "</ul>\n";
+			} else {
+				$output .= json_encode(array(array("response" => $fullname." was not found")));
+			}
 		}
-		echo "</ul>";
+		echo $output;
 	}
 	
 	if ($email) {

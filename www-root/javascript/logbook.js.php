@@ -20,25 +20,20 @@
 				width: 653,  
 				className: 'default-tooltip'  
 			});
-    }); 
+    });
+
 	function addObjective (objective_id, level) {
 		if (!$('objective_'+objective_id+'_row')) {
 			new Ajax.Updater('objective-list', '<?php echo ENTRADA_URL."/api/logbook-objective.api.php"; ?>', {
 				parameters: 'id='+objective_id+'&level='+level,
-				method:		'post',
-				insertion: 'bottom',
+				method: 'post',
+				insertion: 'top',
 				onComplete: function () {
+                    if (!$('objective-list').visible()) {
+                        $('objective-list').show();
+                    }
 					if (!$('objective-container').visible()) {
 						$('objective-container').show();
-					}
-					if ($('objective-loading').visible()) {
-						$('objective-loading').hide();
-					}
-					loadObjectiveInvolvement($('obj_'+objective_id+'_participation_level'));
-				},
-				onCreate: function () {
-					if (!$('objective-loading').visible()) {
-						$('objective-loading').show();
 					}
 				}
 			});
@@ -64,21 +59,14 @@
 		if (!$('procedure_'+procedure_id+'_row')) {
 			new Ajax.Updater('procedure-list', '<?php echo ENTRADA_URL."/api/logbook-procedure.api.php"; ?>', {
 				parameters: 'id='+procedure_id+'&level='+level,
-				method:		'post',
-				insertion: 'bottom',
-				onComplete: function () { 
+				method: 'post',
+				insertion: 'top',
+				onComplete: function () {
 					if (!$('procedure-container').visible()) {
 						$('procedure-container').show();
 					}
-					if ($('procedure-loading').visible()) {
-						$('procedure-loading').hide();
-					}
+
 					loadProcedureInvolvement($('proc_'+procedure_id+'_participation_level'));
-				},
-				onCreate: function () {
-					if (!$('procedure-loading').visible()) {
-						$('procedure-loading').show();
-					}
 				}
 			});
 			$('all_procedure_id').selectedIndex = 0;
@@ -127,8 +115,8 @@
 				count++;
 			}
 		);
-		if (!count && $('objective-list').visible()) {
-			$('objective-list').hide();
+		if (!count && $('objective-container').visible()) {
+			$('objective-container').hide();
 		}
 	}
 	
@@ -143,11 +131,19 @@
 				}
 			}
 		);
+
 		ids.each(
 			function (id) { 
 				if (id != null) {
 					$('procedure_'+id+'_row').remove(); 
-					$('proc-item-'+id).show();
+
+                    $('all-proc-item-'+id).show();
+                    if ($('rotation-proc-item-'+id)) {
+                        $('rotation-proc-item-'+id).show();
+                    }
+                    if ($('deficient-proc-item-'+id)) {
+                        $('deficient-proc-item-'+id).show();
+                    }
 				}
 			}
 		);
@@ -157,47 +153,83 @@
 				count++;
 			}
 		);
-		if (!count && $('procedure-list').visible()) {
-			$('procedure-list').hide();
+		if (!count && $('procedure-container').visible()) {
+			$('procedure-container').hide();
 		}
 	}
 	
 	function showRotationObjectives() {
-		$('all_objective_id').hide();
-		$('deficient_objective_id').hide();
-		$('rotation_objective_id').show();
+        if ($('all_objective_id')) {
+            $('all_objective_id').hide();
+        }
+        if ($('deficient_objective_id')) {
+		    $('deficient_objective_id').hide();
+        }
+        if ($('rotation_objective_id')) {
+	    	$('rotation_objective_id').show();
+        }
 	}
 	
 	function showDeficientObjectives() {
-		$('all_objective_id').hide();
-		$('rotation_objective_id').hide();
-		$('deficient_objective_id').show();
+		if ($('all_objective_id')) {
+           $('all_objective_id').hide();
+        }
+		if ($('rotation_objective_id')) {
+           $('rotation_objective_id').hide();
+        }
+        if ($('deficient_objective_id')) {
+           $('deficient_objective_id').show();
+        }
 	}
 	
 	function showAllObjectives() {
-		$('rotation_objective_id').hide();
-		$('deficient_objective_id').hide();
-		$('all_objective_id').show();
+        if ($('rotation_objective_id')) {
+	    	$('rotation_objective_id').hide();
+        }
+        if ($('deficient_objective_id')) {
+	    	$('deficient_objective_id').hide();
+        }
+        if ($('all_objective_id')) {
+	    	$('all_objective_id').show();
+        }
 	}
 	
 	function showRotationProcedures() {
-		$('all_procedure_id').hide();
-		$('deficient_procedure_id').hide();
-		$('rotation_procedure_id').show();
+        if ($('all_procedure_id')) {
+           $('all_procedure_id').hide();
+        }
+        if ($('deficient_procedure_id')) {
+           $('deficient_procedure_id').hide();
+        }
+        if ($('rotation_procedure_id')) {
+           $('rotation_procedure_id').show();
+        }
 	}
 	
 	function showDeficientProcedures() {
-		$('all_procedure_id').hide();
-		$('rotation_procedure_id').hide();
-		$('deficient_procedure_id').show();
+        if ($('all_procedure_id')) {
+            $('all_procedure_id').hide();
+        }
+        if ($('rotation_procedure_id')) {
+            $('rotation_procedure_id').hide();
+        }
+        if ($('deficient_procedure_id')) {
+            $('deficient_procedure_id').show();
+        }
 	}
 	
 	function showAllProcedures() {
-		$('deficient_procedure_id').hide();
-		$('rotation_procedure_id').hide();
-		$('all_procedure_id').show();
+        if ($('deficient_procedure_id')) {
+            $('deficient_procedure_id').hide();
+        }
+        if ($('rotation_procedure_id')) {
+            $('rotation_procedure_id').hide();
+        }
+        if ($('all_procedure_id')) {
+            $('all_procedure_id').show();
+        }
 	}
-	
+
 	function loadProcedureInvolvement(selectBox) {
 		selectBox.options[$$('#procedure-list tr:first-child td select')[0].selectedIndex].selected = true;
 	}

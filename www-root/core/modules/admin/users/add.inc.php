@@ -62,7 +62,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                 $access = false;
 
                 if ($user) {
-                    $access = Models_UserAccess::fetchRowByUserIDAppID($user->getID());
+                    $access = Models_User_Access::fetchRowByUserIDAppID($user->getID());
                 }
 
                 if ($access) {
@@ -84,7 +84,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                 $access = false;
 
                 if ($user) {
-                    $access = Models_UserAccess::fetchRowByUserIDAppID($user->getID());
+                    $access = Models_User_Access::fetchRowByUserIDAppID($user->getID());
                 }
 
                 if ($access) {
@@ -387,6 +387,11 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                     }
                 }
             }
+
+            if (isset($_POST["user_departments"]) && $_POST["user_departments"]) {
+                $user_departments = json_decode(json_decode($_POST["user_departments"]));
+                $PROCESSED["department_ids"] = array_unique($user_departments);
+            }
 			
             if (!$ERROR) {
                 $PROCESSED["password"] = sha1($PROCESSED["password"].$PROCESSED["salt"]);
@@ -488,11 +493,8 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                      * Handle the inserting of user data into the user_departments table
                      * if departmental information exists in the form.
                      */
-                    if (isset($_POST["user_departments"]) && $_POST["user_departments"]) {
-                        $user_departments = json_decode(json_decode($_POST["user_departments"]));
-                        $department_ids = array_unique($user_departments);
-
-                        foreach ($department_ids as $department_id) {
+                    if (isset($PROCESSED["department_ids"]) && is_array($PROCESSED["department_ids"])) {
+                        foreach ($PROCESSED["department_ids"] as $department_id) {
                             $department_id = clean_input($department_id, "int");
 
                             if ($department_id) {
@@ -513,7 +515,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                             }
                         }
                         ?>
-                        <script>sessionStorage.removeItem("search_target_control_ids");</script>
+                        <script>sessionStorage.removeItem("user_departments_list");</script>
                         <?php
                     }
                 } else {
@@ -590,7 +592,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 			if (isset($_GET["id"]) && $_GET["id"] && ($proxy_id = clean_input($_GET["id"], array("int")))) {
 				$ONLOAD[] = "findExistingUser('id', '".$proxy_id."')";
 			}
-			$ONLOAD[] = "toggle_visibility_checkbox($('send_notification'), 'send_notification_msg')";
+			$ONLOAD[] = "toggle_visibility_checkbox('#send_notification', '#send_notification_msg')";
 
 			if ($ERROR) {
 				echo display_error();
@@ -850,12 +852,23 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 
                 <hr>
 
+                <?php
+                if (isset($PROCESSED["department_ids"]) && is_array($PROCESSED["department_ids"])) {
+                    foreach ($PROCESSED["department_ids"] as $department_id) {
+                        $organisation_title = Models_Department::fetchOrganisationTitleByDepartmentID($department_id);
+                        $organisation_filter_name = str_replace(" ", "_", $organisation_title);
+                        $department = Models_Department::fetchRowByID($department_id);
+                        $input = "<input type=\"hidden\" name=\"" . $organisation_filter_name . "[]\" value=\"" . $department_id . "\" id=\"" . $organisation_filter_name . "_" . $department_id . "\" data-id=\"" . $department_id . "\" data-label=\"" . $department->getDepartmentTitle() . "\" data-filter=\"" . $organisation_filter_name . "\" class=\"search-target-control " . $organisation_filter_name . "_search_target_control\">";
+
+                        echo $input;
+                    }
+                }
+                ?>
+
                 <div id="departmental-affiliation-container">
                     <h2>Departmental Affiliation</h2>
 
                     <div id="advanced-search-container"></div>
-
-                    <div id="advanced-search-departments-list"></div>
 
                     <ul id="departments-list" class="list-group departments"></ul>
 
@@ -867,7 +880,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                 <h2>Notification Options</h2>
 
 				<label class="checkbox">
-					<input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"]))) ? " checked=\"checked\"" : ""); ?> onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /> Send this new user the following password reset e-mail after adding them.
+					<input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"]))) ? " checked=\"checked\"" : ""); ?> onclick="toggle_visibility_checkbox(this, '#send_notification_msg')" /> Send this new user the following password reset e-mail after adding them.
 				</label>
 				<div id="send_notification_msg" style="display: block">
 					<div class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</div>
@@ -890,10 +903,14 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 
                     provStateFunction();
 
-                    if (sessionStorage.getItem("search_target_control_ids")) {
-                        departments = sessionStorage.getItem("search_target_control_ids");
+                    if (sessionStorage.getItem("user_departments_list")) {
+                        if (step > 1) {
+                            var departments_list = JSON.parse(sessionStorage.getItem("user_departments_list"));
 
-                        rebuildSelectedDepartments(departments);
+                            rebuildSelectedDepartments(JSON.parse(departments_list));
+                        } else {
+                            sessionStorage.removeItem("user_departments_list");
+                        }
                     }
 
                     if (sessionStorage.getItem("users_permissions")) {
@@ -1084,7 +1101,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 
                         $(this).closest("li").remove();
 
-                        $("#advanced-search-departments-list").find("input[value=" + dept_id + "]").remove();
+                        $("#addUser").find("input[value=" + dept_id + "]").remove();
                     });
 
                     $("#added-permissions-container").on("click", ".remove-permission", function (e) {
@@ -1133,6 +1150,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 
                         sessionStorage.setItem("users_permissions", JSON.stringify(permissions));
                         sessionStorage.setItem("organisation_order", JSON.stringify(organisation_order));
+                        sessionStorage.setItem("user_departments_list", JSON.stringify(departments));
                     });
 
                     $("#added-permissions-container").on("change", "input[id^=clinical_]", function (e) {
@@ -1514,26 +1532,27 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                     }
 
                     function rebuildSelectedDepartments(selected_departments) {
-                        $(selected_departments).each(function (key, element) {
-                            var dept_id = $(element).attr("data-id");
-
+                        $(selected_departments).each(function (key, dept_id) {
                             var department_li = $(document.createElement("li")).attr("id", "department-" + dept_id).addClass("list-group-item");
                             var icon = $(document.createElement("i")).attr("data-dept", dept_id).addClass("fa fa-minus-circle fa-lg remove-department");
                             var span = $(document.createElement("span")).addClass("department-name");
                             var organisation_title = "";
+                            var department_name = "";
 
                             $.getJSON("<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-departments"; ?>", { method: "get-organisation-title-by-dept-id", dept_id: dept_id }).done(function (data) {
                                 organisation_title = data.organisation_title;
+                                department_name = data.department_name;
 
                                 if (organisation_title) {
                                     organisation_title = " &#45; " + organisation_title;
                                 }
 
-                                $(span).html($(element).attr("data-label") + organisation_title);
+                                $(span).html(department_name + organisation_title);
 
                                 $(department_li).append(icon).append("&nbsp;&nbsp;").append(span);
 
                                 $("#departments-list").append(department_li);
+                                departments.push(dept_id);
                             });
                         });
                     }
@@ -1588,8 +1607,8 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                             resource_url: ENTRADA_URL,
                             filters: filters,
                             filter_component_label: "Departments",
-                            selected_list_container: $("#advanced-search-departments-list"),
                             parent_form: $("#addUser"),
+                            list_selections: false,
                             width: 500
                         });
                     }

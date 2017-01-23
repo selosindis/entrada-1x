@@ -354,7 +354,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						$items = $db->GetAll($query);
 						if ($items) {
 							foreach ($items as $i) {
-								$attached_files[] = $f["file_name"];
+								$attached_files[] = $i["file_name"];
 							}
 						}
 						
@@ -369,7 +369,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						$items = $db->GetAll($query);
 						if ($items) {
 							foreach ($items as $i) {
-								$attached_quizzes[] = $f["quiz_title"];
+								$attached_quizzes[] = $i["quiz_title"];
 							}
 						}
 						
@@ -383,7 +383,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						$items = $db->GetAll($query);
 						if ($items) {
 							foreach ($items as $i) {
-								$attached_links[] = $f["link"];
+								$attached_links[] = $i["link"];
 							}
 						}
 						

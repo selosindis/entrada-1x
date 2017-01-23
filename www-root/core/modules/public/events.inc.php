@@ -75,6 +75,7 @@ if (!defined("PARENT_INCLUDED")) {
     }
 
     $event = Models_Event::get($EVENT_ID);
+	$assessments = Models_Assessment_AssessmentEvent::fetchAllAssessmentByEventID($EVENT_ID);
 
 	/**
 	 * Check for groups which have access to the administrative side of this module
@@ -130,8 +131,8 @@ if (!defined("PARENT_INCLUDED")) {
 	}
 
 	$sidebar_html  = "<div style=\"text-align: center\">\n";
-	$sidebar_html .= "	<a href=\"".ENTRADA_RELATIVE."/podcasts\"><img src=\"".ENTRADA_RELATIVE."/images/podcast-dashboard-image.jpg\" width=\"149\" height=\"99\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
-	$sidebar_html .= "	<a href=\"".ENTRADA_RELATIVE."/podcasts\" style=\"color: #557CA3; font-size: 14px\">Podcasts Available</a>";
+	$sidebar_html .= "	<a href=\"".ENTRADA_RELATIVE."/podcasts\"><img src=\"".ENTRADA_RELATIVE."/images/itunes_podcast_icon.png\" width=\"70\" height=\"70\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
+	$sidebar_html .= "	<a href=\"".ENTRADA_RELATIVE."/podcasts\" style=\"display: block; margin-top: 10px; font-size: 14px\">Podcasts Available</a>";
 	$sidebar_html .= "</div>\n";
 	new_sidebar_item("Podcasts in iTunes", $sidebar_html, "podcast-bar", "open", "2.1");
 
@@ -295,7 +296,7 @@ if (!defined("PARENT_INCLUDED")) {
                             $next_click = "";
                             ?>
                             <div class="btn-toolbar clearfix">
-                                <div class="btn-group span10">
+                                <div class="btn-group span12">
                                     <?php
                                     if (isset($transversal_ids["prev"])) {
                                         $back_click = ENTRADA_RELATIVE . "/events?" . replace_query(array((isset($_GET["drid"]) ? "drid" : "rid") => $transversal_ids["prev"]));
@@ -379,7 +380,7 @@ if (!defined("PARENT_INCLUDED")) {
                     </script>
 
                     <div class="row-fluid">
-                        <div class="span8">
+                        <div class="span8 pull-left">
                             <?php
                             if (clean_input($event_info["event_description"], array("allowedtags", "nows")) != "") {
                                 echo "<div class=\"event-description\">";
@@ -396,7 +397,7 @@ if (!defined("PARENT_INCLUDED")) {
                             ?>
                         </div>
 
-                        <div class="span4">
+                        <div class="span4 pull-right">
                             <table class="event-details">
                                 <tbody>
                                     <tr>
@@ -409,6 +410,13 @@ if (!defined("PARENT_INCLUDED")) {
                                     <tr>
                                         <th>Location</th>
                                         <td><?php echo (($event_info["event_location"]) ? $event_info["event_location"] : "To Be Announced"); ?></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Attendance</th>
+                                        <td>
+                                            <?php echo (isset($event_info["attendance_required"]) && ($event_info["attendance_required"] == 0) ? "<em>Optional</em>" :  "Required"); ?>
+                                        </td>
                                     </tr>
                                     <tr class="spacer">
                                         <td colspan="2"><hr></td>
@@ -443,7 +451,7 @@ if (!defined("PARENT_INCLUDED")) {
                                                 <td>
                                                     <?php
                                                     foreach ($event_contacts["teacher"] as $contact) {
-                                                        echo "<a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a><br />\n";
+                                                        echo "<a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\" class=\"event-details-item\">".html_encode($contact["fullname"])."</a>\n";
                                                     }
                                                     ?>
                                                 </td>
@@ -615,8 +623,20 @@ if (!defined("PARENT_INCLUDED")) {
                                     <tr class="spacer">
                                         <td colspan="2"><hr></td>
                                     </tr>
-                                    <?php } ?>
-                                    <?php
+                                    <?php }
+									if ($assessments) {
+										$html = "<tr><th>" . $translate->_("Assessment") . "</th><td>";
+										$read_assessment = false;
+										foreach ($assessments as $assessment) {
+											$course = Models_Course::fetchRowByID($assessment["course_id"]);
+											if ($ENTRADA_ACL->amIAllowed(new GradebookResource($course->getID(), $course->getOrganisationID()), "read")) {
+												$html .= "<a href=\"" . ENTRADA_RELATIVE . "/admin/gradebook/assessments?section=grade&id=" . $assessment["course_id"] . "&assessment_id=" . $assessment["assessment_id"] . "\" class=\"event-details-item\">" . limit_chars($assessment["name"]) . "</a>\n";
+												$read_assessment = true;
+											}
+										}
+										echo ($read_assessment ? $html . "</td></tr>" : "");
+									}
+
                                     /**
                                      * @todo simpson This needs to be fixed as $event_audience_type is no longer for grad_year.
                                      */
@@ -766,7 +786,7 @@ if (!defined("PARENT_INCLUDED")) {
                                             ?>
                                             <li>
                                                 <strong><?php echo $result["objective_name"]; ?></strong>
-                                                <div class="objective-description">From the <?php echo $translate->_("Objective Set"); ?>: <strong><?php echo $set->getName(); ?></strong></div>
+                                                <div class="objective-description">From the <?php echo $translate->_("Curriculum Tag Set"); ?>: <strong><?php echo $set->getName(); ?></strong></div>
                                             </li>
                                             <?php
                                         }
@@ -847,8 +867,8 @@ if (!defined("PARENT_INCLUDED")) {
                                                     if (!$results) {
                                                         if (!in_array($objective["objective_id"], $c_objectives)) {
                                                             $explicit_event_objectives[] = $objective;
-                                                        } else{
-															$query = "SELECT * `course_objectives` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `objective_id` = ".$db->qstr($objective["objective_id"])."";
+                                                        } else {
+															$query = "SELECT * FROM `course_objectives` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `objective_id` = ".$db->qstr($objective["objective_id"]);
 															$results = $db->getRow($query);
 															if($result) {
 																$explicit_event_objectives[] = $objective;
@@ -883,7 +903,7 @@ if (!defined("PARENT_INCLUDED")) {
                                                                 <?php
                                                                 $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
                                                                 if ($set) {
-                                                                    echo "From the " . $translate->_("Objective Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
+                                                                    echo "From the " . $translate->_("Curriculum Tag Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
                                                                 }
 
                                                                 echo $objective["objective_description"];

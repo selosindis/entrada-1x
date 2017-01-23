@@ -24,17 +24,42 @@
 
 class Models_Event_Attendance extends Models_Base {
 
-    private $eattendance_id,
+    protected $eattendance_id,
         $event_id,
         $proxy_id,
         $updated_date,
         $updated_by;
 
-    protected $table_name = "event_attendance";
-    protected $default_sort_column = "eattendance_id";
+    protected static $table_name           = "event_attendance";
+    protected static $primary_key          = "eaudience_id";
+    protected static $default_sort_column  = "eattendance_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
+    }
+
+    public function getID() {
+        return $this->eattendance_id;
+    }
+
+    public function getEventAttendanceID() {
+        return $this->eattendance_id;
+    }
+
+    public function getEventId() {
+        return $this->event_id;
+    }
+
+    public function getProxyId() {
+        return $this->proxy_id;
+    }
+
+    public function getUpdatedDate() {
+        return $this->updated_date;
+    }
+
+    public function getUpdatedBy() {
+        return $this->updated_by;
     }
 
     /**
@@ -74,24 +99,41 @@ class Models_Event_Attendance extends Models_Base {
         return false;
     }
 
+    public static function fetchAllByPrimaryKeyByEventID($event_id) {
+        $self = new self();
+        return $self->fetchAll(array(
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
+        ));
+    }
+
+    public static function build_sorter($key) {
+        return function ($a, $b) use ($key) {
+            return strnatcmp($a[$key], $b[$key]);
+        };
+    }
+
+    public static function sortAudience($audience) {
+        $self = new self();
+        uasort($audience, $self->build_sorter('lastname'));
+        return $audience;
+    }
+
     public static function fetchAllByEventID($event_id, $event_start = 0) {
         global $db;
-
-        $attendance = array();
 
         $event_audience = Models_Event_Audience::fetchAllByEventID($event_id);
         if ($event_audience) {
             foreach ($event_audience as $event) {
-                $a = $event->getAudience($event_start);
-
-                $members = $a->getAudienceMembers();
-                if ($members) {
-                    foreach ($members as $member) {
-                        $attendance[$member["id"]] = array(
-                            "firstname" => $member["firstname"],
-                            "lastname" => $member["lastname"],
-                            "has_attendance" => false
-                        );
+                if ($a = $event->getAudience($event_start)) {
+                    $members = $a->getAudienceMembers();
+                    if ($members) {
+                        foreach ($members as $member) {
+                            $attendance[$member["id"]] = array(
+                                "firstname" => $member["firstname"],
+                                "lastname" => $member["lastname"],
+                                "has_attendance" => false
+                            );
+                        }
                     }
                 }
             }
@@ -110,9 +152,5 @@ class Models_Event_Attendance extends Models_Base {
         }
 
         return $attendance;
-    }
-
-    public function getEventAttendanceID() {
-        return $this->eattendance_id;
     }
 }

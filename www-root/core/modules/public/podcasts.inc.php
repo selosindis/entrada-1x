@@ -35,14 +35,14 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
 
 	$sidebar_html  = "<div style=\"text-align: center\">\n";
-	$sidebar_html .= "	<a href=\"".str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL)."/podcasts/feed\"><img src=\"".ENTRADA_URL."/images/podcast-dashboard-image.jpg\" width=\"149\" height=\"99\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
-	$sidebar_html .= "	<a href=\"".str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL)."/podcasts/feed\" style=\"color: #557CA3; font-size: 14px\">Subscribe Here</a>";
+	$sidebar_html .= "	<a href=\"".str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL)."/podcasts/feed\"><img src=\"".ENTRADA_URL."/images/itunes_podcast_icon.png\" width=\"70\" height=\"70\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
+	$sidebar_html .= "	<a href=\"".str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL)."/podcasts/feed\" style=\"display: block; margin-top: 10px; font-size: 14px\">Subscribe Here</a>";
 	$sidebar_html .= "</div>\n";
 	new_sidebar_item("Podcasts in iTunes", $sidebar_html, "podcast-bar", "open", "1.1");
 
 	?>
-    <div style="text-align: left; border-bottom: 1px #b3b3b2 solid">
-        <a href="<?php echo str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL); ?>/podcasts/feed"><img src="<?php echo ENTRADA_URL; ?>/images/podcast-header-image.jpg" width="750" height="238" alt="Podcasts in iTunes" title="" border="0" /></a>
+    <div style="text-align: left; border-bottom: 1px #d9dee2 solid">
+        <a href="<?php echo str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL); ?>/podcasts/feed"><img src="<?php echo ENTRADA_URL; ?>/images/podcast-header-image.png" width="750" height="258" alt="Podcasts in iTunes" title="" border="0" /></a>
     </div>
 
     <h1>Podcasts Now Available</h1>
@@ -63,7 +63,7 @@ if(!defined("PARENT_INCLUDED")) {
 
             <p>The term podcasting is closely associated with Apple's iPod, however, it is important to note than an iPod is not required to listen to a podcast. All that is required to listen to a podcast is a podcasting client (such as <a href="http://www.itunes.com">iTunes</a>) and an Internet connection.</p>
 
-            <button class="btn btn-large btn-primary pull-right" onclick="window.location='<?php echo str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL); ?>/podcasts/feed'"><i class="icon-white icon-play-circle"></i> Launch iTunes</button>
+            <button class="btn btn-large btn-primary pull-right" onclick="window.location='<?php echo str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL); ?>/podcasts/feed'"><span class="fa fa-play-circle"></span> Launch iTunes</button>
         </div>
     <?php
 }

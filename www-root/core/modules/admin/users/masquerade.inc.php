@@ -58,6 +58,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                  */
                 $previous_session = $_SESSION;
 
+                $first_session_id = (isset($_SESSION["first_session_id"]) ? $_SESSION["first_session_id"] : $_SESSION["details"]["id"]);
+
                 $_SESSION = array();
                 unset($_SESSION);
                 session_destroy();
@@ -65,11 +67,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                 session_start();
                 $ENTRADA_USER = User::get($PROXY_ID);
                 $_SESSION["previous_session"] = $previous_session;
+                $_SESSION["first_session_id"] = $first_session_id;
 
                 /**
                  * Swap out the admin's data for the requested user's
                  */
                 $_SESSION["isAuthorized"] = true;
+                $_SESSION["auth"]["method"] = $previous_session["auth"]["method"];
                 $_SESSION["details"] = array();
                 $_SESSION["details"]["app_id"] = (int) AUTH_APP_ID;
                 $_SESSION["details"]["id"] = $user_data["id"];
@@ -112,6 +116,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                         $_SESSION["details"]["allow_podcasting"] = "all";
                     }
                 }
+                /**
+                 * Save the user login information to the statistics table.
+                 */
+                add_statistic("users", "login_as", "proxy_id", $_SESSION["details"]["id"], $_SESSION["first_session_id"]);
 
                 /**
                  * Any custom session information that needs to be set on a per-group basis.

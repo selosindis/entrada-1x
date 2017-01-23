@@ -32,8 +32,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 	exit;
 } else {
 
-	require_once("Models/mspr/Observership.class.php");
-	require_once("Models/mspr/Observerships.class.php");
+	require_once("Classes/mspr/Observership.class.php");
+	require_once("Classes/mspr/Observerships.class.php");
 	?>
 	<h1>My Observerships</h1>
 	<?php

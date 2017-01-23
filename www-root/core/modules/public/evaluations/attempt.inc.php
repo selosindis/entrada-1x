@@ -117,7 +117,7 @@ if ($RECORD_ID) {
 	$evaluation_record	= $db->GetRow($query);
 	if ($evaluation_record) {
 		if ($evaluation_record["allow_target_request"] && !$evaluation_record["require_request_code"] && (!isset($evaluation_request) || !$evaluation_request)) {
-            $evaluation_requests = Models_Evaluation::getEvaluationRequests($RECORD_ID, $ENTRADA_USER->getID());
+            $evaluation_requests = Classes_Evaluation::getEvaluationRequests($RECORD_ID, $ENTRADA_USER->getID());
             if ($evaluation_requests && count($evaluation_requests)) {
                 $evaluation_request = $evaluation_requests[0];
             } elseif ($evaluation_record["require_requests"]) {
@@ -126,7 +126,7 @@ if ($RECORD_ID) {
         }
     }
 	if ($evaluation_record) {
-        $temp_evaluation_record = Models_Evaluation::getEvaluationDetails($evaluation_record, $ENTRADA_USER->getId());
+        $temp_evaluation_record = Classes_Evaluation::getEvaluationDetails($evaluation_record, $ENTRADA_USER->getId());
         if ($temp_evaluation_record) {
             $evaluation_record = $temp_evaluation_record;
         }
@@ -247,7 +247,7 @@ if ($RECORD_ID) {
 									break;
 								}
 								if ((isset($target_record_id) && $target_record_id) || ((isset($_POST["target_record_id"])) && ($target_record_id = clean_input($_POST["target_record_id"], array("trim", "int"))))) {
-									$evaluation_targets = Models_Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
+									$evaluation_targets = Classes_Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 									foreach ($evaluation_targets as $evaluation_target) {
 										switch ($evaluation_target["target_type"]) {
 											case "cgroup_id" :
@@ -359,7 +359,7 @@ if ($RECORD_ID) {
 												} else {
 													$comments = NULL;
 												}
-												if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], $eqresponse_id, $comments)) {
+												if (!Classes_Evaluation::evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], $eqresponse_id, $comments)) {
 													$ERROR++;
 													$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 
@@ -389,7 +389,7 @@ if ($RECORD_ID) {
 											} else {
 												$comments = NULL;
 											}
-											if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], 0, $comments)) {
+											if (!Classes_Evaluation::evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], 0, $comments)) {
 												$ERROR++;
 												$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 
@@ -446,12 +446,12 @@ if ($RECORD_ID) {
                                                 application_log("error", "Unable to mark evaluation request as completed [".$progress_record["evaluation_id"]."]. Database said: ".$db->ErrorMsg());
                                             }
 											if ($evaluation_record["threshold_notifications_type"] != "disabled") {
-												$is_below_threshold = Models_Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
+												$is_below_threshold = Classes_Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
 												if ($is_below_threshold) {
 													if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
-														require_once("Models/notifications/NotificationUser.class.php");
-														require_once("Models/notifications/Notification.class.php");
-														$threshold_notification_recipients = Models_Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
+														require_once("Classes/notifications/NotificationUser.class.php");
+														require_once("Classes/notifications/Notification.class.php");
+														$threshold_notification_recipients = Classes_Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
 														if (isset($threshold_notification_recipients) && $threshold_notification_recipients) {
 															foreach ($threshold_notification_recipients as $threshold_notification_recipient) {
 																$notification_user = NotificationUser::get($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
@@ -565,7 +565,7 @@ if ($RECORD_ID) {
 									add_notice("This evaluation has not been completed and was marked as to be completed by ".date(DEFAULT_DATE_FORMAT, $evaluation_record["evaluation_finish"]).". Please complete this evaluation now to continue using ".APPLICATION_NAME.".");
 								}
                                 if (isset($evaluation_record["identify_comments"]) && $evaluation_record["identify_comments"]) {
-                                   add_notice("This evaluation is set to indicate your name on comments. Please be aware that the comment portion of the results will not be totally anonymous to reviewers, while the individual multiple choice and rubric answers you select will still be unidentified.");
+                                   add_notice("This evaluation is set to indicate your name on comments. Please be aware that the comment portion of the results will not be totally anonymous to reviewers, while the individual multiple choice and Grouped Item answers you select will still be unidentified.");
                                 }
 								
 								if (isset($evaluation_record["evaluation_description"]) && $evaluation_record["evaluation_description"]) {
@@ -615,7 +615,7 @@ if ($RECORD_ID) {
 									<?php
 									add_statistic("evaluation", "evaluation_view", "evaluation_id", $RECORD_ID);
 									if (!isset($evaluation_targets) || !count($evaluation_targets)) {
-										$evaluation_targets = Models_Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
+										$evaluation_targets = Classes_Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 									}
                                     if (in_array($PROCESSED["target_shortname"], array("preceptor", "teacher", "peer", "resident"))) {
                                         $HEAD[] = "
@@ -672,7 +672,7 @@ if ($RECORD_ID) {
 												echo "<div class=\"content-small\">Evaluating <strong>".$target_name."</strong>.</div>";
                                                 if ($PROCESSED["target_shortname"] == "preceptor") {
                                                     echo "<div id=\"preceptor_select\">\n";
-                                                    echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $evaluation_targets[0]["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
+                                                    echo Classes_Evaluation::getPreceptorSelect($RECORD_ID, $evaluation_targets[0]["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
                                                     echo "</div>\n";
                                                 } elseif ($PROCESSED["target_shortname"] == "resident") {
                                                     echo "<div class=\"content-small row-fluid\">\n";
@@ -722,7 +722,7 @@ if ($RECORD_ID) {
 												echo "<div id=\"preceptor_select\">\n";
 												if (isset($PROCESSED_CLERKSHIP_EVENT["event_id"]) && $PROCESSED_CLERKSHIP_EVENT["event_id"]) {
                                                     echo "<br /><div class=\"content-small\">Please choose a clerkship preceptor to evaluate: \n";
-													echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $PROCESSED_CLERKSHIP_EVENT["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
+													echo Classes_Evaluation::getPreceptorSelect($RECORD_ID, $PROCESSED_CLERKSHIP_EVENT["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
                                                     echo "</div>\n";
 												} else {
 													echo display_notice("Please select a <strong>Clerkship Service</strong> to evaluate a <strong>Preceptor</strong> for.");
@@ -865,7 +865,7 @@ if ($RECORD_ID) {
 									$total_questions	= 0;
 									if ($questions) {
 										$total_questions = count($questions);
-                                        echo Models_Evaluation::getQuestionAnswerControls($questions, $PROCESSED["eform_id"], false, true, $eprogress_id);
+                                        echo Classes_Evaluation::getQuestionAnswerControls($questions, $PROCESSED["eform_id"], false, true, $eprogress_id);
 									} else {
 										$ERROR++;
 										$ERRORSTR[] = "There are no questions currently available for this evaluation. This problem has been reported to a system administrator; please try again later.";

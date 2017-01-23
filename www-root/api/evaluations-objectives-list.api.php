@@ -48,19 +48,20 @@ $objectives = $db->GetAll($query);
 if ($objectives) {
 	$objective_name = $translate->_("events_filter_controls");
 	$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
+    $nonhierarchical_name = $objective_name["cp"]["global_lu_objectives_name"];
 	?>
 	<a name="evaluation-question-objectives-section"></a>
 	<h2 title="Evaluation Question Objectives Section">Evaluation Question Objectives</h2>
 	<div id="evaluation-objectives-section">
 		<div style="width: 40%;" class="objectives half left">
-			<h3>Objective Sets</h3>
+			<h3>Curriculum Tag Sets</h3>
 			<ul class="tl-objective-list" id="objective_list_0">
 			<?php
 			foreach($objectives as $objective){ 
 				?>
 				<li class="objective-container objective-set"
 					id="objective_<?php echo $objective["objective_id"]; ?>"
-					data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
+					data-list="<?php echo (((!isset($hierarchical_name) || !$hierarchical_name) && (!isset($nonhierarchical_name) || !$nonhierarchical_name || $nonhierarchical_name != $objective["objective_name"])) || $objective["objective_name"] == $hierarchical_name ? 'hierarchical' : 'flat'); ?>"
 					data-id="<?php echo $objective["objective_id"];?>">
 					<?php $title = ($objective["objective_code"]? $objective["objective_code"].': '.$objective["objective_name"] : $objective["objective_name"]); ?>
 					<div 	class="objective-title"
@@ -157,7 +158,7 @@ if ($objectives) {
 								<?php
 								$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
 								if ($set) {
-									echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+									echo "Curriculum Tag Set: <strong>".$set["objective_name"]."</strong><br/>";
 								}
 								?>
 								<?php echo $objective["objective_description"];?>
@@ -204,7 +205,7 @@ if ($objectives) {
 										<?php
 										$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
 										if ($set) {
-											echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+											echo "Curriculum Tag Set: <strong>".$set["objective_name"]."</strong><br/>";
 										}
 										?>
 										<?php echo $objective["objective_description"];?>

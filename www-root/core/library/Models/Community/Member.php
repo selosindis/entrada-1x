@@ -32,11 +32,16 @@ class Models_Community_Member extends Models_Base {
                 $member_acl,
                 $tutoring;
 
-    protected $table_name = "community_members";
-    protected $default_sort_column = "cmember_id";
+    protected static $table_name          = "community_members";
+    protected static $primary_key         = "cmember_id";
+    protected static $default_sort_column = "cmember_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
+    }
+
+    public function getID() {
+        return $this->cmember_id;
     }
 
     public function getCMemberID() {
@@ -79,25 +84,7 @@ class Models_Community_Member extends Models_Base {
         return $this->tutoring;
     }
 
-    public function insert() {
-        global $db;
-
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
-            return $this;
-        } else {
-            return false;
-        }
-    }
-
-    public function update() {
-        global $db;
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`cmember_id` = " . $db->qstr($this->getCMemberID()))) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
+    /* @return bool|Models_Community_Member */
     public static function fetchRowByProxyIDCommunityID($proxy_id, $community_id = 0) {
         $self = new self();
         return $self->fetchRow(
@@ -108,6 +95,31 @@ class Models_Community_Member extends Models_Base {
         );
     }
 
+    /* @return ArrayObject|Models_Community_Member[] */
+    public static function fetchAllByProxyID($proxy_id) {
+        $self = new self();
+        
+        $constraints = array (
+            array(
+                "key" => "proxy_id",
+                "value" => $proxy_id,
+                "method" => "="
+            )
+        );
+        
+        $objs = $self->fetchAll($constraints, "=", "AND");
+        $output = array();
+
+        if (!empty($objs)) {
+            foreach ($objs as $o) {
+                $output[] = $o;
+            }
+        }
+
+        return $output;
+    }
+
+    /* @return ArrayObject|Models_Community_Member[] */
     public static function fetchAllByCommunityID($community_id) {
         $self = new self();
 
@@ -119,7 +131,7 @@ class Models_Community_Member extends Models_Base {
             )
         );
 
-        $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
+        $objs = $self->fetchAll($constraints, "=", "AND");
         $output = array();
 
         if (!empty($objs)) {
@@ -133,25 +145,39 @@ class Models_Community_Member extends Models_Base {
 
     public static function insert_members($proxy_id, $community_id, $ACL = 0, $tutoring = 0) {
         global $db;
-        //fetchRowByProxyIDCommunityID
         $member = self::fetchRowByProxyIDCommunityID($proxy_id, $community_id);
         if ($member) {
             $member->setMemberACL($ACL);
             $member->setMemberActive(1);
-            $member->update();
+            if (!$member->update()) {
+                application_log("error", "Error when updating member (" . $proxy_id .") to community (" . $community_id . "), DB said: " . $db->ErrorMsg());
+            }
         } else {
-            //no record so enter the row
-            $member_array['community_id'] = $community_id;
-            $member_array['proxy_id'] = $proxy_id;
-            $member_array['member_active'] = 1;
-            $member_array['member_joined'] = time();
-            $member_array['member_acl'] = $ACL;
-            $member_array['tutoring'] = $tutoring;
-            $new_member = new self();
-            $new_member->fromArray($member_array);
+            $new_member = new self(array(
+                "community_id"  => $community_id,
+                "proxy_id"      => $proxy_id,
+                "member_active" => 1,
+                "member_joined" => time(),
+                "member_acl"    => $ACL,
+                "tutoring"      => $tutoring
+            ));
             if (!$new_member->insert()) {
-                application_log("error", "Error when inserting new member (" . $proxy_id .") to community, DB said: " . $db->ErrorMsg());
+                application_log("error", "Error when inserting new member (" . $proxy_id .") to community (" . $community_id . "), DB said: " . $db->ErrorMsg());
             }
         }
+    }
+
+    public function updateMultipleMembersACL($proxy_id_in, $community_id, $ACL = 0) {
+        global $db;
+
+        $query = "UPDATE `community_members` SET `member_acl` = ? WHERE `proxy_id` IN (".$proxy_id_in.") AND `community_id` = ? ";
+
+        $result = $db->Execute($query, array($ACL,$community_id));
+
+        if ($result) {
+            return $result;
+        }
+
+        return false;
     }
 }

@@ -24,8 +24,8 @@
  *
  */
 
-require_once("library/Models/utility/SimpleCache.class.php");
-require_once("library/Models/courses/Course.class.php");
+require_once("library/Classes/utility/SimpleCache.class.php");
+require_once("library/Classes/courses/Course.class.php");
 
 class Models_Syllabus {
 	private $syllabus_id,

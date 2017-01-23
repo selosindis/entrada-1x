@@ -1,78 +1,103 @@
 <?php
 
 class Models_Objective {
-	
+
 	private	$objective_id,
 			$objective_code,
 			$objective_name,
 			$objective_description,
+            $objective_secondary_description,
 			$objective_parent,
+            $objective_set_id,
+            $associated_objective,
 			$objective_order,
 			$objective_loggable,
 			$objective_active,
 			$updated_date,
 			$updated_by;
-			
+
 	public function __construct(	$objective_id = NULL,
                                     $objective_code = NULL,
                                     $objective_name = NULL,
                                     $objective_description = NULL,
+                                    $objective_secondary_description = NULL,
                                     $objective_parent = NULL,
+                                    $objective_set_id = NULL,
+                                    $associated_objective = NULL,
                                     $objective_order = NULL,
                                     $objective_loggable = NULL,
                                     $objective_active = 1,
                                     $updated_date = NULL,
                                     $updated_by = NULL) {
-		
+
 		$this->objective_id = $objective_id;
 		$this->objective_code = $objective_code;
 		$this->objective_name = $objective_name;
 		$this->objective_description = $objective_description;
+        $this->objective_secondary_description = $objective_secondary_description;
 		$this->objective_parent = $objective_parent;
+        $this->objective_set_id = $objective_set_id;
+        $this->associated_objective = $associated_objective;
 		$this->objective_order = $objective_order;
 		$this->objective_loggable = $objective_loggable;
 		$this->objective_active = $objective_active;
 		$this->updated_date = $updated_date;
 		$this->updated_by = $updated_by;
-		
+
 	}
-	
+
 	public function getID() {
 		return $this->objective_id;
 	}
-	
+
 	public function getCode() {
 		return $this->objective_code;
 	}
-	
+
 	public function getName() {
 		return $this->objective_name;
 	}
-	
+
+    public function getDescription() {
+        return $this->objective_description;
+    }
+
+    public function getSecondaryDescription() {
+        return $this->objective_secondary_description;
+    }
+
 	public function getParent() {
 		return $this->objective_parent;
 	}
-	
+
+    public function getObjectiveSetID() {
+        return $this->objective_set_id;
+    }
+
+    public function getAssociatedObjective() {
+        return $this->associated_objective;
+    }
+
 	public function getOrder() {
 		return $this->objective_order;
 	}
-	
+
 	public function getDateUpdated() {
 		return $this->updated_date;
 	}
-	
+
 	public function getUpdatedBy() {
 		return $this->updated_by;
 	}
-	
+
 	public function getLoggable() {
 		return $this->objective_loggable;
 	}
-	
+
 	public function getActive() {
 		return $this->objective_active;
 	}
-	
+
 	/**
 	 * Returns objects values in an array.
 	 * @return Array
@@ -87,7 +112,7 @@ class Models_Objective {
 		}
 		return $arr;
 	}
-	
+
 	/**
 	 * Uses key-value pair to set object values
 	 * @return Organisation
@@ -98,31 +123,130 @@ class Models_Objective {
 		}
 		return $this;
 	}
-	
+
     public static function fetchByOrganisation($organisation_id, $active = 1) {
 		global $db;
-		
+
 		$objectives = false;
-		
-		$query = "SELECT a.* FROM `global_lu_objectives` AS a
-                    JOIN `objective_organisations` AS b
+
+		$query = "  SELECT a.* FROM `global_lu_objectives` AS a
+                    JOIN `objective_organisation` AS b
                     ON a.`objective_id` = b.`objective_id`
-                    WHERE b.`organisation_id` = ? 
+                    WHERE b.`organisation_id` = ?
                     AND a.`objective_active` = ?";
+					
 		$results = $db->GetAll($query, array($organisation_id, $active));
 		if ($results) {
 			foreach ($results as $result) {
-				$objectives[] = new self($result["objective_id"], $result["objective_name"], $result["objective_description"], $result["objective_parent"], $result["objective_order"], $result["objective_loggable"], $result["updated_date"], $result["updated_by"], $result["objective_active"]);
+				$objectives[] = new self($result["objective_id"], $result["objective_code"], $result["objective_name"], $result["objective_description"], $result["objective_secondary_description"], $result["objective_parent"], $result["objective_set_id"], $result["associated_objective"], $result["objective_order"], $result["objective_loggable"], $result["objective_active"], $result["updated_date"], $result["updated_by"]);
 			}
 		}
-		
+
         return $objectives;
     }
+    
+    public static function fetchAllByOrganisationParentID($organisation_id = null, $parent_id = 0, $active = 1) {
+        global $db;
+
+		$objectives = false;
+
+		$query = "  SELECT a.* FROM `global_lu_objectives` AS a
+                    JOIN `objective_organisation` AS b
+                    ON a.`objective_id` = b.`objective_id`
+                    WHERE b.`organisation_id` = ?
+                    AND a.`objective_parent` = ?
+                    AND a.`objective_active` = ?
+                    ORDER BY `objective_order` ASC";
+        
+        $results = $db->GetAll($query, array($organisation_id,$parent_id, $active));
+		if ($results) {
+			foreach ($results as $result) {
+				$objectives[] = new self($result["objective_id"], $result["objective_code"], $result["objective_name"], $result["objective_description"], $result["objective_secondary_description"], $result["objective_parent"], $result["objective_set_id"], $result["associated_objective"], $result["objective_order"], $result["objective_loggable"], $result["objective_active"], $result["updated_date"], $result["updated_by"]);
+			}
+		}
+        
+        return $objectives;
+    }
+
+    public static function fetchByOrganisationSearchValue($organisation_id, $search_value = null, $parent_id = null, $active = 1) {
+		global $db;
+
+		$objectives = false;
+
+        if (isset($search_value) && $tmp_input = clean_input(strtolower($search_value), array("trim", "striptags"))) {
+            $PROCESSED["search_value"] = $tmp_input;
+        } else {
+            $PROCESSED["search_value"] = "";
+        }
+
+        $parent_id = clean_input($parent_id, array("trim", "int"));
+
+		$query = "  SELECT a.* FROM `global_lu_objectives` AS a
+                    JOIN `objective_organisation` AS b
+                    ON a.`objective_id` = b.`objective_id`
+                    WHERE b.`organisation_id` = ?
+                    AND a.`objective_parent` = ?
+                    AND a.`objective_name` LIKE " . $db->qstr("%". $PROCESSED["search_value"] ."%") . "
+                    AND a.`objective_active` = ?
+                    ORDER BY a.`objective_order` ASC";
+
+		$results = $db->GetAll($query, array($organisation_id, $parent_id, $active));
+		if ($results) {
+			foreach ($results as $result) {
+				$objectives[] = new self($result["objective_id"], $result["objective_code"], $result["objective_name"], $result["objective_description"], $result["objective_secondary_description"], $result["objective_parent"], $result["objective_set_id"], $result["associated_objective"], $result["objective_order"], $result["objective_loggable"], $result["objective_active"], $result["updated_date"], $result["updated_by"]);
+			}
+		}
+
+        return $objectives;
+    }
+
+    public static function fetchAllByParentID($organisation_id = null, $parent_id = null, $active = 1) {
+		global $db;
+
+		$objectives = false;
+
+        $parent_id = clean_input($parent_id, array("trim", "int"));
+
+		$query = "  SELECT a.* FROM `global_lu_objectives` AS a
+                    JOIN `objective_organisation` AS b
+                    ON a.`objective_id` = b.`objective_id`
+                    WHERE b.`organisation_id` = ?
+                    AND a.`objective_parent` = ?
+                    AND a.`objective_active` = ?
+                    ORDER BY a.`objective_order` ASC";
+
+		$results = $db->GetAll($query, array($organisation_id, $parent_id, $active));
+		if ($results) {
+			foreach ($results as $result) {
+				$objectives[] = new self($result["objective_id"], $result["objective_code"], $result["objective_name"], $result["objective_description"], $result["objective_secondary_description"], $result["objective_parent"], $result["objective_set_id"], $result["associated_objective"], $result["objective_order"], $result["objective_loggable"], $result["objective_active"], $result["updated_date"], $result["updated_by"]);
+			}
+		}
+
+        return $objectives;
+    }
+
+    public static function countObjectiveChildren ($objective_id = null, $active = 1) {
+        global $db;
+
+        $query = "  SELECT COUNT(a.`objective_id`) AS `total_children` FROM `global_lu_objectives` AS a
+                    WHERE a.`objective_parent` = ?
+                    AND a.`objective_active` = ?";
+
+        $result = $db->GetRow($query, array($objective_id, $active));
+
+        if ($result) {
+            return $result["total_children"];
+        } else {
+            return 0;
+        }
+
+    }
+
     public static function fetchAll($parent_id = NULL, $active = 1) {
 		global $db;
-		
+
 		$objectives = false;
-		
+
 		$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_active` = ?".(isset($parent_id) && ($parent_id || $parent_id === 0) ? " AND `objective_parent` = ?" : "");
 		$results = $db->GetAll($query, array($active, $parent_id));
 		if ($results) {
@@ -131,10 +255,10 @@ class Models_Objective {
 				$objectives[$result["objective_id"]] = $objective->fromArray($result);
 			}
 		}
-		
+
         return $objectives;
     }
-    
+
     public static function fetchObjectiveSet($objective_id) {
         global $db;
 
@@ -149,7 +273,12 @@ class Models_Objective {
         do{
             $level++;
             $parent = self::fetchRow($parent_id);
+            if ($parent) {
             $parent_id = (int) $parent->getParent();
+            } else {
+                $parent = false;
+                $parent_id = 0;
+            }
         } while($parent_id && $level < 10);
 
         if ($level == 10) {
@@ -291,7 +420,7 @@ class Models_Objective {
         global $db;
 
 		$return = false;
-		
+
 		if ($objective_id != 0) {
 			$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ? AND `objective_active` = ?";
 			$result = $db->GetRow($query, array($objective_id, $active));
@@ -300,28 +429,36 @@ class Models_Objective {
 				$return = $objective->fromArray($result);
 			}
 		}
-		
+
         return $return;
     }
-    
-    public static function fetchRowByName($objective_name, $active = 1) {
+
+    public static function fetchRowByName($organisation_id, $objective_name, $active = 1) {
         global $db;
 
+        $organisation_id = (int) $organisation_id;
+
 		$return = false;
-		
-        $query = "SELECT * FROM `global_lu_objectives` WHERE `objective_name` = ? AND `objective_active` = ?";
-        $result = $db->GetRow($query, array($objective_name, $active));
+
+        $query = "SELECT a.*
+                  FROM `global_lu_objectives` AS a
+                  JOIN `objective_organisation` AS b
+                  ON b.`objective_id` = a.`objective_id`
+                  WHERE b.`organisation_id` = ?
+                  AND a.`objective_name` = ?
+                  AND a.`objective_active` = ?";
+        $result = $db->GetRow($query, array($organisation_id, $objective_name, $active));
         if ($result) {
             $objective = new self();
             $return = $objective->fromArray($result);
         }
-		
+
         return $return;
     }
 
     public function insert() {
 		global $db;
-		
+
 		if ($db->AutoExecute("`global_lu_objectives`", $this->toArray(), "INSERT")) {
 			$this->objective_id = $db->Insert_ID();
 			return true;
@@ -332,23 +469,23 @@ class Models_Objective {
 
 	public function update() {
 		global $db;
-		
+
 		if ($db->AutoExecute("`global_lu_objectives`", $this->toArray(), "UPDATE", "`objective_id` = ".$db->qstr($this->getID()))) {
 			return true;
 		} else {
 			return false;
 		}
-		
+
     }
 
     public function delete() {
         $this->objective_active = false;
 		return $this->update();
     }
-    
+
     public static function getChildIDs($objective_id) {
         global $db;
-        
+
         $objective_ids = array();
         $query = "SELECT `objective_id` FROM `global_lu_objectives` WHERE `objective_parent` = ".$db->qstr($objective_id);
         $child_ids = $db->GetAll($query);
@@ -365,10 +502,10 @@ class Models_Objective {
         }
         return $objective_ids;
     }
-	    
+
     public static function getObjectiveSetDepth($objective_id, $max_depth = 0) {
         $child_ids = self::getChildIDs($objective_id);
-        
+
         if (is_array($child_ids)) {
             foreach ($child_ids as $value) {
                 $depth = self::getObjectiveSetDepth($value) + 1;
@@ -381,7 +518,7 @@ class Models_Objective {
 
         return $max_depth;
     }
-    
+
     public static function fetchExplicitEventObjective($objective_id, $event_id) {
         global $db;
         $query = "SELECT c.`objective_id`, e.`objective_code`, e.`objective_name`, e.`objective_description`
@@ -400,5 +537,84 @@ class Models_Objective {
                     AND d.`cobjective_id` IS NULL";
         return $db->GetRow($query, array($event_id, $objective_id));
     }
+    
+    public function getByIDAndOrganisation($objective_id, $organisation_id) {
+        global $db;
 
+        $query = "SELECT a.`objective_id`
+							FROM `global_lu_objectives` AS a
+							JOIN `objective_organisation` AS b
+							ON a.`objective_id` = b.`objective_id`
+							WHERE a.`objective_id` = ?
+							AND a.`objective_active` = '1'
+							AND b.`organisation_id` = ?
+							ORDER BY a.`objective_order` ASC";
+
+        $result = $db->GetRow($query, array($objective_id, $organisation_id));
+
+        if($result) {
+            return $result;
+        }
+
+        return false;
+    }
+
+    public function getAllByCourseAndOrganisation($course_id, $organisation_id) {
+        global $db;
+
+        $query = "	SELECT a.* FROM `global_lu_objectives` a
+                                JOIN `objective_audience` b
+                                ON a.`objective_id` = b.`objective_id`
+                                AND b.`organisation_id` = ?
+                                WHERE (
+                                        (b.`audience_value` = 'all')
+                                        OR
+                                        (b.`audience_type` = 'course' AND b.`audience_value` = ?)
+                                    )
+                                AND a.`objective_parent` = '0'
+                                AND a.`objective_active` = '1'";
+        $objectives = $db->GetAll($query, array($organisation_id, $course_id));
+
+        if ($objectives) {
+            return $objectives;
+        }
+
+        return false;
+    }
+
+    public function getAllMappedByCourse($course_id) {
+        global $db;
+
+        $query = "	SELECT a.*,b.`objective_type`, b.`importance`
+                    FROM `global_lu_objectives` a
+                    JOIN `course_objectives` b
+                    ON a.`objective_id` = b.`objective_id`
+                    AND b.`course_id` = ?
+                    WHERE a.`objective_active` = '1'
+                    AND b.`active` = '1'
+                    GROUP BY a.`objective_id`
+                    ORDER BY b.`importance` ASC";
+        $objectives = $db->GetAll($query, array($course_id));
+
+        if ($objectives) {
+            return $objectives;
+        }
+
+        return false;
+    }
+
+    public function fetchAllChildrenByObjectiveSetID ($objective_set_id = null, $active = 1) {
+        global $db;
+        $objectives = array();
+
+        $query = "  SELECT `objective_id` FROM `global_lu_objectives` WHERE `objective_set_id` = ? AND `objective_parent` != 0 AND `objective_active` = ?";
+        $results = $db->GetAll($query, array($objective_set_id, $active));
+        if ($results) {
+            foreach ($results as $result) {
+                $objectives[] = new self($result["objective_id"], $result["objective_code"], $result["objective_name"], $result["objective_description"], $result["objective_secondary_description"], $result["objective_parent"], $result["objective_set_id"], $result["associated_objective"], $result["objective_order"], $result["objective_loggable"], $result["objective_active"], $result["updated_date"], $result["updated_by"]);
+            }
+        }
+
+        return $objectives;
+    }
 }

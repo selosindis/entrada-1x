@@ -117,7 +117,7 @@ if (!defined("IN_EVENTS")) {
                                     <div id="event_audience_type_custom_options" style="<?php echo ($course_list && !$custom_audience ? "display: none; " : ""); ?>position: relative; margin-top: 10px;">
                                         <select id="audience_type" onchange="showMultiSelect();">
                                             <option value="">-- Select an audience type --</option>
-                                            <option value="cohorts">Cohorts of learners</option>
+                                            <option value="cohorts">Cohorts/Course Lists of learners</option>
                                             <?php
                                             if ($course_groups) {
                                                 ?>
@@ -231,7 +231,7 @@ if (!defined("IN_EVENTS")) {
 
                                                                 if (isset($cohort_times_a) && is_array($cohort_times_a) && !array_key_exists($audience_value, $cohort_times_a)) {
                                                                     $audience_array = $audience->toArray();
-                                                                    $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                                    $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                                     $cohort_times_o[$audience_value] = $audience;
                                                                     $cohort_times_a[$audience_value] = $audience_array;
                                                                 }
@@ -276,7 +276,7 @@ if (!defined("IN_EVENTS")) {
                                                                 }
                                                                 if (isset($cgroup_times_a) && is_array($cgroup_times_a) && !array_key_exists($audience_value, $cgroup_times_a)) {
                                                                     $audience_array = $audience->toArray();
-                                                                    $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                                    $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                                     $cgroup_times_o[$audience_value] = $audience;
                                                                     $cgroup_times_a[$audience_value] = $audience_array;
                                                                 }
@@ -330,7 +330,7 @@ if (!defined("IN_EVENTS")) {
                                                                 }
                                                                 if (isset($proxy_times_a) && is_array($proxy_times_a) && !array_key_exists($audience_value, $proxy_times_a)) {
                                                                     $audience_array = $audience->toArray();
-                                                                    $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                                    $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                                     $proxy_times_o[$audience_value] = $audience;
                                                                     $proxy_times_a[$audience_value] = $audience_array;
                                                                 }
@@ -342,8 +342,11 @@ if (!defined("IN_EVENTS")) {
                                         }
 
                                         if (!isset($PROCESSED["associated_cohort_ids"]) && !isset($PROCESSED["associated_cgroup_ids"]) && !isset($PROCESSED["associated_proxy_ids"]) && !isset($_POST["event_audience_cohorts"]) && !isset($_POST["event_audience_course_groups"]) && !isset($_POST["event_audience_students"]) && isset($EVENT_ID)) {
-                                            $audiences = Models_Event_Audience::fetchAllByEventID($EVENT_ID);
-
+                                            if ($is_draft) {
+												$audiences = Models_Event_Draft_Event_Audience::fetchAllByDraftEventID($PROCESSED["devent_id"]);
+											} else {
+												$audiences = Models_Event_Audience::fetchAllByEventID($EVENT_ID);
+											}
                                             if (isset($audiences) && is_array($audiences) && !empty($audiences)) {
                                                 $PROCESSED["event_audience_type"] = "custom";
 
@@ -360,7 +363,7 @@ if (!defined("IN_EVENTS")) {
                                                                 $PROCESSED["associated_cohort_ids"][]   = (int) $audience_value;
                                                                 if (!array_key_exists($audience_value, $cohort_times_a)) {
                                                                     $audience_array = $audience->toArray();
-                                                                    $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                                    $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                                     $cohort_times_o[$audience_value] = $audience;
                                                                     $cohort_times_a[$audience_value] = $audience_array;
                                                                 }
@@ -369,7 +372,7 @@ if (!defined("IN_EVENTS")) {
                                                                 $PROCESSED["associated_cgroup_ids"][]   = (int) $audience_value;
                                                                 if (!array_key_exists($audience_value, $cgroup_times_a)) {
                                                                     $audience_array = $audience->toArray();
-                                                                    $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+																	$audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                                     $cgroup_times_o[$audience_value] = $audience;
                                                                     $cgroup_times_a[$audience_value] = $audience_array;
                                                                 }
@@ -378,7 +381,7 @@ if (!defined("IN_EVENTS")) {
                                                                 $PROCESSED["associated_proxy_ids"][]    = (int) $audience_value;
                                                                 if (!array_key_exists($audience_value, $proxy_times_a)) {
                                                                     $audience_array = $audience->toArray();
-                                                                    $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                                    $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                                     $proxy_times_o[$audience_value] = $audience;
                                                                     $proxy_times_a[$audience_value] = $audience_array;
                                                                 }
@@ -446,8 +449,12 @@ if (!defined("IN_EVENTS")) {
                                             if (isset($cohort_times_o) && is_array($cohort_times_o) && !empty($cohort_times_o)) {
                                                 foreach ($cohort_times_o as $obj) {
                                                     if (isset($obj) && is_object($obj)) {
-                                                        $cohort_view = new Views_Event_Audience($obj);
-                                                        if (isset($cohort_view) && is_object($cohort_view)) {
+                                                    	if (!$is_draft) {
+                                                        	$cohort_view = new Views_Event_Audience($obj);
+														} else {
+															$cohort_view = new Views_Event_Draft_Audience($obj);
+														}
+														if (isset($cohort_view) && is_object($cohort_view)) {
                                                             echo $cohort_view->renderLI();
                                                         }
                                                     }
@@ -457,7 +464,12 @@ if (!defined("IN_EVENTS")) {
                                             if (isset($cgroup_times_o) && is_array($cgroup_times_o) && !empty($cgroup_times_o)) {
                                                 foreach ($cgroup_times_o as $obj) {
                                                     if (isset($obj) && is_object($obj)) {
-                                                        $cgroup_view = new Views_Event_Audience($obj);
+														if (!$is_draft) {
+															$cgroup_view = new Views_Event_Audience($obj);
+														} else {
+															$cgroup_view = new Views_Event_Draft_Audience($obj);
+														}
+
                                                         if (isset($cgroup_view) && is_object($cgroup_view)) {
                                                             echo $cgroup_view->renderLI();
                                                         }
@@ -468,7 +480,11 @@ if (!defined("IN_EVENTS")) {
                                             if (isset($proxy_times_o) && is_array($proxy_times_o) && !empty($proxy_times_o)) {
                                                 foreach ($proxy_times_o as $obj) {
                                                     if (isset($obj) && is_object($obj)) {
-                                                        $proxy_view = new Views_Event_Audience($obj);
+														if (!$is_draft) {
+															$proxy_view = new Views_Event_Audience($obj);
+														} else {
+															$proxy_view = new Views_Event_Draft_Audience($obj);
+														}
                                                         if (isset($proxy_view) && is_object($proxy_view)) {
                                                             echo $proxy_view->renderLI();
                                                         }

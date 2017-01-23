@@ -94,7 +94,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							}
 						}
 						if ($return_value == 200) {
-							application_log("success", "Rubric id [".$erubric_id."] questions were removed from evaluation form id [".$FORM_ID."].");
+							application_log("success", "Griuped Item id [".$erubric_id."] questions were removed from evaluation form id [".$FORM_ID."].");
 						}
 						echo $return_value;
 					} else {

@@ -25,7 +25,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MANAGE_USER_DATA"))) {
 } else {
 
 require_once("Entrada/metadata/functions.inc.php");
-require_once("Models/organisations/Organisations.class.php");
+require_once("Classes/organisations/Organisations.class.php");
 
 $SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/meta_data.js\"></script>";
 $ONLOAD[] = "api_url = \"".ENTRADA_URL."/admin/users/metadata?section=api-metadata\";page_init();";

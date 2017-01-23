@@ -2,34 +2,6 @@
 	var listed = [];
 	jQuery(document).ready(function($){
 		jQuery('.objectives').hide();
-		/**
-		* @todo fix bugs in draggable/droppable when version control added
-		* bugs include: dropping doesn't work when list expanded, artifacts display from draggable elements after drop
-		*/
-		// jQuery('.draggable').draggable({
-		// 	revert:true
-		// });
-
-		// jQuery('.droppable').droppable({
-		// 	drop: function(event,ui){
-		// 		var id = jQuery(ui.draggable[0]).attr('data-id');
-		// 		var ismapped = jQuery.inArray(id,mapped);
-		// 		if(ismapped == -1){
-		// 			var title = jQuery('#objective_title_'+id).attr('data-title');
-		// 			var description = jQuery('#objective_'+id).attr('data-description');
-		// 			var list = jQuery('#objective_'+id).parents('.objective-set').attr('data-list');
-		// 			jQuery('#check_objective_'+id).attr('checked','checked');
-		// 			mapObjective(id,title,description,list,true);
-		// 		}
-		// 		jQuery(this).removeClass('hover');
-		// 	},
-		// 	over:function(event,ui){
-		// 		jQuery(this).addClass('hover');
-		// 	},
-		// 	out: function(event,ui){
-		// 		jQuery(this).removeClass('hover');
-		// 	}
-		// });
 
 		jQuery('.objective-remove').live('click',function(){
 			var id = jQuery(this).attr('data-id');
@@ -235,7 +207,7 @@
 			var set_id = jQuery(sets_above[sets_above.length-1]).attr('data-id');
 			var set_name = jQuery('#objective_title_'+set_id).attr('data-title');
 			if(set_name){
-				jQuery(desc).html("From the Objective Set: <strong>"+set_name+"</strong><br/>");
+				jQuery(desc).html("Curriculum Tag Set: <strong>"+set_name+"</strong><br/>");
 			}
 			jQuery(desc).append(description);
 
@@ -296,8 +268,7 @@
 							.attr('style',"height: 28px; overflow: hidden;");
 			jQuery(text_div).append(text_label).append(text);
 			jQuery('#mapped_objective_'+id).append(text_div);
-            
-            new ExpandableTextarea($('objective_text_'+id));
+            jQuery('#objective_text_'+id).textareaAutoSize();
 		}
 
 

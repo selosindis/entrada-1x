@@ -45,11 +45,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 	$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/curriculum/explorer", "title" => "Explorer");
 
     search_subnavigation("explorer");
-    ?>
-    <h1>Curriculum Explorer</h1>
+	?>
+	<h1>Curriculum Explorer</h1>
 
     <div class="alert alert-info">
-        <p class="lead">This feature is available in both the <strong>Consortium</strong> and <strong>Cloud</strong> editions of Entrada ME only at this time. Please feel free to <a href="http://www.entrada.org/contact" target="_blank"><strong>contact us</strong></a> to arrange a demo.</p>
+        <p class="lead">This feature is available in Entrada ME Consortium Edition only at this time. Please feel free to <a href="http://www.entrada.org/contact" target="_blank"><strong>contact us</strong></a> to arrange a demo.</p>
         <p class="pull-right">
             <a class="btn btn-primary btn-large" href="http://www.entrada.org" target="_blank">
                 <i class="fa fa-info-circle"></i> Learn More
@@ -57,5 +57,5 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
         </p>
         <div class="clearfix"></div>
     </div>
-    <?php
+	<?php
 }

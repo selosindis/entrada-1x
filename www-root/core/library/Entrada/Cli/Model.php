@@ -28,12 +28,8 @@ class Entrada_Cli_Model extends Entrada_Cli {
      * @var array The valid actions that can be run with this utility.
      */
     protected $actions = array(
-        "create" => "Create a new Entrada database migration file.",
-        "pending" => "See a list of the pending database migrations in your installation.",
-        "up-s" => "Run all pending migrations against your database. Provide optional filename to output the SQL instead of run it.",
-        "down-s" => "Rollback the last successful up migration. Provide optional filename to output SQL instead of run it.",
-        "audit" => "Verifies that all present migrations have been run successfully.",
-        "help" => "Yep, it's help time.",
+        "create" => "\tCreate a new Entrada database model using an interactive session.\n\t\t\tThe table to be modelled must be present in the database.",
+        "help" => "\tSpit out this very brief help information.",
     );
 
     private $description;
@@ -84,6 +80,10 @@ HEADERMESSAGE;
         $this->createModel();
     }
 
+    public function playHelp() {
+        $this->renderActionHelp($this->command, $this->actions);
+    }
+    
     protected function getTable() {
         global $db;
 
@@ -254,9 +254,9 @@ HEADERMESSAGE;
         if (isset($this->database_name) && $this->database_name && $this->database_name != DATABASE_NAME) {
             $this->class_contents .= "    protected \$database_name = \"" . $this->database_name . "\";\n";
         }
-        $this->class_contents .= "    protected \$table_name = \"".$this->table_name."\";\n";
-        $this->class_contents .= "    protected \$primary_key = \"".$this->primary_id."\";\n";
-        $this->class_contents .= "    protected \$default_sort_column = \"".$this->sort_column."\";\n\n";
+        $this->class_contents .= "    protected static \$table_name = \"".$this->table_name."\";\n";
+        $this->class_contents .= "    protected static \$primary_key = \"".$this->primary_id."\";\n";
+        $this->class_contents .= "    protected static \$default_sort_column = \"".$this->sort_column."\";\n\n";
         $this->class_contents .= "    public function __construct(\$arr = NULL) {\n";
         $this->class_contents .= "        parent::__construct(\$arr);\n";
         $this->class_contents .= "    }\n\n";

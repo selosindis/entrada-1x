@@ -34,8 +34,9 @@ class Models_Event_Resource_Entity extends Models_Base {
             $updated_by,
             $active;
     
-    protected $table_name = "event_resource_entities";
-    protected $default_sort_column = "event_resource_entity_id";
+    protected static $table_name = "event_resource_entities";
+    protected static $default_sort_column = "event_resource_entity_id";
+    protected static $primary_key = "event_resource_entity_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -210,7 +211,7 @@ class Models_Event_Resource_Entity extends Models_Base {
             break;
             case 4 :
                 $resource = Models_Event_Resource_Homework::fetchRowByID($this->entity_value);
-            break;
+            break;      
             case 8 :
                 $resource = Models_Quiz_Attached::fetchRowByID($this->entity_value);
             break;
@@ -228,7 +229,7 @@ class Models_Event_Resource_Entity extends Models_Base {
     public function insert() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->event_resource_entity_id = $db->Insert_ID();
             return $this;
         } else {
@@ -240,7 +241,7 @@ class Models_Event_Resource_Entity extends Models_Base {
     public function update() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`event_resource_entity_id` = ".$db->qstr($this->event_resource_entity_id))) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`event_resource_entity_id` = ".$db->qstr($this->event_resource_entity_id))) {
             return $this;
         } else {
             echo $db->ErrorMsg();

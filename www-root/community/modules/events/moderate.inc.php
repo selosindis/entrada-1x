@@ -185,6 +185,36 @@ if ($RECORD_ID) {
 				}
 			);
 		}
+
+
+<?php
+/**
+ * Add the javascript for deleting.
+ */
+if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
+	?>
+		function eventDelete(id) {
+			Dialog.confirm('Do you really wish to delete '+ $('event-' + id + '-title').innerHTML +' from this community?',
+				{
+					id:				'requestDialog',
+					width:			350,
+					height:			100,
+					title:			'Delete Confirmation',
+					className:		'medtech',
+					okLabel:		'Yes',
+					cancelLabel:	'No',
+					closable:		'true',
+					buttonClass:	'btn',
+					ok:				function(win) {
+										window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?<?php echo (($page_current > 1) ? "pv=".$page_current."&" : ""); ?>action=delete&id='+id;
+										return true;
+									}
+				}
+			);
+		}
+	<?php
+}
+?>
 	</script>
     <div id="module-header">
         <?php

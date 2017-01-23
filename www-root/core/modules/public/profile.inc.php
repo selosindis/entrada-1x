@@ -30,8 +30,8 @@ if (!defined("PARENT_INCLUDED")) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif(!$ENTRADA_ACL->isLoggedInAllowed('profile', 'read')) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -43,8 +43,9 @@ if (!defined("PARENT_INCLUDED")) {
 	$VALID_MAX_FILESIZE			= MAX_UPLOAD_FILESIZE;
 	$VALID_MAX_DIMENSIONS		= array("photo-width" => 216, "photo-height" => 300, "thumb-width" => 75, "thumb-height" => 104);
 	$RENDER						= false;
-	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile", "title" => "My Profile");
+
+	$MODULE_TEXT = $translate->_($MODULE);
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile", "title" => $MODULE_TEXT["title"]);
 
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();
@@ -91,7 +92,7 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 			}
 			add_profile_sidebar();
-			
+
 			require_once($module_file);
 			
 		}
@@ -110,13 +111,13 @@ if (!defined("PARENT_INCLUDED")) {
  * 
  */
 function add_profile_sidebar () {
-	global $ENTRADA_ACL, $ENTRADA_USER, $db;
+	global $ENTRADA_ACL, $ENTRADA_USER;
 
 	$sidebar_html  = "<ul class=\"menu\">";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile\">Personal Information</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=privacy\">Privacy Preferences</a></li>\n";
 	if (((defined("COMMUNITY_NOTIFICATIONS_ACTIVE")) && ((bool) COMMUNITY_NOTIFICATIONS_ACTIVE)) || ((defined("NOTIFICATIONS_ACTIVE")) && ((bool) NOTIFICATIONS_ACTIVE))) {
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=notifications\">Notification Preferences</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=activenotifications\">Notification Preferences</a></li>\n";
 	}
 	if ($ENTRADA_ACL->isLoggedInAllowed('assistant_support', 'create')) {
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=assistants\">My Admin Assistants</a></li>\n";
@@ -139,14 +140,13 @@ function add_profile_sidebar () {
  * Processes the personal info update. source data retrieved from POST. modifies the $PROCESSED variable 
  */
 function profile_update_personal_info() {
-	global $db, $PROCESSED, $PROFILE_NAME_PREFIX, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $NOTICE, $NOTICESTR, $PROCESSED_PHOTO, $PROCESSED_PHOTO_STATUS, $PROCESSED_NOTIFICATIONS, $VALID_MIME_TYPES, $ENTRADA_USER;
+	global $PROCESSED, $PROFILE_NAME_PREFIX, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $NOTICE, $NOTICESTR, $PROCESSED_PHOTO, $PROCESSED_PHOTO_STATUS, $PROCESSED_NOTIFICATIONS, $VALID_MIME_TYPES, $ENTRADA_USER;
 	
 	if (isset($_POST["custom"]) && $_POST["custom"]) {
 		/*
 		* Fetch the custom fields
 		*/
-		$query = "SELECT * FROM `profile_custom_fields` WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())." ORDER BY `organisation_id`, `department_id`, `id`";
-		$dep_fields = $db->GetAssoc($query);
+		$dep_fields = Models_Profile_Custom_Fields::getAllByByOrganisationIDOrdered($ENTRADA_USER->getActiveOrganisation());
 		if ($dep_fields) {
 			foreach ($dep_fields as $field_id => $field) {
 				switch (strtolower($field["type"])) {
@@ -158,14 +158,14 @@ function profile_update_personal_info() {
 						}
 					break;
 					default :
-						if ($_POST["custom"][$field["department_id"]][$field_id]) {
+						if (!empty($_POST["custom"][$field["department_id"]][$field_id])) {
 							if ($field["length"] != NULL && strlen($_POST["custom"][$field["department_id"]][$field_id]) > $field["length"]) {
 								add_error("<strong>".$field["title"]."</strong> has a character limit of <strong>".$field["length"]."</strong> and you have entered <strong>".strlen($_POST["custom"][$field["department_id"]][$field_id])."</strong> characters. Please edit your response and re-save your profile.");
 							} else {
 								$PROCESSED["custom"][$field_id] = clean_input($_POST["custom"][$field["department_id"]][$field_id], array("trim", strtolower($field["type"]) == "richtext" ? "html" : (strtolower($field["type"]) == "twitter" ? "alphanumeric" : "striptags")));
 							}
 						} else {
-							if ($field["mandatory"] == "1") {
+							if ($field["required"] == "1") {
 								add_error("<strong>".$field["title"]."</strong> is a required field, please enter a response and re-save your profile.");
 							}
 						}
@@ -191,8 +191,8 @@ function profile_update_personal_info() {
          * one I need to know if they already have one or not.
          */
         if ($ENTRADA_USER->getGroup() == "student") {
-            $query = "SELECT `prefix` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->GetProxyId());
-            $prefix = $db->GetOne($query);
+			$user = Models_User::fetchRowByID($ENTRADA_USER->GetProxyId());
+            $prefix = $user->getPrefix();
         } else {
             $prefix = false;
         }
@@ -218,12 +218,10 @@ function profile_update_personal_info() {
 			if (valid_address($email)) {
 				$PROCESSED["email"] = $email;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The primary e-mail address you have provided is invalid. Please make sure that you provide a properly formatted e-mail address.";
+				add_error("The primary e-mail address you have provided is invalid. Please make sure that you provide a properly formatted e-mail address.");
 			}
 		} else { 
-			$ERROR++;
-			$ERRORSTR[] = "The primary e-mail address is a required field.";
+			add_error("The primary e-mail address is a required field.");
 		}
 	}
 	
@@ -231,8 +229,7 @@ function profile_update_personal_info() {
 		if (valid_address(trim($_POST["email_alt"]))) {
 			$PROCESSED["email_alt"] = strtolower(trim($_POST["email_alt"]));
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "The secondary e-mail address you have provided is invalid. Please make sure that you provide a properly formatted e-mail address or leave this field empty if you do not wish to display one.";
+			add_error("The secondary e-mail address you have provided is invalid. Please make sure that you provide a properly formatted e-mail address or leave this field empty if you do not wish to display one.");
 		}
 	} else {
 		$PROCESSED["email_alt"] = "";
@@ -267,21 +264,18 @@ function profile_update_personal_info() {
 	} else {
 		$PROCESSED["postcode"] = "";
 	}
-
+	
 	if ((isset($_POST["country_id"])) && ($tmp_input = clean_input($_POST["country_id"], "int"))) {
-		$query = "SELECT * FROM `global_lu_countries` WHERE `countries_id` = ".$db->qstr($tmp_input);
-		$result = $db->GetRow($query);
+		$result = Models_Country::fetchRowByID($tmp_input);
 		if ($result) {
 			$PROCESSED["country_id"] = $tmp_input;
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "The selected country does not exist in our countries database. Please select a valid country.";
+			add_error("The selected country does not exist in our countries database. Please select a valid country.");
 
-			application_log("error", "Unknown countries_id [".$tmp_input."] was selected. Database said: ".$db->ErrorMsg());
+			application_log("error", "Unknown countries_id [".$tmp_input."] was selected.");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[]	= "You must select a country.";
+		add_error("You must select a country.");
 	}
 
 	if ((isset($_POST["prov_state"])) && ($tmp_input = clean_input($_POST["prov_state"], array("trim", "notags")))) {
@@ -290,11 +284,9 @@ function profile_update_personal_info() {
 
 		if (ctype_digit($tmp_input) && ($tmp_input = (int) $tmp_input)) {
 			if ($PROCESSED["country_id"]) {
-				$query = "SELECT * FROM `global_lu_provinces` WHERE `province_id` = ".$db->qstr($tmp_input)." AND `country_id` = ".$db->qstr($PROCESSED["country_id"]);
-				$result = $db->GetRow($query);
+				$result = Models_Province::fetchRowByIDCountryID($tmp_input, $PROCESSED["country_id"]);
 				if (!$result) {
-					$ERROR++;
-					$ERRORSTR[] = "The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.";
+					add_error("The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.");
 				}
 			}
 
@@ -306,41 +298,24 @@ function profile_update_personal_info() {
 		$PROCESSED["prov_state"] = ($PROCESSED["province_id"] ? $PROCESSED["province_id"] : ($PROCESSED["province"] ? $PROCESSED["province"] : ""));
 	}
 	if (!$ERROR) {
-		if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Your account profile has been successfully updated.";
+		$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+		if ($user && $user->fromArray($PROCESSED)->update()) {
+			add_success("Your account profile has been successfully updated.");
 
 			application_log("success", "User successfully updated their profile.");
 
 			if (isset($PROCESSED["custom"])) {
 				foreach ($PROCESSED["custom"] as $field_id => $value) {
-					$query = "DELETE FROM `profile_custom_responses` WHERE `field_id` = ".$db->qstr($field_id)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-					$db->Execute($query);
-
-					$query = "INSERT INTO `profile_custom_responses` (`field_id`, `proxy_id`, `value`) VALUES (".$db->qstr($field_id).", ".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($value).")"; 
-					$db->Execute($query);
-				}
-			}
-			
-			if (isset($PROCESSED["publications"])) {
-				$query = "DELETE FROM `profile_publications` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-				if ($db->Execute($query)) {
-					foreach ($PROCESSED["publications"] as $pub_type => $ppublications) {
-						foreach ($ppublications as $dep_id => $publications) {
-							foreach ($publications as $publication) {
-								$query = "INSERT INTO `profile_publications` (`pub_type`, `pub_id`, `dep_id`, `proxy_id`) VALUES (".$db->qstr($pub_type).", ".$db->qstr($publication).", ".$db->qstr($dep_id).", ".$db->qstr($ENTRADA_USER->getID()).")";
-								$db->Execute($query);
-							}
-						}
-					}
+					Models_Profile_Custom_Responses::deleteByFieldIDProxyID($field_id, $ENTRADA_USER->getID());
+					$custom_response = new Models_Profile_Custom_Responses();
+					$custom_response->fromArray(array("field_id" => $field_id, "proxy_id" => $ENTRADA_USER->getID(), "value" => $value))->insert();
 				}
 			}
 			
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "We were unfortunately unable to update your profile at this time. The system administrator has been informed of the problem, please try again later.";
+			add_error("We were unfortunately unable to update your profile at this time. The system administrator has been informed of the problem, please try again later.");
 
-			application_log("error", "Unable to update user profile. Database said: ".$db->ErrorMsg());
+			application_log("error", "Unable to update user profile. ");
 		}
 	}
 }
@@ -351,13 +326,14 @@ function profile_update_privacy() {
 	 * Note: The sessions variable ($_SESSION["details"]["privacy_level"]) is actually being
 	 * changed in index.php on line 268, so that the proper tabs are displayed.
 	 */
-	global $db, $ERROR, $ERRORSTR, $ENTRADA_USER;
+	global $ENTRADA_USER;
 	
 	if ((isset($_POST["privacy_level"])) && ($privacy_level = (int) trim($_POST["privacy_level"]))) {
 		if ($privacy_level > MAX_PRIVACY_LEVEL) {
 			$privacy_level = MAX_PRIVACY_LEVEL;
 		}
-		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+		$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+		if ($user && $user->fromArray(array("privacy_level" => $privacy_level))->update()) {
 			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
 				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
 				exit;
@@ -366,17 +342,16 @@ function profile_update_privacy() {
 				exit;
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.";
+			add_error("We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.");
 
-			application_log("error", "Unable to update privacy setting. Database said: ".$db->ErrorMsg());
+			application_log("error", "Unable to update privacy setting. ");
 		}
 
 	}
 }
 
 function profile_update_google_privacy() {
-	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
+	global $GOOGLE_APPS, $ENTRADA_USER;
 	
 	if ((bool) $GOOGLE_APPS["active"]) {
 		/**
@@ -388,11 +363,13 @@ function profile_update_google_privacy() {
 		if (isset($_POST["google_account"])) {
 			if ((int) trim($_POST["google_account"])) {
 				if (google_create_id()) {
-					$SUCCESS++;
-					$SUCCESSSTR[] = "<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.";
+					add_success("<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.");
 				}
 			} else {
-				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
+				$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+				if ($user) {
+					$user->fromArray(array("google_id" => "opt-out"))->update();
+				}
 			}
 		}
 	}
@@ -406,17 +383,18 @@ function profile_update_google_privacy() {
 		if ($privacy_level > MAX_PRIVACY_LEVEL) {
 			$privacy_level = MAX_PRIVACY_LEVEL;
 		}
-		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))){
-			$ERROR++;
-			$ERRORSTR[] = "We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.";
 
-			application_log("error", "Unable to update privacy setting. Database said: ".$db->ErrorMsg());
+		$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+		if ($user && !$user->fromArray(array("privacy_level" => $privacy_level))->update()){
+			add_error("We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.");
+
+			application_log("error", "Unable to update privacy setting. ");
 		}
 	}
 }
 
 function profile_update_google() {
-	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
+	global $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
 		
 	if ((bool) $GOOGLE_APPS["active"]) {
 		/**
@@ -428,8 +406,7 @@ function profile_update_google() {
 		if (isset($_POST["google_account"])) {
 			if ((int) trim($_POST["google_account"])) {
 				if (google_create_id()) {
-					$SUCCESS++;
-					$SUCCESSSTR[] = "<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.";
+					add_success("<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.");
 
 					if ((isset($_POST["ajax"])) && ($_POST["ajax"] == "1")) {
 						// Clear any open buffers and push through only the success message.
@@ -459,14 +436,17 @@ function profile_update_google() {
 					}
 				}
 			} else {
-				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
+				$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+				if ($user) {
+					$user->fromArray(array("google_id" => "opt-out"))->update();
+				}
 			}
 		}
 	}
 }
 
 function profile_update_google_password() {
-	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR;
+	global $GOOGLE_APPS;
 
 	ob_clear_open_buffers();
 
@@ -484,10 +464,10 @@ function profile_update_google_password() {
 }
 
 function profile_add_assistant() {
-	global $db, $PROCESSED, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_ACL, $ENTRADA_USER;
+	global $PROCESSED, $ERROR, $ENTRADA_ACL, $ENTRADA_USER;
 	
 	if ($ENTRADA_ACL->isLoggedInAllowed('assistant_support', 'create')) {
-		$access_timeframe = validate_calendars("valid", true, true);
+		$access_timeframe = Entrada_Utilities::validate_calendars("valid", true, true);
 
 		if (!$ERROR) {
 			if ((isset($access_timeframe["start"])) && ((int) $access_timeframe["start"])) {
@@ -500,86 +480,72 @@ function profile_add_assistant() {
 
 			if ((isset($_POST["assistant_id"])) && ($proxy_id = (int) trim($_POST["assistant_id"]))) {
 				if ($proxy_id != $ENTRADA_USER->getID()) {
-					$query	= "
-						SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`
-						FROM `".AUTH_DATABASE."`.`user_data` AS a
-						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-						ON b.`user_id` = a.`id` AND b.`app_id`='1' AND b.`account_active`='true' AND b.`group`<>'student'
-						WHERE a.`id`=".$db->qstr($proxy_id);
 
-					$result	= $db->GetRow($query);
+					$result = Models_User::getUserByIDAndGroup($proxy_id, "student");
 					if ($result) {
 						$PROCESSED["assigned_by"]	= $ENTRADA_USER->getID();
 						$PROCESSED["assigned_to"]	= $result["proxy_id"];
 						$fullname					= $result["fullname"];
 
-						$query	= "SELECT * FROM `permissions` WHERE `assigned_by`=".$db->qstr($PROCESSED["assigned_by"])." AND `assigned_to`=".$db->qstr($PROCESSED["assigned_to"]);
-						$result	= $db->GetRow($query);
-						if ($result) {
-							if ($db->AutoExecute("permissions", $PROCESSED, "UPDATE", "permission_id=".$db->qstr($result["permission_id"]))) {
-								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully updated <strong>".html_encode($fullname)."'s</strong> access permissions to your account.";
+						$permission_object = Models_Permissions::fetchOneByAssignedByAssignedTo($PROCESSED["assigned_by"],$PROCESSED["assigned_to"]);
+						if ($permission_object) {
+							if ($permission_object->fromArray($PROCESSED)->update()) {
+								add_success("You have successfully updated <strong>".html_encode($fullname)."'s</strong> access permissions to your account.");
 
 								application_log("success", "Updated permissions for proxy_id [".$PROCESSED["assigned_by"]."] who is allowing [".$PROCESSED["assigned_by"]."] accecss to their account from ".date(DEFAULT_DATE_FORMAT, $PROCESSED["valid_from"])." until ".date(DEFAULT_DATE_FORMAT, $PROCESSED["valid_until"]));
 							} else {
-								$ERROR++;
-								$ERRORSTR[] = "We were unable to update <strong>".html_encode($fullname)."'s</strong> access permissions to your account at this time. The system administrator has been informed of this, please try again later.";
+								add_error("We were unable to update <strong>".html_encode($fullname)."'s</strong> access permissions to your account at this time. The system administrator has been informed of this, please try again later.");
 
-								application_log("error", "Unable to update permissions for proxy_id [".$PROCESSED["assigned_by"]."] who is allowing [".$PROCESSED["assigned_by"]."] accecss to their account. Database said: ".$db->ErrorMsg());
+								application_log("error", "Unable to update permissions for proxy_id [".$PROCESSED["assigned_by"]."] who is allowing [".$PROCESSED["assigned_by"]."] accecss to their account.");
 							}
 						} else {
-							if ($db->AutoExecute("permissions", $PROCESSED, "INSERT")) {
-								$SUCCESS++;
-								$SUCCESSSTR[] = "You successfully gave <strong>".html_encode($fullname)."</strong> access permissions to your account.";
+							$permission_object = new Models_Permissions();
+							if ($permission_object->fromArray($PROCESSED)->insert()) {
+								add_success("You successfully gave <strong>".html_encode($fullname)."</strong> access permissions to your account.");
 
 								application_log("success", "Added permissions for proxy_id [".$PROCESSED["assigned_by"]."] who is allowing [".$PROCESSED["assigned_by"]."] accecss to their account from ".date(DEFAULT_DATE_FORMAT, $PROCESSED["valid_from"])." until ".date(DEFAULT_DATE_FORMAT, $PROCESSED["valid_until"]));
 							} else {
-								$ERROR++;
-								$ERRORSTR[] = "We were unable to give <strong>".html_encode($fullname)."</strong> access permissions to your account at this time. The system administrator has been informed of this, please try again later.";
+								add_error("We were unable to give <strong>".html_encode($fullname)."</strong> access permissions to your account at this time. The system administrator has been informed of this, please try again later.");
 
-								application_log("error", "Unable to insert permissions for proxy_id [".$PROCESSED["assigned_by"]."] who is allowing [".$PROCESSED["assigned_by"]."] accecss to their account. Database said: ".$db->ErrorMsg());
+								application_log("error", "Unable to insert permissions for proxy_id [".$PROCESSED["assigned_by"]."] who is allowing [".$PROCESSED["assigned_by"]."] accecss to their account. ");
 							}
 						}
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The person that have selected to add as an assistant either does not exist in this system, or their account is not currently active.<br /><br />Please contact Denise Jones in the Undergrad office (613-533-6000 x77804) to get an account for the requested individual.";
+						add_error("The person that have selected to add as an assistant either does not exist in this system, or their account is not currently active.<br /><br />Please contact Denise Jones in the Undergrad office (613-533-6000 x77804) to get an account for the requested individual.");
 					}
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "You cannot add yourself as your own assistant, there is no need to do so.";
+					add_error("You cannot add yourself as your own assistant, there is no need to do so.");
 				}
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You must enter, then select the name of the person you wish to give access to your account permissions.";
+				add_error("You must enter, then select the name of the person you wish to give access to your account permissions.");
 			}
-		}
+		} else {
+            add_error("Please enter valid start and end dates for the period when the assistant will have access to your account.");
+        }
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "Your account does not have the required access levels to add assistants to your profile.";
+		add_error("Your account does not have the required access levels to add assistants to your profile.");
 
 		application_log("error", "User tried to add assistants to profile without an acceptable group & role.");
 	}
 }
 
 function profile_remove_assistant () {
-	global $db, $PROCESSED, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_ACL, $ENTRADA_USER;
+	global $PROCESSED, $ENTRADA_ACL, $ENTRADA_USER;
 	
 	if ($ENTRADA_ACL->isLoggedInAllowed('assistant_support', 'delete')) {
 		if ((isset($_POST["remove"])) && (@is_array($_POST["remove"])) && (@count($_POST["remove"]))) {
 			foreach ($_POST["remove"] as $assigned_to => $permission_id) {
 				$permission_id = (int) trim($permission_id);
 				if ($permission_id) {
-					if ($db->Execute("DELETE FROM `permissions` WHERE `permission_id`=".$db->qstr($permission_id)." AND `assigned_by`=".$db->qstr($ENTRADA_USER->getID()))) {
+					if (Models_User::deleteAsistants($permission_id, $ENTRADA_USER->getID())) {
 
-						$SUCCESS++;
-						$SUCCESSSTR[] = "You have successfully removed ".get_account_data("fullname", (int) $assigned_to)." from to accessing your permission levels.";
+						add_success("You have successfully removed ".get_account_data("fullname", (int) $assigned_to)." from to accessing your permission levels.");
 
 						application_log("success", "Removed assigned_to [".$assigned_to."] permissions from proxy_id [".$ENTRADA_USER->getID()."] account.");
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "Unable to remove ".get_account_data("fullname", (int) $assigned_to)." from to accessing your permission levels. The system administrator has been informed of this error; however, if this is urgent, please contact us be telephone at: 613-533-6000 x74918.";
+						add_error("Unable to remove ".get_account_data("fullname", (int) $assigned_to)." from to accessing your permission levels. The system administrator has been informed of this error; however, if this is urgent, please contact us be telephone at: 613-533-6000 x74918.");
 
-						application_log("error", "Failed to remove assigned_to [".$assigned_to."] permissions from proxy_id [".$ENTRADA_USER->getID()."] account. Database said: ".$db->ErrorMsg());
+						application_log("error", "Failed to remove assigned_to [".$assigned_to."] permissions from proxy_id [".$ENTRADA_USER->getID()."] account.");
 					}
 				}
 			}
@@ -587,96 +553,35 @@ function profile_remove_assistant () {
 
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "Your account does not have the required access levels to remove assistants from your profile.";
+		add_error("Your account does not have the required access levels to remove assistants from your profile.");
 
 		application_log("error", "User tried to remove assistants from profile without an acceptable group & role.");
 	}
 }
 
 function profile_update_notifications() {
-	global $db, $PROCESSED, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_ACL, $ENTRADA_USER;
+	global $PROCESSED, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_ACL, $ENTRADA_USER;
 
+	$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
 	if ($_POST["enable-notifications"] == 1) {
-		if ($_POST["notify_announcements"] && is_array($_POST["notify_announcements"])) {
-			$notify_announcements = $_POST["notify_announcements"]; 
-		} else {
-			$notify_announcements = array();
-		}
-		if ($_POST["notify_events"] && is_array($_POST["notify_events"])) {
-			$notify_events = $_POST["notify_events"];
-		} else {
-			$notify_events = array();
-		}
-		if ($_POST["notify_polls"] && is_array($_POST["notify_polls"])) {
-			$notify_polls = $_POST["notify_polls"];
-		} else {
-			$notify_polls = array();
-		}
-		if ($_POST["notify_members"] && is_array($_POST["notify_members"])) {
-			$notify_members = $_POST["notify_members"];
-		} else {
-			$notify_members = array();
-		}
-		
-		$user_notifications = $db->GetOne("SELECT `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
-		if (((int)$user_notifications) != 1) {
-			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `notifications` = '1' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+		if ($user && ((int)$user->getNotifications()) != 1) {
+			if (!$user->fromArray(array("notofications" => 1))->update()) {
 				$ERROR++;
-				application_log("error", "Notification settings for the Proxy ID [".$ENTRADA_USER->getID()."] could not be activated. Database said: ".$db->ErrorMsg());
+				application_log("error", "Notification settings for the Proxy ID [".$ENTRADA_USER->getID()."] could not be activated");
 			}
-		}
-		
-		$query = "SELECT `community_id` FROM `community_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `member_active` = '1'";
-		$communities = $db->GetAll($query);
-		if ($communities) {
-			foreach ($communities as $community) {
-				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["announcements"] = (isset($notify_announcements[$community["community_id"]]) && $notify_announcements[$community["community_id"]] ? 1 : 0);
-				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["events"] = (isset($notify_events[$community["community_id"]]) && $notify_events[$community["community_id"]] ? 1 : 0);
-				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["polls"] = (isset($notify_polls[$community["community_id"]]) && $notify_polls[$community["community_id"]] ? 1 : 0);
-				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["members"] = (isset($notify_members[$community["community_id"]]) && $notify_members[$community["community_id"]] ? 1 : 0);
-			}
-		}
-		if ($PROCESSED_NOTIFICATIONS && is_array($PROCESSED_NOTIFICATIONS)) {
-			if ($db->Execute("DELETE FROM `community_notify_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `notify_type` IN ('announcement', 'event', 'poll', 'members')")) {
-				foreach ($PROCESSED_NOTIFICATIONS as $community_id => $notify) {
-					if (!$ERROR) {
-						if (!$db->Execute("	INSERT INTO `community_notify_members` 
-											(`proxy_id`, `community_id`, `record_id`, `notify_type`, `notify_active`) VALUES 
-											(".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'announcement', ".$notify["announcements"]."),
-											(".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'event', ".$notify["events"]."),
-											(".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'members', ".$notify["members"]."),
-											(".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'poll', ".$notify["polls"].")")) {
-							$ERROR++;
-							application_log("error", "Community notifications settings for proxy ID [".$ENTRADA_USER->getID()."] could not be updated. Database said: ".$db->ErrorMsg());
-						}
-					}
-				}
-				if (!$ERROR) {
-					$SUCCESS++;
-					$SUCCESSSTR[] = "Your community notification settings have been successfully updated.";
-				}
-			} else {
-				$ERROR++;
-				application_log("error", "Community notifications settings for proxy ID [".$ENTRADA_USER->getID()."] could not be deleted. Database said: ".$db->ErrorMsg());
-			}
-		}
-		if ($ERROR) {
-			$ERRORSTR[] = "There was an issue while attempting to set your notification settings. The system administrator has been informed of the problem, please try again later.";	
 		}
 	} else {
-		$user_notifications = $db->GetOne("SELECT `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
-		if (((int)$user_notifications) != 0) {
-			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `notifications` = '0' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+		if ($user && ((int)$user->getNotifications()) != 0) {
+			if (!$user->fromArray(array("notofications" => 0))->update()) {
 				$ERROR++;
-				application_log("error", "Notification settings for the Proxy ID [".$ENTRADA_USER->getID()."] could not be deactivated. Database said: ".$db->ErrorMsg());
+				application_log("error", "Notification settings for the Proxy ID [".$ENTRADA_USER->getID()."] could not be deactivated");
 			}
 		}
 	}
 }
 
 function profile_copyright_update_google_privacy() {
-	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
+	global $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
 
 	if ((bool) $GOOGLE_APPS["active"]) {
 		/**
@@ -688,21 +593,24 @@ function profile_copyright_update_google_privacy() {
 		if (isset($_POST["google_account"])) {
 			if ((int) trim($_POST["google_account"])) {
 				if (google_create_id()) {
-					$SUCCESS++;
-					$SUCCESSSTR[] = "<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.";
+					add_success("<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.");
 				}
 			} else {
-				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
+				$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+				if ($user) {
+					$user->fromArray(array("google_id" => "opt-out"))->update();
+				}
 			}
 		}
 	}
 
 	if (isset($_POST["copyright"])) {
-		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
-			$ERROR++;
-			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+		$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
 
-			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+		if ($user && !$user->fromArray(array("copyright" => time()))->update()) {
+			add_error("We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.");
+
+			application_log("error", "Unable to update copyright setting. ");
 		}
 	}
 
@@ -715,11 +623,11 @@ function profile_copyright_update_google_privacy() {
 		if ($privacy_level > MAX_PRIVACY_LEVEL) {
 			$privacy_level = MAX_PRIVACY_LEVEL;
 		}
-		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))){
-			$ERROR++;
-			$ERRORSTR[] = "We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.";
+		$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+		if ($user && !$user->fromArray(array("privacy_level" => $privacy_level))->update()){
+			add_error("We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.");
 
-			application_log("error", "Unable to update privacy setting. Database said: ".$db->ErrorMsg());
+			application_log("error", "Unable to update privacy setting. ");
 		}
 	}
 }
@@ -730,14 +638,14 @@ function profile_copyright_update() {
 	 * Note: The sessions variable ($_SESSION["details"]["privacy_level"]) is actually being
 	 * changed in index.php on line 268, so that the proper tabs are displayed.
 	 */
-	global $db, $ERROR, $ERRORSTR, $ENTRADA_USER;
+	global $ERROR, $ERRORSTR, $ENTRADA_USER;
 
 	if (isset($_POST["copyright"])) {
-		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
-			$ERROR++;
-			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+		$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+		if ($user && !$user->fromArray(array("copyright" => time()))->update()) {
+			add_error("We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.");
 
-			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+			application_log("error", "Unable to update copyright setting. ");
 		}
 	}
 
@@ -745,7 +653,8 @@ function profile_copyright_update() {
 		if ($privacy_level > MAX_PRIVACY_LEVEL) {
 			$privacy_level = MAX_PRIVACY_LEVEL;
 		}
-		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+		$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+		if ($user && $user->fromArray(array("privacy_level" => $privacy_level))->update()) {
 			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
 				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
 				exit;
@@ -754,10 +663,9 @@ function profile_copyright_update() {
 				exit;
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.";
+			add_error("We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.");
 
-			application_log("error", "Unable to update privacy setting. Database said: ".$db->ErrorMsg());
+			application_log("error", "Unable to update privacy setting.");
 		}
 
 	}
@@ -767,7 +675,7 @@ function copyright_update_google_privacy() {
 	/**
 	 * This actually changes the copyright setting.
 	 */
-	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
+	global $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
 
 	if ((bool) $GOOGLE_APPS["active"]) {
 		/**
@@ -779,17 +687,21 @@ function copyright_update_google_privacy() {
 		if (isset($_POST["google_account"])) {
 			if ((int) trim($_POST["google_account"])) {
 				if (google_create_id()) {
-					$SUCCESS++;
-					$SUCCESSSTR[] = "<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.";
+					add_success("<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.");
 				}
 			} else {
-				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
+				$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+				if ($user) {
+					$user->fromArray(array("google_id" => "opt-out"))->update();
+				}
 			}
 		}
 	}
 
 	if (isset($_POST["copyright"])) {
-		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+		$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+
+		if ($user && $user->fromArray(array("copyright" => time()))->update()) {
 			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
 				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
 				exit;
@@ -798,10 +710,9 @@ function copyright_update_google_privacy() {
 				exit;
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+			add_error("We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.");
 
-			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+			application_log("error", "Unable to update copyright setting.");
 		}
 
 	}
@@ -811,10 +722,13 @@ function copyright_update() {
 	/**
 	 * This actually changes the copyright setting in their profile.
 	 */
-	global $db, $ERROR, $ERRORSTR, $ENTRADA_USER;
+	global $ENTRADA_USER;
 
 	if (isset($_POST["copyright"])) {
-		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+
+		$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
+
+		if ($user && $user->fromArray(array("copyright" => time()))->update()) {
 			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
 				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
 				exit;
@@ -823,10 +737,9 @@ function copyright_update() {
 				exit;
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+			add_error("We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.");
 
-			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+			application_log("error", "Unable to update copyright setting.");
 		}
 
 	}

@@ -10,18 +10,18 @@
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
 */
 
-require_once("Models/utility/Collection.class.php"); 
-require_once("Models/utility/SimpleCache.class.php"); 
+require_once("Classes/utility/Collection.class.php");
+require_once("Classes/utility/SimpleCache.class.php");
 
-require_once("Models/users/User.class.php"); 
-require_once("Models/users/Users.class.php"); 
+require_once("Classes/users/User.class.php");
+require_once("Classes/users/Users.class.php");
 
-require_once("Models/users/metadata/MetaDataRelation.class.php");
-require_once("Models/users/metadata/MetaDataRelations.class.php");
-require_once("Models/users/metadata/MetaDataType.class.php");
-require_once("Models/users/metadata/MetaDataTypes.class.php");
-require_once("Models/users/metadata/MetaDataValue.class.php");
-require_once("Models/users/metadata/MetaDataValues.class.php");
+require_once("Classes/users/metadata/MetaDataRelation.class.php");
+require_once("Classes/users/metadata/MetaDataRelations.class.php");
+require_once("Classes/users/metadata/MetaDataType.class.php");
+require_once("Classes/users/metadata/MetaDataTypes.class.php");
+require_once("Classes/users/metadata/MetaDataValue.class.php");
+require_once("Classes/users/metadata/MetaDataValues.class.php");
 
 /**
  * @param MetaDataType $type

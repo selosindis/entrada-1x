@@ -110,15 +110,24 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 											FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
 											JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
 											ON a.`lentry_id` = b.`lentry_id`
-											WHERE a.`lentry_id` IN
-											(
-												SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
-												WHERE `entry_active` = '1' 
-												AND `proxy_id` = ".$db->qstr($PROXY_ID)."
-											)
+											WHERE b.`entry_active` = '1'
+											AND b.`proxy_id` = ".$db->qstr($PROXY_ID)."
 											AND a.`objective_id` = ".$db->qstr($required_objective["objective_id"])."
 											".($llocation_ids_string ? "AND b.`llocation_id` IN (".$llocation_ids_string.")" : "")."
 											GROUP BY a.`objective_id`";
+//								$query = "SELECT COUNT(`objective_id`) AS `recorded`
+//											FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
+//											JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+//											ON a.`lentry_id` = b.`lentry_id`
+//											WHERE a.`lentry_id` IN
+//											(
+//												SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
+//												WHERE `entry_active` = '1'
+//												AND `proxy_id` = ".$db->qstr($PROXY_ID)."
+//											)
+//											AND a.`objective_id` = ".$db->qstr($required_objective["objective_id"])."
+//											".($llocation_ids_string ? "AND b.`llocation_id` IN (".$llocation_ids_string.")" : "")."
+//											GROUP BY a.`objective_id`";
 								$recorded = $db->GetOne($query);
 								
 								if ($recorded) {

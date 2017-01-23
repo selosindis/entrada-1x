@@ -34,6 +34,7 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
                 $query = "SELECT *
                             FROM `community_mailing_lists`
                             WHERE `list_type` != 'inactive'
+                            AND `community_id` = 1
                             ORDER BY `last_checked` ASC
                             LIMIT 10";
                 if ($lists = $db->GetAll($query)) {

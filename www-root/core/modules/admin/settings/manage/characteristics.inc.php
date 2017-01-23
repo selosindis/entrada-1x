@@ -37,7 +37,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 		$PREFERENCES = preferences_load($MODULE);
 		
 
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/characteristics?org=".$ORGANISATION["organisation_id"], "title" => $translate->_("Assessment Characteristics"));
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/characteristics?org=".$ORGANISATION["organisation_id"], "title" => $translate->_("Assessment Types"));
 
 		$module_file = $router->getRoute();
 		if ($module_file) {

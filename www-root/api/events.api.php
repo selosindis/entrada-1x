@@ -62,13 +62,11 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 		$LASTUPDATED = $event_info["updated_date"];
 
 		if(($event_info["release_date"]) && ($event_info["release_date"] > time())) {
-			$ERROR++;
-			$ERRORSTR[] = "The event you are trying to view is not yet available. Please try again after ".date("r", $event_info["release_date"]);
+			add_error("The event you are trying to view is not yet available. Please try again after ".date("r", $event_info["release_date"]));
 
 			echo display_error();
 		} elseif(($event_info["release_until"]) && ($event_info["release_until"] < time())) {
-			$ERROR++;
-			$ERRORSTR[] = "The event you are trying to view is no longer available; it expired ".date("r", $event_info["release_until"]);
+            add_error("The event you are trying to view is no longer available; it expired ".date("r", $event_info["release_until"]));
 
 			echo display_error($errorstr);
 		} else {
@@ -98,6 +96,10 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 						<tr>
 							<td><strong>Location</strong></td>
 							<td><?php echo (($event_info["event_location"]) ? $event_info["event_location"] : "To Be Announced"); ?></td>
+						</tr>						
+                        <tr>
+							<td><strong>Attendance</strong></td>
+							<td><?php echo (isset($event_info["attendance_required"]) && ($event_info["attendance_required"] == 0) ? "<em>Optional</em>" :  "Required"); ?></td>
 						</tr>
 						<?php if (trim($event_info["event_message"]) != "") : ?>
 						<tr>
@@ -124,8 +126,7 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 				</div>
 				<?php
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You are not permitted to access this event.";
+                add_error("You are not permitted to access this event.");
 
 				echo display_error($errorstr);
 				application_log("error", "Proxy_id [".$ENTRADA_USER->getID()."] attempted to access event_id [".$event_id."] and was denied access.");

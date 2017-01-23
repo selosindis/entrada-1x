@@ -18,7 +18,7 @@
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Matt Simpson <simpson@queensu.ca>
- * @copyright Copyright 2014 Queen's University. All Rights Reserved.
+ * @copyright Copyright 2016 Queen's University. All Rights Reserved.
  *
  */
 
@@ -161,6 +161,7 @@ TEMPLATECLASS;
                     $migration = "Migrate_" . $migration;
 
                     $migrate = new $migration($this->command, $this->output_filename);
+                    $migrate->quiet = $this->quiet;
 
                     print $migration . ": BEGINNING";
 
@@ -238,7 +239,6 @@ TEMPLATECLASS;
         $returnVal = $db->Execute($query);
         return $returnVal;
     }
-    
 
     public function playDown($filename = "") {
         print "\n";
@@ -537,7 +537,11 @@ TEMPLATECLASS;
                         print $this->color($db->ErrorMsg(), "grey");
                         print "\n\n";
 
-                        $response = $this->prompt("Would you like to try and continue? [Y/n]", array("y", "yes", "n", "no"), array("alpha", "lower"));
+                        if ($this->quiet) {
+                            $response = "y";
+                        } else {
+                            $response = $this->prompt("Would you like to try and continue? [Y/n]", array("y", "yes", "n", "no"), array("alpha", "lower"));
+                        }
 
                         if (!in_array($response, array("y", "yes"))) {
                             $this->end(true);

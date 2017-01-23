@@ -97,18 +97,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						add_error("There were no valid group identifiers provided to delete. Please ensure that you access this section through the group index.");
 					}
 					break;
-					default:
-						break;
-					
+                default:
+                    break;
 				} 
 			
 			if($ERROR) {
 				$STEP = 1;
 			}
 		break;
-		default :
-			// No error checking for step 1.
-		break;	
 	}
 	
 	// Display Page

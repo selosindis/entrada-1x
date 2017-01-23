@@ -61,7 +61,7 @@ if ($RECORD_ID) {
 		if (isset($_POST["preceptor_proxy_id"]) && ($tmp_input = clean_input($_POST["preceptor_proxy_id"], "int"))) {
 			$preceptor_proxy_id = $tmp_input;
 		}
-		$output = Models_Evaluation::getPreceptorSelect($RECORD_ID, $event_id, $ENTRADA_USER->getID(), (isset($preceptor_proxy_id) && $preceptor_proxy_id ? $preceptor_proxy_id : 0));
+		$output = Classes_Evaluation::getPreceptorSelect($RECORD_ID, $event_id, $ENTRADA_USER->getID(), (isset($preceptor_proxy_id) && $preceptor_proxy_id ? $preceptor_proxy_id : 0));
 		if ($output) {
 			echo "<br /><div class=\"content-small\">Please choose a clerkship preceptor to evaluate: \n";
 			echo $output;

@@ -124,6 +124,24 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				$PROCESSED["organisation_url"] = "";
 			}
 
+			if (isset($_POST["organisation_twitter"]) && ($tmp_input = clean_input($_POST["organisation_twitter"], array("trim", "notags")))) {
+				$PROCESSED["organisation_twitter"] = $tmp_input;
+			} else {
+				$PROCESSED["organisation_twitter"] = "";
+			}
+
+			if (isset($_POST["organisation_hashtags"])) {
+				$PROCESSED["organisation_hashtags"] = array();
+				foreach ($_POST["organisation_hashtags"] as $index => $tmp_input) {
+					if ($organisation_hashtags = clean_input($tmp_input, array("trim", "notags"))) {
+						$PROCESSED["organisation_hashtags"][] = $organisation_hashtags;
+					}
+				}
+				$PROCESSED["organisation_hashtags"] = implode(" ", $PROCESSED["organisation_hashtags"]);
+			} else {
+				$PROCESSED["organisation_hashtags"] = "";
+			}
+
 			if (isset($_POST["organisation_desc"]) && ($tmp_input = clean_input($_POST["organisation_desc"], array("trim","notags")))) {
 				$PROCESSED["organisation_desc"] = $tmp_input;
 			} else {
@@ -225,6 +243,9 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 		default :
 			if ($ENTRADA_ACL->amIAllowed(new ConfigurationResource($ORGANISATION_ID), "update")) {
 				$PROCESSED["prov_state"] = ((isset($PROCESSED["province_id"]) && $PROCESSED["province_id"]) ? (int) $PROCESSED["province_id"] : ((isset($PROCESSED["organisation_province"]) && $PROCESSED["organisation_province"]) ? $PROCESSED["organisation_province"] : ""));
+				$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/chosen.jquery.min.js\"></script>\n";
+				$HEAD[]	= "<link rel=\"stylesheet\" type=\"text/css\"  href=\"".ENTRADA_RELATIVE."/css/jquery/chosen.css\" />\n";
+				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/Twitter.js\"></script>";
 
 				$ONLOAD[] = "provStateFunction(\$F($('editOrganisationForm')['countries_id']))";
 
@@ -446,6 +467,28 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 						<input type="text" id="organisation_url" name="organisation_url" value="<?php echo html_encode($PROCESSED["organisation_url"]); ?>"/>
 					</div>
 				</div>
+				<?php if ( Entrada_Twitter::widgetIsActive() ) { ?>
+					<div class="control-group">
+						<label for="organisation_twitter" class="control-label form-nrequired">Twitter Handle:</label>
+						<div class="controls">
+							<input type="text" id="organisation_twitter" name="organisation_twitter" value="<?php echo html_encode($PROCESSED["organisation_twittertwitter"]); ?>"/>
+						</div>
+					</div>
+					<div class="control-group">
+						<label for="organisation_hashtags" class="control-label form-nrequired">Twitter Hashtags:</label>
+						<div class="controls">
+							<select class="chosen-select" multiple id="twitter_hashtags" name="organisation_hashtags[]">
+								<?php
+								$select_options_array = explode(" ", $PROCESSED["organisation_hashtags"]);
+								foreach ($select_options_array as $select_option) {
+									echo "<option selected value=\"" . $select_option . "\">".$select_option."</option>";
+								}
+								?>
+							</select>
+
+						</div>
+					</div>
+				<?php } ?>
 				<div class="control-group">
 					<label for="template" class="form-required control-label">Interface Template:</label>
 					<div class="controls">

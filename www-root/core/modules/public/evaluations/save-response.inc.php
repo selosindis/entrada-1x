@@ -107,7 +107,7 @@ if ($RECORD_ID) {
 							} else {
 								$comments = NULL;
 							}
-							if (evaluation_save_response($progress_record["eprogress_id"], $progress_record["eform_id"], $qquestion_id, $qqresponse_id, $comments)) {
+							if (Classes_Evaluation::evaluation_save_response($progress_record["eprogress_id"], $progress_record["eform_id"], $qquestion_id, $qqresponse_id, $comments)) {
 								echo 200;
 								exit;
 							} else {

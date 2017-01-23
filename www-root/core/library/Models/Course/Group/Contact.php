@@ -25,12 +25,12 @@
  */
 
 class Models_Course_Group_Contact extends Models_Base {
-    
-    protected $cgcontact_id, $cgroup_id, $proxy_id, $contact_order, $updated_date, $updated_by;
-    
-    protected $table_name = "course_group_contacts";
-    protected $default_sort_column = "contact_order";
-    
+    protected $cgcontact_id, $cgroup_id, $proxy_id, $contact_order = 0 , $updated_date, $updated_by;
+
+    protected static $table_name = "course_group_contacts";
+    protected static $default_sort_column = "contact_order";
+    protected static $primary_key = "cgcontact_id";
+
     public function __construct($arr = NULL) {
         parent::__construct($arr);
     }
@@ -59,7 +59,7 @@ class Models_Course_Group_Contact extends Models_Base {
         return $this->updated_by;
     }
     
-    public static function fetchRowByID($cgcontact_id = 0) {
+    public static function fetchRowByID($cgcontact_id) {
         $self = new self();
         return $self->fetchRow(array(
                 array("key" => "cgcontact_id", "value" => $cgcontact_id, "method" => "=", "mode" => "AND")
@@ -78,52 +78,51 @@ class Models_Course_Group_Contact extends Models_Base {
 
     public static function fetchAllByCgroupID($cgroup_id = 0) {
         $self = new self();
-
-        $constraints = array(
-            array(
-                "mode"      => "AND",
-                "key"       => "cgroup_id",
-                "value"     => $cgroup_id,
-                "method"    => "="
+        return $self->fetchAll(array(
+                array("key" => "cgroup_id", "value" => $cgroup_id, "method" => "=", "mode" => "AND")
             )
         );
-
-        $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
-        $output = array();
-
-        if (!empty($objs)) {
-            foreach ($objs as $o) {
-                $output[] = $o;
-            }
-        }
-
-        return $output;
     }
     
     public static function fetchAllByProxyID($proxy_id = 0) {
         $self = new self();
-
-        $constraints = array(
-            array(
-                "mode"      => "AND",
-                "key"       => "proxy_id",
-                "value"     => $proxy_id,
-                "method"    => "="
+        return $self->fetchAll(array(
+                array("key" => "proxy_id", "value" => $proxy_id, "method" => "=", "mode" => "AND")
             )
         );
+    }
+    
+    
+    public function getExportGroupContactsByGroupID($group_id) {
+        global $db;
 
-        $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
-        $output = array();
+        $query = "SELECT a.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname` FROM `course_group_contacts` AS a
+						JOIN `".AUTH_DATABASE."`.`user_data` AS b
+						ON a.`proxy_id` = b.`id`
+						WHERE a.`cgroup_id` = ?
+						ORDER BY a.`contact_order`";
+        $course_group_audience = $db->GetAll($query, array($group_id));
 
-        if (!empty($objs)) {
-            foreach ($objs as $o) {
-                $output[] = $o;
-            }
+        if ($course_group_audience) {
+            return $course_group_audience;
         }
+        return false;
 
-        return $output;
     }
 
-}
+    public function deleteByGroupID($group_id) {
+        global $db;
 
-?>
+        $constrains = array($group_id);
+
+        $query = "DELETE FROM `course_group_contacts` WHERE `cgroup_id`= ?";
+
+        $result = $db->Execute($query, $constrains);
+
+        if ($result) {
+            return $result;
+        }
+        return false;
+
+    }
+}

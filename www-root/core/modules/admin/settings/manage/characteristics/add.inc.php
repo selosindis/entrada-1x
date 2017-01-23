@@ -101,12 +101,12 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                             }
                         }
 					} else {
-						add_error("There was a problem inserting this " . $translate->_("Assessment Characteristic") . " into the system. The system administrator was informed of this error; please try again later.");
+						add_error("There was a problem inserting this " . $translate->_("Assessment Types") . " into the system. The system administrator was informed of this error; please try again later.");
 
 						application_log("error", "There was an error inserting an assessment characteristic. Database said: ".$db->ErrorMsg());
 					}
 				} else {
-					add_error("There was a problem inserting this " . $translate->_("Assessment Characteristic") . " into the system. The system administrator was informed of this error; please try again later.");
+					add_error("There was a problem inserting this " . $translate->_("Assessment Types") . " into the system. The system administrator was informed of this error; please try again later.");
 
 					application_log("error", "There was an error inserting an assessment characteristic. Database said: ".$db->ErrorMsg());
 				}
@@ -114,7 +114,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                 if (!$ERROR) {
                     $url = ENTRADA_URL . "/admin/settings/manage/characteristics?org=".$ORGANISATION_ID;
 
-                    add_success("You have successfully added <strong>".html_encode($PROCESSED["title"])."</strong> to the system.<br /><br />You will now be redirected to the " . $translate->_("Assessment Characteristics") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+                    add_success("You have successfully added <strong>".html_encode($PROCESSED["title"])."</strong> to the system.<br /><br />You will now be redirected to the " . $translate->_("Assessment Types") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
                     $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
                     application_log("success", "New Assessment Characteristic ID [".$id."] was added to the system.");

@@ -151,10 +151,48 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 			</div>
 		</div>
 		<div class="control-group">
-			<div class="controls content-small">
-				Example 1: <a href="<?php echo ENTRADA_RELATIVE."/curriculum/search?".replace_query(array("q" => "asthma")); ?>" class="content-small">asthma</a><br />
-				Example 2: <a href="<?php echo ENTRADA_RELATIVE."/curriculum/search?".replace_query(array("q" => "pain+AND+palliative")); ?>" class="content-small">pain AND palliative</a><br />
-				Example 3: <a href="<?php echo ENTRADA_RELATIVE."/curriculum/search?".replace_query(array("q" => "%22heart+disease%22+NOT+pediatric")); ?>" class="content-small">"heart disease" NOT pediatric</a>
+			<div class="controls content-small search-operators">
+				<a data-toggle="collapse" href="#search-operator-instructions">
+					Refine your search using: -, "quotes", OR
+				</a>
+				<style type="text/css">
+					#search-operator-instructions.in {
+						border: 1px solid #ccc;
+					}
+					#search-operator-instructions dt {
+						width: 70px;
+						margin-left: 12px;
+						text-align: left;
+					}
+					.stripe {
+						background: #f4f7fa;
+					}
+					#search-operator-instructions dd {
+						margin-left:90px;
+					}
+					/*shrink label so the year fits on screen when loaded*/
+					.timeline-band-layer-inner td {
+						font-size: 30px;
+					}
+				</style>
+				<div id="search-operator-instructions" class="collapse">
+					<dl>
+						<dt>-</dt>
+						<dd>Use the '-' character to remove a word from search results</dd>
+						<dd>E.g. asthma -paediatric
+						<br>Returns all results related to asthma excluding the word paediatric.</dd>
+						<div class="stripe">
+							<dt>"quotes"</dt>
+							<dd>Use quotes to search for the exact text</dd>
+							<dd>E.g. asthma "paediatric"
+							<br>Returns results that contain exactly paediatric. Pediatric results will not be listed.</dd>
+						</div>
+						<dt>OR</dt>
+						<dd>Use this to search for multiple queries at a time</dd>
+						<dd>E.g. asthma OR paediatric
+						<br>Returns all results for asthma or paediatric, the results do not need to be related.</dd>
+					</dl>
+				</div>
 			</div>
 		</div>
 		<div class="control-group">

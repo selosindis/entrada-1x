@@ -58,7 +58,7 @@ switch ($request_method) {
                     $PROCESSED["excluded_target_ids"] = 0;
                 }
 
-                $users = User::fetchUsersByGroups($PROCESSED["search_value"], $PROCESSED["group"], null, $PROCESSED["excluded_target_ids"]);
+                $users = User::fetchUsersByGroups($PROCESSED["search_value"], $PROCESSED["group"], null, null, $PROCESSED["excluded_target_ids"]);
 
                 $data = array();
 
@@ -200,54 +200,11 @@ switch ($request_method) {
                     }
                 }
             break;
-            case "get-organisations" :
-                if (isset($request["search_value"]) && $tmp_input = clean_input(strtolower($request["search_value"]), array("trim", "striptags"))) {
-                    $PROCESSED["search_value"] = $tmp_input;
-                } else {
-                    $PROCESSED["search_value"] = "";
-                }
-
-                $organisations = Models_Organisation::fetchAllOrganisations($PROCESSED["search_value"]);
-
-                if ($organisations) {
-                    $data = array();
-
-                    foreach ($organisations as $organisation) {
-                        $data[] = array("target_id" => $organisation["organisation_id"], "target_parent" => "0", "target_label" => $organisation["organisation_title"], "target_children" => "1");
-                    }
-
-                    echo json_encode(array("status" => "success", "data" => $data, "parent_id" => "0", "parent_name" => "0", "level_selectable" => false));
-                } else {
-                    echo json_encode(array("status" => "error", "data" => $translate->_("No Organisations found")));
-                }
-            break;
             case "get-students" :
                 if (isset($request["search_value"]) && $tmp_input = clean_input(strtolower($request["search_value"]), array("trim", "striptags"))) {
                     $PROCESSED["search_value"] = $tmp_input;
                 } else {
                     $PROCESSED["search_value"] = "";
-                }
-
-                if (isset($request["parent_id"]) && $tmp_input = clean_input(strtolower($request["parent_id"]), array("trim", "int"))) {
-                    $PROCESSED["parent_id"] = $tmp_input;
-                } else {
-                    $PROCESSED["parent_id"] = "0";
-                }
-
-                if (isset($request["context"]) && $tmp_input = clean_input(strtolower($request["context"]), array("trim", "striptags"))) {
-                    $PROCESSED["context"] = $tmp_input;
-                }
-
-                if (isset($request["previous_context"]) && $tmp_input = clean_input(strtolower($request["previous_context"]), array("trim", "striptags"))) {
-                    $PROCESSED["previous_context"] = $tmp_input;
-                }
-
-                if (isset($request["next_context"]) && $tmp_input = clean_input(strtolower($request["next_context"]), array("trim", "striptags"))) {
-                    $PROCESSED["next_context"] = $tmp_input;
-                }
-
-                if (isset($request["current_context"]) && $tmp_input = clean_input(strtolower($request["current_context"]), array("trim", "striptags"))) {
-                    $PROCESSED["current_context"] = $tmp_input;
                 }
 
                 if (isset($request["organisation_id"]) && $tmp_input = clean_input(strtolower($request["organisation_id"]), array("trim", "int"))) {
@@ -256,129 +213,28 @@ switch ($request_method) {
                     $PROCESSED["organisation_id"] = 0;
                 }
 
-                if (isset($request["group_type"]) && $tmp_input = clean_input(strtolower($request["group_type"]), array("trim", "int"))) {
-                    $PROCESSED["group_type"] = $tmp_input;
-                } else {
-                    $PROCESSED["group_type"] = 0;
-                }
-
                 if (isset($request["excluded_target_ids"]) && $tmp_input = clean_input(strtolower($request["excluded_target_ids"]), array("trim", "striptags"))) {
                     $PROCESSED["excluded_target_ids"] = $tmp_input;
                 } else {
                     $PROCESSED["excluded_target_ids"] = 0;
                 }
 
-                if ($PROCESSED["parent_id"] != "0") {
-                    if ($PROCESSED["context"] == "previous" && $PROCESSED["previous_context"] == "organisation_id" ||
-                        $PROCESSED["context"] == "next" && $PROCESSED["next_context"] == "organisation_id" ||
-                        $PROCESSED["context"] == "search" && $PROCESSED["current_context"] == "organisation_id") {
+                if ($PROCESSED["organisation_id"] != "0") {
+                    $users = Models_Organisation::fetchOrganisationUsersWithoutAppID($PROCESSED["search_value"], $PROCESSED["organisation_id"], "student", $PROCESSED["excluded_target_ids"]);
+                    $data = array();
 
-                        $organisation = Models_Organisation::fetchRowByID($PROCESSED["parent_id"]);
-
-                        $data = array();
-                        $data[] = array("target_id" => 1, "target_parent" => strval($PROCESSED["parent_id"]), "target_label" => "All Students", "target_children" => "1");
-                        $data[] = array("target_id" => 2, "target_parent" => strval($PROCESSED["parent_id"]), "target_label" => "Students By Cohort", "target_children" => "1");
-                        $data[] = array("target_id" => 3, "target_parent" => strval($PROCESSED["parent_id"]), "target_label" => "Students By Course List", "target_children" => "1");
-
-                        if ($PROCESSED["context"] == "search" && $PROCESSED["search_value"]) {
-                            $search_value = $PROCESSED["search_value"];
-
-                            $data = array_filter($data, function ($element) use ($search_value) {
-                                $pos = stripos($element["target_label"], $search_value);
-
-                                return $pos !== false;
-                            });
+                    if ($users) {
+                        foreach ($users as $user) {
+                            $data[] = array("target_id" => $user["proxy_id"], "target_label" => $user["firstname"] . " " . $user["lastname"]);
                         }
-
-                        if ($data) {
-                            echo json_encode(array("status" => "success", "data" => $data, "parent_id" => "0", "parent_name" => ($organisation ? $organisation->getOrganisationTitle() : "0"), "level_selectable" => false, "next_context" => "group_type", "current_context" => "organisation_id", "organisation_id" => $PROCESSED["parent_id"]));
-                        } else {
-                            echo json_encode(array("status" => "error", "data" => $translate->_("No Search Results Found")));
-                        }
-                    } elseif ($PROCESSED["context"] == "previous" && $PROCESSED["previous_context"] == "group_type" ||
-                        $PROCESSED["context"] == "next" && $PROCESSED["next_context"] == "group_type" ||
-                        $PROCESSED["context"] == "search" && $PROCESSED["current_context"] == "group_type") {
-                        $group_type = "";
-
-                        switch ($PROCESSED["parent_id"]) {
-                            case 1 :
-                                $group_type = "all_students";
-                            break;
-                            case 2 :
-                                $group_type = "cohort";
-                            break;
-                            case 3 :
-                                $group_type = "course_list";
-                            break;
-                        }
-
-                        if ($group_type == "all_students") {
-                            $users = Models_Organisation::fetchOrganisationUsersWithoutAppID($PROCESSED["search_value"], $PROCESSED["organisation_id"], "student", $PROCESSED["excluded_target_ids"]);
-
-                            $data = array();
-
-                            if ($users) {
-                                foreach ($users as $user) {
-                                    $data[] = array("target_id" => $user["proxy_id"], "target_parent" => strval($PROCESSED["parent_id"]), "target_label" => $user["firstname"] . " " . $user["lastname"], "lastname" => $user["lastname"], "role" => $translate->_(ucfirst($user["role"])), "email" => $user["email"]);
-                                }
-                            }
-
-                            if ($data) {
-                                echo json_encode(array("status" => "success", "data" => $data, "parent_id" => $PROCESSED["organisation_id"], "parent_name" => "All Students in " . Models_Organisation::fetchRowByID($PROCESSED["organisation_id"])->getOrganisationTitle(), "previous_context" => "organisation_id", "current_context" => "group_type"));
-                            } else {
-                                echo json_encode(array("status" => "error", "data" => $translate->_("No Students Found")));
-                            }
-                        } else {
-                            $groups = Models_Group::fetchAllByGroupType($group_type, $PROCESSED["organisation_id"], $PROCESSED["search_value"]);
-
-                            if ($groups) {
-                                $data = array();
-
-                                foreach ($groups as $group) {
-                                    $users = Models_Group_Member::getUsersByGroupIDWithoutAppID($group->getID(), $PROCESSED["search_value"], 1, $PROCESSED["excluded_target_ids"]);
-
-                                    $data[] = array("target_id" => $group->getID(), "target_parent" => strval($PROCESSED["parent_id"]), "target_label" => $group->getGroupName(), "target_children" => strval(count($users)));
-                                }
-
-                                echo json_encode(array("status" => "success", "data" => $data, "parent_id" => strval($PROCESSED["organisation_id"]), "parent_name" => ($group_type == "cohort" ? "Students By Cohort" : "Students By Course List"), "level_selectable" => false, "previous_context" => "organisation_id", "next_context" => "group_id", "current_context" => "group_type", "group_type" => $PROCESSED["parent_id"]));
-                            } else {
-                                echo json_encode(array("status" => "error", "data" => $translate->_("No " . (!$group_type ? ucfirst(str_replace("_", " ", $group_type)) : "Group") . "s found")));
-                            }
-                        }
-                    } elseif ($PROCESSED["context"] == "next" && $PROCESSED["next_context"] == "group_id" ||
-                        $PROCESSED["context"] == "search" && $PROCESSED["current_context"] == "group_id") {
-                        $group = Models_Group::fetchRowByID($PROCESSED["parent_id"]);
-
-                        if ($group) {
-                            $users = Models_Group_Member::getUsersByGroupIDWithoutAppID($PROCESSED["parent_id"], $PROCESSED["search_value"], 1, $PROCESSED["excluded_target_ids"]);
-                        }
-
-                        if ($users) {
-                            $data = array();
-
-                            foreach ($users as $user) {
-                                $data[] = array("target_id" => $user->getProxyId(), "target_parent" => strval($PROCESSED["parent_id"]), "target_label" => $user->getFirstname() . " " . $user->getLastname(), "target_children" => "0", "lastname" => $user->getLastname(), "role" => $translate->_("Learner"), "email" => $user->getEmail());
-                            }
-
-                            echo json_encode(array("status" => "success", "data" => $data, "parent_id" => strval($PROCESSED["group_type"]), "parent_name" => $group->getGroupName(), "previous_context" => "group_type", "current_context" => "group_id"));
-                        } else {
-                            echo json_encode(array("status" => "error", "data" => $translate->_("No Users found"), "parent_id" => strval($PROCESSED["group_type"]), "parent_name" => $group->getGroupName(), "previous_context" => "group_type", "current_context" => "group_id"));
-                        }
+                    }
+                    if ($data) {
+                        echo json_encode(array("status" => "success", "data" => $data));
+                    } else {
+                        echo json_encode(array("status" => "error", "data" => $translate->_("No Users found")));
                     }
                 } else {
-                    $organisations = Models_Organisation::fetchAllOrganisations($PROCESSED["search_value"]);
-
-                    if ($organisations) {
-                        $data = array();
-
-                        foreach ($organisations as $organisation) {
-                            $data[] = array("target_id" => $organisation["organisation_id"], "target_parent" => "0", "target_label" => $organisation["organisation_title"], "target_children" => "1");
-                        }
-
-                        echo json_encode(array("status" => "success", "data" => $data, "parent_id" => "0", "parent_name" => "0", "level_selectable" => false, "next_context" => "organisation_id"));
-                    } else {
-                        echo json_encode(array("status" => "error", "data" => $translate->_("No Organisations found")));
-                    }
+                    echo json_encode(array("status" => "error", "data" => $translate->_("No Organisations found")));
                 }
             break;
         }

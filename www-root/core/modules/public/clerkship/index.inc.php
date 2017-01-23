@@ -32,8 +32,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	exit;
 }
 
-require_once("Entrada/calendar/calendar.class.php");
-
 switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 	case "student" :
 		switch($ACTION) {
@@ -105,15 +103,15 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 			<?php
 		}
         ?>
-		<div class="row pull-right margin-bottom">
-            <a href="<?php echo ENTRADA_URL."/clerkship/electives?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i>Add Elective</a>
-        <?php
-        if ($SHOW_LOGBOOK) {
-            ?>
-            <a href="<?php echo ENTRADA_URL."/clerkship/logbook?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i>Log Encounter</a>
+		<div class="pull-right space-below">
+            <a href="<?php echo ENTRADA_URL."/clerkship/electives?section=add";?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Elective</a>
             <?php
-        }
-        ?>
+            if ($SHOW_LOGBOOK) {
+                ?>
+                <a href="<?php echo ENTRADA_URL."/clerkship/logbook?section=add";?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Log Encounter</a>
+                <?php
+            }
+            ?>
         </div>
 		<div class="clearfix"></div>
 
@@ -165,11 +163,18 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 						$is_here = false;
 					}
 
-					if ($apartment_available) {
-						$apartment_url	= ENTRADA_URL."/clerkship?section=details&id=".$result["event_id"];
-					} else {
-						$apartment_url	= "";
-					}
+                    if ((bool) $result["manage_apartments"]) {
+                        $aschedule_id = regionaled_apartment_check($result["event_id"], $PROXY_ID);
+                        $apartment_available = (($aschedule_id) ? true : false);
+                    } else {
+                        $apartment_available = false;
+                    }
+
+                    if ($apartment_available) {
+                        $apartment_url = ENTRADA_URL."/clerkship?section=details&id=".$result["event_id"];
+                    } else {
+                        $apartment_url = "";
+                    }
 
 					if (!isset($result["region_name"]) || $result["region_name"] == "") {
 						$result_region = clerkship_get_elective_location($result["event_id"]);
@@ -216,14 +221,9 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 						$skip = false;
 					}
 
-                    $apartment_available = false;
                     $apartment_message = false;
-					if ((bool) $result["manage_apartments"]) {
-                        if (!$elective) {
-                            $apartment_available = true;
-                        } else {
-                            $apartment_message = true;
-                        }
+					if ((bool) $result["manage_apartments"] && $elective) {
+                        $apartment_message = true;
 					}
                     
 					if (!$skip) {
@@ -532,6 +532,9 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
                 </form>
             </div>
         </div>
+        <script>
+            setupAllTabs(false);
+        </script>
 		<?php
         /**
          * If a department is selected, display the schedule.

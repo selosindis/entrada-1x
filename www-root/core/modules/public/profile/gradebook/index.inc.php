@@ -31,9 +31,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_GRADEBOOK"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 }
-?>
-<h1>My Gradebooks</h1>
-<?php
+
+echo "<h1>" . $translate->_("My Gradebooks") . "</h1>";
 
 /**
  * Update requested column to sort by.
@@ -82,62 +81,79 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"]) {
 }
 
 $group_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getId());
-
-$group_ids_string = implode(', ',$group_ids);
-$query = "	SELECT a.*, COUNT(b.`assessment_id`) AS `assessments`
-			FROM `courses` AS a
-			JOIN `assessments` AS b
-			ON a.`course_id` = b.`course_id`
-			AND b.`active` = 1
-			AND b.`cohort` IN (".$group_ids_string.")
-			AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
-			AND (b.`release_until` = '0' OR b.`release_until` > ".$db->qstr(time()).")
-			AND b.`show_learner` = '1'
-            JOIN `assessment_grades` AS c
-            ON b.`assessment_id` = c.`assessment_id`
-            AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-			GROUP BY a.`course_id`
-			ORDER BY ".$sort_by;
-$results = $db->GetAll($query);
-if ($results) {
-	?>
-	<table class="table table-bordered table-striped" cellspacing="0" summary="List of Gradebooks">
-		<thead>
-			<tr>
-				<th width="14%" class="date-small borderl<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "code") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("code", "Course Code", ENTRADA_RELATIVE."/profile/gradebook"); ?></th>
-				<th class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("title", "Course Title", ENTRADA_RELATIVE."/profile/gradebook"); ?></td>
-				<th width="14%" class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "assessments") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("assessments", "Assessments", ENTRADA_RELATIVE."/profile/gradebook"); ?></th>
-				<?php
-				if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-					?>
-					<th width="13%" class="general">Wgt. Total</th>
-					<?php
-				}
-				?>
-			</tr>
-		</thead>
-		<tbody>
-		<?php
-		foreach ($results as $result) {
-			echo "<tr id=\"gradebook-".$result["course_id"]."\"".((!$result["course_active"]) ? " class=\"disabled\"" : "").">\n";
-			echo "	<td".((!$result["course_active"]) ? " class=\"disabled\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook?section=view&amp;id=".$result["course_id"]."\">".html_encode($result["course_code"])."</a></td>\n";
-			echo "	<td".((!$result["course_active"]) ? " class=\"disabled\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook?section=view&amp;id=".$result["course_id"]."\">".html_encode($result["course_name"])."</a></td>\n";
-			echo "	<td".((!$result["course_active"]) ? " class=\"disabled\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook?section=view&amp;id=".$result["course_id"]."\">".($result["assessments"])."</a></td>\n";
-			if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-				$gradebook = gradebook_get_weighted_grades($result["course_id"], $ENTRADA_USER->getCohort(), $ENTRADA_USER->getID());
-				echo "	<td>".round(trim($gradebook["grade"]), 2)." / ".trim($gradebook["total"])."</td>\n";
-			}
-			echo "</tr>\n";
-		}
-		?>
-		</tbody>
-	</table>
-	<?php
+if ($group_ids) {
+    $group_ids_string = implode(', ', $group_ids);
 } else {
-	echo "<div class=\"display-notice\">";
-	echo "	<h3>No Course Gradebooks Available</h3>";
-	echo "	There are currently no assessments in the system for your graduating year.";
-	echo "</div>";
+    $group_ids_string = "";
 }
 
-?>
+if ($group_ids_string) {
+    $query = "SELECT a.*, COUNT(b.`assessment_id`) AS `assessments`
+                FROM `courses` AS a
+                JOIN `assessments` AS b
+                ON a.`course_id` = b.`course_id`
+                AND b.`active` = 1
+                AND b.`cohort` IN (" . $group_ids_string . ")
+                AND (b.`release_date` = '0' OR b.`release_date` <= " . $db->qstr(time()) . ")
+                AND (b.`release_until` = '0' OR b.`release_until` > " . $db->qstr(time()) . ")
+                AND b.`show_learner` = '1'
+                JOIN `assessment_grades` AS c
+                ON b.`assessment_id` = c.`assessment_id`
+                AND c.`proxy_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
+                GROUP BY a.`course_id`
+                ORDER BY " . $sort_by;
+    $results = $db->GetAll($query);
+    if ($results) {
+        ?>
+        <table class="table table-bordered table-striped" cellspacing="0" summary="List of Gradebooks">
+            <thead>
+                <tr>
+                    <th width="14%" class="date-small borderl<?php echo(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "code") ? " sorted" . strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("code", "Course Code", ENTRADA_RELATIVE . "/profile/gradebook"); ?></th>
+                    <th class="title<?php echo(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "title") ? " sorted" . strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("title", "Course Title", ENTRADA_RELATIVE . "/profile/gradebook"); ?></th>
+                    <th width="14%" class="general<?php echo(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["sb"] == "assessments") ? " sorted" . strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["gradebook"]["so"]) : ""); ?>"><?php echo public_order_link("assessments", "Assessments", ENTRADA_RELATIVE . "/profile/gradebook"); ?></th>
+                    <?php
+                    if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+                        ?>
+                        <th width="13%" class="general">Wgt. Total</th>
+                        <?php
+                    }
+                    ?>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
+            foreach ($results as $result) {
+                echo "<tr id=\"gradebook-" . $result["course_id"] . "\"" . (!$result["course_active"] ? " class=\"disabled\"" : "") . ">\n";
+                echo "  <td" . ((!$result["course_active"]) ? " class=\"disabled\"" : "") . "><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/gradebook?section=view&amp;id=" . $result["course_id"] . "\">" . html_encode($result["course_code"]) . "</a></td>\n";
+                echo "  <td" . ((!$result["course_active"]) ? " class=\"disabled\"" : "") . "><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/gradebook?section=view&amp;id=" . $result["course_id"] . "\">" . html_encode($result["course_name"]) . "</a></td>\n";
+                echo "  <td" . ((!$result["course_active"]) ? " class=\"disabled\"" : "") . "><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/gradebook?section=view&amp;id=" . $result["course_id"] . "\">" . ($result["assessments"]) . "</a></td>\n";
+                if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+                    echo "<td>";
+                    $gradebook = gradebook_get_weighted_grades($result["course_id"], $ENTRADA_USER->getCohort(), $ENTRADA_USER->getID());
+                    if ($gradebook) {
+                        echo round(trim($gradebook["grade"]), 2) . " / " . trim($gradebook["total"]) . "</td>\n";
+                    } else {
+                        echo "&nbsp;";
+                    }
+                    echo "</td>";
+                }
+                echo "</tr>";
+            }
+            ?>
+            </tbody>
+        </table>
+        <?php
+    } else {
+        ?>
+        <div class="display-generic">
+            <?php echo $translate->_("There are no gradebook assessments to display in any of the courses you are enroled in at this time."); ?>
+        </div>
+        <?php
+    }
+} else {
+    ?>
+    <div class="display-generic">
+        <?php echo $translate->_("You are not presently enroled in any courses, so there are no gradebook assessments to display at this time."); ?>
+    </div>
+    <?php
+}

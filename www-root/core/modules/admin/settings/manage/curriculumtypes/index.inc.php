@@ -34,6 +34,11 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
+
+    if ((isset($_POST["curriculum_order"])) && ($curriculum_order = clean_input($_POST["curriculum_order"], array("notags", "trim")))) {
+        Models_Curriculum_Type::setCurriculumTypeOrderByCurriculumIDArray(explode(',', $curriculum_order));
+    }
+
     ?>
 	<h1>Curriculum Layout</h1>
 
@@ -55,24 +60,37 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	if ($results) {
         ?>
         <form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/curriculumtypes?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
-            <table class="table table-striped" summary="Curriculum Layout">
-                <colgroup>
-                    <col style="width: 3%" />
-                    <col style="width: 97%" />
-                </colgroup>
-                <tbody>
-                    <?php
-                    foreach ($results as $result) {
-                        echo "<tr>\n";
-                        echo "  <td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$result["curriculum_type_id"]."\"/></td>\n";
-                        echo "  <td><a href=\"".ENTRADA_RELATIVE."/admin/settings/manage/curriculumtypes?section=edit&amp;org=".$ORGANISATION_ID."&amp;type_id=".$result["curriculum_type_id"]."\">".$result["curriculum_type_name"]."</a></td>\n";
-                        echo "</tr>\n";
-                    }
-                    ?>
-                </tbody>
-            </table>
+            <ul id="selected_curriculumtypes_options">
+                <?php
+                foreach ($results as $result) {
+                    echo "<li id=\"selected_curriculumtypes_options_".$result["curriculum_type_id"]."\">\n";
+                    echo "  <input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$result["curriculum_type_id"]."\">\n";
+                    echo "  <a href=\"".ENTRADA_RELATIVE."/admin/settings/manage/curriculumtypes?section=edit&amp;org=".$ORGANISATION_ID."&amp;type_id=".$result["curriculum_type_id"]."\">".$result["curriculum_type_name"]."</a>\n";
+                    echo "</li>\n";
+                }
+                ?>
+            </ul>
             <input type="submit" class="btn btn-danger" value="Delete Selected" />
+            <input type="button" id="save_curriculum_order_button" class="btn btn-primary" onclick="$('curriculum_order_form').submit()" value="Save Ordering" />
         </form>
+
+        <form id="curriculum_order_form" action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/curriculumtypes?org=<?php echo $ORGANISATION_ID;?>" method="post">
+            <div id="reorder-info">
+                <input id="curriculum_order" name="curriculum_order" style="display: none;" />
+                <p class="content-small">Rearrange the curriculum layouts in the table above by dragging them, and then press the <strong>Save Ordering</strong> button.</p>
+            </div>
+        </form>
+
+        <script>
+            jQuery(document).ready(function($){
+                Sortable.destroy($('selected_curriculumtypes_options'));
+                Sortable.create('selected_curriculumtypes_options', {onUpdate: updateOrder});
+            });
+            function updateOrder() {
+                $('curriculum_order').value = Sortable.sequence('selected_curriculumtypes_options');
+            }
+        </script> 
+
         <?php
 	} else {
 		add_notice("There are currently no Curriculum Layout.");

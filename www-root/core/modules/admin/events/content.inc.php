@@ -232,7 +232,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								ON b.`organisation_id` = c.`organisation_id`
 								WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 								AND a.`eventtype_active` = '1'
-								ORDER BY a.`eventtype_order`";
+								ORDER BY a.`eventtype_title`";
 				$results	= $db->GetAll($query);
 				if ($results) {
 					foreach ($results as $result) {
@@ -413,7 +413,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                  * Update base Learning Event.
                                  */
                                 if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "keywords_hidden" => $PROCESSED["keywords_hidden"], "keywords_release_date" => $PROCESSED["keywords_release_date"], "objectives_release_date" => $PROCESSED["objectives_release_date"] , "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
-                                    add_success("You have successfully updated the event details for this learning event.");
+                                    add_success("You have successfully updated the event setup for this learning event.");
                                     application_log("success", "Updated learning event content.");
                                 } else {
                                     application_log("error", "Failed to update learning event content. Database said: ".$db->ErrorMsg());
@@ -558,20 +558,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         $add_topics_array = $_POST["event_topic"];
                                     }
                                     
-                                    if (isset($remove_topics_array) && is_array($remove_topics_array) && (count($remove_topics_array))) {
-                                        foreach($remove_topics_array as $topic_id => $value) {
-                                            $query = "DELETE FROM `event_topics` WHERE `event_id` = ".$db->qstr($EVENT_ID) . 'AND `topic_id` = ' . $db->qstr($topic_id);
-                                            if (!$db->Execute($query)) {
-                                                add_error("There was an error when trying to delete an Event Topic response from the system. System administrators have been informed of this error; please try again later.");
-                                                application_log("error", "Unable to delete an Event Topic response entry from the database while modifying event contents. Database said: ".$db->ErrorMsg());
-                                            }
-                                        }
-                                        //log history delete hot topic
-                                        if (!in_array('Event Topics Removed', $history_updates)) {
-                                            $history_updates[] = 'Event Topics Removed';
-                                        }
-                                    }
-                                    
                                     if (isset($add_topics_array) && is_array($add_topics_array) && (count($add_topics_array))) {
                                         foreach ($add_topics_array as $topic_id => $value) {
                                             if ($topic_id = clean_input($topic_id, array("trim", "int"))) {
@@ -598,6 +584,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 $history_updates[] = 'Event Topics Added';
                                             }
                                         }
+                                    }
+                                } else {
+                                    if (isset($current_hot_topics)) {
+                                        $remove_topics_array = array_diff_assoc($current_hot_topics, array());
+                                    }
+                                }
+
+                                if (isset($remove_topics_array) && is_array($remove_topics_array) && (count($remove_topics_array))) {
+                                    foreach($remove_topics_array as $topic_id => $value) {
+                                        $query = "DELETE FROM `event_topics` WHERE `event_id` = ".$db->qstr($EVENT_ID) . 'AND `topic_id` = ' . $db->qstr($topic_id);
+                                        if (!$db->Execute($query)) {
+                                            add_error("There was an error when trying to delete an Event Topic response from the system. System administrators have been informed of this error; please try again later.");
+                                            application_log("error", "Unable to delete an Event Topic response entry from the database while modifying event contents. Database said: ".$db->ErrorMsg());
+                                        }
+                                    }
+                                    //log history delete hot topic
+                                    if (!in_array('Event Topics Removed', $history_updates)) {
+                                        $history_updates[] = 'Event Topics Removed';
                                     }
                                 }
 
@@ -1048,7 +1052,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         }
                         textarea.className = "expandable objective";
                         $('objective_'+id+"_append").insert({after: textarea});
-                        setTimeout('new ExpandableTextarea($("objective_text_'+id+'"));', 100);
+                        setTimeout('jQuery("#objective_text_'+id+'").textareaAutoSize();', 100);
                     } else {
                         if ($('objective_text_'+id)) {
                             text[id] = $('objective_text_'+id).value;
@@ -1080,7 +1084,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     <input type="hidden" name="type" value="content" />
                     <a name="event-details-section"></a>
                     <div id="event-details-section">
-                        <table class="table" summary="Learning Event Details">
+                        <table class="table" summary="Learning Event Setup">
                             <colgroup>
                                 <col style="width: 20%" />
                                 <col style="width: 80%" />
@@ -1176,7 +1180,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 </tr>
                                 <tr>
                                     <td class="borderless" style="vertical-align: top"><label for="eventtype_ids" class="form-required"><?php echo $translate->_("Event Types"); ?></label></td>
-                                    <td class="borderless">
+                                    <td id="event-type-search-container" class="borderless">
                                         <script>
                                             var event_types = [];
                                         </script>
@@ -1391,7 +1395,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 }
                             </style>
                             <div class="objectives half left">
-                                <h3><?php echo $translate->_("Objective Sets"); ?></h3>
+                                <h3><?php echo $translate->_("Curriculum Tag Sets"); ?></h3>
                                 <ul class="tl-objective-list" id="objective_list_0">
                                 <?php
                                 foreach($objectives as $objective) {
@@ -1477,10 +1481,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             ?>
 
                             <div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="event" data-resource-id="<?php echo $EVENT_ID;?>">
-                                <h2>Mapped <?php echo $translate->_("Objectives"); ?></h2>
+                                <h2><?php echo $translate->_("Mapped Objectives"); ?></h2>
 
                                 <div class="row-fluid space-below">
-                                    <a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Map Additional <?php echo $translate->_("Objectives"); ?></a>
+                                    <a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> <?php echo $translate->_("Map Additional Objectives"); ?></a>
                                 </div>
                                 <?php
                                 if ($hierarchical_objectives) {
@@ -1508,7 +1512,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             <?php
                                                             $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
                                                             if ($set) {
-                                                                echo "From the " . $translate->_("Objective Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
+                                                                echo "From the " . $translate->_("Curriculum Tag Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
                                                             }
 
                                                             echo $objective["objective_description"];
@@ -1549,7 +1553,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             <?php
                                                             $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
                                                             if ($set) {
-                                                                echo "From the " . $translate->_("Objective Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
+                                                                echo "From the " . $translate->_("Curriculum Tag Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
                                                             }
 
                                                             echo $objective["objective_description"];
@@ -1693,11 +1697,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 position: fixed;
                                 top: 20px;
                                 z-index: 1;
-                                width: 225px;
-                                border-bottom: 5px solid #ffffff;
-                            }
-                            #recurring-events-sidebar .panel-head {
-                                background: linear-gradient(to bottom, #8A0808 0%, #3B0B0B 100%);
+                                width: 22%;
+                                max-width: 313px;
+                                min-width: 206px;
                             }
                         </style>
                         <script type="text/javascript">
@@ -1767,7 +1769,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         <?php
                     }
                     ?>
-                    <div id="selected_list_container"></div>
                 </form>
                 <a name="event-resources-section" id="event-resources-section"></a>
                 <h1 class="space-above large">Event Resources</h1>
@@ -1925,11 +1926,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 event_types: {
                                     label: "<?php echo $translate->_("Event Types"); ?>",
                                     data_source: event_types,
-                                    mode: "radio"
+                                    mode: "radio",
+                                    set_button_text_to_selected_option: false
                                 }
                             },
                             no_results_text: "<?php echo $translate->_("No Event Types found matching the search criteria"); ?>",
-                            selected_list_container: jQuery("#selected_list_container"),
                             parent_form: $("#content_form"),
                             width: 300
                         });
@@ -1956,11 +1957,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         };
 
                         $("#eventtype_ids").click(function (e) {
-                            $.each($(".search-filter-item"), function (index, value) {
+                            $.each($("#event-type-search-container .search-filter-item"), function (index, value) {
                                 $(this).attr("rel", "popover");
                             });
 
-                            $("#content_form").on("mouseenter", ".search-filter-item", function (e) {
+                            $("#event-type-search-container").on("mouseenter", ".search-filter-item", function (e) {
                                 e.stopPropagation();
 
                                 $(".popover").remove();
@@ -1968,7 +1969,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $(this).popover("show");
                             });
 
-                            $("#content_form").on("mouseleave", ".search-filter-item", function (e) {
+                            $("#event-type-search-container").on("mouseleave", ".search-filter-item", function (e) {
                                 e.stopPropagation();
 
                                 if (!$(".search-filter-item:hover").length) {
@@ -1980,7 +1981,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 }
                             });
 
-                            $("#content_form").on("click", ".search-filter-item", function (e) {
+                            $("#event-type-search-container").on("click", ".search-filter-item", function (e) {
                                 $(".popover").remove();
                             });
                         });
@@ -1999,7 +2000,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             $(".popover").remove();
                         });
 
-                        $("#content_form").on("change", ".search-target-input-control", function () {
+                        $("#event-type-search-container").on("change", ".search-target-input-control", function () {
                             if ($(this).is(":checked")) {
                                 var li = $(document.createElement("li")).attr({id: "type_" + this.value}).html($(this).attr("data-label"));
                                 var a = $(document.createElement("a")).attr({href: "#", onclick: "$(this).up().remove(); cleanupList(); return false;"}).addClass("remove");
@@ -2015,7 +2016,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                 cleanupList();
                                 
-                                $("#selected_list_container").html("");
+                                $("#" + $(this).attr("data-filter") + "_" + $(this).val()).remove();
                             }
                         });
                     });
@@ -2030,7 +2031,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                  * Sidebar item that will provide the links to the different sections within this page.
                  */
                 $sidebar_html  = "<ul class=\"menu\">\n";
-                $sidebar_html .= "	<li class=\"link\"><a href=\"#event-details-section\" onclick=\"$('event-details-section').scrollTo(); return false;\" title=\"Event Details\">Event Details</a></li>\n";
+                $sidebar_html .= "	<li class=\"link\"><a href=\"#event-details-section\" onclick=\"$('event-details-section').scrollTo(); return false;\" title=\"Event Setup\">" . $translate->_("Event Setup") . "</a></li>\n";
                 $sidebar_html .= "	<li class=\"link\"><a href=\"#event-objectives-section\" onclick=\"$('event-objectives-section').scrollTo(); return false;\" title=\"" . $translate->_("Event Objectives") . "\">" . $translate->_("Event Objectives") . "</a></li>\n";
                 $sidebar_html .= "	<li class=\"link\"><a href=\"#event-resources-section\" onclick=\"$('event-resources-section').scrollTo(); return false;\" title=\"Event Resources\">Event Resources</a></li>\n";
                 $sidebar_html .= "</ul>\n";

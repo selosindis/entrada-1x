@@ -43,7 +43,7 @@ if(!defined("PARENT_INCLUDED")) {
 		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] = "all";
 	}
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => "My Evaluations");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => $translate->_("Clerkship Evaluations"));
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);

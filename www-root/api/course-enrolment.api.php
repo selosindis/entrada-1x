@@ -152,7 +152,8 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                         "lastname" => $audience_member->getLastName(),
                                                         "number" => $audience_member->getNumber(),
                                                         "username" => $audience_member->getUsername(),
-                                                        "email" => $audience_member->getEmail()
+                                                        "email" => $audience_member->getEmail(),
+                                                        "proxy_id" => $audience_member->getID()
                                                     );
                                                 }
                                             }
@@ -163,16 +164,21 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                     "lastname" => $audience_member->getLastName(),
                                                     "number" => $audience_member->getNumber(),
                                                     "username" => $audience_member->getUsername(),
-                                                    "email" => $audience_member->getEmail()
+                                                    "email" => $audience_member->getEmail(),
+                                                    "proxy_id" => $audience_member->getID()
                                                 );;
                                             }
                                         }
                                     }
                                     $_SESSION[APPLICATION_IDENTIFIER]["courses"]["selected_curriculum_period"] = $cperiod_id;
                                     if (isset($enrolment_view)) {
+                                        $old_preferences = $new_preferences = preferences_load("courses");
+                                        $new_preferences["enrolment_view"] = $enrolment_view;
+                                        preferences_update_user("courses", $ENTRADA_USER->getID(), $old_preferences, $new_preferences);
                                         $_SESSION[APPLICATION_IDENTIFIER]["courses"]["enrolment_view"] = $enrolment_view;
                                     }
                                     echo json_encode(array("status" => "success", "data" => $enrolment));
+                                    preferences_update("courses");
                                 } else {
                                     if (!$search_term) {
                                         echo json_encode(array("status" => "error", "data" => "There are currently no learners attached to the selected Curriculum Period."));

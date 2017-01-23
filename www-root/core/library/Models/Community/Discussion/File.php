@@ -41,9 +41,9 @@ class Models_Community_Discussion_File extends Models_Base {
         $updated_by,
         $notify;
 
-    protected $table_name = "community_discussions_files";
-    protected $primary_key = "cdfile_id";
-    protected $default_sort_column = "cdfile_id";
+    protected static $table_name = "community_discussions_files";
+    protected static $primary_key = "cdfile_id";
+    protected static $default_sort_column = "cdfile_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);

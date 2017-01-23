@@ -1,34 +1,11 @@
 	var mapped = [];
 	jQuery(document).ready(function($){
 		jQuery('.objectives').hide();
-		/**
-		* @todo fix bugs in draggable/droppable when version control added
-		*/		
-		// jQuery('.draggable').draggable({
-		// 	revert:true
-		// });
+		if(jQuery('#mapped_hierarchical_objectives').children('li').length == 0 && jQuery('#mapped_flat_objectives').children('li').length == 0){
+			jQuery('#toggle_sets').trigger('click');
+		}
 
-		// jQuery('.droppable').droppable({
-		// 	drop: function(event,ui){										
-		// 		var id = jQuery(ui.draggable[0]).attr('data-id');
-		// 		var ismapped = jQuery.inArray(id,mapped);
-		// 		if(ismapped == -1){
-		// 			var title = jQuery('#objective_title_'+id).attr('data-title');
-		// 			var description = jQuery('#objective_'+id).attr('data-description');										
-		// 			var list = jQuery('#objective_'+id).parents('.objective-set').attr('data-list');
-		// 			mapObjective(id,title,description,list);
-		// 		}
-		// 		jQuery(this).removeClass('hover');											
-		// 	},
-		// 	over:function(event,ui){
-		// 		jQuery(this).addClass('hover');
-		// 	},
-		// 	out: function(event,ui){
-		// 		jQuery(this).removeClass('hover');	
-		// 	}
-		// });
-
-		jQuery('.objective-remove').live('click',function(){
+		jQuery('#course-objectives-section').on('click', '.objective-remove', function(){
 			var id = jQuery(this).attr('data-id');
 			var key = jQuery.inArray(id,mapped);
 			var list = jQuery('#mapped_objective_'+id).parent().attr('data-importance');
@@ -110,7 +87,7 @@
 			}							
 		});
 
-		jQuery('.checked-objective').live('change',function(){
+		jQuery('#course-objectives-section').on('change', '.checked-objective', function(){
 			var id = jQuery(this).val();
 			// parents will return all sets above that objective, which for anything other than curriculum objectives will be an array
 			// this grabs all parents above the object and then fetches the list from the immediate (last) parent
@@ -130,7 +107,7 @@
 			var state = $(this).attr('data-toggle');
 			if(state == "show"){
 				$(this).attr('data-toggle','hide');
-				$(this).html('<i class="icon-minus-sign icon-white"></i> Hide Objective Sets');
+				$(this).html('<i class="icon-minus-sign icon-white"></i> Hide Curriculum Tag Sets');
 				jQuery('.mapped_objectives').animate({width:'60%'},400,'swing',function(){
 					//jQuery('.objectives').animate({display:'block'},400,'swing');											
 					jQuery('.objectives').css({width:'0%'});
@@ -139,7 +116,7 @@
 				});										
 			}else{
 				$(this).attr('data-toggle','show');
-				$(this).html('<i class="icon-plus-sign icon-white"></i> Show Objective Sets');
+				$(this).html('<i class="icon-plus-sign icon-white"></i> Show Curriculum Tag Sets');
 				jQuery('.objectives').animate({width:'0%'},400,'linear',function(){
 					jQuery('.objectives').hide();
 					jQuery('.mapped_objectives').animate({width:'100%'},400,'swing');
@@ -147,11 +124,9 @@
 			}
 		});
 
-		if(jQuery('#mapped_hierarchical_objectives').children('li').length == 0 && jQuery('#mapped_flat_objectives').children('li').length == 0){
-			jQuery('#toggle_sets').trigger('click');
-		}								
 
-		jQuery('.importance').live('change',function(){
+
+		jQuery('#course-objectives-section').on('change', '.importance', function(){
 			var id = $(this).attr('data-id');
 			var cur_val = $(this).attr('data-value');
 			var imp = $(this).val();
@@ -230,7 +205,7 @@
 		var set_id = jQuery(sets_above[sets_above.length-1]).attr('data-id');
 		var set_name = jQuery('#objective_title_'+set_id).attr('data-title');
 		if(set_name){
-			jQuery(desc).html("From the Objective Set: <strong>"+set_name+"</strong><br/>");
+			jQuery(desc).html("Curriculum Tag Set: <strong>"+set_name+"</strong><br/>");
 		}
 		jQuery(desc).append(description);
 		jQuery(li).append(desc);

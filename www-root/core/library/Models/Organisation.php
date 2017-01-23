@@ -36,6 +36,8 @@ class Models_Organisation extends Models_Base {
               $organisation_fax,
               $organisation_email,
               $organisation_url,
+              $organisation_twitter,
+              $organisation_hashtags,
               $organisation_installation,
               $organisation_desc,
               $template,
@@ -46,11 +48,11 @@ class Models_Organisation extends Models_Base {
               $organisation_active,
               $app_id;
 
-    protected $primary_key = "organisation_id";
-    protected $table_name = "organisations";
-    protected $default_sort_column = "organisation_title";
-    protected $database_name = AUTH_DATABASE;
-    
+    protected static $primary_key = "organisation_id";
+    protected static $table_name = "organisations";
+    protected static $default_sort_column = "organisation_title";
+    protected static $database_name = AUTH_DATABASE;
+
     public function getID () {
         return $this->organisation_id;
     }
@@ -98,7 +100,15 @@ class Models_Organisation extends Models_Base {
     public function getOrganisationUrl () {
         return $this->organisation_url;
     }
-    
+
+    public function getOrganisationTwitterHandle () {
+        return $this->organisation_twitter;
+    }
+
+    public function getOrganisationTwitterHashtags () {
+        return $this->organisation_hashtags;
+    }
+
     public function getOrganisationInstallation () {
         return $this->organisation_installation;
     }
@@ -129,6 +139,14 @@ class Models_Organisation extends Models_Base {
     
     public function getActive () {
         return $this->organisation_active;
+    }
+
+    public function getTwitterHandle () {
+        return $this->organisation_twitter;
+    }
+
+    public function getTwitterHashTags () {
+        return $this->organisation_twitter;
     }
     
     public function getAppID () {
@@ -186,7 +204,6 @@ class Models_Organisation extends Models_Base {
                     AND (
                             CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE ".$db->qstr("%".$search_term."%")." OR
                             CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE ".$db->qstr("%".$search_term."%")." OR
-
                             a.email LIKE ".$db->qstr("%".$search_term."%")."
                         )
                     ".(isset($groups_string) && $groups_string ? "AND b.`group` IN (".$groups_string.")" : (isset($group) && $group ? "AND b.`group` = ?" : ""))."
@@ -260,7 +277,7 @@ class Models_Organisation extends Models_Base {
                     ORDER BY b.`organisation_title`";
         
         $results = $db->GetAll($query);
-        
+
         return $results;
     }
 }

@@ -105,8 +105,68 @@ class Models_Assignment extends Models_Base {
         ));
     }
 
+    public function fetchRowByAssessmentID($assignment_active = true) {
+        return $this->fetchRow(array(
+            array("key" => "assessment_id", "value" => $this->assessment_id, "method" => "="),
+            array("key" => "assignment_active", "value" => $assignment_active, "method" => "=")
+        ));
+    }
+
     public static function fetchAllRecords($assignment_active = true) {
         $self = new self();
         return $self->fetchAll(array(array("key" => "assignment_active", "value" => $assignment_active, "method" => "=")));
     }
+
+    public static function getAllByCourseIDUserID($cperiod_ids_string, $courses_ids_string, $user_id, $organisation_id, $sort_by){
+        global $db;
+
+        $query = "SELECT b.`course_code`, a.`assignment_id`, c.`name`, a.`due_date`, d.`grade_id` AS `grade_id`, d.`value` AS `grade_value`, e.`grade_weighting` AS `submitted_date`, c.`show_learner`
+						FROM `assignments` AS a
+						JOIN `courses` AS b
+						ON a.`course_id` = b.`course_id`
+						JOIN `assessments` AS c
+						ON a.`assessment_id` = c.`assessment_id`
+						AND c.`cperiod_id` IN (". $cperiod_ids_string .")
+						LEFT JOIN `assessment_grades` AS d
+						ON d.`proxy_id` = ?
+						AND d.`assessment_id` = a.`assessment_id`
+						LEFT JOIN `assessment_exceptions` AS e
+						ON d.`proxy_id` = e.`proxy_id`
+						AND d.`assessment_id` = e.`assessment_id`
+						WHERE b.`course_id` IN (". $courses_ids_string .")
+						AND b.`organisation_id` = ?
+	                    AND (a.`release_date` = 0 OR a.`release_date` < ? )
+	                    AND (a.`release_until` = 0 OR a.`release_until` > ? )
+	                    AND a.`assignment_active` = '1'
+	                    AND c.`active` = 1
+                        ORDER BY ".$sort_by;
+
+        $assignments = $db->GetAll($query, array($user_id, $organisation_id, time(), time()));
+
+        if ($assignments) {
+            return $assignments;
+        }
+
+        return false;
+    }
+    
+    public static function getRowAssignmentCourse($assignment_id, $active = 1) {
+        global $db;
+
+        $query = "SELECT a.*, b.`organisation_id`
+				FROM `assignments` a
+				JOIN `courses` b
+				ON a.`course_id` = b.`course_id`
+				WHERE a.`assignment_id` = ?
+				AND a.`assignment_active` = ? ";
+
+        $assignment = $db->GetRow($query, array($assignment_id, $active));
+
+        if ($assignment) {
+            return $assignment;
+        }
+
+        return false;
+    }
+    
 }

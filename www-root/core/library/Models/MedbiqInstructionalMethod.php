@@ -31,9 +31,10 @@ class Models_MedbiqInstructionalMethod extends Models_Base {
               $active,
               $updated_date,
               $updated_by;
-    
-    protected $table_name = "medbiq_instructional_methods";
-    protected $default_sort_column = "instructional_method_id";
+
+    protected static $primary_key = "instructional_method_id";
+    protected static $table_name = "medbiq_instructional_methods";
+    protected static $default_sort_column = "instructional_method_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -86,7 +87,7 @@ class Models_MedbiqInstructionalMethod extends Models_Base {
     
     public function update() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`instructional_method_id` = ".$db->qstr($this->getID()))) {
+		if ($db->AutoExecute("`". static::$table_name ."`", $this->toArray(), "UPDATE", "`instructional_method_id` = ".$db->qstr($this->getID()))) {
 			return true;
 		} else {
 			return false;
@@ -95,7 +96,7 @@ class Models_MedbiqInstructionalMethod extends Models_Base {
     
     public function insert() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "INSERT")) {
+		if ($db->AutoExecute("`". static::$table_name ."`", $this->toArray(), "INSERT")) {
 			$this->instructional_method_id = $db->Insert_ID();
 			return true;
 		} else {

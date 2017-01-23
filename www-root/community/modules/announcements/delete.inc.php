@@ -42,6 +42,9 @@ if ($RECORD_ID) {
 					AND `cpage_id` = ".$db->qstr($PAGE_ID)." 
 					AND `cannouncement_id` = ".$db->qstr($RECORD_ID)." LIMIT 1";
 		if ($db->Execute($query)) {
+			if ($COMMUNITY_ADMIN && $announcement_record["pending_moderation"] == 1 && $PAGE_OPTIONS["moderate_posts"] == 1) {
+				community_notify($COMMUNITY_ID, $RECORD_ID, "announcement_delete", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$RECORD_ID, $COMMUNITY_ID, $announcement_record["release_date"]);	
+			}
 			communities_deactivate_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID);
 			add_statistic("community:".$COMMUNITY_ID.":announcements", "delete", "cannouncement_id", $RECORD_ID);
 			delete_notifications('announcement:'.$announcement_record["cannouncement_id"]);

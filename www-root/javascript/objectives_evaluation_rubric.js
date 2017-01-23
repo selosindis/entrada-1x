@@ -197,7 +197,7 @@
 			var set_id = jQuery(sets_above[sets_above.length-1]).attr('data-id');
 			var set_name = jQuery('#objective_title_'+set_id).attr('data-title');
 			if(set_name){
-				jQuery(desc).html("From the Objective Set: <strong>"+set_name+"</strong><br/>");
+				jQuery(desc).html("Curriculum Tag Set: <strong>"+set_name+"</strong><br/>");
 			}
 			jQuery(desc).append(description);
 			

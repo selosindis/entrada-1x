@@ -298,7 +298,7 @@ class Entrada_Sync_Course_Ldap {
                     $names[0] = $member_ldap_data["givenName"];
                     $names[1] = $member_ldap_data["sn"];
                 }else{
-                    $names = explode(" ", $member_ldap_data["cn"]);	
+                    $names = explode(" ", $member_ldap_data["cn"], 2);
                 }
                 $student = array(	
                     "number"			=> $number,

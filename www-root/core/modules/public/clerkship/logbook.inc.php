@@ -64,7 +64,7 @@ if (!defined("IN_CLERKSHIP")) {
 				}
 			}
 			if ($plans_accepted) {
-				$sidebar_html .= "<center>Accepted Plans:</center>\n";
+				$sidebar_html .= "Accepted Plans:\n";
 				$sidebar_html .= "<ul class=\"menu\">";
 				foreach ($deficiency_plans as $plan) {
 					if ($plan["clerk_accepted"] && $plan["administrator_accepted"]) {
@@ -74,7 +74,7 @@ if (!defined("IN_CLERKSHIP")) {
 				$sidebar_html .= "</ul>";
 			}
 			if ($plans_pending) {
-				$sidebar_html .= "<center>Plans Pending Approval:</center>\n";
+				$sidebar_html .= "Plans Pending Approval:\n";
 				$sidebar_html .= "<ul class=\"menu\">";
 				foreach ($deficiency_plans as $plan) {
 					if ($plan["clerk_accepted"] && !$plan["administrator_accepted"]) {
@@ -84,7 +84,7 @@ if (!defined("IN_CLERKSHIP")) {
 				$sidebar_html .= "</ul>";
 			}
 			if ($plans_rejected) {
-				$sidebar_html .= "<center>Rejected Plans:</center>\n";
+				$sidebar_html .= "Rejected Plans:\n";
 				$sidebar_html .= "<ul class=\"menu\">";
 				foreach ($deficiency_plans as $plan) {
 					if ($plan["administrator_comments"] && !$plan["clerk_accepted"]) {

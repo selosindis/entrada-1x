@@ -43,7 +43,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	}
 	if ($award_id) {
 
-		require_once("Models/awards/InternalAwards.class.php");
+		require_once("Classes/awards/InternalAwards.class.php");
 	
 		process_manage_award_details();
 

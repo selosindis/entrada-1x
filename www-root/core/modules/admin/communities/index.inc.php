@@ -385,29 +385,7 @@ if (!defined("IN_COMMUNITIES")) {
 	echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
 	echo "</form>\n";
 
-	/**
-	 * Sidebar item that will provide another method for sorting, ordering, etc.
-	 */
-	$sidebar_html  = "Sort columns:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "community_title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("sb" => "community_title"))."\" title=\"Sort by Evaluation Title\">by community title</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "community_opened") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("sb" => "community_opened"))."\" title=\"Sort by Date &amp; Time\">by date &amp; time</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "category_title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("sb" => "category_title"))."\" title=\"Sort by category_title\">by category title</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "Order columns:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "asc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("so" => "asc"))."\" title=\"Ascending Order\">in ascending order</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("so" => "desc"))."\" title=\"Descending Order\">in descending order</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "Rows per page:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
-	$sidebar_html .= "</ul>\n";
 
-	new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
 
 	$ONLOAD[] = "initList()";
 }

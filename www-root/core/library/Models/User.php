@@ -25,10 +25,10 @@
 class Models_User extends Models_Base {
     protected $id, $number, $username, $password, $salt, $organisation_id, $department, $prefix, $firstname, $lastname, $email, $email_alt, $email_updated, $google_id, $telephone, $fax, $address, $city, $province, $postcode, $country, $country_id, $province_id, $notes, $office_hours, $privacy_level, $copyright, $notifications, $entry_year, $grad_year, $gender, $clinical, $uuid, $updated_date, $updated_by;
 
-    protected $database_name = AUTH_DATABASE;
-    protected $table_name = "user_data";
-    protected $primary_key = "id";
-    protected $default_sort_column = "lastname";
+    protected static $database_name = AUTH_DATABASE;
+    protected static $table_name = "user_data";
+    protected static $primary_key = "id";
+    protected static $default_sort_column = "lastname";
 
 
 
@@ -305,5 +305,323 @@ class Models_User extends Models_Base {
         }
 
         return $output;
+    }
+
+    public function getDirectors($organisation_id) {
+        global $db;
+
+        $query	= "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, c.`organisation_id`
+						FROM `".static::$database_name."`.`".static::$table_name."` AS a
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access` as b
+						ON b.`user_id` = a.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations` as c
+						ON b.`organisation_id` = c.`organisation_id`
+						WHERE b.`group` = 'faculty'
+						AND (b.`role` = 'director' OR b.`role` = 'admin')
+						AND b.`app_id` = '".AUTH_APP_ID."'
+						AND b.`account_active` = 'true'
+						AND b.`organisation_id` = ?
+						ORDER BY `fullname` ASC";
+
+        $results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query, array($organisation_id)) : $db->GetAll($query, array($organisation_id)));
+
+        if ($results) {
+            return $results;
+        }
+
+        return false;
+    }
+
+    public function getCurriculumCoordinators() {
+        global $db;
+
+        $query = "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, c.`organisation_id`
+						FROM `".static::$database_name."`.`".static::$table_name."` AS a
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+						ON b.`user_id` = a.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+						ON a.`organisation_id` = c.`organisation_id`
+						WHERE b.`group` = 'staff'
+						AND b.`role` = 'admin'
+						AND b.`app_id` = '".AUTH_APP_ID."'
+						AND b.`account_active` = 'true'
+						ORDER BY `fullname` ASC";
+
+        $results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+
+        if ($results) {
+            return $results;
+        }
+
+        return false;
+    }
+
+    public function getFaculties() {
+        global $db;
+
+        $query = "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, c.`organisation_id`
+							FROM `".static::$database_name."`.`".static::$table_name."` AS a
+							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							ON b.`user_id` = a.`id`
+							LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+							ON a.`organisation_id` = c.`organisation_id`
+							WHERE (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
+							AND b.`app_id` = '".AUTH_APP_ID."'
+							AND b.`account_active` = 'true'
+							ORDER BY `fullname` ASC";
+
+        $results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+
+        if ($results) {
+            return $results;
+        }
+
+        return false;
+    }
+
+    public function getProgramCoordinators($organisation_id) {
+        global $db;
+
+        $query = "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`id`, c.`organisation_id`
+						FROM `".static::$database_name."`.`".static::$table_name."` AS a
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+						ON b.`user_id` = a.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+						ON b.`organisation_id` = c.`organisation_id`
+						WHERE b.`role` = 'pcoordinator'
+						AND b.`app_id` = '".AUTH_APP_ID."'
+						AND b.`account_active` = 'true'
+						AND b.`organisation_id` = ?
+						ORDER BY `fullname` ASC";
+
+        $results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query, array($organisation_id)) : $db->GetAll($query, array($organisation_id)));
+
+        if ($results) {
+            return $results;
+        }
+
+        return false;
+    }
+
+    public function getEvaluationReps() {
+        global $db;
+
+        $query = "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`id`, c.`organisation_id`
+						FROM `".static::$database_name."`.`".static::$table_name."` AS a
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+						ON b.`user_id` = a.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+						ON a.`organisation_id` = c.`organisation_id`
+						WHERE b.`group` = 'faculty'
+						AND b.`app_id` = '".AUTH_APP_ID."'
+						AND b.`account_active` = 'true'
+						ORDER BY `fullname` ASC";
+
+        $results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+
+        if ($results) {
+            return $results;
+        }
+
+        return false;
+    }
+
+    public function getStudentReps() {
+        global $db;
+
+        $query = "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`id`, c.`organisation_id`
+						FROM `".static::$database_name."`.`".static::$table_name."` AS a
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+						ON b.`user_id` = a.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+						ON a.`organisation_id` = c.`organisation_id`
+						WHERE b.`group` = 'student'
+						AND b.`app_id` = '".AUTH_APP_ID."'
+						AND b.`account_active` = 'true'
+						ORDER BY `fullname` ASC";
+
+        $results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+
+        if ($results) {
+            return $results;
+        }
+
+        return false;
+    }
+
+    public function getStudents() {
+        global $db;
+
+        $query = "	SELECT a.`id` AS `proxy_id`, b.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`organisation_id`
+								FROM `".static::$database_name."`.`".static::$table_name."` AS a
+								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+								ON a.`id` = b.`user_id`
+								WHERE b.`app_id` = ".AUTH_APP_ID."
+								AND b.`account_active` = 'true'
+								AND (b.`access_starts` = '0' OR b.`access_starts` <= ".time().")
+								AND (b.`access_expires` = '0' OR b.`access_expires` > ".time().")
+								AND b.`group` = 'student'
+								AND b.`role` >= '".(date("Y") - ((date("m") < 7) ?  2 : 1))."'
+								ORDER BY b.`role` ASC, a.`lastname` ASC, a.`firstname` ASC";
+
+        $results = $db->GetAll($query);
+
+        if ($results) {
+            return $results;
+        }
+
+        return false;
+    }
+    
+    /**
+     * Takes in an optional search value
+     * Gets all organisations for a valid user applying
+     * an optional filter on the organisation title
+     * Returns a key value array or results
+     * @param string $search_value
+     * @return array|bool
+     */
+    
+    public function getOrganisations($search_value = "") {
+        global $db;
+        global $ENTRADA_USER;
+
+        $output = false;
+
+        $query = "  SELECT c.`organisation_id`, c.`organisation_title` FROM `" . static::$database_name . "`.`" . static::$table_name . "` AS a
+                    JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
+                    ON a.`id` = b.`user_id`
+                    JOIN `" . AUTH_DATABASE . "`.`organisations` AS c
+                    ON b.organisation_id = c.`organisation_id`
+                    WHERE b.`app_id` = ". $db->qstr(AUTH_APP_ID) ."
+                    AND b.`account_active` = 'true'
+                    AND (b.`access_starts` = '0' OR b.`access_starts` <= ". $db->qstr(time()) .")
+                    AND (b.`access_expires` = '0' OR b.`access_expires` > ". $db->qstr(time()) .")
+                    AND b.`user_id` = ". $db->qstr($ENTRADA_USER->getActiveId()) ."";
+
+
+        if ($search_value != null) {
+            $query .= " AND c.`organisation_title` LIKE (" . $db->qstr("%" . $search_value . "%") . ")";
+        }
+        
+        $query .= "GROUP BY c.`organisation_id`";
+
+        $results = $db->GetAll($query);
+        if ($results) {
+            foreach ($results as $result) {
+                $output[] = $result;
+            }
+        }
+
+        return $output;
+    }
+
+    public function getTutors() {
+        global $db;
+
+        $query = "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`organisation_id`
+                  FROM `".AUTH_DATABASE."`.`user_data` AS a
+                  LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                  ON b.`user_id` = a.`id`
+                  WHERE b.`app_id` = '".AUTH_APP_ID."'
+                  AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer') OR b.`group` = 'staff' OR b.`group` = 'medtech')
+                  ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+
+        $results = $db->GetAll($query);
+        if ($results) {
+            return $results;
+        }
+
+        return false;
+    }
+
+    public static function getAssistants($user_id) {
+        global $db;
+
+        $query = "SELECT a.`permission_id`, a.`assigned_to`, a.`valid_from`, a.`valid_until`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`
+									FROM `permissions` AS a
+									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									ON b.`id` = a.`assigned_to`
+									WHERE a.`assigned_by`= ?
+									ORDER BY `valid_until` ASC";
+        $results = $db->GetAll($query, array($user_id));
+
+        if ($results) {
+            return $results;
+        }
+
+        return false;
+    }
+
+    public function getCourseAudienceByOrganisationID($organisation_id = null) {
+        global $db;
+
+        $query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+                            FROM `".AUTH_DATABASE."`.`user_data` AS a
+                            JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                            ON a.`id` = b.`user_id`
+                            WHERE b.`app_id` IN (?)
+                            AND b.`account_active` = 'true'
+                            AND (b.`access_starts` = '0' OR b.`access_starts` <= ?)
+                            AND (b.`access_expires` = '0' OR b.`access_expires` > ?)
+                            AND b.`organisation_id` = ?
+                            GROUP BY a.`id`
+                            ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+
+
+        $course_audience = $db->GetAll($query, array(AUTH_APP_IDS_STRING, time(), time(), $organisation_id));
+
+        if ($course_audience) {
+            return $course_audience;
+        }
+        return false;
+    }
+
+    public static function getUserByIDAndPass ($user_id, $password) {
+        global $db;
+
+        $query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` 
+                    WHERE `id` = ? 
+                    AND ((`salt` IS NULL AND `password` = MD5(?)) 
+                    OR (`salt` IS NOT NULL AND `password` = SHA1(CONCAT(? , `salt`))))";
+        $results = $db->GetRow($query, array($user_id, $password, $password));
+
+        if ($results) {
+            return new self($results);
+        }
+
+        return false;
+    }
+
+    public static function deleteAsistants($permision_id, $user_id) {
+        global $db;
+
+        $query = "DELETE FROM `permissions` WHERE `permission_id`= ? AND `assigned_by`= ? ";
+
+        $result = $db->Execute($query, array($permision_id, $user_id));
+
+        if ($result) {
+            return $result;
+        }
+
+        return false;
+    }
+
+    public static function getUserByIDAndGroup ($user_id, $group = "student") {
+        global $db;
+
+        $query	= "SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`
+						FROM `".AUTH_DATABASE."`.`user_data` AS a
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+						ON b.`user_id` = a.`id` AND b.`app_id`='1' AND b.`account_active`='true' AND b.`group`<> ?
+						WHERE a.`id`= ? ";
+
+        $results = $db->GetRow($query, array($group, $user_id));
+
+        if ($results) {
+            return $results;
+        }
+
+        return false;
     }
 }

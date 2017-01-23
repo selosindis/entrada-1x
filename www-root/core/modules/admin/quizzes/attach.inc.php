@@ -266,8 +266,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
                         if (isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
                             $quiztype = Models_Quiz_QuizType::fetchRowByID($PROCESSED["quiztype_id"]);
-                            if ($quiztype->getQuizTypeCode() == "delayed") {
-                                $require_finish = true;
+                            if ($quiztype) {
+                                if ($quiztype->getQuizTypeCode() == "delayed") {
+                                    $require_finish = true;
+                                }
                             }
                         }
 

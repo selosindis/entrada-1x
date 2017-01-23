@@ -33,7 +33,13 @@
  *
  */
 
-set_include_path(get_include_path().PATH_SEPARATOR.dirname(__FILE__)."/includes");
+@set_include_path(implode(PATH_SEPARATOR, array(
+    dirname(__FILE__) . "/../../www-root/core",
+    realpath(dirname(__FILE__) . "/includes"),
+    dirname(__FILE__) . "/../../www-root/core/library",
+    dirname(__FILE__) . "/../../www-root/core/library/vendor",
+    get_include_path(),
+)));
 
 @ini_set("auto_detect_line_endings", 1);
 @ini_set("magic_quotes_runtime", 0);
@@ -51,7 +57,8 @@ if((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
 	exit;
 }
 
-require_once("classes/adodb/adodb.inc.php");
+require_once("autoload.php");
+
 require_once("config.inc.php");
 require_once("dbconnection.inc.php");
 require_once("functions.inc.php");

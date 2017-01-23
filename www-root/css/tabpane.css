@@ -3,70 +3,79 @@ position:relative;
 width:100%;
 }
 
-.dynamic-tab-pane-control .tab-row .tab {
-display:inline;
-float:left;
-background:#f4f4f4;
-border:1px solid;
-border-bottom:0;
-cursor:pointer;
-z-index:1;
-position:relative;
-top:0;
-border-color:#DDD;
-margin-right:6px;
-margin-bottom:0;
-padding:3px 18px;
--moz-border-radius:4px 4px 0 0;
--webkit-border-radius:4px 4px 0 0;
-border-radius:4px 4px 0 0;
-}
-
-.dynamic-tab-pane-control .tab-row .tab.selected {
-border:1px solid #CCC;
-border-bottom:0;
-z-index:3;
-top:-1px;
-background:#FFF;
-padding:2px 16px 5px;
-}
-
-.dynamic-tab-pane-control .tab-row .tab .error,.dynamic-tab-pane-control .tab-row .tab.selected .error {
-background-color:#FFD9D0;
+.dynamic-tab-pane-control .tab-row .tab .error,
+.dynamic-tab-pane-control .tab-row .tab.selected .error {
+  background-color:#FFD9D0;
 }
 
 .dynamic-tab-pane-control .tab-row .tab a {
-font-weight:400;
-color:#333;
-text-decoration:none;
-cursor:pointer;
-  text-shadow:1px 1px 0 rgba(255,255,255,0.75);
+  text-decoration:none;
+  color: #8b959d;
+  font-weight: normal;
+  display: inline;
+  float: left;
+  background: transparent;
+  border: 1px solid #d9dee2;
+  cursor: pointer;
+  z-index: 1;
+  position: relative;
+  margin-bottom: 30px;
+  margin-right: -1px;
+  padding: 8px 12px;
+  font-family: "Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  line-height: 20px;
 }
 
-.dynamic-tab-pane-control .tab-row .hover a {
-color:#666;
+.dynamic-tab-pane-control .tab-row .tab:first-child a {
+  -webkit-border-radius: 5px 0 0 5px;
+  -moz-border-radius: 5px 0 0 5px;
+  border-radius: 5px 0 0 5px;
+}
+
+.dynamic-tab-pane-control .tab-row .tab:last-child a {
+  -webkit-border-radius: 0 5px 5px 0;
+  -moz-border-radius: 0 5px 5px 0;
+  border-radius: 0 5px 5px 0;
+}
+
+.dynamic-tab-pane-control .tab-row .tab:only-child a {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+
+.dynamic-tab-pane-control .tab-row .tab a:hover,
+.dynamic-tab-pane-control .tab-row .tab a:focus {
+  background-color: #ecf0f3;
+}
+
+.dynamic-tab-pane-control .tab-row .tab a:active,
+.dynamic-tab-pane-control .tab-row .tab a:focus:active {
+  background-color: #e1e7ec;
 }
 
 .dynamic-tab-pane-control .tab-row .tab.selected a {
-color:#036;
+  color: #000;
+  background-color: #fff;
+  cursor: default;
+}
+
+.dynamic-tab-pane-control .tab-row .tab.selected a:active,
+.dynamic-tab-pane-control .tab-row .tab.selected a:focus:active {
+  background-color: #fff;
 }
 
 .dynamic-tab-pane-control .tab-page {
-clear:both;
-border:1px solid #CCC;
-background:#FFF;
-z-index:2;
-position:relative;
-top:-2px;
-width:97%;
-height:150px;
-min-height:150px;
-height:auto !important;
-/*height:350px;*/
-overflow:auto;
-overflow-x:hidden;
-overflow-y:auto;
-padding:15px 10px 10px;
+  clear: both;
+  z-index: 2;
+  position: relative;
+  top: -2px;
+  width: 100%;
+  height: auto;
+  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .dynamic-tab-pane-control .tab-page.members {
@@ -75,9 +84,7 @@ height:auto;
 }
 
 .dynamic-tab-pane-control .tab-row {
-z-index:1;
-white-space:nowrap;
-background:#FFF;
-height:1.85em;
-width:100%;
+  z-index:1;
+  white-space:nowrap;
+  width:100%;
 }

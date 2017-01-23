@@ -112,13 +112,15 @@ if (!defined("IN_GROUPS")) {
 	preferences_update($MODULE, $PREFERENCES);
 
 	?>
-	<h1>Manage Groups</h1>
+	<h1><?php echo $translate->_("Manage Cohorts"); ?></h1>
+
 	<div class="row-fluid">
-		<div style="float: right">
-			<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add Group</a>
+		<div class="pull-right">
+			<a class="btn btn-success" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add"><i class="icon-plus-sign icon-white"></i> <?php echo $translate->_("Add New Cohort"); ?></a>
 		</div>
 	</div>
-	<?php 
+
+	<?php
 	/**
 	 * Update requested order to sort by.
 	 * Valid: asc, desc
@@ -243,31 +245,14 @@ if (!defined("IN_GROUPS")) {
 //	Zend_Debug::dump($scheduler_groups);
 
 	?>
-	
-	</style>
-	<div class="tab-pane" id="user-tabs">
-		<div class="tab-page">
-			<h3 class="tab">Group Search</h3>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/groups" method="get" class="form-horizontal">
-			<div class="control-group">
-				<label for="q" class="form-required control-label">Group Search:</label>
-				<div class="controls">
-					<input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" style="width: 350px" />
-						<div class="content-small" style="margin-top: 10px">
-							<strong>Note:</strong> You can search for Group name.
-						</div>
-				</div>
-			</div>
-			<div class="form-actions">
-				<input type="submit" class="btn btn-primary" value="Search" />
-				<input type="button" class="btn" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/groups'"/>
-			</div>
-			<input type="hidden" name="type" value="search" />
-			</form>
-		</div>
-	</div>
-	
-	<script type="text/javascript">setupAllTabs(true);</script>
+
+    <form action="<?php echo ENTRADA_URL; ?>/admin/groups" method="get" class="form-inline">
+        <input type="hidden" name="type" value="search" />
+        <label for="q" class="form-required control-label">Cohort Search:</label>
+        <input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" style="width: 350px" placeholder="<?php echo $translate->_("Search in Cohort Name"); ?>" />
+        <input type="submit" class="btn btn-primary" value="Search" />
+    </form>
+
 	<?php
 	echo "<p />";
 	if ($scheduler_groups["total_pages"] > 1) {
@@ -300,85 +285,63 @@ if (!defined("IN_GROUPS")) {
 	}
 
 	if ($scheduler_groups["groups"] && count($scheduler_groups["groups"])) {
-		if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) : ?>
+        ?>
 		<form id="frmSelect"  action="<?php echo ENTRADA_URL; ?>/admin/groups?section=manage" method="post">
-		<?php endif; ?>
-		<table class="tableList" cellspacing="0" cellpadding="1" summary="List of groups">
-			<colgroup>
-				<col class="modified" />
-				<col class="community_title" />
-				<col class="community_shortname" />
-				<col class="community_opened" />
-				<col class="attachment" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td class="modified">&nbsp;</td>
-					<td class="community_title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "group_name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("group_name", "Group Name"); ?></td>
-					<td class="community_shortname<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "members") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("members", "Number of members"); ?></td>
-					<td class="community_opened<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "updated_date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("updated_date", "Updated Date"); ?></td>
-					<td class="attachment">&nbsp;</td>
-				</tr>
-			</thead>
-			<?php if ($ENTRADA_ACL->amIAllowed("group", "delete", false) or $ENTRADA_ACL->amIAllowed("group", "update", false)) : ?>
-			
-			<?php endif; ?>
-			<tbody>
-			<?php
-			foreach ($scheduler_groups["groups"] as $result) {
-				$url = ENTRADA_URL."/admin/groups?section=edit&ids=".$result["group_id"];
+            <table class="table table-striped" cellspacing="0" cellpadding="1" summary="List of Cohorts">
+                <colgroup>
+                    <col class="modified" />
+                    <col class="community_title" />
+                    <col class="community_shortname" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="modified">&nbsp;</th>
+                        <th class="community_title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "group_name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("group_name", "Cohort Name"); ?></th>
+                        <th class="community_shortname<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "members") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("members", "Number of Learners"); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php
+                foreach ($scheduler_groups["groups"] as $result) {
+                    $url = ENTRADA_URL."/admin/groups?section=edit&ids=".$result["group_id"];
 
-
-				echo "<tr id=\"group-".$result["group_id"]."\" class=\"group".((!$result["group_active"]) ? " na" : (($result["inactive"]) ? " np" : ""))."\">\n";
-				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["group_id"]."\" /></td>\n";
-				echo "	<td class=\"community_title\"><a href=\"".$url."\">".html_encode($result["group_name"])."</a></td>\n";
-				echo "	<td class=\"community_shortname\"><a href=\"".$url."\">".$result["members"]."</a></td>\n";
-				echo "	<td class=\"date\"><a href=\"".$url."\">".date("M jS Y", $result["updated_date"])."</a></td>\n";
-				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/groups?section=edit&ids=".$result["group_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a></td>\n";
-				echo "</tr>\n";
-			}
-			?>
-			</tbody>
-		</table>
-		<div class="row-fluid" style="margin-top:10px;">
-				<?php
-						$colspan = 4;
-						//delete
-						if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) {
-							$colspan--;
-							?>
-							<input type="submit" class="btn btn-danger" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=manage'" />
-						<?php
-						}
-						//update
-						if ($ENTRADA_ACL->amIAllowed("group", "update", false)) {
-							$colspan--;
-							?>
-							
-								<input type="submit" class="btn" value="Edit Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=edit'" />
-							
-							<?php
-						}
-						if ($ENTRADA_ACL->amIAllowed("group", "read", false)) {
-							$colspan--;
-							?>
-							
-								<input type="submit" class="btn pull-right" value="Export" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=csv'" />
-							
-							<?php
-						}
-						
-						?>
-		</div>
-		<?php if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) : ?>
+                    echo "<tr id=\"group-".$result["group_id"]."\" class=\"group".((!$result["group_active"]) ? " na" : (($result["inactive"]) ? " np" : ""))."\">\n";
+                    echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["group_id"]."\" /></td>\n";
+                    echo "	<td class=\"community_title\"><a href=\"".$url."\">".html_encode($result["group_name"])."</a></td>\n";
+                    echo "	<td class=\"community_shortname\"><a href=\"".$url."\">".$result["members"]."</a></td>\n";
+                    echo "</tr>\n";
+                }
+                ?>
+                </tbody>
+            </table>
+            <div class="row-fluid" style="margin-top:10px;">
+                <?php
+                //delete
+                if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) {
+                    ?>
+                    <input type="submit" class="btn btn-danger" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=manage'" />
+                    <?php
+                }
+                //update
+                if ($ENTRADA_ACL->amIAllowed("group", "update", false)) {
+                    ?>
+                    <input type="submit" class="btn" value="Edit Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=edit'" />
+                    <?php
+                }
+                if ($ENTRADA_ACL->amIAllowed("group", "read", false)) {
+                    ?>
+                    <input type="submit" class="btn pull-right" value="Export Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=csv'" />
+                    <?php
+                }
+                ?>
+            </div>
 		</form>
 		<?php
-		endif;
 	} else {
 		?>
 		<div class="display-notice">
-			<h3>No Available Groups</h3>
-			There are currently no available small groups in the system. To begin click the <strong>Add Group</strong> link above.
+			<h3><?php echo $translate->_("No Available Cohorts"); ?></h3>
+			There are currently no available small groups in the system. To begin click the <strong><?php echo $translate->_("Add Cohort"); ?></strong> link above.
 		</div>
 		<?php
 	}
@@ -386,30 +349,6 @@ if (!defined("IN_GROUPS")) {
 	echo "<form action=\"\" method=\"get\">\n";
 	echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
 	echo "</form>\n";
-
-	/**
-	 * Sidebar item that will provide another method for sorting, ordering, etc.
-	 */
-	$sidebar_html  = "Sort columns:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "group_name") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/groups?".replace_query(array("sb" => "group_name"))."\" title=\"Sort by Category\">by name</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "members") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/groups?".replace_query(array("sb" => "members"))."\" title=\"Sort by Number of Groups\">by number of members</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "updated_date") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/groups?".replace_query(array("sb" => "updated_date"))."\" title=\"Sort by Date &amp; Time\">by date &amp; time</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "Order columns:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "asc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/groups?".replace_query(array("so" => "asc"))."\" title=\"Ascending Order\">in ascending order</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/groups?".replace_query(array("so" => "desc"))."\" title=\"Descending Order\">in descending order</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "Rows per page:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/groups?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/groups?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/groups?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/groups?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-
-	new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
 
 	$ONLOAD[] = "initList()";
 }

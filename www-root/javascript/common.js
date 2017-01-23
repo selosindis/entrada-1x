@@ -1,49 +1,69 @@
-function toggle_list(element_id) {
-	if($(element_id).style.display == 'none') {
-		new Effect.BlindDown($(element_id), { duration: 0.3 });
+/**
+ * Safely parse JSON and return a default error message (single string) if failure.
+ *
+ * @param data JSON
+ * @param default_message string
+ * @returns {Array}
+ */
+function safeParseJson(data, default_message) {
+	try {
+		var jsonResponse = JSON.parse(data);
+	} catch (e) {
+		var jsonResponse = [];
+		jsonResponse.status = "error";
+		jsonResponse.data = [default_message];
+	}
+	return jsonResponse;
+}
 
-		$(element_id+'_state_btn').addClassName('button-red');
-		$(element_id+'_state_btn').value = 'Hide List';
+// Converted to use jQuery
+function toggle_list(element) {
+    var element_id = "#" + element;
+	if(jQuery(element_id).css('display') == 'none') {
+		jQuery(element_id).slideDown(300);
 
-		$(element_id+'_add_btn').appear({ duration: 0.3 });
+        jQuery(element_id+'_state_btn').addClass('button-red');
+        jQuery(element_id+'_state_btn').val('Hide List');
+
+        jQuery(element_id+'_add_btn').fadeIn(300);
 	} else {
-		new Effect.BlindUp($(element_id), { duration: 0.3 });
+		jQuery(element_id).slideUp(300);
 
-		$(element_id+'_state_btn').removeClassName('button-red');
-		$(element_id+'_state_btn').value = ('Show List');
+        jQuery(element_id+'_state_btn').removeClass('button-red');
+        jQuery(element_id+'_state_btn').val('Show List');
 
-		$(element_id+'_add_btn').fade({ duration: 0.3 });
+        jQuery(element_id+'_add_btn').fadeOut(300);
 	}
 }
 
-function toggle_visibility_checkbox(obj, element_id, effect) {
+// Converted to use jQuery
+function toggle_visibility_checkbox(obj_id, element_id, effect) {
 	if((!effect) || (effect != 'blind')) {
 		effect = 'fade';
 	}
-
-	if($(element_id) != null) {
-		if(obj.checked == true) {
+	if(jQuery(element_id) != null) {
+		if(jQuery(obj_id).prop('checked') == true) {
 			switch(effect) {
 				case 'fade' :
-					Effect.Appear(element_id);
+					jQuery(element_id).fadeIn();
 				break;
 				case 'blind' :
-					Effect.BlindDown(element_id);
+					jQuery(element_id).slideDown();
 				break;
 				default :
-					$(element_id).style.display	= '';
+					jQuery(element_id).show();
 				break;
 			}
 		} else {
 			switch(effect) {
 				case 'fade' :
-					Effect.Fade(element_id);
+					jQuery(element_id).fadeOut();
 				break;
 				case 'blind' :
-					Effect.BlindUp(element_id);
+					jQuery(element_id).slideUp();
 				break;
 				default :
-					$(element_id).style.display	= 'none';
+					jQuery(element_id).hide();
 				break;
 			}
 		}
@@ -51,6 +71,11 @@ function toggle_visibility_checkbox(obj, element_id, effect) {
 	return;
 }
 
+/**
+ * This function does not appear to be used anywhere in Entrada.
+ * EAH 2016/04/06
+ */
+/*
 function toggle_visibility(element_id, effect) {
 	if($(element_id) != null) {
 		if($(element_id).style.display == 'none') {
@@ -81,10 +106,13 @@ function toggle_visibility(element_id, effect) {
 	}
 	return;
 }
+*/
 
+// Converted to use jQuery
 function updateTime(type) {
-	var hour	= $F(type+'_hour');
-	var minute	= $F(type+'_min');
+    type = '#' + type;
+	var hour	= jQuery(type+'_hour').val();
+	var minute	= jQuery(type+'_min').val();
 	var suffix	= '';
 
 	// If it's not past 12 don't bother.
@@ -104,35 +132,37 @@ function updateTime(type) {
 		minute = '00';
 	}
 
-	$(type+'_display').innerHTML = hour+':'+minute+' '+suffix;
+	jQuery(type+'_display').html(hour+':'+minute+' '+suffix);
 
 	return;
 }
 
-function dateLock(field) {
+// Converted to use jQuery
+function dateLock(inputField) {
 
-	if($(field)) {
-		$(field + '_text').removeClassName('form-nrequired');
-		$(field + '_text').removeClassName('form-required');
+	var field = '#' + inputField;
+	if(jQuery(field)) {
+		jQuery(field + '_text').removeClass('form-nrequired');
+		jQuery(field + '_text').removeClass('form-required');
 
-		if ($(field).checked == true) {
-			$(field + '_text').addClassName('form-required');
-			$(field + '_date').disabled = false;
+		if (jQuery(field).prop('checked') == true) {
+			jQuery(field + '_text').addClass('form-required');
+			jQuery(field + '_date').prop('disabled', false);
 
-			if ($(field + '_hour') != null) {
-				$(field + '_hour').disabled = false;
+			if (jQuery(field + '_hour') != null) {
+				jQuery(field + '_hour').prop('disabled', false);
 			}
-			if ($(field + '_min') != null) {
-				$(field + '_min').disabled = false;
+			if (jQuery(field + '_min') != null) {
+				jQuery(field + '_min').prop('disabled', false);
 			}
 		} else {
-			$(field + '_text').addClassName('form-nrequired');
-			$(field + '_date').disabled = true;
-			if ($(field + '_hour') != null) {
-				$(field + '_hour').disabled = true;
+			jQuery(field + '_text').addClass('form-nrequired');
+			jQuery(field + '_date').prop('disabled', true);
+			if (jQuery(field + '_hour') != null) {
+				jQuery(field + '_hour').prop('disabled', true);
 			}
-			if ($(field + '_min') != null) {
-				$(field + '_min').disabled = true;
+			if (jQuery(field + '_min') != null) {
+				jQuery(field + '_min').prop('disabled', true);
 			}
 		}
 	}
@@ -140,6 +170,11 @@ function dateLock(field) {
 	return;
 }
 
+/**
+ * This function does not appear to be used anywhere in Entrada.
+ * EAH 2016/04/13
+ */
+/*
 function upload() {
 	$('addbutton').disabled		= true;
 	$('addbutton').style.color	= '#666666';
@@ -147,6 +182,7 @@ function upload() {
 
 	document.forms[0].submit();
 }
+*/
 
 function customConfig(config) {
 	config.toolbar = [
@@ -159,6 +195,11 @@ function customConfig(config) {
 	config.statusBar	= false;
 }
 
+/**
+ * This function does not appear to be used anywhere in Entrada.
+ * EAH 2016/04/13
+ */
+/*
 function getSelectedButton(buttonGroup) {
 	for (var i = 0; i < buttonGroup.length; i++) {
 		if (buttonGroup[i].checked) {
@@ -167,6 +208,7 @@ function getSelectedButton(buttonGroup) {
 	}
 	return -1; //no button selected
 }
+*/
 
 function sendFeedback(url) {
 	if(url) {
@@ -208,6 +250,11 @@ function sendClerkship(url) {
 	return;
 }
 
+/**
+ * This function does not appear to be used anywhere in Entrada.
+ * EAH 2016/04/13
+ */
+/*
 function sendAnonymousFeedback(url) {
 	if(url) {
 		var windowW = 505;
@@ -227,6 +274,7 @@ function sendAnonymousFeedback(url) {
 	}
 	return;
 }
+*/
 
 function sendAccommodation(url) {
 	if(url) {
@@ -248,6 +296,11 @@ function sendAccommodation(url) {
 	return;
 }
 
+/**
+ * This function does not appear to be used anywhere in Entrada.
+ * EAH 2016/04/13
+ */
+/*
 function closeWindow() {
 	window.close();
 
@@ -255,6 +308,7 @@ function closeWindow() {
 		window.opener.focus();
 	}
 }
+*/
 
 function fieldCopy(copy_from, copy_to, copy_only_empty) {
 	if((!copy_only_empty) || (copy_only_empty == null)) {
@@ -364,118 +418,6 @@ function selection(field) {
 	}
 }
 
-var ExpandableTextarea = Class.create({
-	initialize: function(el) {
-		this.textbox = { element: el, defaultheight: el.getHeight() }
-		this.textbox.element.update = this.setTextboxHeight;
-		this.createHiddenElement();
-		this.setTextboxHeight(false);
-		this.animate = (typeof Scriptaculous == 'undefined') ? false : true;
-		this.textbox.element.setStyle({'overflow': 'hidden'});
-
-		Event.observe(this.textbox.element, 'keyup', this.handleKeyUp.bind(this));
-		Event.observe(this.textbox.element, 'focus', this.setTextboxHeight.bind(this));
-	},
-
-	createHiddenElement: function() {
-		this.hiddenelement = new Element('div').show();
-
-		// How do I get rid of this mess?
-		this.hiddenelement.setStyle({
-			'paddingTop': this.textbox.element.getStyle('paddingTop'),
-			'paddingRight': this.textbox.element.getStyle('paddingRight'),
-			'paddingBottom': this.textbox.element.getStyle('paddingBottom'),
-			'paddingLeft': this.textbox.element.getStyle('paddingLeft'),
-			'fontSize': this.textbox.element.getStyle('font-size'),
-			'fontFamily': this.textbox.element.getStyle('font-family'),
-			'width': this.textbox.element.getStyle('width'),
-			'display': 'block',
-			'visibility': 'hidden',
-			'position': 'absolute',
-			'top': '0',
-			'left': '0'
-		});
-
-		this.textbox.element.parentNode.appendChild(this.hiddenelement);
-	},
-
-	handleKeyUp: function() {
-		this.setTextboxHeight(this.animate);
-	},
-
-	setTextboxHeight: function(animate) {
-		currenttextheight = this.hiddenelement.update(this.textbox.element.value.replace(/\n/g, '\n').replace(/<|>/g, ' ').replace(/\n/g, '<br />').replace(/&/g,"&amp;").replace(/  /g,' &nbsp;')).getHeight();
-		goalheight = ((currenttextheight>this.textbox.defaultheight)?currenttextheight+20:this.textbox.defaultheight);
-
-		if(animate)
-			this.textbox.element.morph({ height: goalheight + 'px'}, { duration: 0.2 });
-		else
-			this.textbox.element.setStyle({ height: goalheight + 'px' });
-
-	}
-});
-
-var CollapseHeadings = Class.create({
-	initialize: function(el) {
-		this.el = $(el);
-		this.child = this.el.title.split(' ').join('-').toLowerCase();
-		if (($(this.child)) && (this.el.hasClassName('nocollapse') == false)) {
-			this.el.addClassName('collapsable');
-
-			if (this.el.hasClassName('collapsed')) {
-				$(this.child).hide();
-			} else {
-				this.el.addClassName('expanded');
-			}
-
-			Event.observe(this.el, 'click', this.toggle.bind(this));
-			this.el.observe('CollapseHeadings:collapse',this.collapse.bind(this));
-			this.el.observe('CollapseHeadings:expand',this.expand.bind(this));
-			document.observe('CollapseHeadings:collapse-all', this.collapse.bind(this));
-			document.observe('CollapseHeadings:expand-all', this.expand.bind(this));
-		}
-	},
-
-	toggle: function() {
-		if ($(this.child).visible()) {
-			this.collapse();
-		} else {
-			this.expand();
-		}
-	},
-
-	collapse: function () {
-		if ($(this.child).visible()) {
-			this.el.removeClassName('expanded');
-			this.el.addClassName('collapsed');
-
-			Effect.BlindUp(this.child, { duration: 0.3 })
-		} // else already collapsed
-	},
-	expand: function () {
-		if (!$(this.child).visible()) {
-			this.el.removeClassName('collapsed');
-			this.el.addClassName('expanded');
-
-			Effect.BlindDown(this.child, { duration: 0.3 })
-		} //else already expanded
-	}
-});
-
-document.observe("dom:loaded", function() {
-	$$('textarea.expandable').each(function(el) {
-		new ExpandableTextarea(el);
-	});
-
-	$$('h2','.collapsable').each(function (el) {
-		new CollapseHeadings(el);
-	});
-
-	$$('ul.page-action > li:last-child').each(function (el) {
-		el.addClassName('last');
-	});
-});
-
 // Used on the Adding / Editing Calendar Events page.
 function checkForNewRegion() {
 	if(document.getElementById('region_id').options[document.getElementById('region_id').selectedIndex].value == 'new') {
@@ -487,6 +429,9 @@ function checkForNewRegion() {
 	}
 }
 
+/**
+ * the following photo related functions are used in modules/public/people.inc.php
+ */
 var grow;
 
 function growPic(official_photo, uploaded_photo, official_link, uploaded_link, zoomout) {
@@ -499,14 +444,14 @@ function growPic(official_photo, uploaded_photo, official_link, uploaded_link, z
 			{
 				scaleMode:
 				{
-					originalHeight:	100,
+					originalHeight:	72,
 					originalWidth:	72
 				},
 				beforeStart: function() {
 					official_photo.style.zIndex = 8;
 				},
 				afterFinish: function() {
-					zoomout.innerHTML = '-';
+					zoomout.innerHTML = '<i class="fa fa-search-minus" aria-hidden="true"></i>';
 
 					grow = true;
 				}
@@ -516,7 +461,7 @@ function growPic(official_photo, uploaded_photo, official_link, uploaded_link, z
 				official_link.style.zIndex = 10;
 				new Effect.Morph(official_link,
 				{
-					style: 'left: 15px; bottom: -185px; font-size: 24px; line-height: 26px; padding: 0px 5px 0px 5px;',
+					style: 'left: 15px; bottom: -164px; font-size: 24px; line-height: 26px; padding: 0px 5px 0px 5px;',
 					duration: 1.0
 				});
 			}
@@ -527,14 +472,14 @@ function growPic(official_photo, uploaded_photo, official_link, uploaded_link, z
 			{
 				scaleMode:
 				{
-					originalHeight:	100,
+					originalHeight:	72,
 					originalWidth:	72
 				},
 				beforeStart: function() {
 					uploaded_photo.style.zIndex	= 7;
 				},
 				afterFinish: function() {
-					zoomout.innerHTML = '-';
+					zoomout.innerHTML = '<i class="fa fa-search-minus" aria-hidden="true"></i>';
 
 					grow = true;
 				}
@@ -544,7 +489,7 @@ function growPic(official_photo, uploaded_photo, official_link, uploaded_link, z
 				uploaded_link.style.zIndex = 10;
 				new Effect.Morph(uploaded_link,
 				{
-					style: 'left: 47px; bottom: -185px; font-size: 24px; line-height: 26px; padding: 0px 5px 0px 5px;',
+					style: 'left: 47px; bottom: -164px; font-size: 24px; line-height: 26px; padding: 0px 5px 0px 5px;',
 					duration: 1.0
 				});
 			}
@@ -565,11 +510,11 @@ function shrinkPic(official_photo, uploaded_photo, official_link, uploaded_link,
 				scaleFrom: (official_photo.width / 72 * 100),
 				scaleMode:
 				{
-					originalHeight:	100,
+					originalHeight:	72,
 					originalWidth:	72
 				},
 				afterFinish: function() {
-					$$('.zoomin').each(function (e) { e.innerHTML = '+'; });
+					$$('.zoomin').each(function (e) { e.innerHTML = '<i class="fa fa-search-plus" aria-hidden="true"></i>'; });
 
 					official_photo.style.zIndex = 6;
 
@@ -593,11 +538,11 @@ function shrinkPic(official_photo, uploaded_photo, official_link, uploaded_link,
 				scaleFrom: (uploaded_photo.width / 72 * 100),
 				scaleMode:
 				{
-					originalHeight: 100,
+					originalHeight: 72,
 					originalWidth: 72
 				},
 				afterFinish: function() {
-					$$('.zoomin').each(function (e) { e.innerHTML = '+'; });
+					$$('.zoomin').each(function (e) { e.innerHTML = '<i class="fa fa-search-plus" aria-hidden="true"></i>'; });
 
 					uploaded_photo.style.zIndex = 5;
 
@@ -835,7 +780,7 @@ function display_msg(type, msg_array, target, location) {
  *  @param warning_threshold - the number of minutes at which the timer fades from blue to yellow, defaults to 25
  *  @param danger_threshold - the number of minutes at which the timer fades from yellow to red, defaults to 10
  */
-function ui_timer (message, minutes, warning_threshold, danger_threshold) {
+function ui_timer (message, minutes, warning_threshold, danger_threshold, doSomething) {
     var count = typeof minutes !== 'undefined' ? (minutes * 60) : 3600;
     warning_threshold = typeof warning_threshold !== 'undefined' ? warning_threshold : 25;
     danger_threshold = typeof danger_threshold !== 'undefined' ? danger_threshold : 10;
@@ -848,6 +793,9 @@ function ui_timer (message, minutes, warning_threshold, danger_threshold) {
         timer(count, warning_threshold, danger_threshold);
         if (count == 0) {
             clearInterval(counter);
+            if (doSomething !== "undefined") {
+                doSomething();
+            }
             return;
         }
     }, 1000);
@@ -896,7 +844,7 @@ function add_timer (count, msg, affix) {
     }
     
     var container = document.createElement("div");
-    var icon_container = document.createElement("span");
+    var icon_container = document.createElement("i");
     var minute_container = document.createElement("span");
     var colon_container = document.createElement("span");
     var second_container = document.createElement("span");
@@ -930,3 +878,117 @@ function sidebarBegone() {
         $("#content").removeClass("span9").addClass("span12").css("margin-left", "0");
     });
 }
+
+/**
+ * jQuery Textarea AutoSize plugin
+ * Author: Javier Julio
+ * Licensed under the MIT license
+ */
+;(function ($, window, document, undefined) {
+
+    var pluginName = "textareaAutoSize";
+    var pluginDataName = "plugin_" + pluginName;
+
+    var containsText = function (value) {
+        return (value.replace(/\s/g, '').length > 0);
+    };
+
+    function Plugin(element, options) {
+        this.element = element;
+        this.$element = $(element);
+        this.init();
+    }
+
+    Plugin.prototype = {
+        init: function() {
+            var height = this.$element.outerHeight();
+            var diff = parseInt(this.$element.css('paddingBottom')) +
+                parseInt(this.$element.css('paddingTop')) || 0;
+
+            if (containsText(this.element.value)) {
+                this.$element.height(this.element.scrollHeight - diff);
+            }
+
+            // keyup is required for IE to properly reset height when deleting text
+            this.$element.on('input keyup', function(event) {
+                var $window = $(window);
+                var currentScrollPosition = $window.scrollTop();
+
+                $(this)
+                    .height(0)
+                    .height(this.scrollHeight - diff);
+
+                $window.scrollTop(currentScrollPosition);
+            });
+        }
+    };
+
+    $.fn[pluginName] = function (options) {
+        this.each(function() {
+            if (!$.data(this, pluginDataName)) {
+                $.data(this, pluginDataName, new Plugin(this, options));
+            }
+        });
+        return this;
+    };
+
+})(jQuery, window, document);
+
+/**
+ * To allow Bootstrap/jQuery plugins to work in a Prototype environment
+ * disable Prototype's show() and hide() DOM element extensions for the affected plugins
+ */
+if (typeof Prototype !== 'undefined' && Prototype.BrowserFeatures.ElementExtensions) {
+    var disablePrototypeJS = function (method, pluginsToDisable) {
+            var handler = function (event) {
+                event.target[method] = undefined;
+                setTimeout(function () {
+                    delete event.target[method];
+                }, 0);
+            };
+            pluginsToDisable.each(function (plugin) {
+                jQuery(window).on(method + '.bs.' + plugin, handler);
+            });
+        },
+        //pluginsToDisable = ['collapse', 'dropdown', 'modal', 'tooltip', 'popover'];
+        pluginsToDisable = ['collapse'];
+    disablePrototypeJS('show', pluginsToDisable);
+    disablePrototypeJS('hide', pluginsToDisable);
+}
+
+jQuery(document).ready(function($) {
+
+    /**
+     * if there are expandable text areas on the screen, enable them to auto-grow with content
+     */
+    $('textarea.expandable').textareaAutoSize();
+
+    /**
+     * check for the prototype based collapsable headings, and enable these with standard bootstrap collapse instead
+     * This depends on the above disablePrototypeJS function above to disable Prototype show() and hide()
+     */
+    $('h2, .collapsable').each(function(){
+        /**
+         * Ignore if already using bootstrap collapse, or if specifically excluded with 'nocollapse' class
+         */
+        if (!($(this).attr('data-toggle') == 'collapse') && !$(this).hasClass('nocollapse')) {
+            var child = "#" + $(this).prop('title').split(' ').join('-').toLowerCase();
+            if (child.length > 1 && $(child).length) {
+                $(this).attr('data-toggle', 'collapse').attr('data-target', child).addClass('collapsable');
+                $(child).addClass('collapse');
+                if (!$(this).hasClass('collapsed')) {
+                    $(child).addClass('in');
+                }
+            }
+        }
+    });
+
+    /**
+     * Converted from Prototype to jQuery
+     */
+    $('ul.page-action > li:last-child').each(function () {
+        if (!$(this).hasClass('last')) {
+            $(this).addClass('last');
+        }
+    });
+});

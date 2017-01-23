@@ -210,7 +210,7 @@ function clean_input($string, $rules = array()) {
 					$string = quotemeta($string);
 				break;
 				case "credentials" :	// Acceptable characters for login credentials.
-					$string = preg_replace("/[^a-z0-9_\-\.]/i", "", $string);
+					$string = preg_replace("/[^a-z0-9_\-\.@]/i", "", $string);
 				break;
 				case "alphanumeric" :	// Remove anything that is not alphanumeric.
 					$string = preg_replace("/[^a-z0-9]+/i", "", $string);

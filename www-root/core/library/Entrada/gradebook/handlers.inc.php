@@ -25,6 +25,11 @@ function format_retrieved_grade($grade, $assessment) {
 	return $handler->getFormattedGradeFromDecimal($grade);	
 }
 
+function get_marking_scheme_short_description($assessment, $comparison_mark = null) {
+	$handler = assessment_handler($assessment);	
+	return $handler->getShortDescription($comparison_mark);
+}
+
 abstract class MarkingSchemeHandlerAbstract {
 	public $assessment;
 	
@@ -60,6 +65,8 @@ abstract class MarkingSchemeHandlerAbstract {
 	public function presentationSuffix() {
 		return "";
 	}
+
+	public abstract function getShortDescription($comparison_mark);
 }
 
 class PercentageGradeHandler extends MarkingSchemeHandlerAbstract {
@@ -73,6 +80,10 @@ class PercentageGradeHandler extends MarkingSchemeHandlerAbstract {
 	}
 	public function presentationSuffix() {
 		return "%";
+	}
+
+	public function getShortDescription($comparison_mark) {
+		return 'Out of 100%';
 	}
 }
 
@@ -94,7 +105,7 @@ class NumericGradeHandler extends MarkingSchemeHandlerAbstract {
 	}
 
 	public function getFormattedGradeFromDecimal($decimal) {
-		if($decimal >= 0) {
+		if(isset($decimal) && $decimal >= 0) {
 			return round(($decimal / 100) * $this->getMaxPoints() * 1000) / 1000;
 		} else {
 			return "";
@@ -111,6 +122,10 @@ class NumericGradeHandler extends MarkingSchemeHandlerAbstract {
 		} else {
 			return 100;
 		}
+	}
+
+	public function getShortDescription($comparison_mark) {
+		return 'Out of '.$comparison_mark.' marks';
 	}
 }
 
@@ -130,11 +145,17 @@ class BooleanGradeHandler extends MarkingSchemeHandlerAbstract {
 	} 
 	
 	public function getFormattedGradeFromDecimal($decimal) {
-		if($decimal == 100) {
+		if(isset($decimal) && $decimal >= 50) {
 			return $this->pass_text;
-		} else {
+		} elseif (isset($decimal) && $decimal < 50) {
 			return $this->fail_text;
+		} else {
+			return "";
 		}
+	}
+
+	public function getShortDescription($comparison_mark = null) {
+		return 'P for Pass, F for Fail';
 	}
 }
 
@@ -142,4 +163,8 @@ class IncompleteCompleteGradeHandler extends BooleanGradeHandler {
 	public $pass_values = array("p", "pass", "1", "c", "complete", 100);
 	public $pass_text = "C";
 	public $fail_text = "I";
+
+	public function getShortDescription($comparison_mark) {
+		return 'C for Complete, I for Incomplete';
+	}
 }

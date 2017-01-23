@@ -52,8 +52,9 @@ if((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	
 	$portfolio = $pfolder->getPortfolio();
 	$file_realpath = EPORTFOLIO_STORAGE_PATH."/portfolio-".$portfolio->getID()."/folder-".$pfolder->getID()."/artifact-".$pfartifact->getID()."/user-".$pentry->getProxyID()."/".$pentry->getID();
-	
+
 	if (file_exists($file_realpath)) {
+		add_statistic("eportfolio", "download_file", "pentry_id", $pentry_id, $_SESSION["details"]["id"]);
 		$finfo = $finfo = new finfo(FILEINFO_MIME);
 		
 		$edata = $pentry->getEdataDecoded();

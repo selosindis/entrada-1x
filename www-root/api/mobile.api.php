@@ -189,6 +189,9 @@ if ($isAuthenticated) {
 	
 	$ENTRADA_USER = User::get($user_details["id"]);
 	$user_details["access_id"] = $ENTRADA_USER->getAccessId();
+	if ($ENTRADA_USER->getActiveGroup() == "student") {
+		$user_details["grad_year"] = $ENTRADA_USER->getGradYear();
+	}
 	
 	$ENTRADA_ACL = new Entrada_Acl($user_details);
 	
@@ -613,7 +616,7 @@ if ($isAuthenticated) {
 				case "evaluations" :
 
 					$evaluations_list = array();
-					$evaluations = Models_Evaluation::getEvaluatorEvaluations($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation());
+					$evaluations = Classes_Evaluation::getEvaluatorEvaluations($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation());
 
 					if ($evaluations) {				
 						if (count($evaluations)) {
@@ -714,7 +717,7 @@ if ($isAuthenticated) {
 
 
 							if (array_search($PROCESSED["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false) {
-									$full_evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false);
+									$full_evaluation_targets_list = Classes_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false);
 									$evaluation_targets_count = count($full_evaluation_targets_list);
 									if (isset($full_evaluation_targets_list) && $evaluation_targets_count) {
 											$evaluation_record["max_submittable"] = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
@@ -732,7 +735,7 @@ if ($isAuthenticated) {
 
 								$completed_attempts = evaluations_fetch_attempts($evaluation_id);
 
-								$evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation_id, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID());
+								$evaluation_targets_list = Classes_Evaluation::getTargetsArray($evaluation_id, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID());
 								$max_submittable = $evaluation_record["max_submittable"];
 								if ($evaluation_targets_list) {
 									$evaluation_targets_count = count($evaluation_targets_list);
@@ -806,7 +809,7 @@ if ($isAuthenticated) {
 													}
 													if ((isset($target_record_id) && $target_record_id) || ((isset($_POST["target_record_id"])) && ($target_record_id = clean_input($_POST["target_record_id"], array("trim", "int"))))) {
 
-														$evaluation_targets = Models_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
+														$evaluation_targets = Classes_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
 
 														foreach ($evaluation_targets as $evaluation_target) {
 															switch ($evaluation_target["target_type"]) {
@@ -918,7 +921,7 @@ if ($isAuthenticated) {
 																		} else {
 																			$comments = NULL;
 																		}
-																		if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], $eqresponse_id, $comments)) {
+																		if (!Classes_Evaluation::evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], $eqresponse_id, $comments)) {
 																			$ERROR++;
 																			$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 
@@ -948,7 +951,7 @@ if ($isAuthenticated) {
 																} else {
 																	$comments = NULL;
 																}
-																if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], 0, $comments)) {
+																if (!Classes_Evaluation::evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], 0, $comments)) {
 																	$ERROR++;
 																	$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 
@@ -978,12 +981,12 @@ if ($isAuthenticated) {
 
 															if ($db->AutoExecute("evaluation_progress", $evaluation_progress_array, "UPDATE", "eprogress_id = ".$db->qstr($eprogress_id))) {
 																if ($evaluation_record["threshold_notifications_type"] != "disabled") {
-																	$is_below_threshold = Models_Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
+																	$is_below_threshold = Classes_Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
 																	if ($is_below_threshold) {
 																		if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
-																			require_once("Models/notifications/NotificationUser.class.php");
-																			require_once("Models/notifications/Notification.class.php");
-																			$threshold_notification_recipients = Models_Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
+																			require_once("Classes/notifications/NotificationUser.class.php");
+																			require_once("Classes/notifications/Notification.class.php");
+																			$threshold_notification_recipients = Classes_Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
 																			if (isset($threshold_notification_recipients) && $threshold_notification_recipients) {
 																				foreach ($threshold_notification_recipients as $threshold_notification_recipient) {
 																					$notification_user = NotificationUser::get($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
@@ -1128,7 +1131,7 @@ if ($isAuthenticated) {
 													$content["evaluation_attempt"] .= "<input type=\"hidden\" name=\"evaluation_id\" value=\"".$evaluation_id."\" />\n";
 													add_statistic("evaluation", "evaluation_view", "evaluation_id", $evaluation_id);
 													if (!isset($evaluation_targets) || !count($evaluation_targets)) {
-														$evaluation_targets = Models_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
+														$evaluation_targets = Classes_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
 													}
 
 													if ($evaluation_targets) {
@@ -1185,7 +1188,7 @@ if ($isAuthenticated) {
 															if ($PROCESSED["target_shortname"] == "preceptor") {
 																$content["evaluation_attempt"] .= "<div id=\"preceptor_select\" data-role=\"fieldcontain\">\n";
 																if (isset($PROCESSED["event_id"]) && $PROCESSED["event_id"]) {
-																	$content["evaluation_attempt"] .= Models_Evaluation::getPreceptorSelect($evaluation_id, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED["preceptor_proxy_id"]) && $PROCESSED["preceptor_proxy_id"] ? $PROCESSED["preceptor_proxy_id"] : 0));
+																	$content["evaluation_attempt"] .= Classes_Evaluation::getPreceptorSelect($evaluation_id, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED["preceptor_proxy_id"]) && $PROCESSED["preceptor_proxy_id"] ? $PROCESSED["preceptor_proxy_id"] : 0));
 																} else {
 																	$content["evaluation_attempt"] .= display_notice("Please select a <strong>Clerkship Service</strong> to evaluate a <strong>Preceptor</strong> for.", true);
 																}
@@ -1257,7 +1260,7 @@ if ($isAuthenticated) {
 													$total_questions	= 0;
 													if ($questions) {
 														$total_questions = count($questions);
-														$content["evaluation_attempt"] .= Models_Evaluation::getMobileQuestionAnswerControls($questions, $PROCESSED["eform_id"], $eprogress_id);
+														$content["evaluation_attempt"] .= Classes_Evaluation::getMobileQuestionAnswerControls($questions, $PROCESSED["eform_id"], $eprogress_id);
 													} else {
 														$ERROR++;
 														$ERRORSTR[] = "There are no questions currently available for this evaluation. This problem has been reported to a system administrator; please try again later.";
@@ -1343,7 +1346,7 @@ if ($isAuthenticated) {
 						if (isset($_POST["preceptor_proxy_id"]) && ($tmp_input = clean_input($_POST["preceptor_proxy_id"], "int"))) {
 							$preceptor_proxy_id = $tmp_input;
 						}
-						$output = Models_Evaluation::getPreceptorSelect($evaluation_id, $event_id, $ENTRADA_USER->getID(), (isset($preceptor_proxy_id) && $preceptor_proxy_id ? $preceptor_proxy_id : 0));
+						$output = Classes_Evaluation::getPreceptorSelect($evaluation_id, $event_id, $ENTRADA_USER->getID(), (isset($preceptor_proxy_id) && $preceptor_proxy_id ? $preceptor_proxy_id : 0));
 						if ($output) {
 							echo "<br /><div class=\"content-small\">Please choose a clerkship preceptor to evaluate: \n";
 							echo $output;
@@ -1511,7 +1514,7 @@ if ($isAuthenticated) {
 				case "evaluations" :
 
 					$evaluations_list = array();
-					$evaluations = Models_Evaluation::getEvaluatorEvaluations($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation());
+					$evaluations = Classes_Evaluation::getEvaluatorEvaluations($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation());
 
 					if ($evaluations) {				
 						if (count($evaluations)) {
@@ -1603,7 +1606,7 @@ if ($isAuthenticated) {
 
 
 						if (array_search($PROCESSED["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false) {
-								$full_evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false);
+								$full_evaluation_targets_list = Classes_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false);
 								$evaluation_targets_count = count($full_evaluation_targets_list);
 								if (isset($full_evaluation_targets_list) && $evaluation_targets_count) {
 										$evaluation_record["max_submittable"] = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
@@ -1621,7 +1624,7 @@ if ($isAuthenticated) {
 
 							$completed_attempts = evaluations_fetch_attempts($evaluation_id);
 
-							$evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation_id, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID());
+							$evaluation_targets_list = Classes_Evaluation::getTargetsArray($evaluation_id, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID());
 							$max_submittable = $evaluation_record["max_submittable"];
 							if ($evaluation_targets_list) {
 								$evaluation_targets_count = count($evaluation_targets_list);
@@ -1695,7 +1698,7 @@ if ($isAuthenticated) {
 												}
 												if ((isset($target_record_id) && $target_record_id) || ((isset($_POST["target_record_id"])) && ($target_record_id = clean_input($_POST["target_record_id"], array("trim", "int"))))) {
 
-													$evaluation_targets = Models_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
+													$evaluation_targets = Classes_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
 
 													foreach ($evaluation_targets as $evaluation_target) {
 														switch ($evaluation_target["target_type"]) {
@@ -1807,7 +1810,7 @@ if ($isAuthenticated) {
 																	} else {
 																		$comments = NULL;
 																	}
-																	if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], $eqresponse_id, $comments)) {
+																	if (!Classes_Evaluation::evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], $eqresponse_id, $comments)) {
 																		$ERROR++;
 																		$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 
@@ -1837,7 +1840,7 @@ if ($isAuthenticated) {
 															} else {
 																$comments = NULL;
 															}
-															if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], 0, $comments)) {
+															if (!Classes_Evaluation::evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], 0, $comments)) {
 																$ERROR++;
 																$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 
@@ -1867,12 +1870,12 @@ if ($isAuthenticated) {
 
 														if ($db->AutoExecute("evaluation_progress", $evaluation_progress_array, "UPDATE", "eprogress_id = ".$db->qstr($eprogress_id))) {
 															if ($evaluation_record["threshold_notifications_type"] != "disabled") {
-																$is_below_threshold = Models_Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
+																$is_below_threshold = Classes_Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
 																if ($is_below_threshold) {
 																	if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
-																		require_once("Models/notifications/NotificationUser.class.php");
-																		require_once("Models/notifications/Notification.class.php");
-																		$threshold_notification_recipients = Models_Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
+																		require_once("Classes/notifications/NotificationUser.class.php");
+																		require_once("Classes/notifications/Notification.class.php");
+																		$threshold_notification_recipients = Classes_Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
 																		if (isset($threshold_notification_recipients) && $threshold_notification_recipients) {
 																			foreach ($threshold_notification_recipients as $threshold_notification_recipient) {
 																				$notification_user = NotificationUser::get($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
@@ -2017,7 +2020,7 @@ if ($isAuthenticated) {
 												$content["evaluation_attempt"] .= "<input type=\"hidden\" name=\"evaluation_id\" value=\"".$evaluation_id."\" />\n";
 												add_statistic("evaluation", "evaluation_view", "evaluation_id", $evaluation_id);
 												if (!isset($evaluation_targets) || !count($evaluation_targets)) {
-													$evaluation_targets = Models_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
+													$evaluation_targets = Classes_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
 												}
 
 												if ($evaluation_targets) {
@@ -2074,7 +2077,7 @@ if ($isAuthenticated) {
 														if ($PROCESSED["target_shortname"] == "preceptor") {
 															$content["evaluation_attempt"] .= "<div id=\"preceptor_select\">\n";
 															if (isset($PROCESSED["event_id"]) && $PROCESSED["event_id"]) {
-																$content["evaluation_attempt"] .= Models_Evaluation::getPreceptorSelect($evaluation_id, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED["preceptor_proxy_id"]) && $PROCESSED["preceptor_proxy_id"] ? $PROCESSED["preceptor_proxy_id"] : 0));
+																$content["evaluation_attempt"] .= Classes_Evaluation::getPreceptorSelect($evaluation_id, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED["preceptor_proxy_id"]) && $PROCESSED["preceptor_proxy_id"] ? $PROCESSED["preceptor_proxy_id"] : 0));
 															} else {
 																$content["evaluation_attempt"] .= display_notice("Please select a <strong>Clerkship Service</strong> to evaluate a <strong>Preceptor</strong> for.");
 															}
@@ -2146,7 +2149,7 @@ if ($isAuthenticated) {
 												$total_questions	= 0;
 												if ($questions) {
 													$total_questions = count($questions);
-													$content["evaluation_attempt"] .= Models_Evaluation::getMobileQuestionAnswerControls($questions, $PROCESSED["eform_id"], $eprogress_id);
+													$content["evaluation_attempt"] .= Classes_Evaluation::getMobileQuestionAnswerControls($questions, $PROCESSED["eform_id"], $eprogress_id);
 												} else {
 													$ERROR++;
 													$ERRORSTR[] = "There are no questions currently available for this evaluation. This problem has been reported to a system administrator; please try again later.";

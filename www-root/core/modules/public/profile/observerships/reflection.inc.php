@@ -32,8 +32,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 	exit;
 } else {
 	
-	require_once("Models/mspr/Observership.class.php");
-	require_once("Models/mspr/ObservershipReflection.class.php");
+	require_once("Classes/mspr/Observership.class.php");
+	require_once("Classes/mspr/ObservershipReflection.class.php");
 	
 	$observership = Observership::get($OBSERVERSHIP_ID);
 	
@@ -133,6 +133,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 					default:
 						$observership = Observership::get($OBSERVERSHIP_ID);
 						$status = $observership->getStatus();
+
+						$stat_action = ($status == "confirmed") ? "reflection_review" : "relflection_edit";
+						add_statistic("observerships", "reflection", "observership_id", $observership->getID());
 						
 						echo "<h1>".$observership->getTitle()." Reflection</h1>";
 						

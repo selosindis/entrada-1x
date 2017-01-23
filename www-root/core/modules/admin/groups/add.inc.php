@@ -47,7 +47,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/groups?".replace_query(array("section" => "add")), "title" => "Adding Group");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/groups?".replace_query(array("section" => "add")), "title" => $translate->_("Adding Cohort"));
 
 	$group_type = "individual";
 	$group_populate = "group_number";
@@ -57,7 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 	$GROUP_IDS = array();
     $PROCESSED = array();
 
-	echo "<h1>Add Group</h1>\n";
+	echo "<h1>" . $translate->_("Add Cohort") . "</h1>\n";
 
 	// Error Checking
 	switch ($STEP) {
@@ -68,25 +68,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			$PROCESSED["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
 
 			/**
-			 * Required field "group_name" / Group Name.
+			 * Required field "group_name" / Cohort Name.
 			 */
 			if ((isset($_POST["group_name"])) && ($group_name = clean_input($_POST["group_name"], array("notags", "trim")))) {
 				$PROCESSED["group_name"] = $group_name;
 			} else {
-				add_error("The <strong>Group Name</strong> field is required.");
+				add_error("The <strong>Cohort Name</strong> field is required.");
 			}
 
 			/**
-			 * Required field "group_type" / Group Type.
+			 * Required field "group_type" / Cohort Type.
 			 */
 			if ((isset($_POST["group_type"])) && ($group_type = clean_input($_POST["group_type"], array("trim"))) && in_array($group_type, array("course_list", "cohort"))) {
 				$PROCESSED["group_type"] = $group_type;
 			} else {
-				add_error("The <strong>Group Type</strong> field is required.");
+				add_error("The <strong>Cohort Type</strong> field is required.");
 			}
 
 			/**
-			 * Required field "course_id" / Course ID.
+			 * Required field "course_id" / Course ID (when group_type == course_list)
 			 */
 			if (isset($PROCESSED["group_type"]) && $PROCESSED["group_type"] == 'course_list') {
 				if (isset($_POST["course_id"]) && $course_id = clean_input($_POST["course_id"], array("int"))) {
@@ -117,17 +117,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 
 			$proxy_ids = array();
 
-			if (isset($_POST["search_target_control_ids"]) && $_POST["search_target_control_ids"]) {
-				$proxy_ids = explode(',', $_POST["search_target_control_ids"]);
-
-				foreach ($proxy_ids as &$proxy_id) {
-					$proxy_id = (int)trim($proxy_id);
+			if (isset($_POST["students"]) && $_POST["students"]) {
+				foreach ($_POST["students"] as $proxy_id) {
+					if ($tmp_input = clean_input($proxy_id, array("trim", "int"))) {
+						$proxy_ids[] = $tmp_input;
+					}
 				}
-
-				unset($proxy_id);
-			} else {
-                add_error("At least one <strong>Member</strong> is required.");
-            }
+			}
 
             $PROCESSED["entrada_only"] = 1;
             $PROCESSED["created_date"] = time();
@@ -144,30 +140,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
                          WHERE a.`group_name` = ".$db->qstr($PROCESSED["group_name"]);
 				$result = $db->GetRow($query);
 				if ($result) {
-					add_error("Lucky you, the <strong>group name</strong> you are trying to create already exists.");
-				} else { ?>
-					<script type="text/javascript">
-						sessionStorage.removeItem("search_target_control_ids");
-					</script>
-					
-					<?php
+					add_error("Lucky you, the <strong>cohort name</strong> you are trying to create already exists.");
+				} else {
 					if (!$db->AutoExecute("groups", $PROCESSED, "INSERT")) {
-						add_error("There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.");
-						application_log("error", "Unable to insert a new group ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
+						add_error("There was an error while trying to add the <strong>Cohort</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.");
+						application_log("error", "Unable to insert a new cohort ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
 					}
 
 					$GROUP_ID = $db->Insert_Id();
 					$PROCESSED["group_id"] = $GROUP_ID;
 					if (!$db->AutoExecute("group_organisations", $PROCESSED, "INSERT")) {
-						add_error("There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.");
+						add_error("There was an error while trying to add the <strong>Cohort</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.");
 						application_log("error", "Unable to insert a new group organisation for group_id [".$GROUP_ID."[. Database said: ".$db->ErrorMsg());
 					} else {
 						if (!empty($proxy_ids)) {
 							foreach ($proxy_ids as $proxy_id) {
 								$PROCESSED["proxy_id"] = $proxy_id;
 								if (!$db->AutoExecute("group_members", $PROCESSED, "INSERT")) {
-									add_error("Failed to insert this member into the group. Please contact a system administrator if this problem persists.");
-									application_log("error", "Error while inserting member into database. Database server said: " . $db->ErrorMsg());
+									add_error("Failed to insert this learner into the group. Please contact a system administrator if this problem persists.");
+									application_log("error", "Error while inserting learner into database. Database server said: " . $db->ErrorMsg());
 								}
 							}
 						}
@@ -217,7 +208,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			?>
 
 			<form id="frmSubmit" class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/groups?section=add&amp;step=2" method="post">
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Group">
+				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Cohort">
 					<colgroup>
 						<col style="width: 3%" />
 						<col style="width: 20%" />
@@ -245,11 +236,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						</tr>
 					</tfoot>
 					<tr>
-						<td colspan="3"><h2>Group Details</h2></td>
+						<td colspan="3"><h2><?php echo $translate->_("Cohort Details"); ?></h2></td>
 					</tr>
 					<tr class="prefixR">
 						<td></td>
-						<td><label for="group_name" class="form-required">Group Name</label></td>
+						<td><label for="group_name" class="form-required"><?php echo $translate->_("Cohort Name"); ?></label></td>
 						<td><input type="text" id="group_name" name="group_name" value="<?php echo html_encode($PROCESSED["group_name"]); ?>" maxlength="255" style="width: 45%" /></td>
 					</tr>
 					<tr>
@@ -257,10 +248,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
-						<td><label for="group_type" class="form-required">Group Type</label></td>
+						<td><label for="group_type" class="form-required"><?php echo $translate->_("Cohort Type"); ?></label></td>
 						<td>
 							<select id="group_type" name="group_type" style="width: 250px">
-								<option value="0">-- Select a group type --</option>
+								<option value="0">-- Select a cohort type --</option>
 								<option value="course_list"<?php echo ($PROCESSED["group_type"] == "course_list" ? " selected=\"selected\"" : ""); ?>>Course list</option>
 								<option value="cohort"<?php echo ($PROCESSED["group_type"] == "cohort" ? " selected=\"selected\"" : ""); ?>>Cohort</option>
 							</select>
@@ -289,8 +280,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						<td colspan="3">
 							<br />
 							<div id="additions">
-								<h2 style="margin-top: 10px">Add Members</h2>
-								<table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
+								<h2 style="margin-top: 10px"><?php echo $translate->_("Add Learners"); ?></h2>
+								<table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="<?php echo $translate->_("Add Learner"); ?>">
 									<colgroup>
 										<col style="width: 45%" />
 										<col style="width: 10%" />
@@ -312,17 +303,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 										<tr>
 											<td colspan="2" style="vertical-align: top">
 												<div class="member-add-type" id="existing-member-add-type">
-													<label for="choose-members-btn" class="control-label form-required"><?php echo $translate->_("Select Members"); ?></label>
+													<label for="choose-members-btn" class="control-label"><?php echo $translate->_("Select Learners"); ?></label>
 													<div class="controls">
-														<button id="choose-members-btn" class="btn btn-search-filter" style="min-width: 220px; text-align: left;"><?php echo $translate->_("Browse All Members"); ?> <i class="icon-chevron-down btn-icon pull-right"></i></button>
+														<button id="choose-members-btn" class="btn btn-search-filter" style="min-width: 220px; text-align: left;"><?php echo $translate->_("Browse All Learners"); ?> <i class="icon-chevron-down btn-icon pull-right"></i></button>
 													</div>
-												</div>
-											</td>
-										</tr>
-										<tr>
-											<td colspan="3">
-												<div id="group-members-list">
-													<h3>Members to be added on Submission</h3>
 												</div>
 											</td>
 										</tr>
@@ -332,10 +316,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						</td>
 					</tr>
 				</table>
-				<div id="selected_list_container"></div>
 			</form>
 
-			<script type="text/javascript">
+			<script>
 				jQuery(document).ready(function () {
 					jQuery("#group_type").change(function () {
 						if (jQuery(this).val() == "course_list") {
@@ -348,58 +331,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 					jQuery("#choose-members-btn").advancedSearch({
 						api_url: "<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-members"; ?>",
 						build_selected_filters: false,
+						reset_api_params: true,
 						resource_url: ENTRADA_URL,
-                        filter_component_label: "Users",
+						filter_component_label: "Users",
+						select_all_enabled: true,
 						filters: {
-							faculty: {
-								api_params: {
-									group: "faculty"
-								},
-								label: "<?php echo $translate->_("Faculty"); ?>",
-								data_source: "get-users-by-group"
-							},
-							medtech: {
-								api_params: {
-									group: "medtech"
-								},
-								label: "<?php echo $translate->_("MEdTech"); ?>",
-								data_source: "get-users-by-group"
-							},
-							resident: {
-								label: "<?php echo $translate->_("Residents"); ?>",
-								data_source: "get-resident-users"
-							},
-							staff: {
-								api_params: {
-									group: "staff"
-								},
-								label: "<?php echo $translate->_("Staff"); ?>",
-								data_source: "get-users-by-group"
-							},
-							student: {
-								select_all_enabled: true,
-								api_params: {
-									context: "",
-									previous_context: "organisation_id",
-									next_context: "organisation_id",
-									current_context: "organisation_id",
-									organisation_id: 0,
-									group_type: 0
-								},
-								label: "<?php echo $translate->_("Students"); ?>",
-								data_source: "get-organisations",
-								secondary_data_source: "get-students"
-							}
+
 						},
 						no_results_text: "<?php echo $translate->_("No Users found matching the search criteria"); ?>",
-						selected_list_container: jQuery("#selected_list_container"),
-						parent_form: jQuery("#frmSubmit"),
 						list_data: {
-							selector: "#group-members-list",
-							background_value : "url(../images/list-community.gif) no-repeat scroll 0 4px transparent"
+							selector: "#group_members_list",
+							background_value: "url(../images/list-community.gif) no-repeat scroll 0 4px transparent"
 						},
+						parent_form: jQuery("#frmSubmit"),
 						width: 300,
-						async: false
+						async: false,
+						target_name: "students"
+					});
+
+					jQuery.getJSON("<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-members"; ?>", {method: "get-roles"} , function (json) {
+						jQuery.each(json.data, function (key, value) {
+							jQuery("#choose-members-btn").data("settings").filters[value.target_label] = {
+								label: value.target_label,
+								api_params: {
+									parent_id: value.target_id
+								},
+								data_source: "get-role-members"
+							}
+						});
 					});
 				});
 			</script>

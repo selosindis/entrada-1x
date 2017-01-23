@@ -25,9 +25,9 @@
 class Models_Province extends Models_Base {
     protected $province_id, $country_id, $province, $abbreviation;
 
-    protected $table_name = "global_lu_provinces";
-    protected $primary_key = "province_id";
-    protected $default_sort_column = "province";
+    protected static $table_name = "global_lu_provinces";
+    protected static $primary_key = "province_id";
+    protected static $default_sort_column = "province";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -63,5 +63,18 @@ class Models_Province extends Models_Base {
     public static function fetchAllRecords() {
         $self = new self();
         return $self->fetchAll(array(array("key" => "province_id", "value" => 0, "method" => ">=")));
+    }
+
+    public static function fetchAllByCountryID($country_id) {
+        $self = new self();
+        return $self->fetchAll(array(array("key" => "country_id", "value" => $country_id, "method" => "=")));
+    }
+
+    public static function fetchRowByIDCountryID($id, $country_id) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "province_id", "value" => $id, "method" => "="),
+            array("key" => "country_id", "value" => $country_id, "method" => "=")
+        ));
     }
 }

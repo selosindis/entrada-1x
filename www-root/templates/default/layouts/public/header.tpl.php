@@ -6,7 +6,6 @@
     <head>
         <meta charset="<?php echo DEFAULT_CHARSET; ?>" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
         <title>%TITLE%</title>
 
         <meta name="description" content="%DESCRIPTION%" />
@@ -29,6 +28,9 @@
         </script>
         <link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery-ui.css" rel="stylesheet" />
 
+        <script type="text/javascript">
+            %JAVASCRIPT_TRANSLATIONS%
+        </script>
         <script src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         <script src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery-ui.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         <script>jQuery.noConflict();</script>
@@ -51,45 +53,34 @@
             <div class="banner">
                 <div class="container">
                     <div class="row-fluid">
-                        <div class="span5">
-                            <a href="<?php echo ENTRADA_URL; ?>"><img src="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/logo.png" width="294" height="46" alt="<?php echo APPLICATION_NAME; ?>" title="<?php echo APPLICATION_NAME; ?>"/></a>
+                        <div class="span4">
+                            <a class="brand" href="<?php echo ENTRADA_URL; ?>"><img src="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/logo.png" width="211" height="33" alt="<?php echo APPLICATION_NAME; ?>" title="<?php echo APPLICATION_NAME; ?>"/></a>
                         </div>
                         <?php
                         if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
+                            $assessment_tasks = 0;//Entrada_Utilities_Assessments_AssessmentTask::countAllIncompleteAssessmentTasks($ENTRADA_USER->getActiveID());
                             ?>
-                            <div class="span5">
+                            <div class="span8 pull-right">
                                 <div class="welcome-area">
-                                    <div class="userAvatar">
-                                        <a href="#"><?php echo "<img src=\"".webservice_url("photo", array($ENTRADA_USER->getID(), (isset($uploaded_file_active) && $uploaded_file_active ? "upload" : (!file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-official") && file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-upload") ? "upload" : "official"))))."\" width=\"32\" height=\"42\" style=\"width: 32px; height: 42px;\" alt=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" class=\"img-polaroid\" />"; ?></a>
-                                    </div>
                                     <div class="welcome-block">
-                                        Welcome <span class="userName"><?php echo $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname(); ?></span>
-                                        <br />
-                                        <a href="<?php echo ENTRADA_RELATIVE; ?>/profile">My Profile</a> |
-                                        <a href="<?php echo ENTRADA_RELATIVE; ?>/evaluations">My Evaluations</a>
-                                        <?php
-                                        /**
-                                         * Cache any outstanding evaluations.
-                                         */
-                                        if (!isset($ENTRADA_CACHE) || !$ENTRADA_CACHE->test("evaluations_outstanding_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID())) {
-                                            $evaluations_outstanding = Models_Evaluation::getOutstandingEvaluations($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation(), true);
-
-                                            if (isset($ENTRADA_CACHE)) {
-                                                $ENTRADA_CACHE->save($evaluations_outstanding, "evaluations_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
-                                            }
-                                        } else {
-                                            $evaluations_outstanding = $ENTRADA_CACHE->load("evaluations_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
-                                        }
-
-                                        if ($evaluations_outstanding) {
-                                            echo "<span class=\"badge badge-success\"><small>".$evaluations_outstanding."</small></span>";
-                                        }
-                                        ?>
+                                        <a href="<?php echo ENTRADA_RELATIVE; ?>/profile">
+                                            <div class="userAvatar">
+                                                <?php echo "<img src=\"".webservice_url("photo", array($ENTRADA_USER->getID(), (isset($uploaded_file_active) && $uploaded_file_active ? "upload" : (!file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-official") && file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-upload") ? "upload" : "official"))))."\" alt=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" class=\"img-polaroid\" />"; ?>
+                                                <span class="fa fa-user header-icon"></span>
+                                            </div>
+                                            <?php echo $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname(); ?>
+                                        </a>
+                                        <a href="<?php echo ENTRADA_RELATIVE; ?>/assessments">
+                                            <span class="fa fa-list-ul header-icon"></span>
+                                            <?php
+                                            echo $translate->_("Assessment &amp; Evaluation");
+                                            if ($assessment_tasks > 0) {
+                                                echo "<span class=\"space-left badge badge-success\">" . $assessment_tasks . "</span>";
+                                            } ?>
+                                        </a>
+                                        <a href="<?php echo ENTRADA_RELATIVE; ?>/?action=logout" class="log-out"><span class="fa fa-power-off"></span> Logout</a>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="span2">
-                                <a href="<?php echo ENTRADA_RELATIVE; ?>/?action=logout" class="log-out">Logout <i class="icon icon-logout"></i></a>
                             </div>
                             <?php
                         }
@@ -115,7 +106,12 @@
         <div class="container" id="page">
             <div class="row-fluid">
                 <?php
-                if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
+                // If the hash is set (GET or POST) and the assessment module is being accessed, an external assessor needs access to the sidebar to view assessment targets.
+                $hash = false;
+                if ((isset($_GET["external_hash"]) && $tmp_input = clean_input($_GET["external_hash"], array("trim", "striptags"))) || (isset($_POST["external_hash"]) && $tmp_input = clean_input($_POST["external_hash"], array("trim", "striptags")))) {
+                    $hash = true;
+                }
+                if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"]) || ($MODULE == "assessment" && $hash)) {
                     ?>
                     <div class="span3 no-printing" id="sidebar">%SIDEBAR%</div>
                     <div class="span9" id="content">
@@ -127,4 +123,4 @@
                 }
                 ?>
                 <div class="clearfix inner-content">
-<!--                    <div class="clearfix">%BREADCRUMB%</div>-->
+                    <div class="clearfix">%BREADCRUMB%</div>

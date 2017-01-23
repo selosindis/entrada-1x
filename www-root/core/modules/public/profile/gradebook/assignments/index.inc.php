@@ -31,9 +31,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_GRADEBOOK"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 }
-?>
-<h1>My Assignments</h1>
-<?php
+
+echo "<h1>" . $translate->_("My Assignments") . "</h1>";
 
 /**
  * Update requested column to sort by.
@@ -41,13 +40,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_GRADEBOOK"))) {
  */
 if (isset($_GET["sb"])) {
 	if (in_array(trim($_GET["sb"]), array("title", "code", "date"))) {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"] = trim($_GET["sb"]);
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = trim($_GET["sb"]);
 	}
 
 	$_SERVER["QUERY_STRING"] = replace_query(array("sb" => false));
 } else {
-	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"])) {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"] = "date";
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "date";
 	}
 }
 
@@ -56,83 +55,91 @@ if (isset($_GET["sb"])) {
  * Valid: asc, desc
  */
 if (isset($_GET["so"])) {
-	$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"] = ((strtolower($_GET["so"]) == "desc") ? "desc" : "asc");
+	$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = ((strtolower($_GET["so"]) == "desc") ? "desc" : "asc");
 
 	$_SERVER["QUERY_STRING"] = replace_query(array("so" => false));
 } else {
-	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"])) {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"] = "desc";
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "desc";
 	}
 }
 
 /**
  * Provide the queries with the columns to order by.
  */
-switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"]) {
+switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 	case "title" :
-		$sort_by = "a.`assignment_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]);
+		$sort_by = "a.`assignment_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 	break;
 	case "code" :
-		$sort_by = "b.`course_code` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]);
+		$sort_by = "b.`course_code` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 	break;
 	case "date" :
 	default :
-		$sort_by = "a.`due_date` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]);
+		$sort_by = "a.`due_date` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 	break;
 }
-	$group_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getId());
-	$group_ids_string = implode(', ',$group_ids);
 
-	$courses = groups_get_enrolled_course_ids($ENTRADA_USER->getID());
-	$query = "SELECT b.`course_code`, a.`assignment_id`, a.`assignment_title`, a.`due_date`, d.`grade_id` AS `grade_id`, d.`value` AS `grade_value`, e.`grade_weighting` AS `submitted_date`, c.`show_learner`
-						FROM `assignments` AS a
-						JOIN `courses` AS b
-						ON a.`course_id` = b.`course_id`
-						JOIN `assessments` AS c
-						ON a.`assessment_id` = c.`assessment_id`
-						AND c.`cohort` IN (". $group_ids_string .")
-						LEFT JOIN `assessment_grades` AS d
-						ON d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-						AND d.`assessment_id` = a.`assessment_id`
-						LEFT JOIN `assessment_exceptions` AS e
-						ON d.`proxy_id` = e.`proxy_id`
-						AND d.`assessment_id` = e.`assessment_id`
-						WHERE b.`course_id` IN (".(implode(',', $courses)).")
-						AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-	                    AND (a.`release_date` = 0 OR a.`release_date` < ".$db->qstr(time()).")
-	                    AND (a.`release_until` = 0 OR a.`release_until` > ".$db->qstr(time()).")
-	                    AND a.`assignment_active` = '1'
-	                    AND c.`active` = 1
-                        ORDER BY ".$sort_by;
-	$assignments = $db->GetAll($query);
-	if($assignments) {
+$group_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getId());
+if ($group_ids) {
+    $group_ids_string = implode(", ", $group_ids);
+} else {
+    $group_ids_string = "";
+}
+
+$cperiods = Models_Course_Audience::getAllByGroupIDProxyID($group_ids_string, $ENTRADA_USER->getID());
+if ($cperiods) {
+    $cperiod_ids = array();
+
+    foreach ($cperiods as $cperiod) {
+        $cperiod_ids[] = (int) $cperiod["cperiod_id"];
+    }
+
+    $cperiod_ids_string = implode(", ", $cperiod_ids);
+} else {
+    $cperiod_ids_string = "";
+}
+
+$courses = groups_get_enrolled_course_ids($ENTRADA_USER->getID());
+if ($courses) {
+    $courses_ids_string = implode(", ", $courses);
+} else {
+    $courses_ids_string = "";
+}
+
+if ($cperiod_ids_string && $courses_ids_string) {
+    $assignments = Models_Assignment::getAllByCourseIDUserID($cperiod_ids_string, $courses_ids_string, $ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation(), $sort_by);
+    if ($assignments) {
         ?>
-        <table class="tableList" cellspacing="0" summary="List of Gradebooks">
+        <table class="table table-bordered table-striped" cellspacing="0" summary="List of Assignments">
             <colgroup>
-                <col class="date-small" />
                 <col class="title" />
                 <col class="general" />
+                <col class="general" />
+                <col class="date" />
             </colgroup>
             <thead>
                 <tr>
-                    <td class="borderl title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]) : ""); ?>"><?php echo public_order_link("title", "Assignment Title", ENTRADA_RELATIVE."/profile/gradebook/assignments"); ?></td>
-                    <td class="date-small<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"] == "code") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]) : ""); ?>"><?php echo public_order_link("code", "Course Code", ENTRADA_RELATIVE."/profile/gradebook/assignments"); ?></td>
-                    <td class="general">Grade</td>
-                    <td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]) : ""); ?>"><?php echo public_order_link("date", "Due Date", ENTRADA_RELATIVE."/profile/gradebook/assignments"); ?></td>
+                    <th class="title<?php echo(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted" . strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("title", "Assignment Title", ENTRADA_RELATIVE . "/profile/gradebook/assignments"); ?></th>
+                    <th class="general<?php echo(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "code") ? " sorted" . strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("code", "Course", ENTRADA_RELATIVE . "/profile/gradebook/assignments"); ?></th>
+                    <th class="general">Grade</th>
+                    <th class="date<?php echo(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "date") ? " sorted" . strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("date", "Due Date", ENTRADA_RELATIVE . "/profile/gradebook/assignments"); ?></th>
                 </tr>
             </thead>
             <tbody>
             <?php
-                foreach ($assignments as $result) {
-                    ?>
-                    <tr id="gradebook-1">
-                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;assignment_id=<?php echo $result["assignment_id"];?>"><?php echo html_encode($result["assignment_title"]);?></a></td>
-                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;assignment_id=<?php echo $result["assignment_id"];?>"><?php echo html_encode($result["course_code"]);?></a></td>
-                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;assignment_id=<?php echo $result["assignment_id"];?>"><?php echo (isset($result["grade_value"]) && $result["show_learner"] ? $result["grade_value"] : "NA"); ?></a></td>
-                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;assignment_id=<?php echo $result["assignment_id"];?>"><?php echo ($result["due_date"]==0?'-':date(DEFAULT_DATE_FORMAT,$result["due_date"]));?></a></td>
-                    </tr>
-                    <?php
-                }
+            foreach ($assignments as $key => $result) {
+                ?>
+                <tr>
+                    <td>
+                        <a href="<?php echo ENTRADA_RELATIVE . "/" . $MODULE; ?>/gradebook/assignments?section=view&amp;assignment_id=<?php echo $result["assignment_id"]; ?>"><?php echo html_encode($result["name"]); ?></a>
+                    </td>
+                    <td><?php echo html_encode($result["course_code"]); ?></td>
+                    <td><?php echo (isset($result["grade_value"]) && $result["show_learner"] ? $result["grade_value"] : $translate->_("N/A")); ?></td>
+                    <td><?php echo ($result["due_date"] == 0 ? '-' : date(DEFAULT_DATE_FORMAT, $result["due_date"])); ?></td>
+                </tr>
+                <?php
+            }
             ?>
             </tbody>
         </table>
@@ -140,7 +147,14 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"]) {
     } else {
         ?>
         <div class="display-generic">
-            There have been no assignments assigned to you in the system just yet.
+            <?php echo $translate->_("There are no assignments due for you at this time, please check back later."); ?>
         </div>
         <?php
     }
+} else {
+    ?>
+    <div class="display-generic">
+        <?php echo $translate->_("You are not presently enroled in any courses, so there are no assignments to display at this time."); ?>
+    </div>
+    <?php
+}

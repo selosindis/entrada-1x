@@ -39,7 +39,7 @@ class Migrate_2016_05_29_235550_857 extends Entrada_Cli_Migrate {
      */
     public function audit() {
         $settings = new Entrada_Settings;
-        if (($settings->read("version_db") >= 17500) && version_compare("1.7.5", $settings->read("version_entrada"), ">=")) {
+        if (($settings->read("version_db") >= 17500) && version_compare("1.7.5", $settings->read("version_entrada"), "<=")) {
             return 1;
         }
 

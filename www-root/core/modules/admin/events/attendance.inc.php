@@ -172,7 +172,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         </thead>
                         <tbody>
                             <?php
-                            if ($audience) {
+							$audience = Models_Event_Attendance::sortAudience($audience);
+							if ($audience) {
                                 foreach ($audience as $proxy_id => $learner) {
                                     ?>
                                     <tr>

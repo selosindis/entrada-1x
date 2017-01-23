@@ -39,7 +39,7 @@ if (!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_EVALUATIONS", true);
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations", "title" => "Manage Evaluations");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations", "title" => $translate->_("Manage Clerkship Evaluations"));
 
 	if (($router) && ($router->initRoute())) {
 		$modules = $router->getModules();
@@ -58,7 +58,7 @@ if (!defined("PARENT_INCLUDED")) {
 				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/questions\">Manage Questions</a></li>\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/reports\">Evaluation Reports</a></li>\n";
 				$sidebar_html .= "</ul>";
-				new_sidebar_item("Manage Evaluations", $sidebar_html, "evaluation-nav", "open");
+				new_sidebar_item($translate->_("Clerkship Evaluations"), $sidebar_html, "evaluation-nav", "open");
 			}
 			$PREFERENCES = preferences_load($MODULE);			
 			$module_file = $router->getRoute();

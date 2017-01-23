@@ -41,8 +41,8 @@ class Models_Community_Page extends Models_Base {
                 $updated_date,
                 $updated_by;
 
-    protected $table_name = "community_pages";
-    protected $default_sort_column = "cpage_id";
+    protected static $table_name = "community_pages";
+    protected static $default_sort_column = "cpage_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);

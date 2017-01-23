@@ -16,7 +16,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->isLoggedInAllowed("mspr", "create", true) || $user_record["group"] != "student") {
+} elseif (!$ENTRADA_ACL->amIAllowed("mspr", "create", true)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
@@ -25,7 +25,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	require_once("Entrada/mspr/functions.inc.php");
-	require_once("Models/mspr/MSPRs.class.php");
+	require_once("Classes/mspr/MSPRs.class.php");
 	$PROXY_ID = $user_record["id"];
 	$user = User::fetchRowByID($PROXY_ID);
 

@@ -25,7 +25,7 @@ require_once("init.inc.php");
 
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
         if (isset($_POST["id"]) && ($evaluation_id = clean_input($_POST["id"], "int"))) {
-            $evaluators = Models_Evaluation::getEvaluators($evaluation_id);
+            $evaluators = Classes_Evaluation::getEvaluators($evaluation_id);
             if ($evaluators) {
                 echo "<br /><label class=\"form-nrequired\" for=\"associated_evaluators\">Evaluators: </label><br />";
                 echo "<select style=\"width: 150px; overflow: none;\" name=\"associated_evaluator\" id=\"associated_evaluator\">\n";

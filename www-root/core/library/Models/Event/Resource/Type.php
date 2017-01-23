@@ -31,8 +31,9 @@ class Models_Event_Resource_Type extends Models_Base {
             $updated_by,
             $active;
     
-    protected $table_name = "event_lu_resource_types";
-    protected $default_sort_column = "resource_type";
+    protected static $table_name = "event_lu_resource_types";
+    protected static $default_sort_column = "resource_type";
+    protected static $primary_key = "event_resource_type_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);

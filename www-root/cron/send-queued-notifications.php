@@ -25,8 +25,8 @@
  */
 require_once("init.inc.php");
 if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
-	require_once("Models/notifications/NotificationUser.class.php");
-	require_once("Models/notifications/Notification.class.php");
+	require_once("Classes/notifications/NotificationUser.class.php");
+	require_once("Classes/notifications/Notification.class.php");
 	
 	$query = "SELECT `nuser_id` FROM `notification_users` 
 				WHERE `next_notification_date` <> 0 

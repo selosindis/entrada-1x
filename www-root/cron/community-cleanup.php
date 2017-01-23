@@ -25,8 +25,8 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-require_once("Models/utility/Template.class.php");
-require_once("Models/utility/TemplateMailer.class.php");
+require_once("Classes/utility/Template.class.php");
+require_once("Classes/utility/TemplateMailer.class.php");
 $SEND_EMAIL_NOTIFICATIONS = false;
 $SET_INACTIVE_COMMUNITIES = false;
 

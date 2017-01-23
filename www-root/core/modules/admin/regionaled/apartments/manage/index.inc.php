@@ -37,8 +37,6 @@ if (!defined("IN_MANAGE")) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
-	require_once("Entrada/calendar/calendar.class.php");
-
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
 	$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/calendar.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 
@@ -51,7 +49,7 @@ if (!defined("IN_MANAGE")) {
 		$timestamp = fetch_timestamps("month", time());
 	}
 
-	$calendar = new Calendar();
+	$calendar = new Entrada_Calendar();
 	$calendar->setBaseUrl(ENTRADA_URL."/admin/regionaled/apartments/manage");
 	$calendar->setCharset(DEFAULT_CHARSET);
 

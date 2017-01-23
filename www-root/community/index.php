@@ -461,7 +461,16 @@ if ($COMMUNITY_URL) {
 				if ((isset($community_details["community_template"])) && (is_dir(ENTRADA_ABSOLUTE."/community/templates/".$community_details["community_template"]))) {
 					$COMMUNITY_TEMPLATE = $community_details["community_template"];
                     $template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
-
+					/**
+					 * Show tweets for this user in the sidebar. Will include organisation, community, and course tweets
+					 */
+					if (Entrada_Twitter::widgetIsActive()) {
+						$twitter = new Entrada_Twitter();
+						$twitter_html = $twitter->render(3,"community",$community_details["community_id"]);
+						if ($twitter_html != "") {
+							$smarty->assign("twitter",$twitter_html);
+						}
+					}
 					$smarty->template_dir = $template_dir;
 					$smarty->compile_id = md5($template_dir);
 				}
@@ -636,7 +645,7 @@ if ($COMMUNITY_URL) {
 							exit;
 						}
 						if ($ALLOW_MEMBERSHIP) {
-							new_sidebar_item("Join Community", "Join this community to access more community features.<div style=\"margin-top: 10px; text-align: center\"><a href=\"".ENTRADA_URL."/communities?section=join&community=".$community_details["community_id"]."\" style=\"font-weight: bold\">Click here to join</a></div>", "join-page-box", "open");
+							new_sidebar_item($translate->_("Join Community"), "Join this community to access more community features.<div style=\"margin-top: 10px; text-align: center\"><a href=\"".ENTRADA_URL."/communities?section=join&community=".$community_details["community_id"]."\" style=\"font-weight: bold\">Click here to join</a></div>", "join-page-box", "open");
 						}
 					}
 					$COMMUNITY_LOAD = true;
@@ -671,7 +680,7 @@ if ($COMMUNITY_URL) {
                         $sidebar_html .= "</select>\n";
                         $sidebar_html .= "</form>\n";
                         if ($display_masks) {
-                            new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
+                            new_sidebar_item($translate->_("Permission Masks"), $sidebar_html, "permission-masks", "open");
                         }
                     }
 
@@ -683,7 +692,7 @@ if ($COMMUNITY_URL) {
                         $sidebar_html .= "  <li class=\"admin\"><a href=\"".ENTRADA_URL."/communities/reports?community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Community Reports</a></li>\n";
 						$sidebar_html .= "</ul>\n";
 
-						new_sidebar_item("Admin Centre", $sidebar_html, "community-admin", "open");
+						new_sidebar_item($translate->_("Admin Center"), $sidebar_html, "community-admin", "open");
 					}
 
 					/**
@@ -708,7 +717,7 @@ if ($COMMUNITY_URL) {
 					 * Show a login back if the user is not logged in.
 					 */
 					if (!$LOGGED_IN) {
-						new_sidebar_item("Community Login", "Log in using your ".APPLICATION_NAME." account to access more community features.<div style=\"margin-top: 10px; text-align: center\"><a href=\"".ENTRADA_URL."/?url=".rawurlencode($PROCEED_TO)."\" style=\"font-weight: bold\">Click here to login</a></div>", "login-page-box", "open");
+						new_sidebar_item($translate->_("Community Login"), "Log in using your ".APPLICATION_NAME." account to access more community features.<div style=\"margin-top: 10px; text-align: center\"><a href=\"".ENTRADA_URL."/?url=".rawurlencode($PROCEED_TO)."\" style=\"font-weight: bold\">Click here to login</a></div>", "login-page-box", "open");
 					}
 
 					/**
@@ -720,7 +729,7 @@ if ($COMMUNITY_URL) {
 						$sidebar_html  .= "<ul class=\"menu\">\n";
 						$sidebar_html .= "	<li class=\"community\"><a href=\"".ENTRADA_URL."/profile\">".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."</a>";
 						if ($COMMUNITY_MEMBER_SINCE) {
-							$sidebar_html .= "	<br />Joined: ".date("Y-m-d", $COMMUNITY_MEMBER_SINCE);
+							$sidebar_html .= "	<div class=\"content-small\">Joined: ".date("Y-m-d", $COMMUNITY_MEMBER_SINCE)."</div>\n";
 						}
 						$sidebar_html .= "	</li>";
 						$sidebar_html .= "</ul>\n";
@@ -746,7 +755,7 @@ if ($COMMUNITY_URL) {
 								$sidebar_html .= "</ul>\n";
 							}
 						}
-						new_sidebar_item("This Community", $sidebar_html, "community-my-membership", "open");
+						new_sidebar_item($translate->_("This Community"), $sidebar_html, "community-my-membership", "open");
 					}
 
 					if ((($PAGE_ACTIVE) && ((in_array($COMMUNITY_MODULE, array("default", "members", "pages", "course"))) || (array_key_exists($PAGE_URL, $COMMUNITY_PAGES["exists"])) && (array_key_exists($COMMUNITY_MODULE, $COMMUNITY_MODULES["enabled"])))) || $HOME_PAGE) {
@@ -940,7 +949,7 @@ if ($COMMUNITY_URL) {
                      * Cache any outstanding evaluations.
                      */
                     if (!isset($ENTRADA_CACHE) || !$ENTRADA_CACHE->test("evaluations_outstanding_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID())) {
-                        $evaluations_outstanding = Models_Evaluation::getOutstandingEvaluations($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation(), true);
+                        $evaluations_outstanding = Classes_Evaluation::getOutstandingEvaluations($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation(), true);
 
                         if (isset($ENTRADA_CACHE)) {
                             $ENTRADA_CACHE->save($evaluations_outstanding, "evaluations_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
@@ -1010,6 +1019,10 @@ if ($COMMUNITY_URL) {
 
                 $smarty->assign("application_name", APPLICATION_NAME);
                 $smarty->assign("application_version", APPLICATION_VERSION);
+				
+				$smarty->assign("maxlifetime", (ini_get("session.gc_maxlifetime") - 1) * 1000);
+				$smarty->assign("session_expire_title", $translate->_("Your session will expire."));
+				$smarty->assign("session_expire_message", $translate->_("Your session will expire in %%timeleft%% second(s). Any information entered will be lost.<br /><br />Do you want to extend your session?"));
 
 				$query = "	SELECT a.`course_id`, a.`course_code`
 									FROM `courses` AS a

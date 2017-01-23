@@ -25,19 +25,20 @@
 class Models_Event_Draft_Creator extends Models_Base {
     
     protected $create_id, $draft_id, $proxy_id;
-    
-    protected $table_name = "draft_creators";
-    protected $default_sort_column = "proxy_id";
+
+    protected static $table_name           = "draft_creators";
+    protected static $primary_key          = "create_id";
+    protected static $default_sort_column  = "proxy_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
     }
-    
-    public function getCreateID() {
+
+    public function getID() {
         return $this->create_id;
     }
-    
-    public function getID() {
+
+    public function getCreateID() {
         return $this->create_id;
     }
     
@@ -72,47 +73,9 @@ class Models_Event_Draft_Creator extends Models_Base {
 
     public static function fetchAllByDraftID($draft_id = 0) {
         $self = new self();
-
-        $constraints = array(
-            array(
-                "mode"      => "AND",
-                "key"       => "draft_id",
-                "value"     => $draft_id,
-                "method"    => "="
+        return $self->fetchAll(array(
+                array("key" => "draft_id", "value" => $draft_id, "method" => "=", "mode" => "AND")
             )
         );
-
-        $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
-        $output = array();
-
-        if (!empty($objs)) {
-            foreach ($objs as $o) {
-                $output[] = $o;
-            }
-        }
-
-        return $output;
     }
-    
-    public function update() {
-        global $db;
-        
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`create_id` = ".$this->create_id)) {
-            return $this;
-        } else {
-            return false;
-        }
-        
-    }
-    
-    public function insert() {
-        global $db;
-        
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
-            return $this;
-        } else {
-            return false;
-        }
-    }
-    
 }

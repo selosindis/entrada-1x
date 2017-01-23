@@ -27,9 +27,10 @@ class Models_Statistic extends Models_Base {
     
     protected $statistic_id, $proxy_id, $timestamp, $module, $submodule, 
               $section, $action, $action_field, $action_value, $prune_after;
-    
-    protected $table_name = "statistics";
-    protected $default_sort_column = "timestamp";
+
+    protected static $primary_key = "statistic_id";
+    protected static $table_name = "statistics";
+    protected static $default_sort_column = "timestamp";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);

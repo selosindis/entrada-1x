@@ -32,7 +32,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 	exit;
 } else {
 	
-	require_once("Models/mspr/Observership.class.php");
+	require_once("Classes/mspr/Observership.class.php");
 
 	$observership_id = clean_input($_GET["id"], array("int"));
 	
@@ -41,6 +41,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/observerships?section=review&id=".$observership_id, "title" => $observership->getTitle());
 	
 	if ($observership) {
+		add_statistic("observerships", "review", "observership_id", $observership_id);
 	
 		echo "<h1>" . $observership->getTitle() . "</h1>";
 		
@@ -55,9 +56,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 			<?php echo $observership->getActivityType();?>
 		</div>
 		<?php if ($observership->getActivityType() == "ipobservership") { ?>
-		<tr id="observership_details">
+			<div class="row-fluid">
 			&nbsp;
-			<td style="vertical-align:top;"><strong for="activity_type" class="form-nrequired">IP Observership Details:</strong>
+			<strong for="activity_type" class="form-nrequired">IP Observership Details:</strong>
 			<?php echo $observership->getObservershipDetails(); ?>
 		</div>	
 		<?php } ?>

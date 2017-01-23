@@ -95,10 +95,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
         <script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         <script type="text/javascript">
         jQuery(function(){
-            jQuery("input[value=Close]").live("click", function() {
+            jQuery(document).on("click", "input[value=Close]", function() {
                 window.close();
             });
-            jQuery("#feedback-form input[value=Submit]").live("click", function() {
+            jQuery("#feedback-form").on("click", "input[value=Submit]", function() {
                 jQuery("#feedback-form").submit();
             });
         });
@@ -242,7 +242,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					<br />
 					<?php } ?>
 					<div class="control-group">
-						<label for="feedback" class="form-required control-label">Feedback or Comments:</label>
+						<label for="feedback" class="form-required control-label space-above">Feedback or Comments:</label>
 						<div class="controls"><textarea id="feedback" class="resize-vertical" name="feedback"></textarea></div>
 					</div>
 					<div class="row-fluid">

@@ -400,7 +400,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						add_error("Please select an appropriate type of evaluator (i.e. entire class, percentage, etc).");
 					}
 					
-					$PROCESSED = Models_Evaluation::processTargets($_POST, $PROCESSED);
+					$PROCESSED = Classes_Evaluation::processTargets($_POST, $PROCESSED);
 					
 					/**
 					 * Non-required field "associated_reviewer" / Associated Reviewers (array of proxy ids).
@@ -664,7 +664,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 					
 					$EVALUATOR_LIST = array();
-					$evaluators = Models_Evaluation::getEvaluators($EVALUATION_ID);
+					$evaluators = Classes_Evaluation::getEvaluators($EVALUATION_ID);
 					if ($evaluators) {
 						foreach ($evaluators as $evaluator) {
 							$EVALUATOR_LIST[$evaluator["proxy_id"]] = array("proxy_id" => $evaluator["proxy_id"], "fullname" => $evaluator["fullname"], "organisation_id" => $evaluator["organisation_id"]);

@@ -32,22 +32,21 @@ if(!defined("PARENT_INCLUDED")) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("gradebook", "read", false)) { 
-	$ERROR++;
-	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
+	add_error("You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_PUBLIC_ASSIGNMENTS",	true);
 	
-	//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.modal.js\"></script>\n";
 	$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/flexigrid.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.js\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.editable.js\"></script>\n";
-	//$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict(); var ENTRADA_URL = '".ENTRADA_URL."';</script>";
-	
+	$HEAD[] = "<script src=\"".  ENTRADA_URL ."/javascript/". $MODULE ."/". $MODULE ."-assignments.js\"></script>";
+	$HEAD[] = "<script src=\"".  ENTRADA_URL ."/javascript/". $MODULE ."/". $MODULE ."-file-upload.js\"></script>";
+	$HEAD[] = "<link rel=\"stylesheet\" href=\"".  ENTRADA_URL ."/css/profile/assignments.css\" />";
 	$ASSESSMENT_TYPES = array("Formative", "Summative", "Narrative");
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments", "title" => "Assignments");

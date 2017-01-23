@@ -25,6 +25,7 @@
 class Models_Event_Draft_Event_Audience extends Models_Base {
     protected   $daudience_id,
                 $eaudience_id,
+                $devent_id,
                 $event_id,
                 $audience_type,
                 $audience_value,
@@ -36,9 +37,9 @@ class Models_Event_Draft_Event_Audience extends Models_Base {
 
     protected $audience_name;
 
-    protected $table_name           = "draft_audience";
-    protected $primary_key          = "daudience_id";
-    protected $default_sort_column  = "eaudience_id";
+    protected static $table_name           = "draft_audience";
+    protected static $primary_key          = "daudience_id";
+    protected static $default_sort_column  = "eaudience_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -80,6 +81,30 @@ class Models_Event_Draft_Event_Audience extends Models_Base {
         return $this->custom_time_end;
     }
 
+    public function setEventId($event_id) {
+        $this->event_id = $event_id;
+    }
+
+    public function setUpdatedBy($id) {
+        $this->updated_by = $id;
+    }
+
+    public function setUpdatedDate($time) {
+        $this->updated_date = $time;
+    }
+
+    public function setCustomTime($custom_time) {
+        $this->custom_time = $custom_time;
+    }
+
+    public function setCustomTimeStart($custom_time_start) {
+        $this->custom_time_start = $custom_time_start;
+    }
+
+    public function setCustomTimeEnd($custom_time_end) {
+        $this->custom_time_end = $custom_time_end;
+    }
+
     public function getAudienceName() {
         if (NULL === $this->audience_name) {
             $audience_value = $this->audience_value;
@@ -110,7 +135,7 @@ class Models_Event_Draft_Event_Audience extends Models_Base {
         return $this->audience_name;
     }
 
-    /* @return bool|Models_Event_Audience */
+    /* @return bool|Models_Event_Draft_Event_Audience */
     public static function fetchRowByID($eaudience_id = NULL) {
         $self = new self();
         return $self->fetchRow(array(
@@ -118,16 +143,16 @@ class Models_Event_Draft_Event_Audience extends Models_Base {
         ));
     }
 
-    /* @return bool|Models_Event_Audience */
+    /* @return bool|Models_Event_Draft_Event_Audience */
     public static function fetchRowByEventTypeEventValue($event_type, $event_value) {
         $self = new self();
         return $self->fetchRow(array(
-            array("key" => "event_type", "value" => $event_type, "method" => "="),
-            array("key" => "event_value", "value" => $event_value, "method" => "=")
+            array("key" => "audience_type", "value" => $event_type, "method" => "="),
+            array("key" => "audience_value", "value" => $event_value, "method" => "=")
         ));
     }
 
-    /* @return ArrayObject|Models_Event_Audience[] */
+    /* @return ArrayObject|Models_Event_Draft_Event_Audience[] */
     public static function fetchAllByEventID($event_id = NULL) {
         $self = new self();
         return $self->fetchAll(array(
@@ -135,12 +160,28 @@ class Models_Event_Draft_Event_Audience extends Models_Base {
         ));
     }
 
-    /* @return ArrayObject|Models_Event_Audience[] */
-    public static function fetchAllByEventIdEventType($event_id, $event_type) {
+    public static function fetchRowByDraftEventIdTypeValue($devent_id, $event_type, $event_value) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "devent_id", "value" => $devent_id, "method" => "="),
+            array("key" => "audience_type", "value" => $event_type, "method" => "="),
+            array("key" => "audience_value", "value" => $event_value, "method" => "=")
+        ));
+    }
+
+    public static function fetchAllByDraftEventID($devent_id = NULL) {
         $self = new self();
         return $self->fetchAll(array(
-            array("key" => "event_id", "value" => $event_id, "method" => "="),
-            array("key" => "event_type", "value" => $event_type, "method" => "=")
+            array("key" => "devent_id", "value" => $devent_id, "method" => "=")
+        ));
+    }
+
+    /* @return ArrayObject|Models_Event_Draft_Event_Audience[] */
+    public static function fetchAllByEventIdEventType($devent_id, $event_type) {
+        $self = new self();
+        return $self->fetchAll(array(
+            array("key" => "devent_id", "value" => $devent_id, "method" => "="),
+            array("key" => "audience_type", "value" => $event_type, "method" => "=")
         ));
     }
 
@@ -285,5 +326,18 @@ class Models_Event_Draft_Event_Audience extends Models_Base {
         }
 
         return $audience;
+    }
+
+    public function delete() {
+        global $db;
+        $sql = "DELETE FROM `" . static::$table_name . "`
+                WHERE `" . static::$primary_key . "` = " . $db->qstr($this->getID());
+
+        if ($db->Execute($sql)) {
+            return true;
+        } else {
+            application_log("error", "Error deleting  ".get_called_class()." id[" . $this->getID() . "]. DB Said: " . $db->ErrorMsg());
+            return false;
+        }
     }
 }

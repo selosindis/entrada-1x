@@ -15,8 +15,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->isLoggedInAllowed("mspr", "create", true) || $user_record["group"] != "student") {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
+} elseif (!$ENTRADA_ACL->amIAllowed("mspr", "create", true)) {
+	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 	echo display_error();
@@ -25,7 +25,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 }  else {
 	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 	
-	$PROXY_ID					= $user_record["id"];
+	$PROXY_ID = $user_record["id"];
 	$user = User::fetchRowByID($user_record["id"]);
 	
 	$PAGE_META["title"]			= "MSPR";
@@ -135,7 +135,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 <script type="text/javascript">
 	var submitting = false;
 </script>
-<h1>Medical School Performance Report<?php echo ($mspr->isAttentionRequired()) ? ": Attention Required" : ""; ?></h1> 
+<h1><?php echo $translate->_("Medical School Performance Report"); ?><?php echo ($mspr->isAttentionRequired()) ? ": " . $translate->_("Attention Required") : ""; ?></h1>
 
 <?php 
 	if ($is_closed) {
@@ -163,7 +163,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 <div class="mspr-tree">
 
-	<a href="#" onclick='document.fire("CollapseHeadings:expand-all");'>Expand All</a> / <a href="#" onclick='document.fire("CollapseHeadings:collapse-all");'>Collapse All</a>
+	<a href="#" onclick="CollapseSections(true)">Expand All</a> / <a href="#" onclick="CollapseSections(false)">Collapse All</a>
 
 	<h2 title="Information Requiring Approval">Information Requiring Approval</h2>
 	<div id="information-requiring-approval">
@@ -191,7 +191,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			</ul>
 		</div>	
 		<div class="section">
-			<h3 title="Contributions to Medical School" class="collapsable<?php echo ($contributions->isAttentionRequired()) ? "" : " collapsed"; ?>">Contributions to Medical School/Student Life</h3>
+			<h3 title="Contributions to Medical School" class="collapsable<?php echo ($contributions->isAttentionRequired()) ? "" : " collapsed"; ?>"><?php echo $translate->_("Contributions to Medical School/Student Life") ?></h3>
 			<div id="contributions-to-medical-school">
 				<div id="add_contribution_link" style="float: right;">
 					<a id="add_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=contributions_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Contribution</a>
@@ -213,261 +213,273 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</li>
 					</ul>
 				</div>
-				<div id="update-contribution-box" class="modal-confirmation">
-					<h1>Edit Contribution to Medical School/Student Life</h1>
-					<form method="post">
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="72%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td><label class="form-required" for="role">Role:</label></td>
-									<td><input name="role" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Interviewer</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="org_event">Organization/Event:</label></td>
-									<td><input name="org_event" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Medical School Interview Weekend</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="start">Start:</label></td>
-									<td>
-										<select name="start_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="start_year">
-										<?php 
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-required" for="end">End:</label></td>
-									<td>
-										<select tabindex="1" name="end_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="end_year">
-										<?php 
-										echo build_option("","Year",true);
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, false);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</form>
-					<div class="footer">
+				<div id="update-contribution-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Edit Contribution to Medical School/Student Life"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post">
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="72%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="role"><?php echo $translate->_("Role:"); ?></label></td>
+										<td><input name="role" type="text" style="width:40%;" /><span class="content-small"><strong>Example</strong>: Interviewer</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="org_event"><?php echo $translate->_("Organization/Event:"); ?></label></td>
+										<td><input name="org_event" type="text" style="width:40%;" /><span class="content-small"><strong>Example</strong>: Medical School Interview Weekend</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="start"><?php echo $translate->_("Start:"); ?></label></td>
+										<td>
+											<select name="start_month">
+												<?php
+												echo build_option("","Month",true);
+
+												for($month_num = 1; $month_num <= 12; $month_num++) {
+													echo build_option($month_num, getMonthName($month_num));
+												}
+												?>
+											</select>
+											<select name="start_year">
+												<?php
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 6;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+												}
+												?>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="end"><?php echo $translate->_("End:"); ?></label></td>
+										<td>
+											<select tabindex="1" name="end_month">
+												<?php
+												echo build_option("","Month",true);
+
+												for($month_num = 1; $month_num <= 12; $month_num++) {
+													echo build_option($month_num, getMonthName($month_num));
+												}
+												?>
+											</select>
+											<select name="end_year">
+												<?php
+												echo build_option("","Year",true);
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 6;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, false);
+												}
+												?>
+											</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 				</div>
 				
-				<div id="add-contribution-box" class="modal-confirmation">
-					<h1>Add Contribution to Medical School/Student Life</h1>
-					<form method="post">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="72%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td><label class="form-required" for="role">Role:</label></td>
-									<td><input name="role" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Interviewer</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="org_event">Organization/Event:</label></td>
-									<td><input name="org_event" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Medical School Interview Weekend</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="start">Start:</label></td>
-									<td>
-										<select name="start_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="start_year">
-										<?php 
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-required" for="end">End:</label></td>
-									<td>
-										<select tabindex="1" name="end_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="end_year">
-										<?php 
-										echo build_option("","Year",true);
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, false);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</form>
-					<div class="footer">
+				<div id="add-contribution-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add Contribution to Medical School/Student Life"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Add" />
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="72%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="role"><?php echo $translate->_("Role:"); ?></label></td>
+										<td><input name="role" type="text" style="width:40%;" /> <span class="content-small"><strong>Example</strong>: Interviewer</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="org_event"><?php echo $translate->_("Organization/Event:"); ?></label></td>
+										<td><input name="org_event" type="text" style="width:40%;" /> <span class="content-small"><strong>Example</strong>: Medical School Interview Weekend</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="start"><?php echo $translate->_("Start:"); ?></label></td>
+										<td>
+											<select name="start_month">
+												<?php
+												echo build_option("","Month",true);
+
+												for($month_num = 1; $month_num <= 12; $month_num++) {
+													echo build_option($month_num, getMonthName($month_num));
+												}
+												?>
+											</select>
+											<select name="start_year">
+												<?php
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 6;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+												}
+												?>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="end"><?php echo $translate->_("End:"); ?></label></td>
+										<td>
+											<select tabindex="1" name="end_month">
+												<?php
+												echo build_option("","Month",true);
+
+												for($month_num = 1; $month_num <= 12; $month_num++) {
+													echo build_option($month_num, getMonthName($month_num));
+												}
+												?>
+											</select>
+											<select name="end_year">
+												<?php
+												echo build_option("","Year",true);
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 6;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, false);
+												}
+												?>
+											</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 				</div>
-				
+
 				<div class="clear">&nbsp;</div>
-				<div id="contributions">
-					<?php echo display_contributions($contributions,"admin"); ?>
-				</div>
+				<div id="contributions"><?php echo display_contributions($contributions, "admin"); ?></div>
+				<div class="clear">&nbsp;</div>
 			</div>
 		</div>
 		
 		<div class="section">
-			<h3 title="Critical Enquiry" class="collapsable<?php echo ($critical_enquiry && $critical_enquiry->isAttentionRequired()) ? "" : " collapsed"; ?>">Critical Enquiry</h3>
+			<h3 title="Critical Enquiry" class="collapsable<?php echo ($critical_enquiry && $critical_enquiry->isAttentionRequired()) ? "" : " collapsed"; ?>"><?php echo $translate->_("Critical Enquiry"); ?></h3>
 			<div id="critical-enquiry">
 				<div id="add_critical_enquiry_link" style="float: right;">
 					<a id="add_critical_enquiry" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>"  class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Critical Enquiry</a>
 				</div>
 				<div class="clear">&nbsp;</div>
 				
-				<div id="add-critical-enquiry-box" class="modal-confirmation">
-					<h1>Add Critical Enquiry</h1>
-					<form method="post"">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-					
-						<table class="mspr_form">
-							<colgroup>
-								<col width="3%"></col>
-								<col width="25%"></col>
-								<col width="72%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="title">Title:</label></td>
-									<td><input name="title" type="text" style="width:40%;" value=""></input></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="organization">Organization:</label></td>
-									<td><input name="organization" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="location">Location:</label></td>
-									<td><input name="location" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="supervisor">Supervisor:</label></td>
-									<td><input name="supervisor" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
-								</tr>	
-							</tbody>
-						</table>	
-					</form>
-					
-					<div class="footer">
+				<div id="add-critical-enquiry-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add Critical Enquiry"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Add"/>
+
+							<table class="mspr_form">
+								<colgroup>
+									<col width="3%" />
+									<col width="25%" />
+									<col width="72%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td><input name="title" type="text" style="width:40%;" value="" /></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="organization"><?php echo $translate->_("Organization:"); ?></label></td>
+										<td><input name="organization" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="location"><?php echo $translate->_("Location:"); ?></label></td>
+										<td><input name="location" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="supervisor"><?php echo $translate->_("Supervisor:"); ?></label></td>
+										<td><input name="supervisor" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
-					
 				</div>
 				
-				<div id="update-critical-enquiry-box" class="modal-confirmation">
-					<h1>Edit Critical Enquiry</h1>
-					<form method="post">
-						<table class="mspr_form">
-							<colgroup>
-								<col width="3%"></col>
-								<col width="25%"></col>
-								<col width="72%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="title">Title:</label></td>
-									<td><input name="title" type="text" style="width:40%;" value=""></input></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="organization">Organization:</label></td>
-									<td><input name="organization" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="location">Location:</label></td>
-									<td><input name="location" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="supervisor">Supervisor:</label></td>
-									<td><input name="supervisor" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
-								</tr>	
-							</tbody>
-						</table>	
-					</form>
-					
-					<div class="footer">
+				<div id="update-critical-enquiry-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Edit Critical Enquiry"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post">
+							<table class="mspr_form">
+								<colgroup>
+									<col width="3%" />
+									<col width="25%" />
+									<col width="72%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td><input name="title" type="text" style="width:40%;" value="" /></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="organization"><?php echo $translate->_("Organization:"); ?></label></td>
+										<td><input name="organization" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="location"><?php echo $translate->_("Location:"); ?></label></td>
+										<td><input name="location" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="supervisor"><?php echo $translate->_("Supervisor:"); ?></label></td>
+										<td><input name="supervisor" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
-					
 				</div>
+
 				<div id="critical_enquiry"><?php echo display_supervised_project($critical_enquiry,"admin"); ?></div>
 			</div>
 		</div>
@@ -479,92 +491,96 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					<a id="add_community_based_project" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=community_based_project_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Community-Based Project</a>
 				</div>
 				<div class="clear">&nbsp;</div>
-				
-			
-				<div id="add-community-based-project-box" class="modal-confirmation">
-					<h1>Add Community-Based Project</h1>
-					<form method="post">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-					
-						<table class="mspr_form">
-							<colgroup>
-								<col width="3%"></col>
-								<col width="25%"></col>
-								<col width="72%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="title">Title:</label></td>
-									<td><input name="title" type="text" style="width:40%;" value=""></input></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="organization">Organization:</label></td>
-									<td><input name="organization" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="location">Location:</label></td>
-									<td><input name="location" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="supervisor">Supervisor:</label></td>
-									<td><input name="supervisor" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
-								</tr>	
-							</tbody>
-						</table>	
-					</form>
-					
-					<div class="footer">
+
+				<div id="add-community-based-project-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add Community Based Project"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Add" />
+
+							<table class="mspr_form">
+								<colgroup>
+									<col width="3%" />
+									<col width="25%" />
+									<col width="72%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td><input name="title" type="text" style="width:40%;" value="" /></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="organization"><?php echo $translate->_("Organization:"); ?></label></td>
+										<td><input name="organization" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="location"><?php echo $translate->_("Location:"); ?></label></td>
+										<td><input name="location" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="supervisor"><?php echo $translate->_("Supervisor:"); ?></label></td>
+										<td><input name="supervisor" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
-					
 				</div>
 				
-				<div id="update-community-based-project-box" class="modal-confirmation">
-					<h1>Edit Community-Based Project</h1>
-					<form method="post">
-						<table class="mspr_form">
-							<colgroup>
-								<col width="3%"></col>
-								<col width="25%"></col>
-								<col width="72%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="title">Title:</label></td>
-									<td><input name="title" type="text" style="width:40%;" value=""></input></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="organization">Organization:</label></td>
-									<td><input name="organization" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="location">Location:</label></td>
-									<td><input name="location" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
-								</tr>	
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="supervisor">Supervisor:</label></td>
-									<td><input name="supervisor" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
-								</tr>	
-							</tbody>
-						</table>	
-					</form>
-					
-					<div class="footer">
+				<div id="update-community-based-project-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Edit Community Based Project"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post">
+							<table class="mspr_form">
+								<colgroup>
+									<col width="3%" />
+									<col width="25%" />
+									<col width="72%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td><input name="title" type="text" style="width:40%;" value="" /></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="organization"><?php echo $translate->_("Organization:"); ?></label></td>
+										<td><input name="organization" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="location"><?php echo $translate->_("Location:"); ?></label></td>
+										<td><input name="location" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="supervisor"><?php echo $translate->_("Supervisor:"); ?></label></td>
+										<td><input name="supervisor" type="text" style="width:40%;" value="" /> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
-					
 				</div>
+
 				<div id="community_based_project"><?php echo display_supervised_project($community_based_project,"admin"); ?></div>
 			</div>
 		</div>
@@ -584,56 +600,60 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				</div>
 				<div class="clear">&nbsp;</div>
 				
-				<div id="update-research-box" class="modal-confirmation">
-					<h1>Edit Research Citation</h1>
-					<form method="post">
-						<table class="mspr_form">
-							<tbody>
-								<tr>
-								<td><label class="form-required" for="details">Citation:</label></td>
-								</tr>
-								<tr>
-								<td><textarea name="details" style="width:96%;height:25ex;"></textarea><br /></td>
-								</tr>
-							</tbody>
-						
-						</table>
-					</form>
-					
-					<div class="footer">
+				<div id="update-research-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Edit Research Citation"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post">
+							<table class="mspr_form">
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="details"><?php echo $translate->_("Citation:"); ?></label></td>
+									</tr>
+									<tr>
+										<td><textarea name="details" style="width:96%;height:25ex;"></textarea><br /></td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
-					
 				</div>
 				
-				<div id="add-research-box" class="modal-confirmation">
-					<h1>Add Research Citation</h1>
-					<form method="post">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-						<table class="mspr_form">
-							<tbody>
-								<tr>
-								<td><label class="form-required" for="details">Citation:</label></td>
-								</tr>
-								<tr>
-								<td><textarea name="details" style="width:96%;height:25ex;"></textarea><br /></td>
-								</tr>
-							</tbody>
-						
-						</table>
-					</form>
-					
-					<div class="footer">
+				<div id="add-research-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add Research Citation"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Add" />
+							<table class="mspr_form">
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="details"><?php echo $translate->_("Citation:"); ?></label></td>
+									</tr>
+									<tr>
+										<td><textarea name="details" style="width:96%;height:25ex;"></textarea><br /></td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
-					
 				</div>
+
 				<div id="research_citations">
 					<?php echo display_research_citations($research_citations,"admin"); ?>
 				</div>
+				<div class="clear">&nbsp;</div>
 			</div>
 		</div>
 		
@@ -649,100 +669,112 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<li>Award terms must be provided to be approved. Awards not accompanied by terms should be rejected.</li>
 					</ul>
 				</div>
-				<div id="update-external-award-box" class="modal-confirmation">
-					<h1>Edit External Award</h1>
-					<form method="post">
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="75%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-								<td><label class="form-required" for="title">Title:</label></td>
-								<td><input name="title" type="text" style="width:60%;"></input></td>
-								</tr>	
-								<tr>
-								<td><label class="form-required" for="body">Awarding Body:</label></td>
-								<td><input name="body" type="text" style="width:60%;"></input></td>
-								</tr>	
-								<tr>
-								<td valign="top"><label class="form-required" for="terms">Award Terms:</label></td>
-								<td><textarea name="terms" style="width: 80%; height: 12ex;" cols="65" rows="20"></textarea></td>
-								</tr>	
-								<tr>
-								<td><label class="form-required" for="year">Year Awarded:</label></td>
-								<td><select name="year">
-									<?php 
-									
-									$cur_year = (int) date("Y");
-									$start_year = $cur_year - 10;
-									$end_year = $cur_year + 4;
-									
-									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-									}
-									
-									?>
-									</select></td>
-								</tr>
-							</tbody>
-						</table>
-					</form>
-					<div class="footer">
+				<div id="update-external-award-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Edit External Award"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post">
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td><input name="title" type="text" style="width:60%;" /></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="body"><?php echo $translate->_("Awarding Body:"); ?></label></td>
+										<td><input name="body" type="text" style="width:60%;" /></td>
+									</tr>
+									<tr>
+										<td valign="top"><label class="form-required" for="terms"><?php echo $translate->_("Award Terms:"); ?></label></td>
+										<td><textarea name="terms" style="width: 80%; height: 12ex;" cols="65" rows="20"></textarea></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="year"><?php echo $translate->_("Year Awarded:"); ?></label></td>
+										<td>
+											<select name="year">
+												<?php
+
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 10;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+												}
+
+												?>
+											</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
-					
 				</div>
 				
-				<div id="add-external-award-box" class="modal-confirmation">
-					<h1>Add External Award</h1>
-					<form method="post">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="75%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-								<td><label class="form-required" for="title">Title:</label></td>
-								<td><input name="title" type="text" style="width:60%;"></input></td>
-								</tr>	
-								<tr>
-								<td><label class="form-required" for="body">Awarding Body:</label></td>
-								<td><input name="body" type="text" style="width:60%;"></input></td>
-								</tr>	
-								<tr>
-								<td valign="top"><label class="form-required" for="terms">Award Terms:</label></td>
-								<td><textarea name="terms" style="width: 80%; height: 12ex;" cols="65" rows="20"></textarea></td>
-								</tr>	
-								<tr>
-								<td><label class="form-required" for="year">Year Awarded:</label></td>
-								<td><select name="year">
-									<?php 
-									
-									$cur_year = (int) date("Y");
-									$start_year = $cur_year - 10;
-									$end_year = $cur_year + 4;
-									
-									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-									}
-									
-									?>
-									</select></td>
-								</tr>
-							</tbody>
-						</table>
-					</form>
-					<div class="footer">
+				<div id="add-external-award-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add External Award"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Add" />
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td><input name="title" type="text" style="width:60%;" /></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="body"><?php echo $translate->_("Awarding Body:"); ?></label></td>
+										<td><input name="body" type="text" style="width:60%;" /></td>
+									</tr>
+									<tr>
+										<td valign="top"><label class="form-required" for="terms"><?php echo $translate->_("Award Terms:"); ?></label></td>
+										<td><textarea name="terms" style="width: 80%; height: 12ex;" cols="65" rows="20"></textarea></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="year"><?php echo $translate->_("Year Awarded:"); ?></label></td>
+										<td>
+											<select name="year">
+												<?php
+
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 10;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+												}
+
+												?>
+											</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 				</div>
+
 				<div id="external_awards"><?php echo display_external_awards($external_awards,"admin"); ?></div>
 			</div>
 		</div>
@@ -769,204 +801,222 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					<p>Comments should be copied in whole or in part from Clinical Performance Evaluations from the student's clerkship rotations and electives.</p>
 					<p>There should be one comment for each core rotation and one per received elective.</p>
 				</div>
-				<div id="update-clineval-box" class="modal-confirmation">
-					<h1>Edit Clinical Performance Evaluation Comment</h1>
-					<form method="post" name="edit_clineval_form">
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="75%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-								<td><label class="form-required" for="source">Source:</label></td>
-								<td><input type="text" name="source"></input><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
-								</tr>	
-								<tr>
-								<td colspan="2"><label class="form-required" for="text">Comment:</label></td>
-								</tr>
-								<tr>
-								<td colspan="2"><textarea name="text" style="width:96%;height:30ex;"></textarea><br /></td>
-								</tr>
-							</tbody>
-						</table>
-					</form>
-					
-					<div class="footer">
+				<div id="update-clineval-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Edit Clinical Performance Evaluation Comment"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post" name="edit_clineval_form">
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="source">Source:</label></td>
+										<td><input type="text" name="source" /><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
+									</tr>
+									<tr>
+										<td colspan="2"><label class="form-required" for="text">Comment:</label></td>
+									</tr>
+									<tr>
+										<td colspan="2"><textarea name="text" style="width:96%;height:30ex;"></textarea><br /></td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm" id="edit-submission-confirm">Update</button>
 					</div>
-					
 				</div>
 				
-				<div id="add-clineval-box" class="modal-confirmation">
-					<h1>Add Clinical Performance Evaluation Comment</h1>
-					<form method="post" name="add_int_act_form">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="75%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-								<td><label class="form-required" for="source">Source:</label></td>
-								<td><input type="text" name="source"></input><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
-								</tr>	
-								<tr>
-								<td colspan="2"><label class="form-required" for="text">Comment:</label></td>
-								</tr>
-								<tr>
-								<td colspan="2"><textarea name="text" style="width:96%;height:30ex;"></textarea><br /></td>
-								</tr>
-							</tbody>
-						</table>
-					</form>
-					
-					<div class="footer">
+				<div id="add-clineval-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add Clinical Performance Evaluation Comment"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post" name="add_int_act_form">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Add" />
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="source">Source:</label></td>
+										<td><input type="text" name="source" /><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
+									</tr>
+									<tr>
+										<td colspan="2"><label class="form-required" for="text">Comment:</label></td>
+									</tr>
+									<tr>
+										<td colspan="2"><textarea name="text" style="width:96%;height:30ex;"></textarea><br /></td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
-					
 				</div>
 				
-			<div class="clear">&nbsp;</div>
-			<form id="add_clineval_form" name="add_clineval_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
-				<input type="hidden" name="user_id" value="<?php echo $PROXY_ID; ?>"></input>
-				<table class="mspr_form">
-					<colgroup>
-						<col width="3%"></col>
-						<col width="25%"></col>
-						<col width="72%"></col>
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="btn btn-primary" name="action" value="Add" />
-								<div id="hide_clineval_link" style="display:inline-block;">
-									<a id="hide_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Cancel Adding Comment</a>
-								</div>
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-						<td>&nbsp;</td>
-						<td><label class="form-required" for="source">Source:</label></td>
-						<td><input type="text" name="source"></input><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
-						</tr>	
-						<tr>
-						<td>&nbsp;</td>
-						<td valign="top"><label class="form-required" for="text">Comment:</label></td>
-						<td><textarea name="text" style="width:80%;height:12ex;"></textarea><br /></td>
-						</tr>
-					</tbody>
-				
-				</table>	
-			
 				<div class="clear">&nbsp;</div>
-			</form>
-		
-		
-			<div id="clinical_performance_eval_comments"><?php echo display_clineval($clinical_evaluation_comments,"admin"); ?></div>
+
+				<div id="add_clineval" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add Clinical"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form id="add_clineval_form" name="add_clineval_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
+							<input type="hidden" name="user_id" value="<?php echo $PROXY_ID; ?>" />
+							<table class="mspr_form">
+								<colgroup>
+									<col width="3%" />
+									<col width="25%" />
+									<col width="72%" />
+								</colgroup>
+								<tfoot>
+									<tr>
+										<td colspan="3">&nbsp;</td>
+									</tr>
+									<tr>
+										<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+											<input type="submit" class="btn btn-primary" name="action" value="Add" />
+											<div id="hide_clineval_link" style="display:inline-block;">
+												<a id="hide_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Cancel Adding Comment</a>
+											</div>
+										</td>
+									</tr>
+								</tfoot>
+								<tbody>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="source">Source:</label></td>
+										<td><input type="text" name="source" /><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td valign="top"><label class="form-required" for="text">Comment:</label></td>
+										<td><textarea name="text" style="width:80%;height:12ex;"></textarea><br /></td>
+									</tr>
+								</tbody>
+							</table>
+							<div class="clear">&nbsp;</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
+					</div>
+				</div>
+
+				<div id="clinical_performance_eval_comments"><?php echo display_clineval($clinical_evaluation_comments,"admin"); ?></div>
 			</div>
 		</div>
 		
 		<div class="section">
 			<h3 title="Summer Studentships" class="collapsable collapsed">Summer Studentships</h3>
 			<div id="summer-studentships">
-			
 				<div id="add_studentship_link" style="float: right;">
 					<a id="add_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=studentship_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Studentship</a>
 				</div>
 				<div class="clear">&nbsp;</div>
 			
-				
-				<div id="update-studentship-box" class="modal-confirmation">
-					<h1>Edit Studentship</h1>
-					<form method="post" name="edit_studentship_form">
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="75%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-								<td><label class="form-required" for="title">Title:</label></td>
-								<td><input type="text" name="title"></input> <span class="content-small"><strong>Example</strong>: The Canadian Institute of Health Studentship</span></td>
-								</tr>	
-								<tr>
-								<td><label class="form-required" for="year">Year Awarded:</label></td>
-								<td><select name="year">
-									<?php 
-									
-									$cur_year = (int) date("Y");
-									$start_year = $cur_year - 4;
-									$end_year = $cur_year + 4;
-									
-									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-									}
-									
-									?>
-									</select></td>
-								</tr>
-							</tbody>
-						
-						</table>	
-					</form>
-					
-					<div class="footer">
+				<div id="update-studentship-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Edit Studentship"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post" name="edit_studentship_form">
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td><input type="text" name="title" /> <span class="content-small"><strong>Example</strong>: The Canadian Institute of Health Studentship</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="year"><?php echo $translate->_("Year Awarded:"); ?></label></td>
+										<td>
+											<select name="year">
+												<?php
+
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 4;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+												}
+
+												?>
+											</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm" id="edit-submission-confirm">Update</button>
 					</div>
-					
 				</div>
-				<div id="add-studentship-box" class="modal-confirmation">
-					<h1>Add Studentship</h1>
-					<form method="post" name="add_studentship_form">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="75%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-								<td><label class="form-required" for="title">Title:</label></td>
-								<td><input type="text" name="title"></input> <span class="content-small"><strong>Example</strong>: The Canadian Institute of Health Studentship</span></td>
-								</tr>	
-								<tr>
-								<td><label class="form-required" for="year">Year Awarded:</label></td>
-								<td><select name="year">
-									<?php 
-									
-									$cur_year = (int) date("Y");
-									$start_year = $cur_year - 4;
-									$end_year = $cur_year + 4;
-									
-									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-									}
-									
-									?>
-									</select></td>
-								</tr>
-							</tbody>
-						
-						</table>
-					</form>
-					
-					<div class="footer">
+
+				<div id="add-studentship-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add Studentship"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post" name="add_studentship_form">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Add" />
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td><input type="text" name="title" /> <span class="content-small"><strong>Example</strong>: The Canadian Institute of Health Studentship</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="year"><?php echo $translate->_("Year Awarded:"); ?></label></td>
+										<td>
+											<select name="year">
+												<?php
+
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 4;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+												}
+
+												?>
+											</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
-					
 				</div>
 				
 				<div id="studentships"><?php echo display_studentships($studentships,"admin"); ?></div>
@@ -974,293 +1024,297 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		</div>
 
 		<div class="section">
-
-			<h3 title="International Activities" class="collapsable collapsed">International Activities</h3>
+			<h3 title="International Activities" class="collapsable collapsed"><?php echo $translate->_("International Activities:"); ?></h3>
 			<div id="international-activities">
 				<div id="add_int_act_link" style="float: right;">
 					<a id="add_int_act" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=int_act_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Activity</a>
 				</div>
 				<div class="clear">&nbsp;</div>
 				
-				<div id="update-int-act-box" class="modal-confirmation">
-					<h1>Edit International Activity</h1>
-					<form method="post" name="edit_int_act_form">
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="25%"></col>
-								<col width="50%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td><label class="form-required" for="title">Title:</label></td>
-		 							<td><input name="title"></input></td><td><span class="content-small"><strong>Example:</strong> Geriatrics Observership</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="site">Site:</label></td>
-									<td><input name="site"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo Metropolitan Hospital</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="location">Location:</label></td>
-									<td><input name="location"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo, Japan</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="start">Start Date:</label></td>
-									<td>
-										<input type="text" name="start" id="int_act_start_edit"></input></td><td><span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-required" for="end">End Date:</label></td>
-									<td>
-										<input type="text" name="end" id="int_act_end_edit"></input></td><td>
-									</td>
-								</tr>
-							</tbody>
-						
-						</table>
-					</form>
-					
-					<div class="footer">
+				<div id="update-int-act-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Edit International Activity"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post" name="edit_int_act_form">
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="25%" />
+									<col width="50%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td><input name="title" type="text" /></td><td><span class="content-small"><strong>Example:</strong> Geriatrics Observership</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="site"><?php echo $translate->_("Site:"); ?></label></td>
+										<td><input name="site" type="text" /></td><td><span class="content-small"><strong>Example:</strong> Tokyo Metropolitan Hospital</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="location"><?php echo $translate->_("Location:"); ?></label></td>
+										<td><input name="location" type="text" /></td><td><span class="content-small"><strong>Example:</strong> Tokyo, Japan</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="start"><?php echo $translate->_("Start Date:"); ?></label></td>
+										<td>
+											<input type="text" name="start" id="int_act_start_edit" type="text" /></td><td><span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+										</td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="end"><?php echo $translate->_("End Date:"); ?></label></td>
+										<td>
+											<input type="text" name="end" id="int_act_end_edit" type="text" /></td><td>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm" id="edit-submission-confirm">Update</button>
 					</div>
-					
 				</div>
 				
-				<div id="add-int-act-box" class="modal-confirmation">
-					<h1>Add International Activity</h1>
-					<form method="post" name="add_int_act_form">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="25%"></col>
-								<col width="50%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td><label class="form-required" for="title">Title:</label></td>
-		 							<td><input name="title"></input></td><td><span class="content-small"><strong>Example:</strong> Geriatrics Observership</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="site">Site:</label></td>
-									<td><input name="site"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo Metropolitan Hospital</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="location">Location:</label></td>
-									<td><input name="location"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo, Japan</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="start">Start Date:</label></td>
-									<td>
-										<input type="text" name="start" id="int_act_start"></input></td><td><span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-required" for="end">End Date:</label></td>
-									<td>
-										<input type="text" name="end" id="int_act_end"></input></td><td>
-									</td>
-								</tr>
-							</tbody>
-						
-						</table>	
-					</form>
-					
-					<div class="footer">
+				<div id="add-int-act-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add International Activity"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post" name="add_int_act_form">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Add" />
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="25%" />
+									<col width="50%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td><input name="title" type="text" /></td><td><span class="content-small"><strong>Example:</strong> Geriatrics Observership</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="site"><?php echo $translate->_("Site:"); ?></label></td>
+										<td><input name="site" type="text" /></td><td><span class="content-small"><strong>Example:</strong> Tokyo Metropolitan Hospital</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="location"><?php echo $translate->_("Location:"); ?></label></td>
+										<td><input name="location" type="text" /></td><td><span class="content-small"><strong>Example:</strong> Tokyo, Japan</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="start"><?php echo $translate->_("Start Date:"); ?></label></td>
+										<td>
+											<input type="text" name="start" id="int_act_start" /></td><td><span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+										</td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="end"><?php echo $translate->_("End Date:"); ?></label></td>
+										<td>
+											<input type="text" type="text" name="end" id="int_act_end" /></td><td>
+										</td>
+									</tr>
+								</tbody>
+
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
-					
 				</div>
+
 				<div id="int_acts"><?php echo display_international_activities($international_activities,"admin"); ?></div>
 			</div>
 		</div>
 		
-		
 		<div class="section">
-
-			<h3 title="Student-Run Electives" class="collapsable collapsed">Student-Run Electives</h3>
+			<h3 title="Student-Run Electives" class="collapsable collapsed"><?php echo $translate->_("Student-Run Electives"); ?></h3>
 			<div id="student-run-electives">
-	
 				<div id="add_student_run_elective_link" style="float: right;">
 					<a id="add_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Student Run Elective</a>
 				</div>
 				
 				<div class="clear">&nbsp;</div>
 				
-				<div id="add-sre-box" class="modal-confirmation">
-					<h1>Add Student-Run Elective/Interest Group</h1>
-					<form method="post" name="add_sre_form">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-						
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="75%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td><label class="form-required" for="group_name">Group Name:</label></td>
-									<td><input name="group_name"></input> <span class="content-small"><strong>Example</strong>: Emergency Medicine Elective</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="university">University:</label></td>
-									<td><input name="university" value="Queen's University"></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="location">Location:</label></td>
-									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="start">Start:</label></td>
-									<td>
-										<select name="start_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="start_year">
-										<?php 
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-required" for="end">End:</label></td>
-									<td>
-										<select name="end_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="end_year">
-										<?php 
-										echo build_option("","Year",true);
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, false);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-							</tbody>
-						</table>	
-					</form>
-					
-					<div class="footer">
+				<div id="add-sre-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add Student-Run Elective/Interest Group"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post" name="add_sre_form">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Add" />
+
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="group_name"><?php echo $translate->_("Group Name:"); ?></label></td>
+										<td><input name="group_name" type="text" /> <span class="content-small"><strong>Example</strong>: Emergency Medicine Elective</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="university"><?php echo $translate->_("University:"); ?></label></td>
+										<td><input name="university" value="Queen's University" type="text" /> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="location"><?php echo $translate->_("Location:"); ?></label></td>
+										<td><input name="location" value="Kingston, ON" type="text" /> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="start"><?php echo $translate->_("Start:"); ?></label></td>
+										<td>
+											<select name="start_month">
+												<?php
+												echo build_option("","Month",true);
+
+												for($month_num = 1; $month_num <= 12; $month_num++) {
+													echo build_option($month_num, getMonthName($month_num));
+												}
+												?>
+											</select>
+											<select name="start_year">
+												<?php
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 6;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+												}
+												?>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="end">End:</label></td>
+										<td>
+											<select name="end_month">
+												<?php
+												echo build_option("","Month",true);
+
+												for($month_num = 1; $month_num <= 12; $month_num++) {
+													echo build_option($month_num, getMonthName($month_num));
+												}
+												?>
+											</select>
+											<select name="end_year">
+												<?php
+												echo build_option("","Year",true);
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 6;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, false);
+												}
+												?>
+											</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
-					
 				</div>
 				
-				<div id="update-sre-box" class="modal-confirmation">
-					<h1>Edit Student-Run Elective/Interest Group</h1>
-					<form method="post" name="edit_sre_form">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Edit"></input>
-						
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="75%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td><label class="form-required" for="group_name">Group Name:</label></td>
-									<td><input name="group_name"></input> <span class="content-small"><strong>Example</strong>: Emergency Medicine Elective</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="university">University:</label></td>
-									<td><input name="university" value="Queen's University"></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="location">Location:</label></td>
-									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="start">Start:</label></td>
-									<td>
-										<select name="start_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="start_year">
-										<?php 
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-required" for="end">End:</label></td>
-									<td>
-										<select name="end_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="end_year">
-										<?php 
-										echo build_option("","Year",true);
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, false);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-							</tbody>
-						</table>	
-					</form>
-					
-					<div class="footer">
+				<div id="update-sre-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Edit Student-Run Elective/Interest Group"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post" name="edit_sre_form">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Edit" />
+
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="group_name"><?php echo $translate->_("Group Name:"); ?></label></td>
+										<td><input name="group_name" /> <span class="content-small"><strong>Example</strong>: Emergency Medicine Elective</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="university"><?php echo $translate->_("University:"); ?></label></td>
+										<td><input name="university" value="Queen's University" /> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="location"><?php echo $translate->_("Location:"); ?></label></td>
+										<td><input name="location" value="Kingston, ON" /> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="start"><?php echo $translate->_("Start:"); ?></label></td>
+										<td>
+											<select name="start_month">
+												<?php
+												echo build_option("","Month",true);
+
+												for($month_num = 1; $month_num <= 12; $month_num++) {
+													echo build_option($month_num, getMonthName($month_num));
+												}
+												?>
+											</select>
+											<select name="start_year">
+												<?php
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 6;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+												}
+												?>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="end"><?php echo $translate->_("End:"); ?></label></td>
+										<td>
+											<select name="end_month">
+												<?php
+												echo build_option("","Month",true);
+
+												for($month_num = 1; $month_num <= 12; $month_num++) {
+													echo build_option($month_num, getMonthName($month_num));
+												}
+												?>
+											</select>
+											<select name="end_year">
+												<?php
+												echo build_option("","Year",true);
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 6;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+														echo build_option($opt_year, $opt_year, false);
+												}
+												?>
+											</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
-					
 				</div>
 				
 				<div class="clear">&nbsp;</div>
@@ -1269,133 +1323,142 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		</div>
 		
 		<div class="section">
-			<h3 title="Internal Awards" class="collapsable collapsed">Internal Awards</h3>
+			<h3 title="Internal Awards" class="collapsable collapsed"><?php echo $translate->_("Internal Awards"); ?></h3>
 			<div id="internal-awards">
-		
 				<div id="add_internal_award_link" style="float: right;">
 					<a id="add_internal_award" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Internal Award</a>
 				</div>
 			
 				<div class="clear">&nbsp;</div>
 				
-				<div id="add-internal-award-box" class="modal-confirmation">
-					<h1>Add Internal Award</h1>
-					<form method="post" name="add_internal_award_form">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-						
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="75%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-								<td><label class="form-required" for="title">Title:</label></td>
-								<td><select name="award_id">
-									<?php 
-										$query		= "SELECT * FROM `student_awards_internal_types` where `disabled` = 0 order by `title` asc";
-										$results	= $db->GetAll($query);
-										if ($results) {
-											foreach ($results as $result) {
-												echo build_option($result['id'], clean_input($result["title"], array("notags", "specialchars")));
+				<div id="add-internal-award-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Add Internal Award"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post" name="add_internal_award_form">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Add" />
+
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td>
+											<select name="award_id">
+												<?php
+													$query		= "SELECT * FROM `student_awards_internal_types` where `disabled` = 0 order by `title` asc";
+													$results	= $db->GetAll($query);
+													if ($results) {
+														foreach ($results as $result) {
+															echo build_option($result['id'], clean_input($result["title"], array("notags", "specialchars")));
+														}
+													}
+												?>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td><label class="form-required" for="year"><?php echo $translate->_("Year Awarded:"); ?></label></td>
+										<td>
+											<select name="year">
+											<?php
+
+											$cur_year = (int) date("Y");
+											$start_year = $cur_year - 4;
+											$end_year = $cur_year + 4;
+
+											for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+													echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
 											}
-										}
-									?>
-									</select></td>
-								</tr>	
-								<tr>
-								<td><label class="form-required" for="year">Year Awarded:</label></td>
-								<td><select name="year">
-									<?php 
-									
-									$cur_year = (int) date("Y");
-									$start_year = $cur_year - 4;
-									$end_year = $cur_year + 4;
-									
-									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-									}
-									
-									?>
-									</select></td>
-								</tr>
-							</tbody>
-						</table>	
-					</form>
-					
-					<div class="footer">
+
+											?>
+											</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
-					
 				</div>
 				
-				<div id="update-internal-award-box" class="modal-confirmation">
-					<h1>Edit Internal Award</h1>
-					<form method="post" name="edit_internal_award_form">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Edit"></input>
-						
-						<table class="mspr_form">
-							<colgroup>
-								<col width="25%"></col>
-								<col width="75%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-								<td><label class="form-required" for="title">Title:</label></td>
-								<td><select name="award_id">
-									<?php 
-										$query		= "SELECT * FROM `student_awards_internal_types` where `disabled` = 0 order by `title` asc";
-										$results	= $db->GetAll($query);
-										if ($results) {
-											foreach ($results as $result) {
-												echo build_option($result['id'], clean_input($result["title"], array("notags", "specialchars")));
-											}
-										}
-									?>
-									</select></td>
-								</tr>	
-								<tr>
-								<td><label class="form-required" for="year">Year Awarded:</label></td>
-								<td><select name="year">
-									<?php 
-									
-									$cur_year = (int) date("Y");
-									$start_year = $cur_year - 4;
-									$end_year = $cur_year + 4;
-									
-									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-									}
-									
-									?>
-									</select></td>
-								</tr>
-							</tbody>
-						</table>	
-					</form>
-					
-					<div class="footer">
+				<div id="update-internal-award-box" class="modal hide">
+					<div class="modal-header">
+						<h3><?php echo $translate->_("Edit Internal Award"); ?></h3>
+					</div>
+					<div class="modal-body">
+						<form method="post" name="edit_internal_award_form">
+							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
+							<input type="hidden" name="action" value="Edit" />
+
+							<table class="mspr_form">
+								<colgroup>
+									<col width="25%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label class="form-required" for="title"><?php echo $translate->_("Title:"); ?></label></td>
+										<td>
+											<select name="award_id">
+												<?php
+													$query		= "SELECT * FROM `student_awards_internal_types` where `disabled` = 0 order by `title` asc";
+													$results	= $db->GetAll($query);
+													if ($results) {
+														foreach ($results as $result) {
+															echo build_option($result['id'], clean_input($result["title"], array("notags", "specialchars")));
+														}
+													}
+												?>
+											</select>
+										</td>
+									</tr>
+									<tr>
+									<td>
+										<label class="form-required" for="year"><?php echo $translate->_("Year Awarded:"); ?></label></td>
+										<td>
+											<select name="year">
+												<?php
+												$cur_year = (int) date("Y");
+												$start_year = $cur_year - 4;
+												$end_year = $cur_year + 4;
+
+												for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+													echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+												}
+												?>
+											</select>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div class="modal-footer">
 						<button class="btn modal-close">Close</button>
 						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
-					
 				</div>
 				
 				<form id="add_internal_award_form" name="add_internal_award_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
-					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-					
-				
+					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>" />
 					<div class="clear">&nbsp;</div>
 				</form>
+
 				<div id="internal_awards"><?php echo display_internal_awards($internal_awards,"admin"); ?></div>
 			</div>
 		</div>
 	</div>
 	
-	<h2 title="Extracted Information Section" class="collapsed">Information Extracted from Other Sources</h2>
+	<h2 title="Extracted Information Section" class="collapsed"><?php echo $translate->_("Information Extracted from Other Sources"); ?></h2>
 	<div id="extracted-information-section">
 	
 		<div class="section">
@@ -1440,16 +1503,20 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	
 </div>
 
-<div id="reject-submission-box" class="modal-confirmation" style="height: 300px">
-	<h1>Reject Submission</h1>
-	<div class="display-notice">
-		Please confirm that you wish to <strong>reject</strong> this submission.
+<div id="reject-submission-box" class="modal hide" style="height: 300px">
+	<div class="modal-header">
+		<h3><?php echo $translate->_("Reject Submission"); ?></h3>
 	</div>
-	<p>
-		<label for="reject-submission-details" class="form-required">Please provide an explanation for this decision:</label><br />
-		<textarea id="reject-submission-details" name="reject_verify_details" style="width: 99%; height: 75px" cols="45" rows="5"></textarea>
-	</p>
-	<div class="footer">
+	<div class="modal-body">
+		<div class="display-notice">
+			Please confirm that you wish to <strong>reject</strong> this submission.
+		</div>
+		<p>
+			<label for="reject-submission-details" class="form-required">Please provide an explanation for this decision:</label><br />
+			<textarea id="reject-submission-details" name="reject_verify_details" style="width: 99%; height: 75px" cols="45" rows="5"></textarea>
+		</p>
+	</div>
+	<div class="modal-footer">
 		<button class="btn modal-close">Close</button>
 		<button class="btn btn-primary pull-right modal-confirm" id="reject-submission-confirm">Reject</button>
 	</div>
@@ -1457,15 +1524,26 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 <script type="text/javascript">
 
+	function CollapseSections(event) {
+		if (event) {
+			jQuery('#information-requiring-approval .collapse, #required-information-section .collapse, #extracted-information-section .collapse').collapse('show');
+			jQuery('#information-requiring-approval .collapsable, #required-information-section .collapsable, #extracted-information-section .collapsable').removeClass('collapsed');
+		} else {
+			jQuery('#information-requiring-approval .collapse, #required-information-section .collapse, #extracted-information-section .collapse').collapse('hide');
+			jQuery('#information-requiring-approval .collapsable, #required-information-section .collapsable, #extracted-information-section .collapsable').addClass('collapsed');
+		}
+	}
+
 document.observe('dom:loaded', function() {
 	try {
 		function get_modal_options() {
 			return {
 				overlayOpacity:	0.75,
 				closeOnClick:	'overlay',
-				className:		'modal-confirmation',
+				className:		'modal',
 				fade:			true,
-				fadeDuration:	0.30
+				fadeDuration:	0.30,
+				position: 'fixed'
 			};
 		}
 

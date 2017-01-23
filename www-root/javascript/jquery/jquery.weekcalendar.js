@@ -50,7 +50,7 @@
             return true;
          },
          resizable : function(calEvent, element) {
-            return true;
+            return false;
          },
          eventClick : function() {
          },
@@ -97,13 +97,6 @@
 
          self._loadCalEvents();
 
-         self._resizeCalendar();
-         self._scrollToHour(self.options.date.getHours());
-
-         $(window).unbind("resize.weekcalendar");
-         $(window).bind("resize.weekcalendar", function() {
-            self._resizeCalendar();
-         });
 
       },
 
@@ -303,7 +296,7 @@
       /*
        * Resize the calendar scrollable height based on the provided function in options.
        */
-      _resizeCalendar : function () {
+     /* _resizeCalendar : function () {
 
          var options = this.options;
          if (options && $.isFunction(options.height)) {
@@ -312,7 +305,7 @@
             var navHeight = this.element.find(".wc-nav").outerHeight();
             this.element.find(".wc-scrollable-grid").height(calendarHeight - navHeight - headerHeight);
          }
-      },
+      },*/
 
       /*
        * configure calendar interaction events that are able to use event
@@ -668,7 +661,6 @@
                self._renderCalendar();
                $weekDayColumns = self.element.find(".wc-time-slots .wc-day-column-inner");
                self._updateDayColumnHeader($weekDayColumns);
-               self._resizeCalendar();
             }
 
          }
@@ -688,6 +680,7 @@
          });
 
          options.calendarAfterLoad(self.element);
+         self._scrollToHour(self.options.date.getHours());
 
          if (!eventsToRender.length) {
             options.noEvents();

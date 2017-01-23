@@ -57,7 +57,7 @@ class Models_Quiz_Attached_Event extends Models_Quiz_Attached {
         return $output;
     }
     
-    public static function fetchRowByID($aquiz_id) {
+    public static function fetchRowByID($aquiz_id = null) {
         global $db;
         
         $output = false;

@@ -17,8 +17,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("user", "update", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+    add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -33,7 +32,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 			switch ($ajax_action) {
 				case "uploadimage" :
-					$filesize = moveImage($_FILES["image"]["tmp_name"], $PROXY_ID, $_POST["coordinates"], $_POST["dimensions"]);
+                    $sizes = array("upload" => array("width" => 250, "height" => 250), "upload-thumbnail" => array("width" => 98, "height" => 98));
+
+                    $filesize = moveImage($_FILES["image"]["tmp_name"], $PROXY_ID, $_POST["coordinates"], $_POST["dimensions"], "user", $sizes);
 
 					if ($filesize) {
 						$PROCESSED_PHOTO["proxy_id"]			= $PROXY_ID;
@@ -144,17 +145,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				<div class="span5">
 					<script src="<?php echo ENTRADA_URL; ?>/javascript/jquery/jquery.imgareaselect.min.js" type="text/javascript"></script>
 					<link href='<?php echo ENTRADA_URL; ?>/css/imgareaselect-default.css' rel='stylesheet' type='text/css' />
-					<style type="text/css">
-						.table-nowrap {white-space:nowrap;}
-						#profile-wrapper {position:relative;}
-						#upload_profile_image_form {margin:0px;float:left;}
-						#profile-image-container {position:absolute;}
-						#upload-image-modal-btn {position:absolute;right:7px;top:7px;display:none;outline:none;}
-						#btn-toggle {position:absolute;right:7px;bottom:7px;display:none;outline:none;}
-						#btn-toggle .btn {outline:none;}
-						.profile-image-preview {text-align:center;max-width:275px;margin:auto;}
-						.modal-body {max-height:none;}
-					</style>
+                    <link href='<?php echo ENTRADA_URL; ?>/css/profile/profile.css' rel='stylesheet' type='text/css' />
 					<?php $profile_image = ENTRADA_ABSOLUTE . '/../public/images/' . $PROXY_ID . '/' . $PROXY_ID . '-large.png'; ?>
 					<script type="text/javascript">
 					function dataURItoBlob(dataURI, type) {
@@ -169,7 +160,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					jQuery(function(){
 
-						jQuery("#btn-toggle .btn").live("click", function() {
+						jQuery('#profile-image-container').on("click", '#btn-toggle .btn', function() {
 							var clicked = jQuery(this);
 							if (!clicked.parent().hasClass(clicked.html().toLowerCase())) {
 								jQuery.ajax({
@@ -198,16 +189,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 							image_width = image.width();
 							image_height = image.height();
-							w_offset = parseInt((image_width - 153) / 2);
-							h_offset = parseInt((image_height - 200) / 2);
+							w_offset = parseInt((image_width - 150) / 2);
+							h_offset = parseInt((image_height - 150) / 2);
 
 							jQuery("#coordinates").attr("value", w_offset + "," + h_offset + "," + (w_offset + 153) + "," + (h_offset + 200));
 							jQuery("#dimensions").attr("value", image_width + "," + image_height)
 
 							image.imgAreaSelect({
-								aspectRatio: '75:98',
+								aspectRatio: '98:98',
 								handles: true,
-								x1: w_offset, y1: h_offset, x2: w_offset + 153, y2: h_offset + 200,
+								x1: w_offset, y1: h_offset, x2: w_offset + 150, y2: h_offset + 150,
 								instance: true,
 								persistent: true,
 								onSelectEnd: function (img, selection) {
@@ -280,7 +271,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							}
 						});
 
-						jQuery("#upload-image-button").live("click", function(){
+						jQuery('#upload-image').on("click", '#upload-image-button', function(){
 							if (typeof jQuery(".preview-image").attr("src") != "undefined") {
 								jQuery("#upload_profile_image_form").submit();
 								jQuery('#upload-image').modal("hide");
@@ -289,7 +280,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							}
 						});
 
-						jQuery("#upload_profile_image_form").submit(function(){
+						jQuery('#upload_profile_image_form').submit(function(){
 							var imageFile = dataURItoBlob(jQuery(".preview-image").attr("src"));
 
 							var xhr = new XMLHttpRequest();
@@ -308,7 +299,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									if (jsonResponse.status == "success") {
 										jQuery("#profile-image-container img.img-polaroid").attr("src", jsonResponse.data);
 										if (jQuery("#image-nav-right").length <= 0) {
-											jQuery("#btn-toggle").append("<a href=\"#\" class=\"btn active\" id=\"image-nav-right\" style=\"display:none;\">Uploaded</a>");
+											jQuery("#btn-toggle").append("<a href=\"#\" class=\"btn btn-small active\" id=\"image-nav-right\" style=\"display:none;\">Uploaded</a>");
 											jQuery("#image-nav-right").removeClass("active");
 										}
 									} else {
@@ -330,7 +321,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							return false;
 						});
 
-						jQuery("#image").live("change", function(){
+						jQuery('#upload_profile_image_form').on("change", "#image", function(){
 							var files = jQuery(this).prop("files");
 
 							if (files && files[0]) {
@@ -373,7 +364,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
 						$uploaded_photo = $db->GetRow($query);
 						?>
-						<span><img src="<?php echo webservice_url("photo", array($PROXY_ID, $uploaded_photo ? "upload" : "official"))."/".time(); ?>" width="192" height="250" class="img-polaroid" /></span>
+						<span><img src="<?php echo webservice_url("photo", array($PROXY_ID, $uploaded_photo ? "upload" : "official"))."/".time(); ?>" class="img-polaroid" /></span>
 						<div class="btn-group" id="btn-toggle" class=" <?php echo $uploaded_photo ? "uploaded" : "official"; ?>">
 							<a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "0" ? "active" : ""; ?>" id="image-nav-left">Official</a>
 							<?php if ($uploaded_photo) { ?><a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "1" ? "active" : ""; ?>" id="image-nav-right">Uploaded</a><?php } ?>
@@ -460,16 +451,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				echo "<div style=\"height: 120px;\">&nbsp;</div>";
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "In order to edit a user profile you must provide a valid identifier. The provided ID does not exist in this system.";
+            add_error("In order to edit a user profile you must provide a valid identifier. The provided ID does not exist in this system.");
 
 			echo display_error();
 
 			application_log("notice", "Failed to provide a valid user identifer when attempting to edit a user profile.");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "In order to edit a user profile you must provide a user identifier.";
+        add_error("In order to edit a user profile you must provide a user identifier.");
 
 		echo display_error();
 

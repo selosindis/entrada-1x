@@ -31,9 +31,10 @@ class Models_Assessment_AssessmentEvent extends Models_Base {
               $updated_by,
               $active;
     
-    protected $table_name = "assessment_events";
-    protected $default_sort_column = "assessment_event_id";
-    
+    protected static $table_name = "assessment_events";
+    protected static $default_sort_column = "assessment_event_id";
+    protected static $primary_key = "assessment_event_id";
+
     public function __construct($arr = NULL) {
         parent::__construct($arr);
     }

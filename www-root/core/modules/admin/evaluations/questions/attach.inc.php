@@ -208,7 +208,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							ORDER BY c.`erubric_id`, c.`question_order`, b.`questiontype_id`";
 				$results	= $db->GetAll($query);
 				if($results) {
-					$question_controls = Models_Evaluation::getQuestionControlsArray($results);
+					$question_controls = Classes_Evaluation::getQuestionControlsArray($results);
 					$HEAD[] = "<script type=\"text/javascript\">
 					var question_controls = ".json_encode($question_controls).";
 					var modalDialog;

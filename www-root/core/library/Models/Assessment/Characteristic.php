@@ -25,20 +25,20 @@ class Models_Assessment_Characteristic extends Models_Base {
     /**
      * @var string
      */
-    protected $table_name = "assessments_lu_meta";
+    protected static $table_name = "assessments_lu_meta";
 
     /**
      * @var string
      */
-    protected $primary_key = "id";
+    protected static $primary_key = "id";
 
     /**
      * @var string
      */
-    protected $default_sort_column = "type";
+    protected static $default_sort_column = "type";
 
     /**
-     * Field names within the $this->table_name table.
+     * Field names within the static::$table_name table.
      * @var string
      */
     protected $id,
@@ -190,34 +190,6 @@ class Models_Assessment_Characteristic extends Models_Base {
     /**
      * @return bool
      */
-    public function insert() {
-		global $db;
-
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "INSERT")) {
-			$this->id = $db->Insert_ID();
-
-			return true;
-		}
-
-		return false;
-	}
-
-    /**
-     * @return bool
-     */
-    public function update() {
-		global $db;
-
-        if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`id` = ".$db->qstr($this->getID()))) {
-			return true;
-		}
-
-        return false;
-	}
-
-    /**
-     * @return bool
-     */
     public function delete() {
         return $this->deactivate();
     }
@@ -226,9 +198,8 @@ class Models_Assessment_Characteristic extends Models_Base {
      * @return bool
      */
     public function deactivate() {
-        global $db;
-
-        if ($db->AutoExecute("`". $this->table_name ."`", array("active" => 0), "UPDATE", "`id` = ".$db->qstr($this->getID()))) {
+        $this->active = 0;
+        if ($this->update()) {
             return true;
         }
 

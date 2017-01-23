@@ -73,19 +73,23 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						add_error("No course ID provided.");
 					}
                     
-                    if(isset(${$request_var}["audience"]) && $tmp_input = clean_input(${$request_var}["audience"], array("trim", "int"))) {
-						$audience = $tmp_input;
+                    if(isset(${$request_var}["cperiod"]) && $tmp_input = clean_input(${$request_var}["cperiod"], array("trim", "int"))) {
+						$cperiod = $tmp_input;
 					} else {
 						add_error("No audience ID provided.");
 					}
                     
                     if (!$ERROR) {
-                        
+                        /*
                         $ca = new Models_Course_Audience();
                         $course_audience = $ca->fetchRowByCourseIDAudienceTypeAudienceValue($course_id, "group_id", $audience);
                         
                         if ($course_audience) {
                             $curriculum_period = $course_audience->getCurriculumPeriod($course_audience->getCperiodID());
+                        }
+                        */
+                        if ($cperiod) {
+                            $curriculum_period = Models_CurriculumPeriod::fetchRowByID($cperiod);
                         }
                         
                         $e = new Models_Event();

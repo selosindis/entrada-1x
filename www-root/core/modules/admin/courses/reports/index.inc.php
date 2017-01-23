@@ -35,41 +35,48 @@ if (!defined("IN_COURSE_REPORTS")) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
-	$query = "	SELECT * FROM `courses`
-				WHERE `course_id` = ".$db->qstr($COURSE_ID)."
-				AND `course_active` = '1'";
-	$course_details	= $db->GetRow($query);
-	courses_subnavigation($course_details,"reports");
-	
-	$query = "	SELECT *
-				FROM `course_lu_reports` a
-				JOIN `course_reports` b
-				ON a.`course_report_id` = b.`course_report_id`
-				WHERE b.`course_id` = " . $db->qstr($COURSE_ID) . "
-				ORDER BY a.`course_report_title` ASC";
-	$reports = $db->getAll($query);
-    ?>
-	<h1>Available Reports</h1>
-	<?php
-    if ($reports) {
+    $course = Models_Course::get($COURSE_ID);
+
+    if ($course) {
+
+        echo "<h1 id=\"page-top\">" . $course->getFullCourseTitle() . "</h1>";
+
+        courses_subnavigation($course->toArray(),"reports");
+
+        $query = "	SELECT *
+                    FROM `course_lu_reports` a
+                    JOIN `course_reports` b
+                    ON a.`course_report_id` = b.`course_report_id`
+                    WHERE b.`course_id` = " . $db->qstr($COURSE_ID) . "
+                    ORDER BY a.`course_report_title` ASC";
+        $reports = $db->getAll($query);
         ?>
-        <ul>
+        <h1 class="muted"><?php echo $translate->_("Course Reports"); ?></h1>
         <?php
-            foreach($reports as $report) {
-                ?>
-                <li>
-                    <a href="<?php echo ENTRADA_URL . '/admin/courses/reports?section=' . $report["section"] . '&id=' . $COURSE_ID; ?>">
-                        <?php echo $report["course_report_title"]; ?>
-                    </a>
-                </li>
-                <?php
-            }
-        ?>
-        </ul>
-        <?php
-	} else {
-		$NOTICE++;
-		$NOTICESTR[] = "Your " . $translate->_("course") . " has no reports to display.  You can add reports on the " . $translate->_("course") . " details page.";
-		echo display_notice();
-	}
+        if ($reports) {
+            ?>
+            <ul>
+            <?php
+                foreach($reports as $report) {
+                    ?>
+                    <li>
+                        <a href="<?php echo ENTRADA_URL . '/admin/courses/reports?section=' . $report["section"] . '&id=' . $COURSE_ID; ?>">
+                            <?php echo $report["course_report_title"]; ?>
+                        </a>
+                    </li>
+                    <?php
+                }
+            ?>
+            </ul>
+            <?php
+        } else {
+            $NOTICE++;
+            $NOTICESTR[] = $translate->_("Your course has no reports to display.  You can add reports on the course Setup page.");
+            echo display_notice();
+        }
+    } else {
+        add_error("In order to edit a course reports you must provide a valid course identifier. The provided ID does not exist in this system.");
+
+        echo display_error();
+    }
 }

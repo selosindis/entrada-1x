@@ -356,7 +356,7 @@ if (!defined("IN_CLERKSHIP")) {
                                     <?php
                                     if (isset($student_classes) && !empty($student_classes)) {
                                         foreach ($student_classes as $group_id => $class) {
-                                            echo "<option value=\"".$group_id."\">Class of ".html_encode($class)."</option>\n";
+                                            echo "<option value=\"".$group_id."\">".html_encode($class)."</option>\n";
                                         }
                                     }
                                     ?>

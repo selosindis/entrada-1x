@@ -23,8 +23,9 @@
  */
 
 class Models_Event_Audience extends Models_Base {
-    protected   $eaudience_id,
+    protected $eaudience_id,
                 $event_id,
+                $audience_name,
                 $audience_type,
                 $audience_value,
                 $custom_time,
@@ -33,11 +34,9 @@ class Models_Event_Audience extends Models_Base {
                 $updated_date,
                 $updated_by;
 
-    protected $audience_name;
-
-    protected $table_name           = "event_audience";
-    protected $primary_key          = "eaudience_id";
-    protected $default_sort_column  = "eaudience_id";
+    protected static $table_name           = "event_audience";
+    protected static $primary_key          = "eaudience_id";
+    protected static $default_sort_column  = "eaudience_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -135,6 +134,14 @@ class Models_Event_Audience extends Models_Base {
             array("key" => "eaudience_id", "value" => $eaudience_id, "method" => "=")
         ));
     }
+    
+    /* @return bool|Models_Event_Audience */
+    public static function fetchRowByEventID($event_id = NULL) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "event_id", "value" => $event_id, "method" => "=")
+        ));
+    }
 
     /* @return bool|Models_Event_Audience */
     public static function fetchRowByEventIdTypeValue($event_id, $event_type, $event_value) {
@@ -165,8 +172,8 @@ class Models_Event_Audience extends Models_Base {
 
     public function delete() {
         global $db;
-        $sql = "DELETE FROM `" . $this->database_name . "`.`" . $this->table_name . "`
-                WHERE `" . $this->primary_key . "` = " . $db->qstr($this->getID());
+        $sql = "DELETE FROM `" . static::$table_name . "`
+                WHERE `" . static::$primary_key . "` = " . $db->qstr($this->getID());
 
         if ($db->Execute($sql)) {
             return true;
@@ -174,64 +181,6 @@ class Models_Event_Audience extends Models_Base {
             application_log("error", "Error deleting  ".get_called_class()." id[" . $this->getID() . "]. DB Said: " . $db->ErrorMsg());
             return false;
         }
-    }
-
-    public static function buildSimpleArray($audience_array) {
-        if (isset($audience_array) && is_array($audience_array)) {
-            $new_audience = array(
-                "audience_type"     => $audience_array["audience_type"],
-                "audience_value"    => (int)$audience_array["audience_value"],
-                "custom_time"       => (int)$audience_array["custom_time"],
-                "custom_time_start" => (int)$audience_array["custom_time_start"],
-                "custom_time_end"   => (int)$audience_array["custom_time_end"]
-            );
-        }
-        return $new_audience;
-    }
-
-    public static function buildInsertUpdateDelete($array) {
-        $return = array(
-            "insert" => "",
-            "update" => "",
-            "delete" => ""
-        );
-
-        if (isset($array) && is_array($array)) {
-            $insert = array();
-            $update = array();
-            $delete = array();
-            $add    = $array["add"];
-            $remove = $array["remove"];
-            if (isset($add) && is_array($add) && !empty($add)) {
-                foreach($add as $key => $item) {
-                    // If the key is not set in the remove
-                    if (is_array($remove)) {
-                        if (!array_key_exists($key, $remove)) {
-                            $insert[$key] = unserialize($item);
-                        } else {
-                            $update[$key] = unserialize($item);
-                            unset($remove[$key]);
-                        }
-                    }
-                }
-                if (is_array($remove) && !empty($remove)) {
-                    foreach ($remove as $item) {
-                        $delete[$key] = unserialize($item);
-                    }
-                }
-            } else if (isset($remove) && is_array($remove) && !empty($remove)) {
-                // There is no add and there are some to remove, so they're delete not update
-                foreach($remove as $key => $item) {
-                    $delete[$key] = unserialize($item);
-                }
-            }
-            $return = array(
-                "insert" => $insert,
-                "update" => $update,
-                "delete" => $delete
-            );
-        }
-        return $return;
     }
 
     /**
@@ -348,7 +297,6 @@ class Models_Event_Audience extends Models_Base {
                     $members = array();
                     foreach ($course_audiences as $course_audience) {
                         if ($course_audience && $course_audience["audience_type"] == "group_id") {
-
                             $query = "SELECT b.`id`, b.`firstname`, b.`lastname`
                                         FROM `group_members` AS a
                                         JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -375,5 +323,19 @@ class Models_Event_Audience extends Models_Base {
         }
 
         return $audience;
+    }
+    
+    public static function onlyCourse($audiences) {
+        $course_exist = false;
+        if ($audiences && is_array($audiences) && !empty($audiences)) {
+            foreach ($audiences as $audience) {
+                if ($audience && is_object($audience)) {
+                    if ($audience->getAudienceType() == "course_id") {
+                        $course_exist = true;
+                    }
+                }
+            }
+        }
+        return $course_exist;
     }
 }

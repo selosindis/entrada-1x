@@ -50,7 +50,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	}
 	?>
 
-	<h2 title="Organisation Details Section">Organisation Details</h2>
+	<h2 title="Organisation Details Section"><?php echo $translate->_("Organisation Details"); ?></h2>
 	<div id="organisation-details-section">
 		<table class="tableList" summary="View Organistion Form">
 			<colgroup>
@@ -59,72 +59,84 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 			</colgroup>
 			<tbody>
 				<tr>
-					<td><label for="countries_id">Country</label></td>
+					<td><label for="countries_id"><?php echo $translate->_("Country"); ?></label></td>
 					<td>
 						<?php echo $ORGANISATION["organisation_country"];?>
 					</td>
 				</tr>
 				<tr>
-					<td><label for="province_id">Province</label></td>
+					<td><label for="province_id"><?php echo $translate->_("Province / State"); ?></label></td>
 					<td>
 						<?php echo $ORGANISATION["organisation_province"];?>
 					</td>
 				</tr>
 				<tr>
-					<td><label for="city_id">City</label></td>
+					<td><label for="city_id"><?php echo $translate->_("City"); ?></label></td>
 					<td>
 						<?php echo $ORGANISATION["organisation_city"];?>
 					</td>
 				</tr>
 				<tr>
-					<td><label for="postal_id">Postal Code</label></td>
+					<td><label for="postal_id"><?php echo $translate->_("Postal Code"); ?></label></td>
 					<td>
 						<?php echo $ORGANISATION["organisation_postcode"];?>
 					</td>
 				</tr>
 				<tr>
-					<td><label for="address1_id">Address 1</label></td>
+					<td><label for="address1_id"><?php echo $translate->_("Address 1"); ?></label></td>
 					<td>
 						<?php echo $ORGANISATION["organisation_address1"];?>
 					</td>
 				</tr>
 				<tr>
-					<td><label for="address2_id">Address 2</label></td>
+					<td><label for="address2_id"><?php echo $translate->_("Address 2"); ?></label></td>
 					<td>
 						<?php echo $ORGANISATION["organisation_address2"];?>
 					</td>
 				</tr>
 				<tr>
-					<td><label for="telephone_id">Telephone</label></td>
+					<td><label for="telephone_id"><?php echo $translate->_("Telephone"); ?></label></td>
 					<td>
 						<?php echo $ORGANISATION["organisation_telephone"];?>
 					</td>
 				</tr>
 				<tr>
-					<td><label for="fax_id">Fax</label></td>
+					<td><label for="fax_id"><?php echo $translate->_("Fax"); ?></label></td>
 					<td>
 						<?php echo $ORGANISATION["organisation_fax"];?>
 					</td>
 				</tr>
 				<tr>
-					<td><label for="email_id">E-Mail Address</label></td>
+					<td><label for="email_id"><?php echo $translate->_("E-Mail Address"); ?></label></td>
 					<td>
 						<?php echo $ORGANISATION["organisation_email"];?>
 					</td>
 				</tr>
 				<tr>
-					<td><label for="url_id">Website</label></td>
+					<td><label for="url_id"><?php echo $translate->_("Website"); ?></label></td>
 					<td>
 						<?php echo "<a href=\"".$ORGANISATION["organisation_url"]."\">".$ORGANISATION["organisation_url"]."</a>";?>
 					</td>
 				</tr>
-
+                <?php if ( Entrada_Twitter::widgetIsActive() ) { ?>
+                <tr>
+                    <td><label for="url_id"><?php echo $translate->_("Twitter Handle"); ?></label></td>
+                    <td>
+                        <?php echo $ORGANISATION["organisation_twitter"];?>
+                    </td>
+                </tr>
+                <tr>
+                    <td><label for="url_id"><?php echo $translate->_("Twitter Hastags"); ?></label></td>
+                    <td>
+                        <?php echo $ORGANISATION["organisation_hashtags"];?>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">&nbsp;</td>
+                </tr>
+                <?php } ?>
 				<tr>
-					<td colspan="2">&nbsp;</td>
-				</tr>
-
-				<tr>
-					<td><label for="template">Interface Template</label></td>
+					<td><label for="template"><?php echo $translate->_("Interface Template"); ?></label></td>
 					<td>
 						<?php echo $ORGANISATION["template"];?>
 					</td>
@@ -137,13 +149,13 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				<?php if (isset($ORGANISATION["aamc_institution_id"]) && $ORGANISATION["aamc_institution_id"]) : ?>
 
 				<tr>
-					<td>AAMC Institution ID</td>
+					<td><?php echo $translate->_("AAMC Institution ID"); ?></td>
 					<td>
 						<?php echo $ORGANISATION["aamc_institution_id"]; ?>
 					</td>
 				</tr>
 				<tr>
-					<td>AAMC Institution Name</td>
+					<td><?php echo $translate->_("AAMC Institution Name"); ?></td>
 					<td>
 						<?php echo $ORGANISATION["aamc_institution_name"]; ?>
 					</td>
@@ -154,13 +166,13 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				</tr>
 
 				<tr>
-					<td>AAMC Program ID</td>
+					<td><?php echo $translate->_("AAMC Program ID"); ?></td>
 					<td>
 						<?php echo $ORGANISATION["aamc_program_id"]; ?>
 					</td>
 				</tr>
 				<tr>
-					<td>AAMC Program Name</td>
+					<td><?php echo $translate->_("AAMC Program Name"); ?></td>
 					<td>
 						<?php echo $ORGANISATION["aamc_program_name"]; ?>
 					</td>

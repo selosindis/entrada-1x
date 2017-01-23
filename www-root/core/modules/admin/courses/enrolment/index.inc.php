@@ -41,6 +41,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
     $course = Models_Course::get($COURSE_ID);
     
     if ($course) {
+
+        echo "<h1 id=\"page-top\">" . $course->getFullCourseTitle() . "</h1>";
+
         courses_subnavigation($course->toArray(), "enrolment");
         $curriculum_periods = Models_CurriculumPeriod::fetchRowByCurriculumTypeIDCourseID($course->getCurriculumTypeID(), $course->getID());
         if ($curriculum_periods) {
@@ -446,7 +449,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
             <div class="row-fluid">
                 <div class="span12">
                     <div class="span3">
-                        <h1>Enrolment</h1>
+                        <h1 class="muted">Enrolment</h1>
                     </div>
                     <div class="span9 no-printing">
                         <?php 
@@ -530,13 +533,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
         <?php
         } else { ?>
             <div class="alert alert-warning">
-                This course currently has no curriculum periods associated with it. This is because there are no Active Periods setup in the Course Details section.
+                <?php echo $translate->_("This course currently has no curriculum periods associated with it. This is because there are no Active Periods setup in the Course Setup section."); ?>
             </div>
         <?php    
         }
     } else { ?>
-        <div class="alert alert-warning">
-            In order to edit a course enrolment you must provide a course identifier.
+        <div class="alert alert-error">
+            In order to edit a course enrolment you must provide a valid course identifier. The provided ID does not exist in this system.
         </div>
     <?php    
     }

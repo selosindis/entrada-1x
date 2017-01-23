@@ -28,9 +28,9 @@ class Models_Lrs_History extends Models_Base {
 
     protected $id, $type, $run_last;
 
-    protected $table_name = "lrs_history";
-    protected $primary_key = "id";
-    protected $default_sort_column = "timestamp";
+    protected static $table_name = "lrs_history";
+    protected static $primary_key = "id";
+    protected static $default_sort_column = "timestamp";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);

@@ -125,6 +125,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					 */
 					if ((isset($_POST["sub_discipline"])) && ($sub_discipline = clean_input($_POST["sub_discipline"], array("notags", "trim")))) {
 						$PROCESSED["sub_discipline"] = $sub_discipline;
+					} else {
+						$PROCESSED["sub_discipline"] = "";
 					}
 
 					/**

@@ -34,8 +34,9 @@ class Models_Event_Resource_Homework extends Models_Base {
             $updated_date,
             $updated_by;
     
-    protected $table_name = "event_resource_homework";
-    protected $default_sort_column = "event_resource_homework_id";
+    protected static $table_name = "event_resource_homework";
+    protected static $default_sort_column = "event_resource_homework_id";
+    protected static $primary_key = "event_resource_homework_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -108,7 +109,7 @@ class Models_Event_Resource_Homework extends Models_Base {
     public function insert() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->event_resource_homework_id = $db->Insert_ID();
             return $this;
         } else {
@@ -119,7 +120,7 @@ class Models_Event_Resource_Homework extends Models_Base {
     public function update() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`event_resource_homework_id` = ".$db->qstr($this->event_resource_homework_id))) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`event_resource_homework_id` = ".$db->qstr($this->event_resource_homework_id))) {
             return $this;
         } else {
             return false;
@@ -129,7 +130,7 @@ class Models_Event_Resource_Homework extends Models_Base {
     public function delete() {
         global $db;
         
-        $query = "DELETE FROM `".$this->table_name."` WHERE `event_resource_homework_id` = ?";
+        $query = "DELETE FROM `".static::$table_name."` WHERE `event_resource_homework_id` = ?";
         if ($db->Execute($query, $this->event_resource_homework_id)) {
             return true;
         } else {

@@ -37,22 +37,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-        
-    if (!isset($_SESSION[APPLICATION_IDENTIFIER][$ENTRADA_USER->getActiveID()]["matrix"]["objective_id"])) {
-        $objective_name = $translate->_("events_filter_controls");
-        $clinical_presentations_name = $objective_name["co"]["global_lu_objectives_name"];
-        $objective = Models_Objective::fetchRowByName($clinical_presentations_name);
-        if ($objective) {
-            $_SESSION[APPLICATION_IDENTIFIER][$ENTRADA_USER->getActiveID()]["matrix"]["objective_id"] = $objective->getID();
-        }
-    }
-    
     search_subnavigation("matrix");
-    ?>
-    <h1>Curriculum Matrix</h1>
 
+	echo "<h1>Curriculum Matrix</h1>";
+
+    ?>
     <div class="alert alert-info">
-        <p class="lead">This feature is available in both the <strong>Consortium</strong> and <strong>Cloud</strong> editions of Entrada ME only at this time. Please feel free to <a href="http://www.entrada.org/contact" target="_blank"><strong>contact us</strong></a> to arrange a demo.</p>
+        <p class="lead">This feature is available in Entrada ME Consortium Edition only at this time. Please feel free to <a href="http://www.entrada.org/contact" target="_blank"><strong>contact us</strong></a> to arrange a demo.</p>
         <p class="pull-right">
             <a class="btn btn-primary btn-large" href="http://www.entrada.org" target="_blank">
                 <i class="fa fa-info-circle"></i> Learn More

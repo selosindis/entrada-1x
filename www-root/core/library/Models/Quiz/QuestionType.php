@@ -27,8 +27,9 @@ class Models_Quiz_QuestionType extends Models_Base {
 
     protected $questiontype_id, $questiontype_title, $questiontype_description, $questiontype_active, $questiontype_order;
 
-    protected $table_name = "quizzes_lu_questiontypes";
-    protected $default_sort_column = "questiontype_order";
+    protected static $table_name = "quizzes_lu_questiontypes";
+    protected static $default_sort_column = "questiontype_order";
+    protected static $primary_key = "questiontype_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);

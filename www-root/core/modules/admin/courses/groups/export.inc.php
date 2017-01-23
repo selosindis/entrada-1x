@@ -40,18 +40,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 	
 	$course_group_ids = array();
 	$course_group_ids_string = "";
-	if (isset($_POST["checked"]) && @count($_POST["checked"])) {
-		foreach ($_POST["checked"] as $course_group_id) {
+	if (isset($_POST["groups"]) && @count($_POST["groups"])) {
+		foreach ($_POST["groups"] as $course_group_id) {
 			$course_group_ids[] = clean_input($course_group_id, "int");
 			$course_group_ids_string .= ($course_group_ids_string ? "," : "").$db->qstr(clean_input($course_group_id, "int"));
 		}
 	}
-	
-	$query = "SELECT a.*, b.`course_name`, b.`course_code` FROM `course_groups` AS a
-				JOIN `courses` AS b
-				ON a.`course_id` = b.`course_id`
-				WHERE a.`cgroup_id` IN (".$course_group_ids_string.")";
-	$course_groups = $db->GetAll($query);
+
+	$course_groups_object = new Models_Course_Group();
+	$course_groups = $course_groups_object->getAllByMultipleGroupID($course_group_ids);
 	
 	if ($course_groups) {
 		/**
@@ -77,18 +74,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 		fputcsv($fp, $row, $csv_delimiter, $csv_enclosure);
 		
 		foreach ($course_groups as $course_group) {
-			$query = "SELECT a.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname` FROM `course_group_audience` AS a
-						JOIN `".AUTH_DATABASE."`.`user_data` AS b
-						ON a.`proxy_id` = b.`id`
-						WHERE a.`cgroup_id` = ".$db->qstr($course_group["cgroup_id"])."
-						AND a.`active` = 1";
-			$course_group_audience = $db->GetAll($query);
-			$query = "SELECT a.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname` FROM `course_group_contacts` AS a
-						JOIN `".AUTH_DATABASE."`.`user_data` AS b
-						ON a.`proxy_id` = b.`id`
-						WHERE a.`cgroup_id` = ".$db->qstr($course_group["cgroup_id"])."
-						ORDER BY a.`contact_order`";
-			$course_group_contacts = $db->GetAll($query);
+			$course_group_audience_object = new Models_Course_Group_Audience();
+			$course_group_contacts_object = new Models_Course_Group_Contact();
+			$course_group_audience = $course_group_audience_object->getExportGroupAudienceByGroupID($course_group["cgroup_id"]);
+			$course_group_contacts = $course_group_contacts_object->getExportGroupContactsByGroupID($course_group["cgroup_id"]);
 			$row = array();
 			$row["course_name"] = "";
 			$row["group_name"] = $course_group["group_name"];

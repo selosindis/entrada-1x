@@ -217,7 +217,7 @@ Control.Window = Class.create({
 			this.options.insertRemoteContentAt = this.container;
 		var styles = {
 			margin: 0,
-			position: 'absolute',
+			position: (this.options.position == 'fixed' ? this.options.position : 'absolute'),
 			zIndex: Control.Window.initialZIndexForWindow()
 		};
 		if(this.options.width)
@@ -405,6 +405,11 @@ Control.Window = Class.create({
 				top: (container_dimensions.height <= viewport_dimensions.height) ? (this.options.constrainToViewport ? Math.max(0,Math.min(viewport_dimensions.height - (container_dimensions.height),top)) : top) + 'px' : 0,
 				left: (container_dimensions.width <= viewport_dimensions.width) ? (this.options.constrainToViewport ? Math.max(0,Math.min(viewport_dimensions.width - (container_dimensions.width),left)) : left) + 'px' : 0
 			});
+		}else if(this.options.position == 'fixed'){
+			this.container.setStyle({
+				top: '10%',
+				left: (container_dimensions.width <= viewport_dimensions.width) ? ((viewport_dimensions.width / 2)-(container_dimensions.width / 2)) + 'px' : 0
+			});
 		}else if(this.options.position.length){
 			var top = $value(this.options.position[1]) + $value(this.options.offsetTop);
 			var left = $value(this.options.position[0]) + $value(this.options.offsetLeft);
@@ -422,6 +427,11 @@ Control.Window = Class.create({
 		var viewport_dimensions = document.viewport.getDimensions();
 		var container_offset = this.container.cumulativeOffset();
 		var container_dimensions = this.container.getDimensions();
+		if(this.options.position == 'fixed'){
+			this.container.setStyle({
+				left: (container_dimensions.width <= viewport_dimensions.width) ? ((viewport_dimensions.width / 2)-(container_dimensions.width / 2)) + 'px' : 0
+			});
+		}
 		if(container_offset.left + container_dimensions.width > viewport_dimensions.width){
 			this.container.setStyle({
 				left: (Math.max(0,viewport_dimensions.width - container_dimensions.width)) + 'px'
@@ -566,6 +576,7 @@ Control.Window = Class.create({
 					if(this.iFrameShim)
 						this.updateIFrameShimZIndex();
 					this.isOpen = true;
+					this.container.setStyle({display: 'block'});
 					this.notify('afterOpen');
 				}.bind(this)
 			});

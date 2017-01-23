@@ -35,13 +35,13 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	?>
-	<h1>Manage Organisations</h1>
+	<h1><?php echo $translate->_("Manage Organisations"); ?></h1>
 	<?php
     if($ENTRADA_ACL->amIAllowed("configuration", "create")) {
         ?>
         <div class="row-fluid space-below medium">
         	<div class="pull-right">
-                <a href="<?php echo ENTRADA_URL; ?>/admin/settings?section=add" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add New Organisation</a>
+                <a href="<?php echo ENTRADA_URL; ?>/admin/settings?section=add" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> <?php echo $translate->_("Add New Organisation"); ?></a>
             </div>
         </div>
         <?php
@@ -96,7 +96,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 								?>
 							</tbody>
 						</table><br />
-						<input type="submit" class="btn btn-danger" value="Delete Selected" />
+						<input type="submit" class="btn btn-danger" value="<?php echo $translate->_("Delete Selected"); ?>" />
 
 					</form>
 				</div>

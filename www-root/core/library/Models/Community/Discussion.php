@@ -47,9 +47,9 @@ class Models_Community_Discussion extends Models_Base {
                 $updated_date,
                 $updated_by;
 
-    protected $table_name = "community_discussions";
-    protected $primary_key = "cdiscussion_id";
-    protected $default_sort_column = "cdiscussion_id";
+    protected static $table_name = "community_discussions";
+    protected static $primary_key = "cdiscussion_id";
+    protected static $default_sort_column = "cdiscussion_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -260,4 +260,11 @@ class Models_Community_Discussion extends Models_Base {
         $results_forum_cat	= $db->GetAll($query_forum_cat);
         return $results_forum_cat;
     }
+
+    public static function fetchRowByID($cdiscussion_id) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "cdiscussion_id", "value" => $cdiscussion_id, "method" => "=")
+        ));
+    } 
 }

@@ -64,7 +64,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			if ($results && $evaluation_id) {
 
 				$single = count($results) == 1;
-				$evaluators_list = Models_Evaluation::getEvaluators($evaluation_id);
+				$evaluators_list = Classes_Evaluation::getEvaluators($evaluation_id);
 				$evaluators = count($evaluators_list);
 
 				echo "<h1>".$results[0]["evaluation_title"]."</h1>";
@@ -491,31 +491,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			echo "<form action=\"\" method=\"get\">\n";
 			echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
 			echo "</form>\n";
-
-			/**
-			 * Sidebar item that will provide another method for sorting, ordering, etc.
-			 */
-			$url = ENTRADA_URL."/admin/evaluations/reports?";
-			$sidebar_html  = "Sort columns:\n";
-			$sidebar_html .= "<ul class=\"menu\">\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "title") ? "on" : "off")."\"><a href=\"".$url.replace_query(array("sb" => "title"))."\" title=\"Sort by Evaluation Title\">by evaluation title</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluation_start") ? "on" : "off")."\"><a href=\"".$url.replace_query(array("sb" => "evaluation_start"))."\" title=\"Sort by Start Date &amp; Time\">by start date</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluation_finish") ? "on" : "off")."\"><a href=\"".$url.replace_query(array("sb" => "evaluation_finish"))."\" title=\"Sort by Finish Date &amp; Time\">by finish</a></li>\n";
-			$sidebar_html .= "</ul>\n";
-			$sidebar_html .= "Order columns:\n";
-			$sidebar_html .= "<ul class=\"menu\">\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "asc") ? "on" : "off")."\"><a href=\"".$url.replace_query(array("so" => "asc"))."\" title=\"Ascending Order\">in ascending order</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") ? "on" : "off")."\"><a href=\"".$url.replace_query(array("so" => "desc"))."\" title=\"Descending Order\">in descending order</a></li>\n";
-			$sidebar_html .= "</ul>\n";
-			$sidebar_html .= "Rows per page:\n";
-			$sidebar_html .= "<ul class=\"menu\">\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".$url.replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".$url.replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".$url.replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".$url.replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
-			$sidebar_html .= "</ul>\n";
-
-			new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
 		break;
 	}
 }

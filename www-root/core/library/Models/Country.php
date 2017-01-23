@@ -25,9 +25,9 @@
 class Models_Country extends Models_Base {
     protected $countries_id, $country, $abbreviation, $iso2, $isonum;
 
-    protected $table_name = "global_lu_countries";
-    protected $primary_key = "countries_id";
-    protected $default_sort_column = "country";
+    protected static $table_name = "global_lu_countries";
+    protected static $primary_key = "countries_id";
+    protected static $default_sort_column = "country";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);

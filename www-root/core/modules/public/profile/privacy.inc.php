@@ -18,8 +18,7 @@ if (!defined("IN_PROFILE")) {
 } elseif(!$ENTRADA_ACL->isLoggedInAllowed('profile', 'read')) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -40,21 +39,32 @@ if (!defined("IN_PROFILE")) {
 
 	$PROCESSED		= array();
 
-	if ((is_array($_SESSION["permissions"])) && ($total_permissions = count($_SESSION["permissions"]) > 1)) {
-		$sidebar_html  = "The following individual".((($total_permissions - 1) != 1) ? "s have" : " has")." given you access to their ".APPLICATION_NAME." permission levels:";
-		$sidebar_html .= "<ul class=\"menu\">\n";
+	if (isset($_SESSION["permissions"]) && is_array($_SESSION["permissions"]) && (count($_SESSION["permissions"]) > 1)) {
+		$sidebar_html  = "<form id=\"masquerade-form\" action=\"".ENTRADA_URL."\" method=\"get\">\n";
+		$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
+		$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 100%\" onchange=\"window.location='".ENTRADA_URL."/".$MODULE."/?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
+		$display_masks = true;
+		$added_users = array();
 		foreach ($_SESSION["permissions"] as $access_id => $result) {
-			if ($access_id != $ENTRADA_USER->getDefaultAccessId()) {
-				$sidebar_html .= "<li class=\"checkmark\"><strong>".html_encode($result["fullname"])."</strong><br /><span class=\"content-small\">Exp: ".(($result["expires"]) ? date("D M d/y", $result["expires"]) : "Unknown")."</span></li>\n";
+			if ($result["organisation_id"] == $ENTRADA_USER->getActiveOrganisation() && is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId() || ($result["id"] == $ENTRADA_USER->getID() && $ENTRADA_USER->getDefaultAccessId() != $access_id)) && array_search($result["id"], $added_users) === false) {
+				if (isset($result["mask"]) && $result["mask"]) {
+					$display_masks = true;
+				}
+				$added_users[] = $result["id"];
+				$sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) || !isset($result["permission_id"]) ? "close" : $result["permission_id"])."\"".(($result["id"] == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
 			}
 		}
-		$sidebar_html .= "</ul>\n";
-
-		new_sidebar_item("Delegated Permissions", $sidebar_html, "delegated-permissions", "open");
+		$sidebar_html .= "</select>\n";
+		$sidebar_html .= "</form>\n";
+		if ($display_masks) {
+			new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
+		}
 	}
 
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/profile.js\"></script>";
-	
+	$HEAD[] = "<script>var PROV_STATE = \"". $prov_state ."\";</script>";
+	$HEAD[] = "<script>var ENTRADA_URL = \"". ENTRADA_URL ."\";</script>";
+
 	if ($ERROR) {
 		fade_element("out", "display-error-box");
 		echo display_error();
@@ -70,14 +80,11 @@ if (!defined("IN_PROFILE")) {
 		echo display_notice();
 	}
 	
-	$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `".AUTH_DATABASE."`.`user_data`.`id`=".$db->qstr($ENTRADA_USER->getID());
-	$result	= $db->GetRow($query);
-	if ($result) {
+	$user_object = Models_User::fetchRowByID($ENTRADA_USER->getID());
+	if ($user_object) {
+		$result = $user_object->toArray();
 			
 ?>
-			
-			
-		
 	<h1>Privacy Preferences</h1>
 	<form action="<?php echo ENTRADA_URL; ?>/profile?section=privacy" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>">
 		<input type="hidden" name="action" value="privacy-update" />
@@ -137,12 +144,11 @@ if (!defined("IN_PROFILE")) {
 			
 		<?php
 	} else {
-		$NOTICE++;
-		$NOTICESTR[]	= "Unfortunately your ".APPLICATION_NAME." profile is not accessible at this time, please try again later.";
+		add_notice("Unfortunately your ".APPLICATION_NAME." profile is not accessible at this time, please try again later.");
 
 		echo display_notice();
 
-		application_log("error", "A user profile was not available in the database? Database said: ".$db->ErrorMsg());
+		application_log("error", "A user profile was not available in the database");
 	}
 }
 ?>

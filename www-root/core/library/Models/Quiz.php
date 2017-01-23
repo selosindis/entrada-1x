@@ -27,8 +27,9 @@ class Models_Quiz extends Models_Base {
     
     protected $quiz_id, $quiz_title, $quiz_description, $quiz_active = 1, $updated_date, $updated_by, $created_by;
     
-    protected $table_name = "quizzes";
-    protected $default_sort_column = "quiz_title";
+    protected static $primary_key = "quiz_id";
+    protected static $table_name = "quizzes";
+    protected static $default_sort_column = "quiz_title";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -55,7 +56,6 @@ class Models_Quiz extends Models_Base {
         );
 
         $objs = $self->fetchAll($constraints, "=", "AND");
-
         $output = array();
 
         if (!empty($objs)) {
@@ -160,7 +160,7 @@ class Models_Quiz extends Models_Base {
     public function insert() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->quiz_id = $db->Insert_ID();
             return $this;
         } else {
@@ -171,7 +171,7 @@ class Models_Quiz extends Models_Base {
     public function update() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`quiz_id` = ".$db->qstr($this->quiz_id))) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`quiz_id` = ".$db->qstr($this->quiz_id))) {
             return $this;
         } else {
             return false;
@@ -181,14 +181,67 @@ class Models_Quiz extends Models_Base {
     public function delete() {
         global $db;
         
-        $query = "DELETE FROM `".$this->table_name."` WHERE `quiz_id` = ?";
+        $query = "DELETE FROM `".static::$table_name."` WHERE `quiz_id` = ?";
         if ($db->Execute($query, $this->quiz_id)) {
             return true;
         } else {
             return false;
         }
     }
-    
-}
 
-?>
+    public static function fetchAllQuizzesByTitleForAssessments($search, $assessment_id, $start_date="", $finish_date="") {
+        global $ENTRADA_USER, $db;
+
+        $where[] = "a.`quiz_title` LIKE ".$db->qstr("%".$search."%");
+        if ($start_date && $finish_date) {
+            $where[] = "f.event_start > ".$db->qstr($start_date);
+            $where[] = "f.event_finish > ".$db->qstr($finish_date);
+        }
+
+        $query	= "SELECT a.*, d.*, COUNT(DISTINCT c.`qquestion_id`) AS `question_total`,
+                CASE
+                    WHEN f.`event_title` IS NOT NULL 
+                        THEN CONCAT('Event [', f.`event_title`, ' - ', DATE(FROM_UNIXTIME(f.`event_start`)), ']')
+                    WHEN g.`page_url` IS NOT NULL 
+                        THEN CONCAT('Community Page: ', h.`community_title`, ' [', g.`page_url`, ']')
+                END AS `content_title`,
+            i.`member_acl` AS `community_admin`, f.`course_id`, j.`organisation_id`
+            FROM `quizzes` AS a
+            LEFT JOIN `quiz_contacts` AS b
+            ON a.`quiz_id` = b.`quiz_id`
+            JOIN `quiz_questions` AS c
+            ON a.`quiz_id` = c.`quiz_id`
+            AND c.`question_active` = 1
+            JOIN `attached_quizzes` AS d
+            ON a.`quiz_id` = d.`quiz_id`";
+
+        if ($assessment_id) {
+            $query .= " LEFT JOIN `assessment_attached_quizzes` AS e
+                ON e.`assessment_id` = ".$db->qstr($assessment_id)."
+                AND e.`aquiz_id` = d.`aquiz_id`";
+            $where[] = "e . `aquiz_id` IS NULL";
+        }
+        
+        $query.= " LEFT JOIN `events` AS f
+            ON d.`content_type` = 'event'
+            AND d.`content_id` = f.`event_id`
+            LEFT JOIN `community_pages` AS g
+            ON d.`content_type` = 'community_page'
+            AND d.`content_id` = g.`cpage_id`
+            LEFT JOIN `communities` AS h
+            ON g.`community_id` = h.`community_id`
+            LEFT JOIN `community_members` AS i
+            ON h.`community_id` = i.`community_id`
+            AND i.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+            AND i.`member_active` = 1
+            LEFT JOIN `courses` AS j
+            ON f.`course_id` = j.`course_id`
+            WHERE ".implode(" AND ", $where)."  
+            GROUP BY d.`aquiz_id`
+            ORDER BY a.`quiz_title`";
+
+        $results	= $db->GetAll($query);
+
+        return $results;
+    }
+}

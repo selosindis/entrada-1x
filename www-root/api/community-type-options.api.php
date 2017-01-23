@@ -89,6 +89,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
         </div>
     </div>
     <div class="clearfix"></div>
+
     <h3>Community Pages</h3>
     <div class="control-group">
         <label class="control-label form-required">Default Pages</label>

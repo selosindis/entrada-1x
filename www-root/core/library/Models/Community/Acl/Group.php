@@ -33,8 +33,8 @@ class Models_Community_Acl_Group extends Models_Base {
                 $update,
                 $delete;
 
-    protected $table_name = "community_acl_groups";
-    protected $default_sort_column = "id";
+    protected static $table_name = "community_acl_groups";
+    protected static $default_sort_column = "id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);

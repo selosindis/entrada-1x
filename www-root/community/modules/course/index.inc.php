@@ -99,7 +99,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             ORDER BY `contact_order` ASC";
                 $results = $db->GetAll($query);
                 if ($results) {
-                    echo "<h2>" . (count($results) > 1 ? $translate->_("course_directors") : $translate->_("course_director")) . "</h2>\n";
+                    echo "<h2>" . (count($results) > 1 ? $translate->_("Course Directors") : $translate->_("Course Director")) . "</h2>\n";
                     foreach ($results as $key => $result) {
                         echo "<div id=\"result-".$result["id"]."\" style=\"width: 100%; padding: 5px 0px 5px 5px; line-height: 16px; text-align: left;\">\n";
                         echo "	<table style=\"width: 100%;\" class=\"profile-card\">\n";
@@ -110,7 +110,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         echo "		<col style=\"width: 22%\" />\n";
                         echo "	<colgroup>";
                         echo "	<tr>";
-                        echo "		<td>";
+                        echo "		<td style=\"vertical-align: top;\">";
                         echo "			<div id=\"img-holder-".$result["id"]."\" class=\"img-holder\">\n";
 
                         $offical_file_active	= false;
@@ -138,25 +138,25 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         }
 
                         if ($uploaded_file_active) {
-                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         } elseif ($offical_file_active) {
-                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         }
 
                         if ((!$offical_file_active) && (!$uploaded_file_active)) {
-                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
                         }
 
                         echo "			</div>\n";
                         echo "		</td>\n";
-                        echo "		<td style=\"font-size: 12px; color: #003366; vertical-align: top\">";
-                        echo "			<div style=\"font-weight: bold; font-size: 13px;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
+                        echo "		<td style=\"font-size: 14px; color: #003366; vertical-align: top\">";
+                        echo "			<div style=\"font-weight: bold;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
                         echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
                         if ($result["privacy_level"] > 1 || $COMMUNITY_ADMIN) {
-                            echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
+                            echo "			<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["email"])."</a><br />\n";
 
                             if ($result["email_alt"]) {
-                                echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\" style=\"font-size: 10px;\">".html_encode($result["email_alt"])."</a>\n";
+                                echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\">".html_encode($result["email_alt"])."</a>\n";
                             }
                         }
                         echo "		</td>\n";
@@ -240,7 +240,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             ORDER BY `contact_order` ASC";
                 $results = $db->GetAll($query);
                 if ($results) {
-                    echo "<h2>" . (count($results) > 1 ? $translate->_("program_coordinators") : $translate->_("program_coordinator")) . "</h2>\n";
+                    echo "<h2>" . (count($results) > 1 ? $translate->_("Program Coordinators") : $translate->_("Program Coordinator")) . "</h2>\n";
                     foreach ($results as $key => $result) {
                         echo "<div id=\"result-".$result["id"]."\" style=\"width: 100%; padding: 5px 0px 5px 5px; line-height: 16px; text-align: left;\">\n";
                         echo "	<table style=\"width: 100%;\" class=\"profile-card\">\n";
@@ -251,7 +251,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         echo "		<col style=\"width: 22%\" />\n";
                         echo "	<colgroup>";
                         echo "	<tr>";
-                        echo "		<td>";
+                        echo "		<td style=\"vertical-align: top;\">";
                         echo "			<div id=\"img-holder-".$result["id"]."\" class=\"img-holder\">\n";
 
                         $offical_file_active	= false;
@@ -280,25 +280,25 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 
 
                         if ($uploaded_file_active) {
-                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         } elseif ($offical_file_active) {
-                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         }
 
                         if ((!$offical_file_active) && (!$uploaded_file_active)) {
-                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
                         }
 
                         echo "			</div>\n";
                         echo "		</td>\n";
-                        echo "		<td style=\"font-size: 12px; color: #003366; vertical-align: top\">";
-                        echo "			<div style=\"font-weight: bold; font-size: 13px;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
+                        echo "		<td style=\"font-size: 14px; color: #003366; vertical-align: top\">";
+                        echo "			<div style=\"font-weight: bold;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
                         echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
                         if ($result["privacy_level"] > 1 || $COMMUNITY_ADMIN) {
-                            echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
+                            echo "			<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["email"])."</a><br />\n";
 
                             if ($result["email_alt"]) {
-                                echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\" style=\"font-size: 10px;\">".html_encode($result["email_alt"])."</a>\n";
+                                echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\">".html_encode($result["email_alt"])."</a>\n";
                             }
                         }
                         echo "		</td>\n";
@@ -382,7 +382,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             ORDER BY `contact_order` ASC";
                 $results = $db->GetAll($query);
                 if ($results) {
-                    echo "<h2>" . (count($results) > 1 ? $translate->_("curriculum_coordinators") : $translate->_("curriculum_coordinator")) . "</h2>\n";
+                    echo "<h2>" . (count($results) > 1 ? $translate->_("Curriculum Coordinators") : $translate->_("Curriculum Coordinator")) . "</h2>\n";
                     foreach ($results as $key => $result) {
                         echo "<div id=\"result-".$result["id"]."\" style=\"width: 100%; padding: 5px 0px 5px 5px; line-height: 16px; text-align: left;\">\n";
                         echo "	<table style=\"width: 100%;\" class=\"profile-card\">\n";
@@ -393,7 +393,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         echo "		<col style=\"width: 22%\" />\n";
                         echo "	<colgroup>";
                         echo "	<tr>";
-                        echo "		<td>";
+                        echo "		<td style=\"vertical-align: top;\">";
                         echo "			<div id=\"img-holder-".$result["id"]."\" class=\"img-holder\">\n";
 
                         $offical_file_active	= false;
@@ -421,25 +421,25 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         }
 
                         if ($uploaded_file_active) {
-                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         } elseif ($offical_file_active) {
-                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         }
 
                         if ((!$offical_file_active) && (!$uploaded_file_active)) {
-                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
                         }
 
                         echo "			</div>\n";
                         echo "		</td>\n";
-                        echo "		<td style=\"font-size: 12px; color: #003366; vertical-align: top\">";
-                        echo "			<div style=\"font-weight: bold; font-size: 13px;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
+                        echo "		<td style=\"font-size: 14px; color: #003366; vertical-align: top\">";
+                        echo "			<div style=\"font-weight: bold;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
                         echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
                         if ($result["privacy_level"] > 1 || $COMMUNITY_ADMIN) {
-                            echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
+                            echo "			<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["email"])."</a><br />\n";
 
                             if ($result["email_alt"]) {
-                                echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\" style=\"font-size: 10px;\">".html_encode($result["email_alt"])."</a>\n";
+                                echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\">".html_encode($result["email_alt"])."</a>\n";
                             }
                         }
                         echo "		</td>\n";
@@ -523,7 +523,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             ORDER BY `contact_order` ASC";
                 $results = $db->GetAll($query);
                 if ($results) {
-                    echo "<h2>" . $translate->_("faculty") . "</h2>\n";
+                    echo "<h2>" . $translate->_("Faculty") . "</h2>\n";
                     foreach ($results as $key => $result) {
                         echo "<div id=\"result-".$result["id"]."\" style=\"width: 100%; padding: 5px 0px 5px 5px; line-height: 16px; text-align: left;\">\n";
                         echo "	<table style=\"width: 100%;\" class=\"profile-card\">\n";
@@ -534,7 +534,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         echo "		<col style=\"width: 22%\" />\n";
                         echo "	<colgroup>";
                         echo "	<tr>";
-                        echo "		<td>";
+                        echo "		<td style=\"vertical-align: top;\">";
                         echo "			<div id=\"img-holder-".$result["id"]."\" class=\"img-holder\">\n";
 
                         $offical_file_active	= false;
@@ -562,25 +562,25 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         }
 
                         if ($uploaded_file_active) {
-                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         } elseif ($offical_file_active) {
-                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+                            echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
                         }
 
                         if ((!$offical_file_active) && (!$uploaded_file_active)) {
-                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+                            echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"72\" style=\"width: 72px; height: 72px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
                         }
 
                         echo "			</div>\n";
                         echo "		</td>\n";
-                        echo "		<td style=\"font-size: 12px; color: #003366; vertical-align: top\">";
-                        echo "			<div style=\"font-weight: bold; font-size: 13px;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
+                        echo "		<td style=\"font-size: 14px; color: #003366; vertical-align: top\">";
+                        echo "			<div style=\"font-weight: bold;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
                         echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
                         if ($result["privacy_level"] > 1 || $COMMUNITY_ADMIN) {
-                            echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
+                            echo "			<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["email"])."</a><br />\n";
 
                             if ($result["email_alt"]) {
-                                echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\" style=\"font-size: 10px;\">".html_encode($result["email_alt"])."</a>\n";
+                                echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\">".html_encode($result["email_alt"])."</a>\n";
                             }
                         }
                         echo "		</td>\n";
@@ -1115,6 +1115,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             WHERE a.`objective_type` = 'event'
                             AND a.`course_id` IN (".implode(", ", $course_ids).")
                             AND b.`objective_active` = 1
+                            AND a.`active` = 1
                             AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
                             GROUP BY b.`objective_id`
                             ORDER BY b.`objective_order`";
@@ -1195,7 +1196,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             ORDER BY c.`group_id` DESC, a.`order` ASC, a.`type`";
 
                 $assessments = $db->GetAll($query);
-                $cohorts_threshold = $ENTRADA_SETTINGS->fetchValueByShortname("course_webpage_assessment_cohorts_count", $ENTRADA_USER->getActiveOrganisation());
+                $cohorts_threshold = Entrada_Settings::fetchValueByShortname("course_webpage_assessment_cohorts_count", $ENTRADA_USER->getActiveOrganisation());
                 if ($assessments) {
                     echo "<h1>Assessments</h1>";
                     $group_count = 0;

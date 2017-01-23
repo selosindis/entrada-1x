@@ -127,7 +127,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                     if (!$ERROR) {
                         $url = ENTRADA_URL . "/admin/settings/manage/characteristics?org=".$ORGANISATION_ID;
 
-                        add_success("You have successfully updated <strong>".html_encode($PROCESSED["title"])."</strong>.<br /><br />You will now be redirected to the " . $translate->_("Assessment Characteristics") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+                        add_success("You have successfully updated <strong>".html_encode($PROCESSED["title"])."</strong>.<br /><br />You will now be redirected to the " . $translate->_("Assessment Types") . " index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
                         $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
                         application_log("success", "Updated Assessment Characteristic ID [".$id."].");

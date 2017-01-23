@@ -90,7 +90,6 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			exit;
 		break;
 		case "next_id" :
-		default :
 			$default_next_page = get_next_community_page($COMMUNITY_ID, $cpage_id, $parent_id, $page_order);
 			echo $default_next_page["cpage_id"];
 			exit;

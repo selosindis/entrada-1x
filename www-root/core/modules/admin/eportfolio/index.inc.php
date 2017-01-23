@@ -1073,14 +1073,7 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 		
 		.left-pane ul li a.active {
-			background: #f9f9f9; /* Old browsers */
-			background: -moz-linear-gradient(top,  #f9f9f9 0%, #f2f2f2 100%); /* FF3.6+ */
-			background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f9f9f9), color-stop(100%,#f2f2f2)); /* Chrome,Safari4+ */
-			background: -webkit-linear-gradient(top,  #f9f9f9 0%,#f2f2f2 100%); /* Chrome10+,Safari5.1+ */
-			background: -o-linear-gradient(top,  #f9f9f9 0%,#f2f2f2 100%); /* Opera 11.10+ */
-			background: -ms-linear-gradient(top,  #f9f9f9 0%,#f2f2f2 100%); /* IE10+ */
-			background: linear-gradient(to bottom,  #f9f9f9 0%,#f2f2f2 100%); /* W3C */
-			filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f9f9f9', endColorstr='#f2f2f2',GradientType=0 ); /* IE6-9 */
+			background: #ecf0f3; /* Old browsers */
 			border-bottom: none;
 		}
 		

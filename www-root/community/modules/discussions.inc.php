@@ -208,7 +208,7 @@ function discussion_topic_module_access($cdtopic_id = 0, $section = "") {
 					switch($section) {
 						case "delete-post" :
 						case "edit-post" :
-							if ($ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
+							if (($LOGGED_IN) && ($ENTRADA_USER->getActiveId() != (int) $result["proxy_id"])) {
 								$allow_to_load = false;
 							} else {
                                 $allow_to_load = true;

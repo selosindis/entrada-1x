@@ -28,8 +28,8 @@ class Entrada_Settings extends Entrada_Base {
               $organisation_id,
               $value;
 
-    protected $table_name = "settings";
-    protected $default_sort_column = "setting_id";
+    protected static $table_name = "settings";
+    protected static $default_sort_column = "setting_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -54,7 +54,7 @@ class Entrada_Settings extends Entrada_Base {
     public function insert() {
         global $db;
 
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->setting_id = $db->Insert_ID();
             return $this;
         } else {
@@ -65,7 +65,7 @@ class Entrada_Settings extends Entrada_Base {
     public function update() {
         global $db;
         if (isset($this->setting_id)) {
-            if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`setting_id` = ".$db->qstr($this->setting_id))) {
+            if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`setting_id` = ".$db->qstr($this->setting_id))) {
                 return $this;
             } else {
                 return false;
@@ -79,7 +79,7 @@ class Entrada_Settings extends Entrada_Base {
         $this->active = 0;
         return $this->update();
     }
-    
+
     public static function fetchByID($setting_id = 0) {
         $self = new self();
         return $self->fetchRow(array(
@@ -133,7 +133,7 @@ class Entrada_Settings extends Entrada_Base {
         return $output;
     }
 
-    public function fetchValueByShortname($shortname, $organisation_id = 1) {
+    public static function fetchValueByShortname($shortname, $organisation_id = 1) {
         $self = new self();
         return $self->read($shortname, $organisation_id);
     }
@@ -153,4 +153,5 @@ class Entrada_Settings extends Entrada_Base {
 
         return false;
     }
+
 }

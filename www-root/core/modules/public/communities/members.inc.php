@@ -38,6 +38,7 @@ if ($MAILING_LISTS["active"]) {
 $COMMUNITY_ID		= 0;
 $PREFERENCES		= preferences_load($MODULE);
 $PROXY_IDS			= array();
+$current_members_ids = array();
 
 /**
  * Check for a community category to proceed.
@@ -211,8 +212,8 @@ if ($COMMUNITY_ID) {
 										}
 									}
 
-									require_once("Models/utility/Template.class.php");
-									require_once("Models/utility/TemplateMailer.class.php");
+									require_once("Classes/utility/Template.class.php");
+									require_once("Classes/utility/TemplateMailer.class.php");
 
 									if ($GUEST_ACCESS) {
 										$hash = get_hash();
@@ -344,12 +345,14 @@ if ($COMMUNITY_ID) {
 							$member_add_success	= 0;
 							$member_add_failure	= 0;
 
-							if (isset($_POST["search_target_control_ids"]) && ($proxy_ids = explode(',', $_POST["search_target_control_ids"])) && count($proxy_ids)) { ?>
-                                <script type="text/javascript">
-                                    sessionStorage.removeItem("search_target_control_ids");
-                                </script>
+							if (isset($_POST["members"]) && (is_array($_POST["members"]))) {
+								$proxy_ids = array();
+								foreach ($_POST["members"] as $proxy_id) {
+									if ($tmp_input = clean_input($proxy_id, array("trim", "int"))) {
+										$proxy_ids[] = $tmp_input;
+									}
+								}
 
-							    <?php
 								if ($MAILING_LISTS["active"]) {
 									try {
 									    $mail_list = new MailingList($COMMUNITY_ID);
@@ -372,6 +375,21 @@ if ($COMMUNITY_ID) {
 												WHERE a.`id` = ".$db->qstr($proxy_id);
 										$result	= $db->GetRow($query);
 										if ($result) {
+											$notifys_type = array('announcement','event','poll');
+											foreach ($notifys_type as $notify_type) {
+													
+												$current_notify = $db->GetOne("SELECT `proxy_id` FROM `community_notify_members` WHERE `proxy_id` = " . $db->qstr($proxy_id) . " AND `community_id` = " . $db->qstr($COMMUNITY_ID) . " AND `record_id` = " . $db->qstr($COMMUNITY_ID) . " AND `notify_type` = " . $db->qstr($notify_type));
+												if ($current_notify) {
+													if (!$db->Execute("UPDATE `community_notify_members` SET `notify_active` =  1 WHERE `proxy_id` = " . $db->qstr($proxy_id) . " AND `community_id` = " . $db->qstr($COMMUNITY_ID) . " AND `record_id` = " . $db->qstr($COMMUNITY_ID) . " AND `notify_type` = " . $db->qstr($notify_type))) {
+														application_log("error", "can update community_notify_members for : ".$COMMUNITY_ID ."and Proxy id : ".$proxy_id);
+													} 
+												} else {
+
+													if (!$db->Execute("INSERT INTO `community_notify_members` (`notify_active`, `proxy_id`, `community_id`, `record_id`, `notify_type`) VALUES ( 1 , " . $db->qstr($proxy_id) . ", " . $db->qstr($COMMUNITY_ID) . ", " . $db->qstr($COMMUNITY_ID) . ", " . $db->qstr($notify_type) . ")")) {
+														application_log("error", "can insert into community_notify_members for : ".$COMMUNITY_ID ."and Proxy id : ".$proxy_id);
+													} 
+												}		
+											}
 											if ((int) $result["cmember_id"]) {
 												if (@$db->AutoExecute("community_members", array("member_active" => 1), "UPDATE", "`cmember_id` = ".$db->qstr((int) $result["cmember_id"]))) {
 													if ($MAILING_LISTS["active"]) {
@@ -827,7 +845,6 @@ if ($COMMUNITY_ID) {
 											echo "	<td>".($result["group"] == "guest" ? "Guest" : "Member" )."</td>\n";
 											echo "	<td class=\"list-status\"><img src=\"images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif\" alt=\"Enabled\"" : "list-status-offline.gif\" alt=\"Disabled\"")." /></td>\n";
 											echo "</tr>\n";
-
                                             $current_members_ids[] = $result["proxy_id"];
 										}
 										?>
@@ -844,54 +861,10 @@ if ($COMMUNITY_ID) {
 							<h3 class="tab">Administrators</h3>
 							<h2 style="margin-top: 0px">Community Administrators</h2>
 							<?php
-							/**
-							 * Get the total number of results using the generated queries above and calculate the total number
-							 * of pages that are available based on the results per page preferences.
-							 */
-							$query	= "SELECT COUNT(*) AS `total_rows` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1' AND `member_acl` = '1'";
-							$result	= $db->GetRow($query);
-							if ($result) {
-								$TOTAL_ROWS	= $result["total_rows"];
-
-								if ($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
-									$TOTAL_PAGES = 1;
-								} elseif (($TOTAL_ROWS % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
-									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-								} else {
-									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
-								}
-
-								if ($TOTAL_PAGES > 1) {
-									$admin_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/".$MODULE, replace_query(), "apv");
-								} else {
-									$admin_pagination = false;
-								}
-
-							} else {
-								$TOTAL_ROWS		= 0;
-								$TOTAL_PAGES	= 1;
-							}
-
-							/**
-							 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
-							 */
-							if (isset($_GET["apv"])) {
-								$PAGE_CURRENT = (int) trim($_GET["apv"]);
-
-								if (($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
-									$PAGE_CURRENT = 1;
-								}
-							} else {
-								$PAGE_CURRENT = 1;
-							}
-
-							$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
-							$PAGE_NEXT		= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
 
 							/**
 							 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
 							 */
-							$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 							$query		= "
 										SELECT a.*, b.`username`, b.`firstname`, b.`lastname`, b.`email`
 										FROM `community_members` AS a
@@ -900,8 +873,7 @@ if ($COMMUNITY_ID) {
 										WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
 										AND a.`member_active` = '1'
 										AND a.`member_acl` = '1'
-										ORDER BY %s
-										LIMIT %s, %s";
+										ORDER BY %s";
 
 							// If the user has sorted on Member Type in the members tab and has moved to the administrators tab
 							// the member type sort is removed and the results are sorted on name as member type is not shown in the results since all
@@ -912,7 +884,7 @@ if ($COMMUNITY_ID) {
 
 							$SORT_BY = str_replace("CASE c.`group` WHEN 'guest' THEN 1 WHEN '%' THEN 2 END ASC", "a.`member_joined`", $SORT_BY);
 
-							$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+							$query		= sprintf($query, $SORT_BY);
 							$results	= $db->GetAll($query);
 							if ($results) {
 								$HEAD[] = "
@@ -973,7 +945,6 @@ if ($COMMUNITY_ID) {
                                                 echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $ENTRADA_USER->getActiveId()) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
                                                 echo "	<td class=\"list-status\"><img src=\"images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif\" alt=\"Active\"" : "list-status-offline.gif\" alt=\"Disabled\"")." /></td>\n";
                                                 echo "</tr>\n";
-
                                                 $current_members_ids[] = $result["proxy_id"];
                                             }
                                             ?>
@@ -1001,9 +972,6 @@ if ($COMMUNITY_ID) {
                                     <label for="choose-members-btn" class="control-label form-required"><?php echo $translate->_("Select Members"); ?></label>
                                     <div class="controls">
                                         <button id="choose-members-btn" class="btn btn-search-filter" style="min-width: 220px; text-align: left;"><?php echo $translate->_("Browse All Members"); ?> <i class="icon-chevron-down btn-icon pull-right"></i></button>
-                                    </div>
-                                    <div id="group_members_list">
-                                        <h3>Members to be Added on Submission</h3>
                                     </div>
                                     <script>
                                         var filters = {};
@@ -1113,17 +1081,11 @@ if ($COMMUNITY_ID) {
                                                     student: {
                                                         select_all_enabled: true,
                                                         api_params: {
-                                                            context: "",
-                                                            previous_context: "organisation_id",
-                                                            next_context: "organisation_id",
-                                                            current_context: "organisation_id",
-                                                            organisation_id: 0,
-                                                            group_type: 0,
+															organisation_id: "<?php echo $ENTRADA_USER->getActiveOrganisation(); ?>",
                                                             excluded_target_ids: excluded_target_ids
                                                         },
                                                         label: "<?php echo $translate->_("Students"); ?>",
-                                                        data_source: "get-organisations",
-                                                        secondary_data_source: "get-students"
+                                                        data_source: "get-students",
                                                     }
                                                 }
                                             </script>
@@ -1138,7 +1100,6 @@ if ($COMMUNITY_ID) {
                                         <input type="submit" class="btn btn-primary" value="Add Members"/>
                                     </div>
                                 </div>
-                                <div id="selected_list_container"></div>
                             </form>
                         </div>
                         <div class="tab-page members">
@@ -1180,15 +1141,17 @@ if ($COMMUNITY_ID) {
                             jQuery("#choose-members-btn").advancedSearch({
 								api_url: "<?php echo ENTRADA_URL . "/" . $MODULE . "?section=api-members"; ?>",
 								build_selected_filters: false,
-                                resource_url: ENTRADA_URL,
+								reset_api_params: true,
+								resource_url: ENTRADA_URL,
 								filter_component_label: "Users",
 								filters: filters,
+                                select_all_enabled : true,
+                                target_name : "members",
                                 no_results_text: "<?php echo $translate->_("No Users found matching the search criteria"); ?>",
-                                selected_list_container: jQuery("#selected_list_container"),
                                 parent_form: jQuery("#add-members-form"),
                                 list_data: {
                                     selector: "#group_members_list",
-                                    background_value : "url(images/list-community.gif) no-repeat scroll 0 4px transparent"
+                                    background_value: "url(images/list-community.gif) no-repeat scroll 0 4px transparent"
                                 },
                                 width: 300,
                                 async: false

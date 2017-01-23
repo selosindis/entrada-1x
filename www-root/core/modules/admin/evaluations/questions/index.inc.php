@@ -44,7 +44,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	<a id="false-link" href="#placeholder"></a>
 	<div id="placeholder" style="display: none"></div>
 	<?php
-	$results = Models_Evaluation::getAuthorEvaluationQuestions();
+	$results = Classes_Evaluation::getAuthorEvaluationQuestions();
 	if ($results) {
 		if (isset($FORM_ID) && $FORM_ID) {
 			$query	= "SELECT COUNT(*) AS `total` FROM `evaluations` WHERE `eform_id` = ".$db->qstr($FORM_ID);
@@ -71,7 +71,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$FORM_ID = false;
 			}
 		}
-		$question_controls = Models_Evaluation::getQuestionControlsArray($results);
+		$question_controls = Classes_Evaluation::getQuestionControlsArray($results);
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
 		$HEAD[] = "<script type=\"text/javascript\">
 		var question_controls = ".json_encode($question_controls).";

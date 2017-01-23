@@ -202,7 +202,7 @@ define("ENCRYPTION_KEY", "UXZF4tTES8RmTHY9qA7DQrvqEde7R5a8");					// Encryption 
  * Google Analystics Tracking Code
  * Create an account at: http://www.google.com/analytics
  */
-define("GOOGLE_ANALYTICS_CODE",	"");											// If you would like Google Analytics to track your usage (in production), then enter your tracking code.
+define("GOOGLE_ANALYTICS_CODE",	"UA-80882-22");											// If you would like Google Analytics to track your usage (in production), then enter your tracking code.
 
 /**
  * Goole Maps API Key
@@ -333,6 +333,7 @@ $COMMUNITY_ORGANISATIONS = array();															// Array of integer organisati
 define("ANNUALREPORT_STORAGE", $config->entrada_storage."/annualreports");		// Full directory path where the annual reports are stored without trailing slash.
 
 define("STORAGE_USER_PHOTOS", $config->entrada_storage . "/user-photos");		// Full directory path where user profile photos are stored without trailing slash.
+define("STORAGE_RESOURCE_IMAGES", $config->entrada_storage . "/resource-images");		// Full directory path where course/track images are stored without trailing slash.
 define("FILE_STORAGE_PATH", $config->entrada_storage . "/event-files");			// Full directory path where off-line files are stored without trailing slash.
 define("MSPR_STORAGE",$config->entrada_storage . "/msprs");						//Full directory path where student Medical School Performance Reports should be sotred
 define("SEARCH_INDEX_PATH",$config->entrada_storage . "/search-indexes");		//Full directory path where student Medical School Performance Reports should be sotred
@@ -345,8 +346,8 @@ define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and para
 define("DEBUG_MODE", true);														// Some places have extra debug code to show sample output. Set this to true if you want to see it.
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
-define("APPLICATION_NAME", "Entrada ME Open Edition");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.7.5"); 										// The current filesystem version of Entrada.
+define("APPLICATION_NAME", "Entrada ME Open Edition");							// The name of this application in your school (i.e. MedCentral, Osler, etc.)
+define("APPLICATION_VERSION", "1.8.0"); 										// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada ME Open Edition: An eLearning Ecosystem";
@@ -570,11 +571,11 @@ $MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "ann
 $MODULES["assessments"] = array("title" => "Assessment & Evaluation", "resource" => "assessments", "permission" => "update");
 $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");
 $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
+$MODULES["evaluations"] = array("title" => "Manage Clerkship Evaluations", "resource" => "evaluation", "permission" => "update");
 $MODULES["groups"] = array("title" => "Manage Cohorts", "resource" => "group", "permission" => "update");
 $MODULES["communities"] = array("title" => "Manage Communities", "resource" => "communityadmin", "permission" => "read");
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
 $MODULES["eportfolio"] = array("title" => "Manage ePortfolios", "resource" => "eportfolio", "permission" => "update");
-$MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
@@ -720,6 +721,11 @@ define("PDF_PASSWORD", "MyPassword");                   // Used to set the owner
 define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 1);          // Used to determine whether or not to include final grade calculations in Grade Export.
 define("GRADEBOOK_DISPLAY_MEAN_GRADE", 1);              // Used to determine whether or not to include mean (average) grade calculations in student gradebook.
 define("GRADEBOOK_DISPLAY_MEDIAN_GRADE", 1);            // Used to determine whether or not to include median grade calculations in student gradebook.
+
+/**
+ * File access timeout
+ */
+define("FILE_PUBLIC_ACCESS_TIMEOUT", 30);				// Used to determine the length of time a file can be accessible in the context of requiring temporary public access to that file. 
 
 /**
  * Learning Events Validation Constant

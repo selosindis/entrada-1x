@@ -29,10 +29,11 @@ class Models_Event_MapEventsEventType extends Models_Base {
               $fk_eventtype_id,
               $updated_date,
               $updated_by;
-    
-    protected $table_name = "map_events_eventtypes";
-    protected $default_sort_column = "map_events_eventtypes_id";
-    
+
+    protected static $table_name            = "map_events_eventtypes";
+    protected static $default_sort_column   = "map_events_eventtypes_id";
+    protected static $primary_key           = "map_events_eventtypes_id";
+
     public function __construct($arr = NULL) {
         parent::__construct($arr);
     }
@@ -80,7 +81,7 @@ class Models_Event_MapEventsEventType extends Models_Base {
     
     public function update() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`map_events_eventtypes_id` = ".$db->qstr($this->getID()))) {
+		if ($db->AutoExecute("`". static::$table_name ."`", $this->toArray(), "UPDATE", "`map_events_eventtypes_id` = ".$db->qstr($this->getID()))) {
 			return true;
 		} else {
 			return false;
@@ -89,7 +90,7 @@ class Models_Event_MapEventsEventType extends Models_Base {
     
     public function insert() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "INSERT")) {
+		if ($db->AutoExecute("`". static::$table_name ."`", $this->toArray(), "INSERT")) {
 			$this->map_events_eventtypes_id = $db->Insert_ID();
 			return true;
 		} else {
@@ -100,7 +101,7 @@ class Models_Event_MapEventsEventType extends Models_Base {
     public function delete () {
 		global $db;
 		
-		$query = "DELETE FROM `". $this->table_name ."` WHERE `map_events_eventtypes_id` = ?";
+		$query = "DELETE FROM `". static::$table_name ."` WHERE `map_events_eventtypes_id` = ?";
 		$result = $db->Execute($query, array($this->getID()));
 		
 		return $result;

@@ -1,5 +1,5 @@
-<div id="sidebar" class="sidebar no-printing">
-	<div class="panel-head"><h3>Course Navigation</h3></div>
+<div id="sidebar" class="sidebar panel no-printing">
+	<div class="panel-head"><h3>{translate}Course Navigation{/translate}</h3></div>
 
 	<ul class="navigation">
 	{foreach from=$site_primary_navigation key=key item=menu_item name=navigation}
@@ -9,5 +9,4 @@
 		{/foreach}
 	{/foreach}
 	</ul>
-
 </div>

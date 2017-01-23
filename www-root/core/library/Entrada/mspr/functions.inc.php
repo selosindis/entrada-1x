@@ -10,30 +10,30 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
 */
 
-require_once("Models/users/User.class.php");
-require_once("Models/users/ClinicalFacultyMembers.class.php");
+require_once("Classes/users/User.class.php");
+require_once("Classes/users/ClinicalFacultyMembers.class.php");
 
-require_once("Models/utility/Approvable.interface.php");
-require_once("Models/utility/AttentionRequirable.interface.php");
-require_once("Models/utility/Editable.interface.php");
-require_once("Models/utility/Template.class.php");
+require_once("Classes/utility/Approvable.interface.php");
+require_once("Classes/utility/AttentionRequirable.interface.php");
+require_once("Classes/utility/Editable.interface.php");
+require_once("Classes/utility/Template.class.php");
 
-require_once("Models/awards/InternalAwardReceipts.class.php");
-require_once("Models/mspr/ExternalAwardReceipts.class.php");
-require_once("Models/mspr/Studentships.class.php");
-require_once("Models/mspr/ClinicalPerformanceEvaluations.class.php");
-require_once("Models/mspr/Contributions.class.php");
-require_once("Models/mspr/DisciplinaryActions.class.php");
-require_once("Models/mspr/LeavesOfAbsence.class.php");
-require_once("Models/mspr/FormalRemediations.class.php");
-require_once("Models/mspr/ClerkshipRotations.class.php");
-require_once("Models/mspr/StudentRunElectives.class.php");
-require_once("Models/mspr/Observerships.class.php");
-require_once("Models/mspr/InternationalActivities.class.php");
-require_once("Models/mspr/CriticalEnquiry.class.php");
-require_once("Models/mspr/CommunityBasedProject.class.php");
-require_once("Models/mspr/ResearchCitations.class.php");
-require_once("Models/mspr/MSPRs.class.php");
+require_once("Classes/awards/InternalAwardReceipts.class.php");
+require_once("Classes/mspr/ExternalAwardReceipts.class.php");
+require_once("Classes/mspr/Studentships.class.php");
+require_once("Classes/mspr/ClinicalPerformanceEvaluations.class.php");
+require_once("Classes/mspr/Contributions.class.php");
+require_once("Classes/mspr/DisciplinaryActions.class.php");
+require_once("Classes/mspr/LeavesOfAbsence.class.php");
+require_once("Classes/mspr/FormalRemediations.class.php");
+require_once("Classes/mspr/ClerkshipRotations.class.php");
+require_once("Classes/mspr/StudentRunElectives.class.php");
+require_once("Classes/mspr/Observerships.class.php");
+require_once("Classes/mspr/InternationalActivities.class.php");
+require_once("Classes/mspr/CriticalEnquiry.class.php");
+require_once("Classes/mspr/CommunityBasedProject.class.php");
+require_once("Classes/mspr/ResearchCitations.class.php");
+require_once("Classes/mspr/MSPRs.class.php");
 
 
 function item_wrap_content($type, $entity, $content, $hide_controls = false, $comment="", $id_string="") {

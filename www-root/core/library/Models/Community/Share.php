@@ -48,8 +48,8 @@ class Models_Community_Share extends Models_Base {
                 $updated_date,
                 $updated_by;
 
-    protected $table_name = "community_shares";
-    protected $default_sort_column = "folder_order";
+    protected static $table_name = "community_shares";
+    protected static $default_sort_column = "folder_order";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);

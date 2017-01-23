@@ -1,7 +1,7 @@
 {
     "name": "entrada/entrada-1x",
     "description": "Entrada is an open source web-based platform created to allow teachers, learners and curriculum managers a simple way of accessing, interacting, and managing the curriculum within their educational environment. Entrada is ideally suited for the health sciences because of its integrated curriculum tagging features and clerkship support; however, it can easily be modified and adapted to almost any professional program. The Entrada project is built upon the philosophies of open access and collaboration, and we welcome new interest in the project.",
-    "version": "1.7.5",
+    "version": "1.8.0",
     "homepage": "http://entrada.org",
     "keywords": ["Entrada", "Entrada ME", "Curriculum Management System", "CMS", "Learning", "Medical", "Education"],
     "license": [
@@ -21,17 +21,36 @@
             "role": "Developer"
         }
     ],
+    "repositories": [{
+        "type": "package",
+        "package": {
+            "name": "entradapackages/mysqldump-php",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/EntradaPackages/mysqldump-php.git",
+                "reference": "origin/master"
+            },
+            "autoload": {
+                "psr-4": {"Ifsnop\\": "src/Ifsnop/"}
+            }
+        }
+    }],
     "require": {
-        "adodb/adodb-php": "5.20.4",
-        "ezyang/htmlpurifier": "4.7",
+        "php": ">=5.3.0",
+        "adodb/adodb-php": "5.19",
+        "ezyang/htmlpurifier": "~4.7",
         "smarty/smarty": "~3.1",
-        "openlss/lib-array2xml": "0.0.10",
-        "jasig/phpcas": "1.3.4",
-        "google/apiclient": "1.1.6",
-        "zendframework/zendframework1": "1.12.17"
+        "openlss/lib-array2xml": "~0.0.10",
+        "jasig/phpcas": "~1.3.4",
+        "google/apiclient": "~1.1.6",
+        "zendframework/zendframework1": "~1.12.17",
+        "entradapackages/mysqldump-php": "dev-master",
+        "mikehaertl/phpwkhtmltopdf": "^2.2"
     },
     "suggest": {
-        "rusticisoftware/tincan": "0.12.0"
+        "rusticisoftware/tincan": "0.12.0",
+        "umich-its-tl/caliper-php": "1.0.1"
     },
     "require-dev": {
         "phpunit/dbunit": "^1.3",
@@ -48,12 +67,14 @@
         "psr-0": {
             "Entrada": "www-root/core/library/",
             "Models": "www-root/core/library/",
-            "Views": "www-root/core/library/"
+            "Views": "www-root/core/library/",
+            "Controllers": "www-root/core/library/",
+            "Classes": "www-root/core/library/"
         }
     },
-  "scripts": {
-    "lint": [
-      "parallel-lint --exclude www-root/core/library/vendor ."
-    ]
-  }
+    "scripts": {
+        "lint": [
+            "parallel-lint --exclude www-root/core/library/vendor ."
+        ]
+    }
 }

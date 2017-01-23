@@ -67,7 +67,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
 				exit;
 			} else {
-				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID)), "title" => $translate->_("course") . " Content");
+				$BREADCRUMB[]	= array("title" => $course_details["course_code"]);
+				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID)), "title" => $translate->_("Content"));
 
 				$query	= "	SELECT a.*, b.`community_url`
 							FROM `community_courses` AS a
@@ -93,6 +94,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$PROCESSED["course_url"] = $tmp_input;
 							} else {
 								$PROCESSED["course_url"] = "";
+							}
+
+							/**
+							 * Redirect All traffic to External Website Url set abovee
+							 */
+							if((isset($_POST["course_redirect"])) && ($tmp_input = clean_input($_POST["course_redirect"], array("int"))) ) {
+								$PROCESSED["course_redirect"] = $tmp_input;
+							} else {
+								$PROCESSED["course_redirect"] = 0;
 							}
 
 							/**
@@ -127,7 +137,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$SUCCESS++;
 								$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> " . $translate->_("course") . " details section.";
 
-								application_log("success", "Successfully updated course_id [".$COURSE_ID."] course details.");
+								application_log("success", "Successfully updated course_id [".$COURSE_ID."] course setup.");
 							} else {
 								if($db->ErrorMsg()) {
 									application_log("error", "Failed to update the course page content for course_id [".$COURSE_ID."]. Database said: ".$db->ErrorMsg());
@@ -410,7 +420,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						}
 						textarea.className = "expandable objective";
 						$('objective_'+id+"_append").insert({after: textarea});
-						setTimeout('new ExpandableTextarea($("objective_text_'+id+'"));', 100);
+						setTimeout('jQuery("#objective_text_'+id+'").textareaAutoSize();', 100);
 					} else {
 						if ($('objective_text_'+id)) {
 							text[id] = $('objective_text_'+id).value;
@@ -430,9 +440,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				}
 				require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 
+				$course = Models_Course::get($COURSE_ID);
+
+				echo "<h1 id=\"page-top\">" . $course->getFullCourseTitle() . "</h1>";
+
 				courses_subnavigation($course_details,"content");
 
-				echo "<h1 id=\"page-top\">".html_encode($course_details["course_name"])."</h1>\n";
+				echo "<h1 class=\"muted\">Content</h1>";
 
 				if($SUCCESS) {
 					echo display_success();
@@ -447,8 +461,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				}
 				?>
 				<a name="course-details-section"></a>
-				<h2 title="Course Details Section"><?php echo $translate->_("course"); ?> Details</h2>
-				<div id="course-details-section" class="clearfix">
+				<h2 title="Course Setup Section"><?php echo $translate->_("Course Setup"); ?></h2>
+				<div id="course-setup-section" class="clearfix">
 					<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
 						<input type="hidden" name="type" value="text" />
 						<div class="control-group">
@@ -467,8 +481,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</div>
 						</div>
 
+						<?php if (!$course_community): ?>
 						<div class="control-group">
-							<label for="course_directors" class="form-nrequired control-label"><?php echo $translate->_("course_directors"); ?></label>
+							<div class="controls">
+								<label for="course_redirect" class="checkbox form-nrequired"><?php echo $translate->_("Redirect all course clicks to External Website (i.e. bypass Course Dashboard)");?>
+									<input type="checkbox" id="course_redirect" name="course_redirect" value="1"<?php echo (isset($PROCESSED["course_redirect"]) && $PROCESSED["course_redirect"]) ? " checked" : ""; ?>>
+								</label>
+							</div>
+						</div>
+						<?php endif; ?>
+
+						<div class="control-group">
+							<label for="course_directors" class="form-nrequired control-label"><?php echo $translate->_("Course Directors"); ?></label>
 							<div class="controls">
 								<?php
 									$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
@@ -492,7 +516,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</div>
 
 						<div class="control-group">
-							<label for="curriculum_coordinators" class="form-nrequired control-label"><?php echo $translate->_("curriculum_coordinators"); ?></label>
+							<label for="curriculum_coordinators" class="form-nrequired control-label"><?php echo $translate->_("Curriculum Coordinators"); ?></label>
 							<div class="controls">
 								<?php
 									$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
@@ -524,7 +548,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 													ON b.`id` = a.`proxy_id`
 													WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
-													AND a.`contact_type` = 'associated_faculty'
+													AND a.`contact_type` = 'faculty'
 													AND b.`id` IS NOT NULL
 													ORDER BY a.`contact_order` ASC";
 								$results	= $db->GetAll($query);
@@ -542,7 +566,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<?php
 						if (isset($course_details["pcoord_id"]) && (int)$course_details["pcoord_id"]) { ?>
 						<div class="control-group">
-							<label for="program_coordinator" class="form-nrequired control-label"><?php echo $translate->_("program_coordinator"); ?></label>
+							<label for="program_coordinator" class="form-nrequired control-label"><?php echo $translate->_("Program Coordinator"); ?></label>
 							<div class="controls">
 								<a href="mailto: <?php echo get_account_data("email", $course_details["pcoord_id"]);?>">
 									<?php echo get_account_data("wholename", $course_details["pcoord_id"]);?>
@@ -554,7 +578,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 						if (isset($course_details["evalrep_id"]) && (int)$course_details["evalrep_id"]) { ?>
 						<div class="control-group">
-							<label for="evaluation_rep" class="form-nrequired control-label"><?php echo $translate->_("evaluation_rep"); ?></label>
+							<label for="evaluation_rep" class="form-nrequired control-label"><?php echo $translate->_("Evaluation Rep"); ?></label>
 							<div class="controls">
 								<a href="mailto: <?php echo get_account_data("email", $course_details["evalrep_id"]);?>">
 									<?php echo get_account_data("wholename", $course_details["evalrep_id"]);?>
@@ -566,7 +590,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 						if (isset($course_details["studrep_id"]) && (int)$course_details["studrep_id"]) { ?>
 						<div class="control-group">
-							<label for="evaluation_rep" class="form-nrequired control-label"><?php echo $translate->_("student_rep"); ?></label>
+							<label for="evaluation_rep" class="form-nrequired control-label"><?php echo $translate->_("Student Rep"); ?></label>
 							<div class="controls">
 								<a href="mailto: <?php echo get_account_data("email", $course_details["studrep_id"]);?>">
 									<?php echo get_account_data("wholename", $course_details["studrep_id"]);?>
@@ -973,7 +997,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				 * Sidebar item that will provide the links to the different sections within this page.
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
-				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" onclick=\"$('course-details-section').scrollTo(); return false;\" title=\"Course Details\">" . $translate->_("course") . " Details</a></li>\n";
+				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" onclick=\"$('course-details-section').scrollTo(); return false;\" title=\"Course Setup\">" . $translate->_("Course Setup") . "</a></li>\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" onclick=\"$('course-objectives-section').scrollTo(); return false;\" title=\"" . $translate->_("Course Objectives") . "\">" . $translate->_("course") . " " . $translate->_("Objectives") . "</a></li>\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" onclick=\"$('course-resources-section').scrollTo(); return false;\" title=\"Course Resources\">" . $translate->_("course") . " Resources</a></li>\n";
 				$sidebar_html .= "</ul>\n";

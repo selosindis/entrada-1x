@@ -25,9 +25,10 @@
 class Models_Event_Draft extends Models_Base {
     
     protected $draft_id, $status, $name, $description, $created, $preserve_elements;
-    
-    protected $table_name = "drafts";
-    protected $default_sort_column = "name";
+
+    protected static $table_name                = "drafts";
+    protected static $default_sort_column       = "name";
+    protected static $primary_key               = "draft_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -114,11 +115,11 @@ class Models_Event_Draft extends Models_Base {
         
         return $output;
     }
-    
+
     public function update() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`draft_id` = ".$this->draft_id)) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`draft_id` = ".$this->draft_id)) {
             return $this;
         } else {
             return false;
@@ -129,13 +130,13 @@ class Models_Event_Draft extends Models_Base {
     public function insert() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             return $this;
         } else {
             return false;
         }
     }
-    
+
     public function deleteCreators() {
         global $db;
         
@@ -159,7 +160,4 @@ class Models_Event_Draft extends Models_Base {
             return false;
         }
     }
-    
 }
-
-?>

@@ -110,7 +110,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         echo "      </button>";
                                         echo "      <ul class=\"dropdown-menu toggle-left\">\n";
                                         if ($ENTRADA_ACL->amIAllowed(new EventResource($recurring_event["event_id"], $recurring_event["course_id"], $event_info["organisation_id"]), 'update')) {
-                                            echo "      <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=edit&amp;id=".$recurring_event["event_id"]."\">Event Details</a></li>";
+                                            echo "      <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=edit&amp;id=".$recurring_event["event_id"]."\">" . $translate->_("Event Setup") . "</a></li>";
                                         }
                                         echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=content&amp;id=".$recurring_event["event_id"]."\">Event Content</a></li>";
                                         echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=attendance&amp;id=".$recurring_event["event_id"]."\">Event Attendance</a></li>";

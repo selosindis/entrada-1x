@@ -181,7 +181,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "You must specify the Template for this community.";
 						}
-						
+
+						/**
+						 * Twitter Settings
+						 */
+						if ((isset($_POST["community_twitter_handle"])) && ($community_twitter_handle = clean_input($_POST["community_twitter_handle"], array("notags", "trim")))) {
+							$PROCESSED["community_twitter_handle"] = $community_twitter_handle;
+						} else {
+							$PROCESSED["community_twitter_handle"] = "";
+						}
+						if (isset($_POST["community_twitter_hashtags"])) {
+							if ( is_array($_POST["community_twitter_hashtags"]) ) {
+								$PROCESSED["community_twitter_hashtags"] = array();
+								foreach ($_POST["community_twitter_hashtags"] as $index => $tmp_input) {
+									if ($community_twitter_hashtags = clean_input($tmp_input, array("trim", "notags"))) {
+										$PROCESSED["community_twitter_hashtags"][] = $community_twitter_hashtags;
+									}
+								}
+								$PROCESSED["community_twitter_hashtags"] = implode(" ", $PROCESSED["community_twitter_hashtags"]);
+							} else {
+								$PROCESSED["community_twitter_hashtags"] = clean_input($_POST["community_twitter_hashtags"], array("notags", "trim"));	
+							}
+						} else {
+							$PROCESSED["community_twitter_hashtags"] = "";
+						}
+
 						/**
 						 * Not Required: Sub-Communities / sub_communities
 						 */
@@ -335,7 +359,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						if ($_POST["community_template"] && $tmp_input = clean_input($_POST["community_template"], array("trim", "striptags"))) {
 							$PROCESSED["community_template"] = $tmp_input;
 						}
-						
+
 						if ($db->AutoExecute("communities", $PROCESSED, "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID))) {
                             
                             $query = "SELECT `community_type_options` FROM `org_community_types`
@@ -573,6 +597,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								}
 								*/
 
+								if ($PROCESSED["community_twitter_handle"] != $community_details["community_twitter_handle"]) {
+									?>
+									<tr>
+										<td>&nbsp;</td>
+										<td><span class="form-nrequired">Community Twitter Handle</span></td>
+										<td><?php echo html_encode($PROCESSED["community_twitter_handle"]); ?></td>
+									</tr>
+									<?php
+								}
+
+								if ($PROCESSED["community_twitter_hashtags"] != $community_details["community_twitter_hashtags"]) {
+									?>
+									<tr>
+										<td>&nbsp;</td>
+										<td><span class="form-nrequired">Community Twitter Hashtags</span></td>
+										<td><?php echo html_encode($PROCESSED["community_twitter_hashtags"]); ?></td>
+									</tr>
+									<?php
+								}
+
 								if ($PROCESSED["sub_communities"] != $community_details["sub_communities"]) {
 									?>
 									<tr>
@@ -700,6 +744,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/livepipe/progressbar.js?release=".APPLICATION_VERSION."\"></script>";
                         $HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/chosen.jquery.min.js\"></script>\n";
                         $HEAD[]	= "<link rel=\"stylesheet\" type=\"text/css\"  href=\"".ENTRADA_RELATIVE."/css/jquery/chosen.css\"></script>\n";
+						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/Twitter.js\"></script>";
                         $ONLOAD[] = "jQuery('.chosen-select').chosen({no_results_text: 'No courses found matching'})";
 
 						/**
@@ -1144,10 +1189,56 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 											*/ ?>
 										</tbody>
 									</table>
+									<?php
+									if (Entrada_Twitter::widgetIsActive()) {
+										?>
+										<h2 style="margin-top: 0px">Twitter Details</h2>
+										<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Modifying Community Details">
+											<colgroup>
+												<col style="width: 3%" />
+												<col style="width: 20%" />
+												<col style="width: 77%" />
+											</colgroup>
+											<tbody>
+												<tr>
+													<td>&nbsp;</td>
+													<td><span class="form-nrequired">Community Twitter Handle</span></td>
+													<td><input type="text" id="community_twitter_handle" name="community_twitter_handle" value="<?php echo html_encode((isset($PROCESSED["community_twitter_handle"]) && $PROCESSED["community_twitter_handle"] ? $PROCESSED["community_twitter_handle"] : "")); ?>"  /></td>
+												</tr>
+												<tr>
+													<td>&nbsp;</td>
+													<td><span class="form-nrequired">Community Twitter Hashtags</span></td>
+													<td>
+														<style type="text/css">
+															/**
+															 *	Fixes the hashtag select box width that was 0px when the page is
+															 *	loaded on a different tab then Details.
+															 */
+															#twitter_hashtags_chzn {
+																width: 220px !important;
+															}
+														</style>
+														<select class="chosen-select" multiple id="twitter_hashtags" name="community_twitter_hashtags[]">
+															<?php
+															if( $PROCESSED["community_twitter_hashtags"] ) {
+																$select_options_array = explode(" ", $PROCESSED["community_twitter_hashtags"]);
+																foreach ($select_options_array as $select_option) {
+																	echo "<option selected value=\"" . $select_option . "\">".$select_option."</option>";
+																}
+															}
+															?>
+														</select>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+										<?php
+									}
+									?>
 								</div>
 								<div class="tab-page">
 									<h3 class="tab">Permissions</h3>
-									<h2 style="margin-top: 0px">Community Permissions</h2>
+									<h2 style="margin-top: 0px"><?php echo $translate->_("Community Permissions"); ?></h2>
 									<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Modifying Community Permissions">
 										<colgroup>
 											<col style="width: 3%" />

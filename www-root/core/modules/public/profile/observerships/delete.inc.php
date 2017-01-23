@@ -34,8 +34,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/observerships?section=delete", "title" => "Delete Observerships");
 	
-	require_once("Models/mspr/Observership.class.php");
-	require_once("Models/mspr/Observerships.class.php");
+	require_once("Classes/mspr/Observership.class.php");
+	require_once("Classes/mspr/Observerships.class.php");
 	?>
 	<h1>My Observerships</h1>
 	<?php

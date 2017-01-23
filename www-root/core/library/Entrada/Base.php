@@ -121,14 +121,14 @@ class Entrada_Base {
             }
             if (!empty($where)) {
                 if (!in_array($sort_column, $class_vars)) {
-                    $sort_column = $this->default_sort_column;
+                    $sort_column = static::$default_sort_column;
                 }
                 if ($sort_order == "DESC") {
                     $sort_order = "DESC";
                 } else {
                     $sort_order = "ASC";
                 }
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order;
+                $query = "SELECT * FROM `".static::$table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order;
                 $results = $db->GetAll($query, $where);
                 if ($results) {
                     foreach ($results as $result) {
@@ -224,7 +224,7 @@ class Entrada_Base {
             }
 
             if (!empty($where)) {
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements;
+                $query = "SELECT * FROM `".static::$table_name."` ".$replacements;
                 $result = $db->GetRow($query, $where);
 
                 if ($result) {

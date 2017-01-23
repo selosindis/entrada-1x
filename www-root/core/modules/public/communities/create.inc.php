@@ -263,6 +263,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				$ERRORSTR[] = "You must specify a Community Type for this new community.";
 			}
 
+			/**
+			 * Twitter Settings
+			 */
+			if ((isset($_POST["community_twitter_handle"])) && ($community_twitter_handle = clean_input($_POST["community_twitter_handle"], array("notags", "trim")))) {
+				$PROCESSED["community_twitter_handle"] = $community_twitter_handle;
+			} else {
+				$PROCESSED["community_twitter_handle"] = "";
+			}
+			if (isset($_POST["community_twitter_hashtags"])) {
+				$PROCESSED["community_twitter_hashtags"] = array();
+				foreach ($_POST["community_twitter_hashtags"] as $index => $tmp_input) {
+					if ($community_twitter_hashtags = clean_input($tmp_input, array("trim", "notags"))) {
+						$PROCESSED["community_twitter_hashtags"][] = $community_twitter_hashtags;
+					}
+				}
+				$PROCESSED["community_twitter_hashtags"] = implode(" ", $PROCESSED["community_twitter_hashtags"]);
+			} else {
+				$PROCESSED["community_twitter_hashtags"] = "";
+			}
+
 			if (isset($_POST["community_registration"])) {
 				switch(clean_input($_POST["community_registration"], array("trim", "int"))) {
 					case 0 :
@@ -498,6 +518,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
             
             $HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/chosen.jquery.min.js\"></script>\n";
             $HEAD[]	= "<link rel=\"stylesheet\" type=\"text/css\"  href=\"".ENTRADA_RELATIVE."/css/jquery/chosen.css\"></script>\n";
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/Twitter.js\"></script>";
 			$ONLOAD[] = "jQuery('.chosen-select').chosen({no_results_text: 'No courses found matching'})";
 
 			if ($COMMUNITY_PARENT) {
@@ -762,7 +783,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                 }
                 ?>
                 <div id="type_options"<?php echo (!isset($PROCESSED["octype_id"]) || !$PROCESSED["octype_id"] ? " style=\"display: none;\"" : ""); ?>>
-
                     <div class="control-group">
                         <label class="control-label form-nrequired">Community Template</label>
                         <div class="controls">
@@ -842,6 +862,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                         </div>
                     </div>
                     <div class="clearfix"></div>
+
                     <h3>Community Pages</h3>
                     <div class="control-group">
                         <label class="control-label form-required">Default Pages</label>
@@ -893,10 +914,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                             }
                         }
                     }
-                ?>
+                	?>
                 </div>
+				<?php if ( Entrada_Twitter::widgetIsActive() ) { ?>
+					<h3>Community Twitter</h3>
+					<div class="control-group">
+						<label class="control-label" for="community_twitter_handle">Community Twitter Handle</label>
+						<div class="controls">
+							<input type="text" id="community_twitter_handle" name="community_twitter_handle" value="<?php echo html_encode((isset($PROCESSED["community_twitter_handle"]) && $PROCESSED["community_twitter_handle"] ? $PROCESSED["community_twitter_handle"] : "")); ?>"  />
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="community_twitter_hashtags">Community Twitter Hashtags</label>
+						<div class="controls">
+							<select class="chosen-select" multiple id="twitter_hashtags" name="community_twitter_hashtags[]">
+								<?php
+								$select_options_array = explode(" ", $PROCESSED["community_twitter_hashtags"]);
+								foreach ($select_options_array as $select_option) {
+									echo "<option selected value=\"" . $select_option . "\">".$select_option."</option>";
+								}
+								?>
+							</select>
 
-                <h3>Community Permissions</h3>
+						</div>
+					</div>
+					<div class="clearfix"></div>
+				<?php } ?>
+
+
+                <h3><?php echo $translate->_("Community Permissions"); ?></h3>
                 <div class="control-group">
                     <label class="control-label form-nrequired">Access Permissions</label>
                     <div class="controls">

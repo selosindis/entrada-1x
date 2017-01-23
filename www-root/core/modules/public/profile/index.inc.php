@@ -18,15 +18,14 @@ if (!defined("IN_PROFILE")) {
 } elseif(!$ENTRADA_ACL->isLoggedInAllowed('profile', 'read')) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
-	$ajax_action = clean_input($_POST["ajax_action"], "alpha");
+	$ajax_action = (isset($_POST["ajax_action"]) ? clean_input($_POST["ajax_action"], "alpha") : "");
 
 	if ($ajax_action == "uploadimageie") {
 		$file_data = getimagesize($_FILES["image"]["tmp_name"]);
@@ -64,14 +63,14 @@ if (!defined("IN_PROFILE")) {
 			$PROCESSED_PHOTO["updated_date"]		= time();
 			$PROCESSED_PHOTO["photo_filesize"]		= $filesize;
 
-			$query = "SELECT `photo_id` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-			$photo_id = $db->GetOne($query);
-			if ($photo_id) {
-				if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_photos`", $PROCESSED_PHOTO, "UPDATE", "`photo_id` = ".$db->qstr($photo_id))) {
+			$user_photo_object = new Models_User_Photo();
+			$user_photo = Models_User_Photo::get($ENTRADA_USER->getID(), Models_User_Photo::UPLOADED);
+			if ($user_photo) {
+				if ($user_photo->fromArray($PROCESSED_PHOTO)->update()) {
 					add_success("Your profile image has been successfully uploaded.");
 				}
 			} else {
-				if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_photos`", $PROCESSED_PHOTO, "INSERT")) {
+				if ($user_photo_object->fromArray($PROCESSED_PHOTO)->insert()) {
 					add_success("Your profile image has been successfully uploaded.");
 				} else {
 					add_error("An error ocurred while attempting to update your profile photo record, please try again later.");
@@ -103,25 +102,30 @@ if (!defined("IN_PROFILE")) {
 					}
 					$PROCESSED["dimensions"] = implode(",", $tmp_dimensions);
 				}
-				
-				$filesize = moveImage($_FILES["image"]["tmp_name"], $ENTRADA_USER->getID(), $PROCESSED["coordinates"], $PROCESSED["dimensions"]);
+
+				$sizes = array("upload" => array("width" => 250, "height" => 250), "upload-thumbnail" => array("width" => 98, "height" => 98));
+
+				$filesize = moveImage($_FILES["image"]["tmp_name"], $ENTRADA_USER->getID(), $PROCESSED["coordinates"], $PROCESSED["dimensions"], "user", $sizes);
+
+				$details = getimagesize($_FILES["image"]["tmp_name"]);
 
 				if ($filesize) {
 					$PROCESSED_PHOTO["proxy_id"]			= $ENTRADA_USER->getID();
+					$PROCESSED_PHOTO["photo_mimetype"]      = ($details && $details["mime"] ? $details["mime"] : "");
 					$PROCESSED_PHOTO["photo_active"]		= 1;
 					$PROCESSED_PHOTO["photo_type"]			= 1;
 					$PROCESSED_PHOTO["updated_date"]		= time();
 					$PROCESSED_PHOTO["photo_filesize"]		= $filesize;
 
-					$query = "SELECT `photo_id` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-					$photo_id = $db->GetOne($query);
+					$user_photo_object = new Models_User_Photo();
+					$user_photo = Models_User_Photo::get($ENTRADA_USER->getID(), Models_User_Photo::UPLOADED);
 
-					if ($photo_id) {
-						if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_photos`", $PROCESSED_PHOTO, "UPDATE", "`photo_id` = ".$db->qstr($photo_id))) {
+					if ($user_photo) {
+						if ($user_photo->fromArray($PROCESSED_PHOTO)->update()) {
 							echo json_encode(array("status" => "success", "data" => webservice_url("photo", array($ENTRADA_USER->getID(), "upload"))."/".time()));
 						}
 					} else {
-						if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_photos`", $PROCESSED_PHOTO, "INSERT")) {
+						if ($user_photo_object->fromArray($PROCESSED_PHOTO)->insert()) {
 							echo json_encode(array("status" => "success", "data" => webservice_url("photo", array($ENTRADA_USER->getID(), "upload"))."/".time()));
 						} else {
 							echo json_encode(array("status" => "error"));
@@ -130,15 +134,13 @@ if (!defined("IN_PROFILE")) {
 				}
 			break;
 			case "togglephoto" :
-				$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-				$photo_record = $db->GetRow($query);
-				if ($photo_record) {
-					$photo_active = ($photo_record["photo_active"] == "1" ? "0" : "1");
-					$query = "UPDATE `".AUTH_DATABASE."`.`user_photos` SET `photo_active` = ".$db->qstr($photo_active)." WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-					if ($db->Execute($query)) {
+				$user_photo = Models_User_Photo::get($ENTRADA_USER->getID(), Models_User_Photo::UPLOADED);
+				if ($user_photo) {
+					$photo_active = ($user_photo->isActive() ? "0" : "1");
+					if ($user_photo->fromArray(array("photo_active" => $photo_active))->update()) {
 						echo json_encode(array("status" => "success", "data" => array("imgurl" => webservice_url("photo", array($ENTRADA_USER->getID(), $photo_active == "1" ? "upload" : "official" ))."/".time(), "imgtype" => $photo_active == "1" ? "uploaded" : "official")));
 					} else {
-						application_log("error", "An error occurred while attempting to update user photo active flag for user [".$ENTRADA_USER->getID()."], DB said: ".$db->ErrorMsg());
+						application_log("error", "An error occurred while attempting to update user photo active flag for user [".$ENTRADA_USER->getID()."]");
 						echo json_encode(array("status" => "error"));
 					}
 				} else {
@@ -147,8 +149,7 @@ if (!defined("IN_PROFILE")) {
 			break;
 			case "generatehash" :
 				$new_private_hash = generate_hash();
-				$query = "UPDATE IGNORE `".AUTH_DATABASE."`.`user_access` SET `private_hash` = ".$db->qstr($new_private_hash)." WHERE `user_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
-				$result = $db->Execute($query);
+				$result = Models_User_Access::updateHash($new_private_hash, $ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation());
 				if ($result) {
 					echo json_encode(array("status" => "success", "data" => $new_private_hash));
 					$_SESSION["details"]["private_hash"] = $new_private_hash;
@@ -178,9 +179,9 @@ if (!defined("IN_PROFILE")) {
 					$errs[] = "New password dosen't match!";
 				}
 				
-				$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getID())." AND ((`salt` IS NULL AND `password` = MD5(".$db->qstr($PROCESSED["current_password"]).")) OR (`salt` IS NOT NULL AND `password` = SHA1(CONCAT(".$db->qstr($PROCESSED["current_password"]).", `salt`))))";
-				$result	= $db->GetRow($query);
-				if ($result) {
+				$user_object = Models_User::getUserByIDAndPass($ENTRADA_USER->getID(),$PROCESSED["current_password"]);
+				if ($user_object) {
+					$result = $user_object->toArray();
 					if (!$errs) {
 						$user_password = $PROCESSED["new_password"];
 						/**
@@ -192,12 +193,11 @@ if (!defined("IN_PROFILE")) {
 							$salt = $result["salt"];
 						}
 
-						$query = "UPDATE `".AUTH_DATABASE."`.`user_data` SET `password` = ".$db->qstr(sha1($user_password.$salt)).", `salt` = ".$db->qstr($salt)." WHERE `id` = ".$db->qstr($result["id"]);
-						if ($db->Execute($query)) {
+						if ($user_object->fromArray(array("password" => sha1($user_password.$salt), "salt" => $salt))->update()) {
 							application_log("auth_success", "Successfully updated password salt for user [".$result["id"]."] via local auth method.");
 							echo json_encode(array("status" => "success", "data" => array("Your password has successfully been updated.")));
 						} else {
-							application_log("auth_error", "Failed to update password salt for user [".$result["id"]."] via local auth method. Database said: ".$db->ErrorMsg());
+							application_log("auth_error", "Failed to update password salt for user [".$result["id"]."] via local auth method.");
 							echo json_encode(array("status" => "error", "data" => array("An error ocurred while attempting to update your password. An administrator has been informed, please try again later.")));
 						}
 					} else {
@@ -230,20 +230,30 @@ if (!defined("IN_PROFILE")) {
 
 	$PROCESSED		= array();
 
-	if ((is_array($_SESSION["permissions"])) && ($total_permissions = count($_SESSION["permissions"]) > 1)) {
-		$sidebar_html  = "The following individual".((($total_permissions - 1) != 1) ? "s have" : " has")." given you access to their ".APPLICATION_NAME." permission levels:";
-		$sidebar_html .= "<ul class=\"menu\">\n";
+	if (isset($_SESSION["permissions"]) && is_array($_SESSION["permissions"]) && (count($_SESSION["permissions"]) > 1)) {
+		$sidebar_html  = "<form id=\"masquerade-form\" action=\"".ENTRADA_URL."\" method=\"get\">\n";
+		$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
+		$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 100%\" onchange=\"window.location='".ENTRADA_URL."/".$MODULE."/?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
+		$display_masks = true;
+		$added_users = array();
 		foreach ($_SESSION["permissions"] as $access_id => $result) {
-			if ($access_id != $ENTRADA_USER->getDefaultAccessId()) {
-				$sidebar_html .= "<li class=\"checkmark\"><strong>".html_encode($result["fullname"])."</strong><br /><span class=\"content-small\">Exp: ".(($result["expires"]) ? date("D M d/y", $result["expires"]) : "Unknown")."</span></li>\n";
+			if ($result["organisation_id"] == $ENTRADA_USER->getActiveOrganisation() && is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId() || ($result["id"] == $ENTRADA_USER->getID() && $ENTRADA_USER->getDefaultAccessId() != $access_id)) && array_search($result["id"], $added_users) === false) {
+				if (isset($result["mask"]) && $result["mask"]) {
+					$display_masks = true;
+				}
+				$added_users[] = $result["id"];
+				$sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) || !isset($result["permission_id"]) ? "close" : $result["permission_id"])."\"".(($result["id"] == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
 			}
 		}
-		$sidebar_html .= "</ul>\n";
-
-		new_sidebar_item("Delegated Permissions", $sidebar_html, "delegated-permissions", "open");
+		$sidebar_html .= "</select>\n";
+		$sidebar_html .= "</form>\n";
+		if ($display_masks) {
+			new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
+		}
 	}
 
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/profile.js\"></script>";
+	$HEAD[] = "<link rel=\"stylesheet\" href=\"".  ENTRADA_URL ."/css/". $MODULE ."/". $MODULE .".css\" />";
 
 	if (file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload")) {
 		$size_upload = getimagesize(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload");
@@ -267,11 +277,10 @@ if (!defined("IN_PROFILE")) {
 		echo display_notice();
 	}
 
-	$ONLOAD[] = "provStateFunction(\$F($('profile-update')['country_id']))";
+//	$ONLOAD[] = "provStateFunction(\$F($('profile-update')['country_id']))";
 
-	$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `".AUTH_DATABASE."`.`user_data`.`id`=".$db->qstr($ENTRADA_USER->getID());
-	$user_data	= $db->GetRow($query);
-	if ($user_data) {
+	$user	= Models_User::fetchRowByID($ENTRADA_USER->getID());
+	if ($user && $user_data = $user->toArray()) {
 		/*
 		 * Get the user departments and the custom fields for the departments.
 		 */
@@ -282,50 +291,18 @@ if (!defined("IN_PROFILE")) {
 
 		$custom_fields = fetch_department_fields($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation());
 
-		?>
-		<script type="text/javascript">
-		function provStateFunction(country_id) {
-			var url='<?php echo webservice_url("province"); ?>';
-			<?php
-				if ((isset($PROCESSED["province"]) && $PROCESSED["province"]) || (isset($PROCESSED["province_id"]) && $PROCESSED["province_id"])) {
-					$source_arr = $PROCESSED;
-				} else {
-					$source_arr = $user_data;
-				}
-				$province = $source_arr["province"];
-				$province_id = $source_arr["province_id"];
-				$prov_state = ($province) ? $province : $province_id;
-			?>
-
-			url = url + '?countries_id=' + country_id + '&prov_state=<?php echo $prov_state; ?>';
-			new Ajax.Updater($('prov_state_div'), url,
-				{
-					method:'get',
-					onComplete: function (init_run) {
-
-						if ($('prov_state').type == 'select-one') {
-							$('prov_state_label').removeClassName('form-nrequired');
-							$('prov_state_label').addClassName('form-required');
-							if (!init_run)
-								$("prov_state").selectedIndex = 0;
-
-						} else {
-
-							$('prov_state_label').removeClassName('form-required');
-							$('prov_state_label').addClassName('form-nrequired');
-							if (!init_run)
-								$("prov_state").clear();
-
-						}
-					}.curry(!provStateFunction.initialzed)
-				});
-			provStateFunction.initialzed = true;
-
+		if ((isset($PROCESSED["province"]) && $PROCESSED["province"]) || (isset($PROCESSED["province_id"]) && $PROCESSED["province_id"])) {
+			$source_arr = $PROCESSED;
+		} else {
+			$source_arr = $user_data;
 		}
-		provStateFunction.initialzed = false;
+		$province = $source_arr["province"];
+		$province_id = $source_arr["province_id"];
+		$prov_state = ($province) ? $province : $province_id;
+		$HEAD[] = "<script>var PROV_STATE = \"". $prov_state ."\";</script>";
+		$HEAD[] = "<script>var ENTRADA_URL = \"". ENTRADA_URL ."\";</script>";
 
-		</script>
-
+			?>
 		<h1>My <?php echo APPLICATION_NAME; ?> Profile</h1>
 		<div id="msgs"></div>
 		This section allows you to update your <?php echo APPLICATION_NAME; ?> user profile information. Please note that this information does not necessarily reflect any information stored at the main University. <span style="background-color: #FFFFCC; padding-left: 5px; padding-right: 5px">This is not your official institutional contact information.</span>
@@ -333,287 +310,21 @@ if (!defined("IN_PROFILE")) {
 		<div id="profile-wrapper">
 		<script src="<?php echo ENTRADA_URL; ?>/javascript/jquery/jquery.imgareaselect.min.js" type="text/javascript"></script>
 		<link href='<?php echo ENTRADA_URL; ?>/css/imgareaselect-default.css' rel='stylesheet' type='text/css' />
-		<style type="text/css">
-			.table-nowrap {
-                white-space: nowrap;
-            }
-            #profile-image-container {
-                position: absolute;
-                right: 0;
-                top: 60px;
-            }
-			#profile-wrapper {
-                position:relative;
-            }
-			#upload_profile_image_form {
-                margin: 0;
-                float: left;
-            }
-			#upload-image-modal-btn {position:absolute;right:7px;top:7px;display:none;outline:none;}
-			#btn-toggle {position:absolute;right:7px;bottom:7px;display:none;outline:none;}
-			#btn-toggle .btn {outline:none;}
-			.profile-image-preview {text-align:center;max-width:275px;margin:auto;}
-			.modal-body {max-height:none;}
-		</style>
 		<?php
         $profile_image = ENTRADA_ABSOLUTE . '/../public/images/' . $ENTRADA_USER->getID() . '/' . $ENTRADA_USER->getID() . '-large.png';
         ?>
-		<script type="text/javascript">
-		function dataURItoBlob(dataURI) {
-			var byteString = atob(dataURI.split(',')[1]);
-			var ab = new ArrayBuffer(byteString.length);
-			var ia = new Uint8Array(ab);
-			for (var i = 0; i < byteString.length; i++) {
-				ia[i] = byteString.charCodeAt(i);
-			}
-			return new Blob([ab], { type: 'image/jpeg' });
-		}
-
-		jQuery(function(){
-
-			jQuery("#update-pw").on("click", function() {
-				jQuery.ajax({
-					url : "<?php echo ENTRADA_URL; ?>/profile",
-					data : "ajax_action=resetpw&" + jQuery("#update-pw-form").serialize(),
-					type : "post",
-					async : true,
-					success : function(data) {
-						var jsonResponse = JSON.parse(data);
-						if (jsonResponse.status == "success") {
-							jQuery("#password-change-modal").modal("hide");
-							display_success(jsonResponse.data, "#msgs");
-						} else {
-							display_error(jsonResponse.data, "#pw-change-msg");
-						}
-					}
-				});
-			});
-
-			jQuery("#password-change-modal").on("hide", function() {
-				jQuery("#msgs").html("");
-				jQuery("#pw-change-msg").html("");
-				jQuery("#current_password, #new_password, #new_password_confirm").attr("value", "");
-			});
-
-			jQuery("#reset-hash").live("click", function() {
-				jQuery.ajax({
-					url : "<?php echo ENTRADA_URL; ?>/profile",
-					data : "ajax_action=generatehash",
-					type : "post",
-					async : true,
-					success : function(data) {
-						var jsonResponse = JSON.parse(data);
-						jQuery("#hash-value").html(jsonResponse.data);
-					}
-				});
-				jQuery("#reset-hash-modal").modal("hide");
-			});
-			
-			jQuery("#btn-toggle .btn").live("click", function() {
-				var clicked = jQuery(this);
-				if (!clicked.parent().hasClass(clicked.html().toLowerCase())) {
-					jQuery.ajax({
-						url : "<?php echo ENTRADA_URL; ?>/profile",
-						data : "ajax_action=togglephoto",
-						type : "post",
-						async : true,
-						success : function(data) {
-							var jsonResponse = JSON.parse(data);
-							jQuery("#profile-image-container span img").attr("src", jsonResponse.data.imgurl);
-							jQuery("#btn-toggle .btn.active").removeClass("active");
-							clicked.addClass("active");
-							clicked.parent().removeClass((jsonResponse.data.imgtype == "uploaded" ? "official" : "uploaded")).addClass(jsonResponse.data.imgtype);
-						}
-					});
-				}
-				return false;
-			});
-
-			function selectImage(image){
-				jQuery(".description").hide();
-				var image_width;
-				var image_height;
-				var w_offset;
-				var h_offset
-
-				image_width = image.width();
-				image_height = image.height();
-				w_offset = parseInt((image_width - 153) / 2);
-				h_offset = parseInt((image_height - 200) / 2);
-
-				jQuery("#coordinates").attr("value", w_offset + "," + h_offset + "," + (w_offset + 153) + "," + (h_offset + 200));
-				jQuery("#dimensions").attr("value", image_width + "," + image_height)
-
-				image.imgAreaSelect({
-					aspectRatio: '75:98',
-					handles: true,
-					x1: w_offset, y1: h_offset, x2: w_offset + 153, y2: h_offset + 200,
-					instance: true,
-					persistent: true,
-					onSelectEnd: function (img, selection) {
-						jQuery("#coordinates").attr("value", selection.x1 + "," + selection.y1 + "," + selection.x2 + "," + selection.y2);
-					}
-				});
-			};
-
-			jQuery(".org-profile-image").hover(function(){
-				jQuery(this).find("#edit-button").animate({"opacity" : 100}, {queue: false}, 150).css("display", "block");
-			}, function() {
-				jQuery(this).find("#edit-button").animate({"opacity" : 0}, {queue: false}, 150);
-			});
-
-			/* file upload stuff starts here */
-			if (window.FileReader) {
-				var reader = new FileReader();
-
-				reader.onload = function (e) {
-					jQuery(".preview-image").attr('src', e.target.result)
-					jQuery(".preview-image").load(function(){
-						selectImage(jQuery(".preview-image"));
-					});
-				};
-			} else {
-				jQuery(".preview-img").hide();
-				jQuery("#upload-image .description").css("height", "auto");
-			}
-			
-			// Required for drag and drop file access
-			jQuery.event.props.push('dataTransfer');
-
-			jQuery("#upload-image").on('drop', function(event) {
-
-				jQuery(".modal-body").css("background-color", "#FFF");
-
-				event.preventDefault();
-
-				var file = event.dataTransfer.files[0];
-
-				if (file.type.match('image.*')) {
-					jQuery("#image").html(file);
-					if (window.FileReader) {
-						reader.readAsDataURL(file);
-					}
-				} else {
-					// However you want to handle error that dropped file wasn't an image
-				}
-			});
-
-			jQuery("#upload-image").on("dragover", function(event) {
-				jQuery(".modal-body").css("background-color", "#f3f3f3");
-				return false;
-			});
-
-			jQuery("#upload-image").on("dragleave", function(event) {
-				jQuery(".modal-body").css("background-color", "#FFF");
-			});
-
-			jQuery('#upload-image').on('hidden', function () {
-				if (jQuery(".profile-image-preview").length > 0) {
-					jQuery(".profile-image-preview").remove();
-					jQuery(".imgareaselect-selection").parent().remove();
-					jQuery(".imgareaselect-outer").remove();
-					jQuery("#image").val("");
-					jQuery(".description").show();
-				}
-			});
-
-			jQuery('#upload-image').on('shown', function() {
-				if (!window.FileReader) {
-					jQuery("#upload-image .description").html("Your browser does not support image cropping, your image will be center cropped.")
-				}
-				if (jQuery(".profile-image-preview").length <= 0) {
-					var preview = jQuery("<div />").addClass("profile-image-preview");
-					preview.append("<img />");
-					preview.children("img").addClass("preview-image");
-					jQuery(".preview-img").append(preview);
-				}
-			});
-
-			jQuery("#upload-image-button").live("click", function(){
-				if (window.FileReader) {
-					if (typeof jQuery(".preview-image").attr("src") != "undefined") {
-						jQuery("#upload_profile_image_form").submit();
-						jQuery('#upload-image').modal("hide");
-					} else {
-						jQuery('#upload-image').modal("hide");
-					}
-				} else {
-					jQuery("#upload_profile_image_form").submit();
-				}
-			});
-
-			jQuery("#upload_profile_image_form").submit(function(){
-				if (window.FileReader) {
-					var imageFile = dataURItoBlob(jQuery(".preview-image").attr("src"));
-
-					var xhr = new XMLHttpRequest();
-					var fd = new FormData();
-					fd.append('ajax_action', 'uploadimage');
-					fd.append('image', imageFile);
-					fd.append('coordinates', jQuery("#coordinates").val());
-					fd.append('dimensions', jQuery("#dimensions").val());
-
-					xhr.open('POST', "<?php echo ENTRADA_URL; ?>/profile", true);
-					xhr.send(fd);
-
-					xhr.onreadystatechange = function() {
-						if (xhr.readyState == 4 && xhr.status == 200) {
-							var jsonResponse = JSON.parse(xhr.responseText);
-							if (jsonResponse.status == "success") {
-								jQuery("#profile-image-container img.img-polaroid").attr("src", jsonResponse.data);
-								if (jQuery("#image-nav-right").length <= 0) {
-									jQuery("#btn-toggle").append("<a href=\"#\" class=\"btn active\" id=\"image-nav-right\" style=\"display:none;\">Uploaded</a>");
-									jQuery("#image-nav-right").removeClass("active");
-								}
-							} else {
-								// Some kind of failure notification.
-							};
-						} else {
-							// another failure notification.
-						}
-					}
-
-					if (jQuery(".profile-image-preview").length > 0) {
-						jQuery(".profile-image-preview").remove();
-						jQuery(".imgareaselect-selection").parent().remove();
-						jQuery(".imgareaselect-outer").remove();
-						jQuery("#image").val("");
-						jQuery(".description").show();
-					}
-
-					return false;
-				} else {
-					jQuery("#upload_profile_image_form").append("<input type=\"hidden\" name=\"ajax_action\" value=\"uploadimageie\" />");
-				}
-			});
-
-			jQuery("#image").live("change", function(){
-				var files = jQuery(this).prop("files");
-
-				if (files && files[0]) {
-					if (window.FileReader) {
-						reader.readAsDataURL(files[0]);
-					}
-				}
-			});
-
-			jQuery("#profile-image-container").hover(function(){
-				jQuery("#profile-image-container .btn, #btn-toggle").fadeIn("fast");
-			},
-			function() {
-				jQuery("#profile-image-container .btn").fadeOut("fast");
-			});
-		});
-		</script>
-
 		<div id="profile-image-container" class="pull-right">
 			<a href="#upload-image" id="upload-image-modal-btn" data-toggle="modal" class="btn btn-primary" id="upload-profile-image">Upload Photo</a>
 			<?php
-			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($user_data["id"]);
-			$uploaded_photo = $db->GetRow($query);
+
+			$photo_object = Models_User_Photo::get($user_data["id"], Models_User_Photo::UPLOADED);
+
+			if ($photo_object) {
+				$uploaded_photo = $photo_object->toArray();
+			}
 			?>
 			<span>
-                <img src="<?php echo webservice_url("photo", array($ENTRADA_USER->getID(), $uploaded_photo ? "upload" : "official"))."/".time(); ?>" width="192" height="250" class="img-polaroid" />
+                <img src="<?php echo webservice_url("photo", array($ENTRADA_USER->getID(), $uploaded_photo ? "upload" : "official"))."/".time(); ?>" class="img-polaroid" />
             </span>
 			<div class="btn-group" id="btn-toggle" class="<?php echo $uploaded_photo ? "uploaded" : "official"; ?>">
 				<a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "0" ? "active" : ""; ?>" id="image-nav-left">Official</a>
@@ -749,10 +460,10 @@ if (!defined("IN_PROFILE")) {
                             $countries = fetch_countries();
                             if ((is_array($countries)) && (count($countries))) {
 
-                                $country_id = ($PROCESSED["country_id"])?$PROCESSED["country_id"]:$user_data["country_id"];
+                                $country_id = (isset($PROCESSED["country_id"])) ? $PROCESSED["country_id"] : $user_data["country_id"];
 
-                                echo "<select id=\"country_id\" name=\"country_id\" class=\"input-large\" onchange=\"provStateFunction(this.value);\">\n";
-                                echo "<option value=\"0\"".((!country_id) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
+                                echo "<select id=\"country_id\" name=\"country_id\" class=\"input-large\" >\n";
+                                echo "<option value=\"0\"".(empty($country_id) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
                                 foreach ($countries as $country) {
                                     echo "<option value=\"".(int) $country["countries_id"]."\"".(($country_id == $country["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
                                 }
@@ -809,12 +520,18 @@ if (!defined("IN_PROFILE")) {
                         <span class="input-large uneditable-input"><?php echo html_encode($_SESSION["details"]["username"]); ?></span>
                     </div>
                 </div>
+                <?php
+                if (empty($_SESSION["auth"]["method"]) || $_SESSION["auth"]["method"] == "local") {
+                ?>
                 <div class="control-group">
                     <label class="control-label">Password:</label>
                     <div class="controls">
                         <a class="btn" href="#password-change-modal" data-toggle="modal">Change My Password</a>
                     </div>
                 </div>
+                <?php
+                }
+                ?>
                 <div class="control-group">
                     <label class="control-label">Private Hash:</label>
                     <div class="controls">
@@ -895,53 +612,6 @@ if (!defined("IN_PROFILE")) {
 							</div>
 						<?php }
 
-						$pub_types = array (
-							"ar_poster_reports"				=> array("id_field" => "poster_reports_id",				"title" => "title"),
-							"ar_peer_reviewed_papers"		=> array("id_field" => "peer_reviewed_papers_id",		"title" => "title"),
-							"ar_non_peer_reviewed_papers"	=> array("id_field" => "non_peer_reviewed_papers_id",	"title" => "title"),
-							"ar_book_chapter_mono"			=> array("id_field" => "book_chapter_mono_id",			"title" => "title"),
-							"ar_conference_papers"			=> array("id_field" => "conference_papers_id",			"title" => "lectures_papers_list")
-						);
-						if (isset($pub_types)) {
-							foreach ($pub_types as $type_table => $data) {
-								$query = "	SELECT a.`".$data["id_field"]."` AS `id`, a.`".$data["title"]."` AS `title`, a.`year_reported`, b.`id` AS `dep_pub_id`
-											FROM `".$type_table."` AS a
-											LEFT JOIN `profile_publications` AS b
-											ON a.`proxy_id` = b.`proxy_id`
-											AND b.`pub_id` = a.`".$data["id_field"]."`
-											AND (b.`dep_id` = ".$db->qstr($department_id). " || b.`dep_id` IS NULL)
-											WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-								$pubs = $db->GetAll($query);
-								if ($pubs) {
-									echo "<h4>Publications on ".$department." Website</h4>";
-									?>
-									<h4><?php echo ucwords(str_replace("ar ", "", str_replace("_", " ", $type_table))); ?></h4>
-									<table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-hover table-bordered table-nowrap">
-										<thead>
-											<tr>
-												<th>Title</th>
-												<th width="10%">Date</th>
-												<th width="8%">Visible</th>
-											</tr>
-										</thead>
-										<tbody>
-										<?php foreach ($pubs as $publication) {
-											?>
-											<tr data-id="<?php echo $publication["id"]; ?>">
-												<td><?php echo $publication["title"]; ?></td>
-												<td><?php echo $publication["year_reported"]; ?></td>
-												<td><input type="checkbox" name="publications[<?php echo str_replace("ar_", "", $type_table); ?>][<?php echo $department_id; ?>][<?php echo $publication["id"]; ?>]" <?php echo ($publication["dep_pub_id"] != NULL ? "checked=\"checked\"" : ""); ?> /></td>
-											</tr>
-											<?php
-										}
-										?>
-										</tbody>
-									</table>
-									<?php
-								}
-							}
-						}
-
 						echo "</div>";
 						$i++;
 					}
@@ -993,6 +663,9 @@ if (!defined("IN_PROFILE")) {
 				<a href="#" class="btn btn-primary" id="reset-hash">Reset Hash</a>
 			</div>
 		</div>
+        <?php
+        if (empty($_SESSION["auth"]["method"]) || $_SESSION["auth"]["method"] == "local") {
+        ?>
 		<div class="modal hide fade" id="password-change-modal">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -1026,6 +699,9 @@ if (!defined("IN_PROFILE")) {
 				<a href="#" class="btn btn-primary" id="update-pw">Update</a>
 			</div>
 		</div>
+        <?php
+        }
+        ?>
 		<?php
 		if (((bool) $GOOGLE_APPS["active"]) && $user_data["google_id"]) {
 			?>
@@ -1068,59 +744,7 @@ if (!defined("IN_PROFILE")) {
 				</div>
 			</div>
 			<script type="text/javascript" defer="defer">
-			$('reset-google-password-close').observe('click', function() {
-				$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
-				$('reset-google-password-success', 'reset-google-password-waiting').invoke('hide');
 
-				$('google_password_1').setValue('');
-				$('google_password_2').setValue('');
-				Control.Modal.close();
-			});
-
-			$('reset-google-password-submit').observe('click', function() {
-				$('reset-google-password-submit', 'reset-google-password-form').invoke('hide');
-				$('reset-google-password-waiting').show();
-
-				if ($('google_password_1') && $('google_password_2')) {
-					var new_password = $F('google_password_1');
-					var test_password = $F('google_password_2');
-
-					if (new_password && test_password) {
-						if (new_password == test_password) {
-							new Ajax.Request('<?php echo ENTRADA_URL; ?>/profile', {
-								method: 'post',
-								parameters: {
-									'action' : 'google-password-reset',
-									'password' : new_password,
-									'ajax' : 1
-								},
-								onSuccess: function(response) {
-									$('reset-google-password-form-status').update('');
-									$('reset-google-password-waiting').hide();
-									$('reset-google-password-success').show();
-								},
-								onFailure: function(response) {
-									$('reset-google-password-form-status').update('<div class="display-error">We were unable to reset your password at this time, please try again later. If this error persists please contact the system administrator and inform them of the error.</div>');
-									$('reset-google-password-waiting').hide();
-									$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
-								}
-							});
-						} else {
-							$('reset-google-password-form-status').update('<div class="display-error">Your passwords did not match, please try again.</div>');
-							$('reset-google-password-waiting').hide();
-							$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
-						}
-					} else {
-						$('reset-google-password-form-status').update('<div class="display-error" style="margin: 0">Please make sure you enter your new password, then re-enter it again in the space provided.</div>');
-						$('reset-google-password-waiting').hide();
-						$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
-					}
-				} else {
-					$('reset-google-password-form-status').update('<div class="display-error" style="margin: 0">Please make sure you enter your new password, then re-enter it again in the space provided.</div>');
-					$('reset-google-password-waiting').hide();
-					$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
-				}
-			});
 			</script>
 			<?php
         }
@@ -1129,6 +753,6 @@ if (!defined("IN_PROFILE")) {
 
 		echo display_notice();
 
-		application_log("error", "A user profile was not available in the database? Database said: ".$db->ErrorMsg());
+		application_log("error", "A user profile was not available in the database");
 	}
 }

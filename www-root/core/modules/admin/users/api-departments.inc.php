@@ -118,9 +118,9 @@ switch ($request_method) {
                 }
                 
                 $organisation_title = Models_Department::fetchOrganisationTitleByDepartmentID($PROCESSED["dept_id"]) ?: "";
-                    
-                echo json_encode(array("organisation_title" => $organisation_title));
-            break;    
+                $department = Models_Department::fetchRowByID($PROCESSED["dept_id"]);
+                echo json_encode(array("organisation_title" => $organisation_title, "department_name" => ($department ? $department->getDepartmentTitle() : "")));
+            break;
         }
     break;
 }

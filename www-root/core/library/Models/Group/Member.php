@@ -30,12 +30,15 @@ class Models_Group_Member extends Models_Base {
             $finish_date,
             $member_active,
             $entrada_only,
+            $created_date,
+            $created_by,
             $updated_date,
             $updated_by;
-    
-    protected $table_name = "group_members";
-    protected $default_sort_column = "gmember_id";
-     
+
+    protected static $table_name = "group_members";
+    protected static $default_sort_column = "gmember_id";
+    protected static $primary_key = "gmember_id";
+
     public function getID () {
         return $this->gmember_id;
     }
@@ -63,15 +66,23 @@ class Models_Group_Member extends Models_Base {
     public function getEntradaOnly () {
         return $this->entrada_only;
     }
-    
+
+    public function getCreatedDate () {
+        return $this->created_date;
+    }
+
+    public function getCreatedBy () {
+        return $this->created_by;
+    }
+
     public function getUpdatedDate () {
         return $this->updated_date;
     }
-    
+
     public function getUpdatedBy () {
         return $this->updated_by;
     }
-    
+
     public function __construct($arr = NULL) {
         parent::__construct($arr);
     }
@@ -161,5 +172,41 @@ class Models_Group_Member extends Models_Base {
             $member = User::fromArray($result, $m);
         }
         return $member;
+    }
+
+    public static function getAssessmentGroupMembers ($organisation_id = null, $group_id = null, $active = 1) {
+        global $db;
+
+        $query	= "	SELECT a.`id`, a.`number`, a.`firstname`, a.`lastname`, a.`email`, c.`gmember_id`, c.`member_active`,
+                    a.`username`, a.`email`, a.`organisation_id`, a.`username`, b.`group`, b.`role`
+                    FROM `".AUTH_DATABASE."`.`user_data` AS a
+                    JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                    ON a.`id` = b.`user_id`
+                    JOIN `group_members` c ON a.`id` = c.`proxy_id`
+                    WHERE b.`account_active` = 'true'
+                    AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+                    AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+                    AND b.`organisation_id` = ?
+                    AND c.`group_id` = ?
+                    AND c.`member_active` = ?
+                    GROUP BY a.`id`
+                    ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+
+        $group_members = array();
+
+        $results = $db->GetAll($query, array($organisation_id, $group_id, $active));
+        if ($results) {
+            foreach ($results as $result) {
+                $group_members[] = array(
+                    "name" => $result["firstname"] . " " . $result["lastname"],
+                    "firstname" => $result["firstname"],
+                    "lastname" => $result["lastname"],
+                    "proxy_id" => $result["id"],
+                    "email" => $result["email"],
+                    "number" => $result["number"]);
+            }
+        }
+
+        return $group_members;
     }
 }

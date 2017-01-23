@@ -291,10 +291,21 @@ Timeline.DurationEventPainter.prototype.paint = function() {
             createEventDiv(evt, highlightMatcher(evt));
         }
     }
-    
+
     this._highlightLayer.style.display = "block";
     this._eventLayer.style.display = "block";
+    scrollbarCheck(this._eventLayer);
+
+
 };
+
+
+function scrollbarCheck(el) {
+    var height = el.scrollHeight - el.clientHeight - el.scrollTop;
+    if (height > 0) {
+        new CreateScrollBar(el);
+    }
+}
 
 Timeline.DurationEventPainter.prototype.softPaint = function() {
 };
@@ -305,7 +316,7 @@ Timeline.DurationEventPainter.prototype._onClickInstantEvent = function(icon, do
     var c = Timeline.DOM.getPageCoordinates(icon);
     this._showBubble(
         c.left + Math.ceil(icon.offsetWidth / 2), 
-        c.top + Math.ceil(icon.offsetHeight / 2),
+        c.top + Math.ceil(icon.offsetHeight / 2 - this._eventLayer.scrollTop),
         evt
     );
 };

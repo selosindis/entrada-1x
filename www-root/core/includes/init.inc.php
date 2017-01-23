@@ -39,7 +39,9 @@ require_once("functions.inc.php");
 require_once("dbconnection.inc.php");
 require_once("Entrada/pagination/pagination.class.php");
 require_once("cache.inc.php");
-require_once("Models/users/User.class.php");
+require_once("Classes/users/User.class.php");
+
+$ENTRADA_LOGGER = new Models_Logger();
 
 if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 	$ENTRADA_USER = User::get($_SESSION["details"]["id"]);
@@ -69,6 +71,14 @@ $ENTRADA_TEMPLATE = new Entrada_Template();
  * Initialize the settings class.
  */
 $ENTRADA_SETTINGS = new Entrada_Settings();
+
+$version_js = $ENTRADA_SETTINGS->read("version_js");
+
+if (isset($version_js) && $version_js) {
+    define("JAVASCRIPT_VERSION", ((int) $version_js));
+} else {
+    define("JAVASCRIPT_VERSION", APPLICATION_VERSION);
+}
 
 if ($ENTRADA_USER) {
     /**
@@ -115,7 +125,7 @@ $translate->addTranslation(
 		"scan" => Entrada_Translate::LOCALE_FILENAME
 	)
 );
-
+$DEFAULT_TEXT_LABELS = $translate->_("default");
 
 $ADODB_CACHE_DIR = CACHE_DIRECTORY;
 $time_start = getmicrotime();
@@ -135,6 +145,7 @@ $GENERICSTR = array();
 $BREADCRUMB = array();
 $HEAD = array();
 $ONLOAD = array();
+$JAVASCRIPT_TRANSLATIONS = array();
 $ONUNLOAD = array();
 $JQUERY = array();
 $SIDEBAR = array();

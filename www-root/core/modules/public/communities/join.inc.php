@@ -183,6 +183,22 @@ if($COMMUNITY_ID) {
 						$PROCESSED["member_acl"]	= 0;
 
 						if($db->AutoExecute("community_members", $PROCESSED, "INSERT")) {
+							
+							$notifys_type = array('announcement','event','poll');
+							foreach ($notifys_type as $notify_type) {
+									
+								$current_notify = $db->GetOne("SELECT `proxy_id` FROM `community_notify_members` WHERE `proxy_id` = " . $db->qstr($ENTRADA_USER->getID()) . " AND `community_id` = " . $db->qstr($COMMUNITY_ID) . " AND `record_id` = " . $db->qstr($COMMUNITY_ID) . " AND `notify_type` = " . $db->qstr($notify_type));
+								if ($current_notify) {
+									if (!$db->Execute("UPDATE `community_notify_members` SET `notify_active` =  1 WHERE `proxy_id` = " . $db->qstr($ENTRADA_USER->getID()) . " AND `community_id` = " . $db->qstr($COMMUNITY_ID) . " AND `record_id` = " . $db->qstr($COMMUNITY_ID) . " AND `notify_type` = " . $db->qstr($notify_type))) {
+										application_log("error", "can update community_notify_members for : ".$COMMUNITY_ID ."and Proxy id : ".$ENTRADA_USER->getID());
+									} 
+								} else {
+
+									if (!$db->Execute("INSERT INTO `community_notify_members` (`notify_active`, `proxy_id`, `community_id`, `record_id`, `notify_type`) VALUES ( 1 , " . $db->qstr($ENTRADA_USER->getID()) . ", " . $db->qstr($COMMUNITY_ID) . ", " . $db->qstr($COMMUNITY_ID) . ", " . $db->qstr($notify_type) . ")")) {
+										application_log("error", "can insert into community_notify_members for : ".$COMMUNITY_ID ."and Proxy id : ".$ENTRADA_USER->getID());
+									} 
+								}		
+							}
 							$member_id		= $db->Insert_Id();
 							if ($MAILING_LISTS["active"]) {
 								$mail_list = new MailingList($COMMUNITY_ID);

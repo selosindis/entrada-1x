@@ -15,7 +15,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->amIAllowed("user", "create", false) || $user_record["group"] != "student") {
+} elseif (!$ENTRADA_ACL->amIAllowed("user", "create", false)) {
 	header( "refresh:15;url=".ENTRADA_URL."/admin/users" );
 
 	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
@@ -24,8 +24,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
-	require_once("Models/users/User.class.php");
-	require_once("Models/mspr/DisciplinaryActions.class.php");
+	require_once("Classes/users/User.class.php");
+	require_once("Classes/mspr/DisciplinaryActions.class.php");
 		
 	$user = User::fetchRowByID($user_record["id"]);
 	

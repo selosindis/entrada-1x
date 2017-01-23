@@ -32,7 +32,7 @@ class Models_Evaluation_ResponseDescriptor {
         $updated_by,
         $active;
 
-    protected $table_name = "evaluations_lu_response_descriptors";
+    protected static $table_name = "evaluations_lu_response_descriptors";
 
     public function __construct($arr = NULL) {
         if (is_array($arr)) {
@@ -67,7 +67,7 @@ class Models_Evaluation_ResponseDescriptor {
     public function insert() {
         global $db;
 
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->erdescriptor_id = $db->Insert_ID();
             return $this;
         } else {
@@ -78,7 +78,7 @@ class Models_Evaluation_ResponseDescriptor {
     public function update() {
         global $db;
         if (isset($this->erdescriptor_id)) {
-            if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`erdescriptor_id` = ".$db->qstr($this->erdescriptor_id))) {
+            if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`erdescriptor_id` = ".$db->qstr($this->erdescriptor_id))) {
                 return $this;
             } else {
                 return false;
@@ -143,7 +143,7 @@ class Models_Evaluation_ResponseDescriptor {
                 } else {
                     $sort_order = "ASC";
                 }
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order;
+                $query = "SELECT * FROM `".static::$table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order;
                 $result = $db->GetRow($query, $where);
                 if ($result) {
                     $self = new self();
@@ -212,7 +212,7 @@ class Models_Evaluation_ResponseDescriptor {
                 } else {
                     $sort_order = "ASC";
                 }
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order;
+                $query = "SELECT * FROM `".static::$table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order;
                 $results = $db->GetAll($query, $where);
                 if ($results) {
                     foreach ($results as $result) {
@@ -228,6 +228,24 @@ class Models_Evaluation_ResponseDescriptor {
         $self = new self();
 
         return $self->fetchRow(array(array("key" => "erdescriptor_id", "value" => $erdescriptor_id)));
+    }
+
+    public static function fetchByResponseID($eqresponse_id, $active = true) {
+        global $db;
+
+        $self = new self();
+
+        $query = "SELECT a.* FROM `".static::$table_name."` AS a
+                    JOIN `evaluation_question_response_descriptors` AS b
+                    ON a.`erdescriptor_id` = b.`erdescriptor_id`
+                    WHERE b.`eqresponse_id` = ?
+                    AND a.`active` = ?";
+        $descriptor = $db->GetRow($query, array($eqresponse_id, $active));
+        if ($descriptor) {
+            $self = $self->fromArray($descriptor);
+        }
+
+        return $self;
     }
 
     public static function fetchAllByOrganisation($organisation_id) {

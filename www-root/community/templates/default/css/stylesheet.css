@@ -17,6 +17,163 @@ label {
     line-height: 24px;
     font-weight: 300;
 }
+/**
+ *  Twitter Widget
+ */
+
+.twitter-widget-container .list-group-item {
+    padding: 10px;
+    color: #2b2e32;
+    list-style: none;
+    line-height: 0;
+    border-top: 1px solid #edf1f5;
+    border-right: none;
+    border-bottom: none;
+    border-left: none;
+    -webkit-transition: all .2s;
+    transition: all .2s;
+}
+
+.twitter-widget-container .list-group-item:first-child {
+    border: none;
+}
+
+.twitter-widget-container .list-group-item:hover,
+.twitter-widget-container a.list-group-item:hover,
+.twitter-widget-container button.list-group-item:hover,
+.twitter-widget-container a.list-group-item:focus,
+.twitter-widget-container button.list-group-item:focus {
+    background-color: #f9fcfe;
+    text-decoration: none;
+}
+
+.twitter-widget-container a.list-group-item:hover .link-arrow,
+.twitter-widget-container button.list-group-item:hover .link-arrow {
+    color: #2b2e32;
+}
+
+.twitter-widget-container a.list-group-item:focus .link-arrow,
+.twitter-widget-container button.list-group-item:focus .link-arrow {
+    color: #9d1939;
+}
+
+.twitter-widget-container a.list-group-item:focus,
+.twitter-widget-container button.list-group-item:focus {
+    border-bottom: none;
+    background-color: #f9fcfe;
+}
+
+.twitter-widget-container a.list-group-item:focus .title,
+.twitter-widget-container a.list-group-item:focus .content-heading,
+.twitter-widget-container a.list-group-item:focus p {
+    color: #9d1939;
+}
+
+.twitter-widget-container .table {
+    display: table;
+    width: 100%;
+    height: 0;
+    margin: 0;
+}
+.twitter-widget-container .table-cell {
+    display: table-cell;
+    height: 100%;
+    float: none;
+    vertical-align: middle;
+}
+.twitter-widget-container .table-cell-lg {
+    display: table-cell;
+    width: 100%;
+    height: 100%;
+    vertical-align: middle;
+}
+.twitter-widget-container .panel-link {
+    cursor: pointer;
+    padding: 20px 0;
+    border-top: 1px solid #edf1f5;
+    -webkit-transition: all .2s;
+    transition: all .2s;
+}
+.twitter-widget-container .panel-link:first-child {
+    border: none;
+}
+.twitter-widget-container .panel-link:hover {
+    background-color: #f9fcfe;
+}
+.twitter-widget-container .panel-link a {
+    display: inline-block;
+}
+.twitter-widget-container .panel-link:hover a {
+    color: #9d1939;
+}
+.twitter-widget-container .panel-link a:focus {
+    border: none;
+    box-shadow: 0 2px 0 #9d1939;
+}
+
+.twitter-widget-container .circle {
+    display: inline-block;
+    position: relative;
+    background-color: #f6f9fc;
+    border-radius: 100%;
+    z-index: 2;
+}
+.twitter-widget-container .circle img {
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    object-fit: cover;
+    vertical-align: initial;
+}
+.twitter-widget-container .circle-img-sm {
+    margin-right: 15px;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+}
+.twitter-widget-container  .panel-content {
+    max-height: 600px;
+    overflow-y: scroll;
+}
+.twitter-widget-container  .table-cell {
+    vertical-align: top;
+}
+.twitter-widget-container  .tweet-link {
+    display: block;
+}
+.twitter-widget-container  .tweet-user a {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+.twitter-widget-container  .tweet-date {
+    margin-top: 10px;
+    color: #88909e;
+}
+.twitter-widget-container  p {
+    margin: 0;
+    line-height: 20px;
+}
+
+#div-twitter-load-more a {
+    display: block;
+    padding: 10px 0;
+    text-align: center;
+}
+#twitter-loading-spinner {
+    text-align: center;
+    height: 32px;
+}
+
+#twitter-no-more-tweets p {
+    display: block;
+    padding: 10px 0;
+    text-align: center;
+}
+
+#tweets .panel-body {
+    padding: 0;
+}
+/** End Twitter Widget **/
 a {
     text-decoration: none;
     color: #069;

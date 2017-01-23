@@ -27,8 +27,9 @@ class Models_Quiz_QuizType extends Models_Base {
     
     protected $quiztype_id, $quiztype_code, $quiztype_title, $quiztype_description, $quiztype_active, $quiztype_order;
     
-    protected $table_name = "quizzes_lu_quiztypes";
-    protected $default_sort_column = "quiztype_order";
+    protected static $table_name = "quizzes_lu_quiztypes";
+    protected static $default_sort_column = "quiztype_order";
+    protected static $primary_key = "quiztype_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);

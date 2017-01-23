@@ -53,7 +53,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 		$PREFERENCES = preferences_load($MODULE);
 
 
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/deparments?org=".$ORGANISATION['organisation_id'], "title" => "Departments");
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/departments?org=".$ORGANISATION['organisation_id'], "title" => "Departments");
 
 		$module_file = $router->getRoute();
 		if ($module_file) {

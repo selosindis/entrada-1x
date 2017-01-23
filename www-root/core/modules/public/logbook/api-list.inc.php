@@ -29,14 +29,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ENCOUNTER_TRACKING"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
     exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('encounter_tracking', 'read')) {
+} elseif (!$ENTRADA_ACL->amIAllowed('encounter_tracking', 'read') && !$ENTRADA_ACL->amIAllowed("academicadvisor", "read", false)) {
     exit;
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
     ob_clear_open_buffers();
-    
-    if (isset($_GET["proxy_id"]) && ((int)$_GET["proxy_id"])) {
-        $proxy_id = (int) $_GET["proxy_id"];
+
+    $student_viewing = true;
+    if (isset($_GET["proxy_id"]) && $tmp_input = clean_input($_GET["proxy_id"], array("trim", "int"))) {
+        $proxy_id = $tmp_input;
+        $student_viewing = false;
     } else {
         $proxy_id = $ENTRADA_USER->getID();
     }
@@ -83,13 +85,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ENCOUNTER_TRACKING"))) {
         foreach ($entries as $entry) {
             if (!isset($search_value) || stripos($entry->getCourseName(), $search_value) !== false || stripos(date("F jS, Y", $entry->getEncounterDate()), $search_value) !== false || stripos($entry->getInstitution(), $search_value) !== false || stripos($entry->getLocation(), $search_value) !== false) {
                 $url = ENTRADA_URL . "/logbook?section=edit&entry_id=".html_encode($entry->getID());
+                if ($proxy_id && $proxy_id > 0) {
+                    $url .= "&proxy_id=" . $proxy_id;
+                }
                 if ($count >= $start && $count < ($start + $limit)) {
                     $row = array();
-                    $row["checkbox"] = "<input class=\"delete\" type=\"checkbox\" name=\"delete[".html_encode($entry->getID())."]\" value=\"".html_encode($entry->getID())."\" />";
-                    $row["course"] = "<a href=\"".$url."\">".html_encode($entry->getCourseName())."</a>";
-                    $row["date"] = "<a href=\"".$url."\">".html_encode(date("F jS, Y", $entry->getEncounterDate()))."</a>";
+                    $row["checkbox"]    = "<input class=\"delete\" type=\"checkbox\" name=\"delete[".html_encode($entry->getID())."]\" value=\"".html_encode($entry->getID())."\" />";
+                    $row["course"]      = "<a href=\"".$url."\">".html_encode($entry->getCourseName())."</a>";
+                    $row["date"]        = "<a href=\"".$url."\">".html_encode(date("F jS, Y", $entry->getEncounterDate()))."</a>";
                     $row["institution"] = "<a href=\"".$url."\">".html_encode($entry->getInstitution())."</a>";
-                    $row["location"] = "<a href=\"".$url."\">".html_encode($entry->getLocation())."</a>";
+                    $row["location"]    = "<a href=\"".$url."\">".html_encode($entry->getLocation())."</a>";
                     $output["aaData"][] = $row;
                 }
                 $count++;

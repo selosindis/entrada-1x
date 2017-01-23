@@ -59,7 +59,7 @@ if ($objectives) {
 	<h2 title="Evaluation Question Objectives Section">Objectives to Report On</h2>
 	<div id="evaluation-objectives-section">
 		<div style="width: 40%;" class="objectives half left">
-			<h3>Objective Sets</h3>
+			<h3>Curriculum Tag Sets</h3>
 			<ul class="tl-objective-list" id="objective_list">
 			<?php
 			foreach($objectives as $objective){ 
@@ -134,7 +134,7 @@ if ($objectives) {
 					</ul>
 				</div>												
 				<p class="well well-small content-small">
-					<strong>Helpful Tip:</strong> Click <strong>Map Additional Objectives</strong> to view the list of available objective sets. Select an objective from the list on the left and it will be mapped to the assessment.
+					<strong>Helpful Tip:</strong> Click <strong>Map Additional Objectives</strong> to view the list of available curriculum tag sets. Select an objective from the list on the left and it will be mapped to the assessment.
 				</p>
 			</div>
 			<p class="well well-small content-small" id="alternate_objective_notice" style="display: none;">
@@ -163,7 +163,7 @@ if ($objectives) {
 								<?php
 								$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
 								if ($set) {
-									echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+									echo "Curriculum Tag Set: <strong>".$set["objective_name"]."</strong><br/>";
 								}
 								?>
 								<?php echo $objective["objective_description"];?>
@@ -210,7 +210,7 @@ if ($objectives) {
 										<?php
 										$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
 										if ($set) {
-											echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+											echo "Curriculum Tag Set: <strong>".$set["objective_name"]."</strong><br/>";
 										}
 										?>
 										<?php echo $objective["objective_description"];?>

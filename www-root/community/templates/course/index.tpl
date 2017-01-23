@@ -47,27 +47,29 @@
             <div class="banner">
                 <div class="container">
                     <div class="row-fluid">
-                        <div class="span5">
-                            <a href="{$sys_website_url}"><img src="{$template_relative}/images/logo.png" width="294" height="46" alt="{$application_name}" title="{$application_name}"/></a>
+                        <div class="span4">
+                            <a class="brand" href="{$sys_website_url}"><img src="{$template_relative}/images/logo.png" width="211" height="33" alt="{$application_name}" title="{$application_name}"/></a>
                         </div>
 
                         {if $isAuthorized}
-                            <div class="span5">
+                            <div class="span8 pull-right">
                                 <div class="welcome-area">
-                                    <div class="userAvatar">
-                                        <a href="#"><img src="{$sys_profile_photo}" width="32" height="42" style="width: 32px; height: 42px;" alt="{$member_name}" class="img-polaroid" /></a>
-                                    </div>
                                     <div class="welcome-block">
-                                        Welcome <span class="userName">{$member_name}</span>
-                                        <br />
-                                        <a href="{$sys_website_relative}/profile">My Profile</a> |
-                                        <a href="{$sys_website_relative}/evaluations">My Evaluations</a>
-                                        {$sys_profile_evaluations}
+                                        <a href="{$sys_website_relative}/profile">
+                                            <div class="userAvatar">
+                                                <img src="{$sys_profile_photo}" width="36" height="36" style="width: 36px; height: 36px;" alt="{$member_name}" class="img-polaroid" />
+                                                <span class="fa fa-user header-icon"></span>
+                                            </div>
+                                            {$member_name}
+                                        </a>
+                                        <a href="{$sys_website_relative}/assessments">
+                                            <span class="fa fa-list-ul header-icon"></span>
+                                            {translate}Assessment &amp; Evaluation{/translate}
+                                        </a>
+
+                                        <a href="{$sys_website_relative}/?action=logout" class="log-out"><span class="fa fa-power-off"></span> Logout</a>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="span2">
-                                <a href="{$sys_website_relative}/?action=logout" class="log-out">Logout <i class="icon icon-logout"></i></a>
                             </div>
                         {/if}
                     </div>
@@ -89,8 +91,15 @@
             <div id="site-body" class="row-fluid">
                 <div class="span3 no-printing" id="sidebar">
                     {include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
-                    <br />
                     {$page_sidebar}
+                    {if $twitter}
+                        <div class="panel-head">
+                            <h3>{translate}Twitter{/translate}</h3>
+                        </div>
+                        <div class="clearfix panel-body">
+                            {$twitter}
+                        </div>
+                    {/if}
                 </div>
                 <div class="span9" id="content">
                     <div class="clearfix inner-content">
@@ -122,6 +131,20 @@
                 pageTracker._initData();
                 pageTracker._trackPageview();
             </script>
+        {/if}
+
+        {if $isAuthorized}
+            <script src = "{$sys_website_url}/javascript/jquery/jquery.session.timeout.js?release={$application_version}" ></script >
+            <script type = "text/javascript" >
+                jQuery(document) . ready(function ($) {
+                    $.timeoutMonitor({
+                        sessionTime: {$maxlifetime},
+                        warnTime: 60000,    // 60 seconds before it expires
+                        title: '{$session_expire_title}',
+                        message: '{$session_expire_message}'
+                    });
+                });
+            </script >
         {/if}
     </body>
 </html>

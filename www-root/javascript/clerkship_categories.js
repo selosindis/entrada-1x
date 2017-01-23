@@ -345,3 +345,27 @@ function buildDOM(children,id){
 
     jQuery('#children_'+id).slideDown();
 }
+
+function selectCategory(element, parent_id, category_id, organisation_id) {
+    jQuery.ajax({
+        url: SITE_URL + "/api/categories-list.api.php",
+        type : 'get',
+        data : {'pid': parent_id, 'id': category_id, 'organisation_id': organisation_id}
+    }).done(function(result) {
+        jQuery(element).html(result)
+    });
+    return;
+}
+
+function selectOrder(element, category_id, parent_id, organisation_id) {
+    jQuery.ajax({
+        url: SITE_URL + "/api/categories-list.api.php",
+        type: 'get',
+        data : {'type': 'order', 'id': category_id, 'pid': parent_id, 'organisation_id': organisation_id}
+    }).done(function(result) {
+        jQuery(element).html(result)
+    });
+    return;
+}
+
+

@@ -90,7 +90,6 @@ header("Content-type: text/xml");
  */
 require_once("autoload.php");
 
-require_once("classes/adodb/adodb.inc.php");
 require_once("functions.inc.php");
 require_once("settings.inc.php");
 
@@ -115,7 +114,7 @@ $auth_password = "";
 $user_username = "";
 $user_password = "";
 
-$is_authenticated = false;
+$authenticated_by_method = "";
 
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 echo "<authenticate xmlns:authenticate=\"".AUTH_URL."/authenticate.dtd\">\n";
@@ -363,9 +362,10 @@ if (!$ERROR) {
 		}
 
 		/**
-		 * We have found a successful user record in the system, break the chain here.
+		 * We have found a successful user record in the system, break the chain here, saving the successful method
 		 */
 		if (!empty($user_data)) {
+            $authenticated_by_method = $auth_method;
 			break;
 		}
 	}
@@ -421,6 +421,7 @@ if (!$ERROR) {
 			 */
 			echo "\t\t<status>".encrypt("success", $auth_password)."</status>\n";
 			echo "\t\t<message>".encrypt("You were successfully authenticated into this application.", $auth_password)."</message>\n";
+            echo "\t\t<method>".encrypt($authenticated_by_method, $auth_password)."</method>\n";
 
 			if ((isset($_POST["requested_info"])) && ($REQUESTED_INFO = @unserialize(base64_decode($_POST["requested_info"]))) && (is_array($REQUESTED_INFO)) && (count($REQUESTED_INFO) > 0)) {
 				$APPLICATION_SPECIFIC	= unserialize(base64_decode($user_access["extras"]));

@@ -31,8 +31,7 @@ if(!defined("PARENT_INCLUDED")) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif(!$ENTRADA_ACL->amIAllowed("coursecontent", "update", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -42,7 +41,7 @@ if(!defined("PARENT_INCLUDED")) {
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/chosen.jquery.min.js\"></script>\n";
     $HEAD[]	= "<link rel=\"stylesheet\" type=\"text/css\"  href=\"".ENTRADA_RELATIVE."/css/jquery/chosen.css\" />\n";
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE, "title" => $translate->_("courses"));
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE, "title" => $translate->_($MODULE));
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);

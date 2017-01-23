@@ -71,11 +71,14 @@ if ($RECORD_ID) {
                     if ($file_record['session_variables']) {
                        ?>
                         <form id="header_rederict" action="<?php echo $file_record["link_url"]?>" method="post">
-                            <input type="hidden" name="course_id" value="<?php echo $course_id['course_id']?>"></input>
-                            <input type="hidden" name="community_id" value="<?php echo $COMMUNITY_ID?>"></input>
-                            <input type="hidden" name="username" value="<?php echo $ENTRADA_USER->getUsername()?>"></input>
-                            <input type="hidden" name="firstname" value="<?php echo $ENTRADA_USER->getFirstname()?>"></input>
-                            <input type="hidden" name="lastname" value="<?php echo $ENTRADA_USER->getLastname()?>"></input>
+                            <input type="hidden" name="course_id" value="<?php echo $course_id["course_id"]?>" />
+                            <input type="hidden" name="community_id" value="<?php echo $COMMUNITY_ID?>" />
+                            <input type="hidden" name="username" value="<?php echo $ENTRADA_USER->getUsername()?>" />
+                            <input type="hidden" name="email" value="<?php echo $ENTRADA_USER->getEmail()?>" />
+                            <input type="hidden" name="firstname" value="<?php echo $ENTRADA_USER->getFirstname()?>" />
+                            <input type="hidden" name="lastname" value="<?php echo $ENTRADA_USER->getLastname()?>" />
+                            <input type="hidden" name="role" value="<?php echo $ENTRADA_USER->getActiveRole()?>" />
+                            <input type="hidden" name="group" value="<?php echo $ENTRADA_USER->getActiveGroup()?>" />
                         </form>
                         <script type="text/javascript">
                             jQuery(document).ready(function() {
@@ -87,20 +90,11 @@ if ($RECORD_ID) {
                        header("Location: ".$file_record["link_url"]);
                     }
                 } else {
-                    if ($file_record['session_variables']) {
-                        if ($file_record['iframe_resize']) {
-                        $iframe = "<iframe class='iframeSize'  width='100%' scrolling='no' src='" . $file_record["link_url"] . "?course_id=" . $course_id['course_id'] . "&community_id=" . $COMMUNITY_ID . "&username=" . $ENTRADA_USER->getUsername() .  "&firstname=" . $ENTRADA_USER->getFirstname() . "&lastname=" . $ENTRADA_USER->getLastname() . "'></iframe>";
-                        ?>
-                        <!--[if lt IE 9]>
-                        <?php
-                        //disables the no scrolling for IE 8
-                        //there is an issue I can't fix at the moment where the ie8 won't expand the iframe based on the content.
-                        $iframe = "<iframe class='iframeSize'  width='100%' src='" . $file_record["link_url"] . "?course_id=" . $course_id['course_id'] . "&community_id=" . $COMMUNITY_ID . "&username=" . $ENTRADA_USER->getUsername() .  "&firstname=" . $ENTRADA_USER->getFirstname() . "&lastname=" . $ENTRADA_USER->getLastname() . "'></iframe>";                        
-                        ?>
-                        <![endif]-->
-                        <?php
+                    if ($file_record["session_variables"]) {
+                        if ($file_record["iframe_resize"]) {
+                            $iframe = "<iframe class='iframeSize'  width='100%' scrolling='no' src='" . $file_record["link_url"] . "?course_id=" . $course_id['course_id'] . "&community_id=" . $COMMUNITY_ID . "&username=" . $ENTRADA_USER->getUsername() .  "&firstname=" . $ENTRADA_USER->getFirstname() . "&lastname=" . $ENTRADA_USER->getLastname() . "&role=" . $ENTRADA_USER->getActiveRole() . "&group=" . $ENTRADA_USER->getActiveGroup() . "'></iframe>";
                     } else {
-                            $iframe = "<iframe class='iframeSize'  width='100%' src='" . $file_record["link_url"] . "?course_id=" . $course_id['course_id'] . "&community_id=" . $COMMUNITY_ID . "&username=" . $ENTRADA_USER->getUsername() .  "&firstname=" . $ENTRADA_USER->getFirstname() . "&lastname=" . $ENTRADA_USER->getLastname() . "'></iframe>";
+                            $iframe = "<iframe class='iframeSize'  width='100%' src='" . $file_record["link_url"] . "?course_id=" . $course_id['course_id'] . "&community_id=" . $COMMUNITY_ID . "&username=" . $ENTRADA_USER->getUsername() .  "&firstname=" . $ENTRADA_USER->getFirstname() . "&lastname=" . $ENTRADA_USER->getLastname()  . "&role=" . $ENTRADA_USER->getActiveRole() . "&group=" . $ENTRADA_USER->getActiveGroup() .  "&email=" . $ENTRADA_USER->getEmail() ."'></iframe>";
                         }
                     } else {
                         $iframe = "<iframe class='iframeSize' src='" . $file_record["link_url"] . "'></iframe>";
@@ -124,7 +118,7 @@ if ($RECORD_ID) {
         
         if (shares_link_module_access($RECORD_ID, "view-link")) {
 
-            $BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$file_record["cshare_id"], "title" => limit_chars($file_record["folder_title"], 32));
+            Models_Community_Share::getParentsBreadCrumbs($file_record["cshare_id"]);
             $BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-link&id=".$RECORD_ID, "title" => limit_chars($file_record["link_title"], 32));
 
             $community_shares_select = community_shares_in_select_hierarchy($file_record["cshare_id"], $file_record["parent_folder_id"], $PAGE_ID);

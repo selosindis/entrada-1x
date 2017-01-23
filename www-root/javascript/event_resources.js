@@ -233,7 +233,8 @@ jQuery(document).ready(function ($) {
     $("#event-resources-container").on("click", ".resource-link", function () {
         edit_mode = true;
         
-        $("#event_resource_modal_title").html("Edit Event Resource");
+        var title_modal = "Edit Event Resource";
+        $("#event_resource_modal_title").html(title_modal);
         
         var event_resource_id = $(this).parent().attr("data-id");
         var data_string;
@@ -251,6 +252,8 @@ jQuery(document).ready(function ($) {
             success: function (data) {
                 var jsonResponse = JSON.parse(data);
                 if (jsonResponse.status === "success") {
+                    var title_span = document.createElement("span");
+                    $(title_span).addClass("event-resource-title-small");
                     resource_step_control.val("2");
                     build_hidden_form_controls(jsonResponse.data.resource_type);
                     resource_type_value_control.val(jsonResponse.data.resource_type);
@@ -279,10 +282,11 @@ jQuery(document).ready(function ($) {
                         case 5 :
                         case 6 :
                         case 11 :
-                        case 12 :
                             $("#event_resource_file_view_value").val((jsonResponse.data.access_method == "0" ? "download" : "view"));
                             $("#event_resource_file_title_value").val(jsonResponse.data.title);
                             $("#event_resource_file_description_value").val(jsonResponse.data.description);
+                            $(title_span).html(jsonResponse.data.title);
+                            $("#event_resource_modal_title").append("<br/>").append(title_span);
                         break;
                         case 2 :
                             $("#event_resource_bring_description_value").val(jsonResponse.data.description);
@@ -300,6 +304,8 @@ jQuery(document).ready(function ($) {
                             $("#event_resource_link_url_value").val(jsonResponse.data.link);
                             $("#event_resource_link_title_value").val(jsonResponse.data.title);
                             $("#event_resource_link_description_value").val(jsonResponse.data.description);
+                            $(title_span).html(jsonResponse.data.title);
+                            $("#event_resource_modal_title").append("<br/>").append(title_span);
                         break;
                         case 4 :
                             $("#event_resource_homework_description_value").val(jsonResponse.data.description);
@@ -309,6 +315,8 @@ jQuery(document).ready(function ($) {
                             $("#event_resource_module_url_value").val(jsonResponse.data.link);
                             $("#event_resource_module_title_value").val(jsonResponse.data.title);
                             $("#event_resource_module_description_value").val(jsonResponse.data.description);
+                            $(title_span).html(jsonResponse.data.title);
+                            $("#event_resource_modal_title").append("<br/>").append(title_span);
                         break;
                         case 8 :
                             var quiz_type = parseInt(jsonResponse.data.quiztype_id);
@@ -330,6 +338,8 @@ jQuery(document).ready(function ($) {
                             $("#event_resource_quiz_time_value").val(jsonResponse.data.quiz_timeout);
                             $("#event_resource_quiz_attempts_value").val(jsonResponse.data.quiz_attempts);
                             $("#event_resource_quiz_results_value").val(quiz_results);
+                            $(title_span).html(jsonResponse.data.title);
+                            $("#event_resource_modal_title").append("<br/>").append(title_span);
                             
                         break;
                         case 9 : 
@@ -342,6 +352,8 @@ jQuery(document).ready(function ($) {
                             $("#event_resource_lti_key_value").val(jsonResponse.data.lti_key);
                             $("#event_resource_lti_secret_value").val(jsonResponse.data.lti_secret);
                             $("#event_resource_lti_parameters_value").val(jsonResponse.data.lti_params);
+                            $(title_span).html(jsonResponse.data.title);
+                            $("#event_resource_modal_title").append("<br/>").append(title_span);
                         break;
                     }
                     show_step();
@@ -705,11 +717,16 @@ jQuery(document).ready(function ($) {
 
                     if (jsonResponse.status === "success") {
                         var html = jsonResponse.data.html;
-                        if (recurring_events) {
+                        var resource = jsonResponse.data.resource;
+
+                        if (recurring_events && html) {
                             msg += "<br/>You can also delete it from the following recurring events in this series.";
                             $("#delete-event-resource-modal .modal-body").append(html);
                             $("#delete-event-resource-modal").css({"max-height": 425});
                             display_notice([msg], "#delete-event-resource-msgs", "append");
+                        } else {
+                            display_notice([msg], "#delete-event-resource-msgs", "append");
+                            $("#delete-event-resource-modal").css({"max-height": 230});
                         }
                     } else {
                         display_error(jsonResponse.data, "#event-resource-msgs", "append");
@@ -722,8 +739,7 @@ jQuery(document).ready(function ($) {
 
                 }
             });
-        }
-
+        } else {
         display_notice([msg], "#delete-event-resource-msgs", "append");
         
         var delete_table = document.createElement("table");
@@ -746,6 +762,7 @@ jQuery(document).ready(function ($) {
         $(delete_table_tbody).append(delete_row_tr);
         $(delete_table).append(delete_table_thead).append(delete_table_tbody).addClass("table table-striped table-bordered");
         $("#delete-event-resource-modal .modal-body").append(delete_table);
+        }
         
         $("#delete-event-resource-modal").modal("show");
         $("#delete-event-resource").attr({"data-id": data_id});
@@ -758,8 +775,8 @@ jQuery(document).ready(function ($) {
     
     $("#delete-event-resource").on("click", function () {
         var entity_id = $(this).attr("data-id");
-        var data = $("#delete-event-resource-modal input.entity");
-        var entities = []
+        var data = $("#delete-event-resource-modal input.entity:checked");
+        var entities = [];
         if (data) {
             $.each(data, function(key, value) {
                 var entity_id = $(value).data("entity-id");
@@ -923,7 +940,7 @@ jQuery(document).ready(function ($) {
                 var resource_optional_label = document.createElement("label");
                 var resource_optional_radio = document.createElement("input");
                 
-                $(resource_required_heading).html("Should viewing this file be considered optional or required?");
+                $(resource_required_heading).html("Should viewing this resource be considered optional or required?");
                 
                 $(resource_optional_label).attr({"for": "event-resource-required-no"}).addClass("radio");
                 $(resource_optional_radio).attr({type: "radio", id: "event-resource-required-no", value: "no", name: "event_resource_required"});
@@ -1179,7 +1196,6 @@ jQuery(document).ready(function ($) {
                     case 5 :
                     case 6 :
                     case 11 :
-                    case 12 :
                         
                         build_hidden_form_controls (selected_resource_type);
                         
@@ -1213,8 +1229,6 @@ jQuery(document).ready(function ($) {
                                     $(resource_file_view_option_control_group).append(resource_file_view_option_heading).append(resource_file_option_download_label).append(resource_file_option_view_label).addClass("control-group");
                                 }
                                 
-                                if (edit_mode) {
-                                    
                                     /**
                                      *
                                      * Builds file title controls
@@ -1230,7 +1244,6 @@ jQuery(document).ready(function ($) {
                                     $(resource_file_title_input).attr({type: "text", id: "event_resource_file_title", name: "event_resource_file_title"}).addClass("input-xlarge").val($("#event_resource_file_title_value").val());
                                     $(resource_file_title_controls).append(resource_file_title_input);
                                     $(resource_file_title_control_group).append(resource_file_title_heading).append(resource_file_title_controls).addClass("control-group");
-                                }
                                 
                                 /**
                                  *
@@ -1248,11 +1261,7 @@ jQuery(document).ready(function ($) {
                                 $(resource_file_description_controls).append(resource_file_description_textarea);
                                 $(resource_file_description_control_group).append(resource_file_description_heading).append(resource_file_description_controls).addClass("control-group");
                                 
-                                if (edit_mode) {
-                                    resource_step_container.append(resource_file_title_control_group).append(resource_file_description_control_group);
-                                } else {
-                                    resource_step_container.append(resource_file_description_control_group);
-                                }
+                                resource_step_container.append(resource_file_title_control_group).append(resource_file_description_control_group);
                                 
                                 if (edit_mode) {
                                     var attach_file_heading = document.createElement("h3");
@@ -2004,9 +2013,6 @@ jQuery(document).ready(function ($) {
                     case 10 :
                         resource_type = "LTI Provider";
                     break;
-                    case 12 :
-                        resource_type = "Podcast";
-                    break;
                 }
                 
                 var success_p = document.createElement("p");
@@ -2100,8 +2106,14 @@ jQuery(document).ready(function ($) {
                     var release_until = (resource.release_until != "" ? resource.release_until : "");
 
                     $(resource_delete_i).addClass("icon-white icon-trash");
-                    $(resource_time_p).html(release_date + " " + release_until).addClass("muted").addClass("event-resource-release-dates");
-                    $(resource_delete_span).addClass("btn btn-mini btn-danger pull-right delete-resource").append(resource_delete_i).attr({"data-id": resource.entity_id});
+                    if (release_date && release_until) {
+                        $(resource_time_p).html(release_date + " " + release_until).addClass("muted").addClass("event-resource-release-dates");
+                    }
+
+                    if (resource.delete != 0) {
+                        $(resource_delete_span).addClass("btn btn-mini btn-danger pull-right delete-resource").append(resource_delete_i).attr({"data-id": resource.entity_id});
+                    }
+
                     $(resource_description_p).html(resource.description).addClass("muted resource-description");
 
                     var required = "";
@@ -2128,7 +2140,6 @@ jQuery(document).ready(function ($) {
                         case 5 :
                         case 6 :
                         case 11 :
-                        case 12 :
                             var resource_accesses_span = document.createElement("span");
                             var resource_accesses_i = document.createElement("i");
                             var download_span = document.createElement("span");
@@ -2226,7 +2237,6 @@ jQuery(document).ready(function ($) {
             case 5 :
             case 6 :
             case 11 :
-            case 12 :
                 
                 /**
                 *

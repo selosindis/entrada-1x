@@ -24,37 +24,37 @@
  */
 require_once("init.inc.php");
 
-if (isset($_POST["id"]) && $_SESSION["isAuthorized"]) {
-	$procedure_id = clean_input($_POST["id"], array("int"));
-	if (isset($_POST["level"]) && ((int)$_POST["level"])) {
-		$level = (int)$_POST["level"];
-	} else {
-		$level = 0;
-	}
-	if ($procedure_id) {
-		$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` WHERE `lprocedure_id` = ".$db->qstr($procedure_id);
-		$procedure = $db->GetRow($query);
-		if ($procedure) {
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"] && isset($_POST["id"])) {
+    $procedure_id = clean_input($_POST["id"], array("int"));
+
+    if (isset($_POST["level"]) && ((int)$_POST["level"])) {
+        $level = (int)$_POST["level"];
+    } else {
+        $level = 0;
+    }
+
+    if ($procedure_id) {
+        $query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` WHERE `lprocedure_id` = ".$db->qstr($procedure_id);
+        $procedure = $db->GetRow($query);
+        if ($procedure) {
             ?>
             <div class="row-fluid" id="procedure_<?php echo $procedure_id; ?>_row">
-                    <span class="span1">
+                <div class="span5">
+                    <label class="checkbox space-above">
                         <input type="checkbox" class="procedure_delete" value="<?php echo $procedure_id; ?>" />
-                    </span>
-                <label class="span6" for="delete_procedure_<?php echo $procedure_id; ?>">
-                    <?php echo $procedure["procedure"]?>
-                </label>
-                <span class="span5 align-right">
-                    <input type="hidden" name="procedures[<?php echo $procedure_id; ?>]" value="<?php echo $procedure_id; ?>" />
-                    <select name="proc_participation_level[<?php echo $procedure_id; ?>]" id="proc_<?php echo $procedure_id; ?>_participation_level" style="width: 150px" class="pull-right">
+                        <?php echo html_encode($procedure["procedure"]); ?>
+                    </label>
+                </div>
+                <div class="span7 space-below">
+                    <select name="proc_participation_level[<?php echo $procedure_id; ?>]" id="proc_<?php echo $procedure_id; ?>_participation_level" class="input-large">
                         <option value="1" <?php echo ($level == 1 || (!$level) ? "selected=\"selected\"" : ""); ?>>Observed</option>
                         <option value="2" <?php echo ($level == 2 ? "selected=\"selected\"" : ""); ?>>Performed with help</option>
                         <option value="3" <?php echo ($level == 3 ? "selected=\"selected\"" : ""); ?>>Performed independently</option>
                     </select>
-                </span>
+                </div>
+                <input type="hidden" name="procedures[<?php echo $procedure_id; ?>]" value="<?php echo $procedure_id; ?>" />
             </div>
             <?php 
-		}
-	}
+        }
+    }
 }
-
-?>

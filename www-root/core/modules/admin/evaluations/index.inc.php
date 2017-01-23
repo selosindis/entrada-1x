@@ -37,7 +37,7 @@ if (!defined("IN_EVALUATIONS")) {
 } else {
 
 	?>
-	<h1>Manage Evaluations</h1>
+	<h1><?php echo $translate->_("Manage Clerkship Evaluations"); ?></h1>
 	<?php
 
 	if ($ENTRADA_ACL->amIAllowed("evaluation", "create", false)) {
@@ -48,8 +48,8 @@ if (!defined("IN_EVALUATIONS")) {
 		<div style="clear: both"></div>
 		<?php
 	}
-    
-    $evaluations = Models_Evaluation::getAuthorEvaluations();
+
+    $evaluations = Classes_Evaluation::getAuthorEvaluations();
 
 	if (count($evaluations)) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
@@ -91,9 +91,9 @@ if (!defined("IN_EVALUATIONS")) {
 				<tr>
 					<td class="modified">&nbsp;</td>
 					<td class="title">Title</td>
-					<td class="date">Evaluation Start</td>
-					<td class="date">Evaluation Finish</td>
-					<td class="date-smallest>">Evaluation Type</td>
+					<td class="date-small">Evaluation Start</td>
+					<td class="date-small">Evaluation Finish</td>
+					<td class="date-smallest">Type</td>
 					<td class="attachment">&nbsp;</td>
 				</tr>
 			</thead>
@@ -115,9 +115,9 @@ if (!defined("IN_EVALUATIONS")) {
 				echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation\">\n";
 				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" /></td>\n";
 				echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
-				echo "	<td class=\"date\"><a href=\"".$url."\" alt=\"".$result["evaluation_start"]."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_start"])."</a></td>\n";
-				echo "	<td class=\"date\"><a href=\"".$url."\" alt=\"".$result["evaluation_finish"]."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</a></td>\n";
-				echo "	<td class=\"date-smallest\"><a href=\"".$url."\">".html_encode($result["evaluation_type"])."</a></td>\n";
+				echo "	<td class=\"date-small\"><a href=\"".$url."\" alt=\"".$result["evaluation_start"]."\">".date("M d/y g:ia", $result["evaluation_start"])."</a></td>\n";
+				echo "	<td class=\"date-small\"><a href=\"".$url."\" alt=\"".$result["evaluation_finish"]."\">".date("M d/y g:ia", $result["evaluation_finish"])."</a></td>\n";
+				echo "	<td class=\"date-smallest\"><a href=\"".$url."\">".ucwords($result["evaluation_type"])."</a></td>\n";
 				echo "	<td class=\"attachment\">\n";
                 if ($ENTRADA_ACL->amIAllowed(new EvaluationResource($result["evaluation_id"], $result["organisation_id"], true), 'update')) {
                 echo "  <div class=\"btn-group\">\n";

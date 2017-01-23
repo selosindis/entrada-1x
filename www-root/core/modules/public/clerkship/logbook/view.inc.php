@@ -72,7 +72,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                 if ($db->AutoExecute(CLERKSHIP_DATABASE.".logbook_rotation_comments", $PROCESSED, "INSERT")) {
                     if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
                         $lrcomment_id = $db->Insert_Id();
-                        require_once("Models/notifications/NotificationUser.class.php");
+                        require_once("Classes/notifications/NotificationUser.class.php");
                         $notification_user = NotificationUser::get($PROXY_ID, "logbook_rotation", $rotation_id, $PROXY_ID);
                         if (!$notification_user) {
                             $notification_user = NotificationUser::add($PROXY_ID, "logbook_rotation", $rotation_id, $PROXY_ID);
@@ -206,7 +206,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					$tooltip_locations_array = array();
 					?>
 					<br />
-					<table class="tableList" cellspacing="0" summary="Clinical Presentations Encountered in <?php echo $clinical_rotation["title"]; ?>">
+					<table class="table table-striped" cellspacing="0" summary="Clinical Presentations Encountered in <?php echo $clinical_rotation["title"]; ?>">
 					    <colgroup>
 							<col style="width:3%" />
 							<col style="width:<?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 52 : 67); ?>%;"/>
@@ -222,16 +222,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					    </colgroup>
 					    <thead>
 						<tr>
-						    <td colspan="2">Clinical Presentations Encountered in <?php echo $clinical_rotation["title"]; ?></td>
-						    <td style="border-left: none;">Logged</td>
+						    <th colspan="2">Clinical Presentations Encountered in <?php echo $clinical_rotation["title"]; ?></th>
+						    <th>Logged</th>
                             <?php
                             if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
                                 ?>
-                                <td style="border-left: none;">Setting</td>
+                                <th>Setting</th>
                                 <?php
                             }
                             ?>
-						    <td style="border-left: none;">Required</td>
+						    <th>Required</th>
 						</tr>
 					    </thead>
 					    <tbody>
@@ -340,7 +340,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                     $tooltip_locations_array = array();
 					?>
 					<br />
-					<table class="tableList" cellspacing="0" summary="Clinical Presentations for <?php echo $clinical_rotation["title"]; ?> encountered in other rotations">
+					<table class="table table-striped" cellspacing="0" summary="Clinical Presentations for <?php echo $clinical_rotation["title"]; ?> encountered in other rotations">
 					    <colgroup>
 							<col style="width:3%" />
 							<col style="width:<?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 52 : 67); ?>%;"/>
@@ -356,16 +356,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					    </colgroup>
 					    <thead>
 						<tr>
-						    <td colspan="2">Clinical Presentations for <?php echo $clinical_rotation["title"]; ?> encountered in other rotations</td>
-						    <td style="border-left: none;">Logged</td>
+						    <th colspan="2">Clinical Presentations for <?php echo $clinical_rotation["title"]; ?> encountered in other rotations</th>
+						    <th>Logged</th>
                             <?php
                             if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
                                 ?>
-                                <td style="border-left: none;">Setting</td>
+                                <th>Setting</th>
                                 <?php
                             }
                             ?>
-						    <td style="border-left: none;">Required</td>
+						    <th>Required</th>
 						</tr>
 					    </thead>
 					    <tbody>
@@ -470,7 +470,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				//     <div class="content-heading">Procedures List</div>
 					?>
 					<br />
-					<table class="tableList" cellspacing="0" summary="Procedures List">
+					<table class="table table-striped" cellspacing="0" summary="Procedures List">
 					    <colgroup>
 							<col style="width:3%" />
 							<col style="width:<?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 52 : 67); ?>%;"/>
@@ -486,16 +486,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					    </colgroup>
 					    <thead>
 						<tr>
-						    <td colspan="2">Tasks Completed in <?php echo $clinical_rotation["title"]?></td>
-						    <td style="border-left: none;">Logged</td>
+						    <th colspan="2">Tasks Completed in <?php echo $clinical_rotation["title"]?></th>
+						    <th>Logged</th>
                             <?php
                             if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
                                 ?>
-                                <td style="border-left: none;">Setting</td>
+                                <th>Setting</th>
                                 <?php
                             }
                             ?>
-						    <td style="border-left: none;">Required</td>
+						    <th>Required</th>
 						</tr>
 					    </thead>
 					    <tbody>
@@ -603,7 +603,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				//     <div class="content-heading">Procedures List</div>
 					?>
 					<br />
-					<table class="tableList" cellspacing="0" summary="Procedures List">
+					<table class="table table-striped" cellspacing="0" summary="Procedures List">
 					    <colgroup>
 							<col style="width:3%" />
 							<col style="width:<?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 52 : 67); ?>%;"/>
@@ -619,16 +619,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					    </colgroup>
 					    <thead>
 						<tr>
-						    <td colspan="2">Tasks Completed for <?php echo $clinical_rotation["title"]?> in other rotations</td>
-						    <td style="border-left: none;">Logged</td>
+						    <th colspan="2">Tasks Completed for <?php echo $clinical_rotation["title"]?> in other rotations</th>
+						    <th>Logged</th>
                             <?php
                             if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
                                 ?>
-                                <td style="border-left: none;">Setting</td>
+                                <th>Setting</th>
                                 <?php
                             }
                             ?>
-						    <td style="border-left: none;">Required</td>
+						    <th>Required</th>
 						</tr>
 					    </thead>
 					    <tbody>
@@ -707,7 +707,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						}
 					}
 				}
-				if (isset($objective_ids) && count(explode(",", $objective_ids))) {
+				if (isset($objective_ids) && $objective_ids) {
 					$query  = "SELECT * FROM `".DATABASE_NAME."`.`global_lu_objectives`
 							WHERE `objective_id` IN (".$objective_ids.")
 							AND `objective_active` = '1'
@@ -719,7 +719,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				if ($results) {
 					?>
 					<br />
-					<table class="tableList" cellspacing="0" summary="Missing Objectives">
+					<table class="table table-striped" cellspacing="0" summary="Missing Objectives">
 					    <colgroup>
 						<col style="width: 3%;"/>
 						<col style="width: <?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 67 : 82); ?>%;"/>
@@ -735,15 +735,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					    </colgroup>
 					    <thead>
 						<tr>
-						    <td colspan="2">Missing Clinical Presentations</td>
+						    <th colspan="2">Missing Clinical Presentations</th>
                             <?php
                             if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
                                 ?>
-                                <td style="border-left: none;">Setting</td>
+                                <th>Setting</th>
                                 <?php
                             }
                             ?>
-						    <td style="border-left: none;">Number Missing</td>
+						    <th>Number Missing</th>
 						</tr>
 					    </thead>
 					    <tbody>
@@ -845,7 +845,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                     if ($results) {
                         ?>
                         <br />
-                        <table class="tableList" cellspacing="0" summary="Missing procedures">
+                        <table class="table table-striped" cellspacing="0" summary="Missing procedures">
                             <colgroup>
                             <col style="width: 3%;"/>
                             <col style="width: <?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 67 : 82); ?>%;"/>
@@ -860,15 +860,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                             </colgroup>
                             <thead>
                             <tr>
-                                <td colspan="2">Missing Clinical Tasks</td>
+                                <th colspan="2">Missing Clinical Tasks</th>
                                 <?php
                                 if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
                                     ?>
-                                    <td style="border-left: none;">Setting</td>
+                                    <th>Setting</th>
                                     <?php
                                 }
                                 ?>
-                                <td style="border-left: none;">Number Missing</td>
+                                <th>Number Missing</th>
                             </tr>
                             </thead>
                             <tbody>

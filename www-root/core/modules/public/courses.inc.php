@@ -35,7 +35,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 define("IN_COURSES", true);
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => $translate->_("courses"));
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => $translate->_($MODULE));
 
 if (($router) && ($router->initRoute())) {
 	$COURSE_ID = 0;
@@ -44,6 +44,19 @@ if (($router) && ($router->initRoute())) {
 	if ((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
 		$COURSE_ID = (int) trim($_GET["id"]);
 	}
+
+	if ($COURSE_ID) {
+        if ($course = Models_Course::get($COURSE_ID)) {
+            /**
+             * Check if alltraffic should be re-routed to an external URL
+             */
+            if ($course->getCourseRedirect() && $course->getCourseUrl() ) {
+                header("Location: ".$course->getCourseUrl());
+                exit;
+            }
+            unset($course);
+        }
+    }
 
 	if ((isset($_GET["organisation_id"])) && ((int) trim($_GET["organisation_id"]))) {
 		$ORGANISATION_ID = (int) trim($_GET["organisation_id"]);

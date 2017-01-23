@@ -35,7 +35,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else{
 	
-	echo "<h1>Manage Organisations</h1>";
+	echo "<h1>" . $translate->_("Delete Organisations") . "</h1>";
 	
 	if (isset($_POST["remove_ids"]) && is_array($_POST["remove_ids"]) && !empty($_POST["remove_ids"])) {
 		
@@ -130,7 +130,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 										?>
 									</tbody>
 								</table><br />
-								<input type="submit" class="btn btn-danger" value="Delete Selected" />
+								<input type="submit" class="btn btn-danger" value="<?php echo $translate->_("Delete Selected"); ?>" />
 							</form>
 						</div>
 					<?php

@@ -28,8 +28,9 @@ class Models_LearningObject_Permission extends Models_Base {
     protected $lo_file_permission_id, $lo_file_id, $proxy_id, $permission, 
               $updated_date, $updated_by, $active = 1;
     
-    protected $table_name = "learning_object_files";
-    protected $default_sort_column = "filename";
+    protected static $table_name = "learning_object_files";
+    protected static $default_sort_column = "filename";
+    protected static $primary_key = "lo_file_permission_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);

@@ -19,7 +19,7 @@ function removeFeedbackForm() {
 jQuery(function(){
 	jQuery("#feedback-widget").parent().css("overflow","visible");
 
-	jQuery("#feedback-widget .menu li a").live("click", function(){
+	jQuery("#feedback-widget .menu li a").on("click", function(){
 		if (shown == false) {
 			shown = true;
 			
@@ -46,11 +46,11 @@ jQuery(function(){
 		}
 		return false;
 	});
-	jQuery("#feedback-form input[value=Close]").live("click", function() {
+	jQuery("#feedback-widget").on("click", "#feedback-form input[value=Close]", function() {
 		removeFeedbackForm()
 		return false;
 	});
-	jQuery("#feedback-form input[value=Submit]").live("click", function() {
+	jQuery("#feedback-widget").on("click", "#feedback-form input[value=Submit]", function() {
 		jQuery("#feedback-form").hide();
 		jQuery("#feedback-form-container").append("<div class=\"loading\">Loading</div>");
 		if (submitted == false) {

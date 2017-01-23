@@ -939,7 +939,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									}
 									textarea.className = "expandable objective";
 									$('objective_'+id+'_append').insert({after: textarea});
-									setTimeout('new ExpandableTextarea($("objective_text_'+id+'"));', 100);
+									setTimeout('jQuery("#objective_text_'+id+'").textareaAutoSize();', 100);
 								} else {
 									if ($('objective_text_'+id)) {
 										text[id] = $('objective_text_'+id).value;

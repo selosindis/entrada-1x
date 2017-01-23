@@ -36,34 +36,25 @@ if (!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	require_once("Models/utility/Collection.class.php");
-	require_once("Models/utility/SimpleCache.class.php");
+	require_once("Classes/utility/Collection.class.php");
+	require_once("Classes/utility/SimpleCache.class.php");
 
-	require_once("Models/organisations/Organisation.class.php");
-	require_once("Models/organisations/Organisations.class.php");
+	require_once("Classes/organisations/Organisation.class.php");
+	require_once("Classes/organisations/Organisations.class.php");
 
 	define("IN_AAMC_CI", true);
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/reports/aamc", "title" => "AAMC Curriculum Inventory");
 
-	if (($router) && ($router->initRoute())) {
-		$module_file = $router->getRoute();
-		if ($module_file) {
-			$ACTIVE_ORG = Organisation::get((int) $ENTRADA_USER->getActiveOrganisation());
-
-			if ($ACTIVE_ORG->getAAMCInstitutionId() && $ACTIVE_ORG->getAAMCInstitutionName() && $ACTIVE_ORG->getAAMCProgramId() && $ACTIVE_ORG->getAAMCProgramName()) {
-				require_once($module_file);
-			} else {
-				add_error("Before you are able to generate a AAMC Cirriculum Inventory report you must provide your AAMC institution name and identifier, and program name and identifier on the <a href=\"".ENTRADA_RELATIVE."/admin/settings/manage?org=".$ENTRADA_USER->getActiveOrganisation()."&amp;section=edit\">Edit Organisation</a> page.");
-
-				echo display_error();
-			}
-		}
-	} else {
-		$url = ENTRADA_URL."/admin/".$MODULE;
-		application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".$url."].");
-
-		header("Location: ".$url);
-		exit;
-	}
+	?>
+    <div class="alert alert-info">
+        <p class="lead">This feature is available in Entrada ME Consortium Edition only at this time. Please feel free to <a href="http://www.entrada.org/contact" target="_blank"><strong>contact us</strong></a> to arrange a demo.</p>
+        <p class="pull-right">
+            <a class="btn btn-primary btn-large" href="http://www.entrada.org" target="_blank">
+                <i class="fa fa-info-circle"></i> Learn More
+            </a>
+        </p>
+        <div class="clearfix"></div>
+    </div>
+    <?php
 }

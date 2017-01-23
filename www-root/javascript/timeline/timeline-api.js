@@ -41,12 +41,16 @@ Timeline.Platform = new Object();
         "sources.js",
         "layouts.js",
         "painters.js",
-        "decorators.js"
+        "decorators.js",
+
+        "scrollbar.js"
+
     ];
     var cssFiles = [
         "timeline.css",
         "ethers.css",
-        "events.css"
+        "events.css",
+        "scrollbar.css"
     ];
     
     var localizedJavascriptFiles = [

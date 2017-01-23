@@ -142,7 +142,7 @@ class Entrada_Utilities {
         }
 
         $output .= "        <div class=\"input-append\">";
-        $output .= "		    <input type=\"text\" class=\"input-small\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")." style=\"padding-left: 10px\" />&nbsp;";
+        $output .= "		    <input placeholder=\"YYYY-MM-DD\" type=\"text\" class=\"input-small\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")." style=\"padding-left: 10px\" />&nbsp;";
 
         if (!$disabled) {
             $output .= "	    <a class=\"btn\" href=\"javascript: showCalendar('', document.getElementById('".$fieldname."_date'), document.getElementById('".$fieldname."_date'), '', '".$fieldname."_date', 0, 20, 1)\" title=\"Show Calendar\" onclick=\"if (!document.getElementById('".$fieldname."').checked) { return false; }\"><i class=\"icon-calendar\"></i></a>";
@@ -208,7 +208,11 @@ class Entrada_Utilities {
                         $day = (int) trim($pieces[2]);
                         $year = (int) trim($pieces[0]);
 
-                        $timestamp_start = mktime($hour, $minute, $second, $month, $day, $year);
+                        if (checkdate($month, $day, $year)) {
+                            $timestamp_start = mktime($hour, $minute, $second, $month, $day, $year);
+                        } else {
+                            add_error("Invalid format for calendar date.");
+                        }
                     }
                 }
             }
@@ -234,7 +238,11 @@ class Entrada_Utilities {
                         $day = (int) trim($pieces[2]);
                         $year = (int) trim($pieces[0]);
 
-                        $timestamp_finish = mktime($hour, $minute, $second, $month, $day, $year);
+                        if (checkdate($month, $day, $year)) {
+                            $timestamp_finish = mktime($hour, $minute, $second, $month, $day, $year);
+                        } else {
+                            add_error("Invalid format for calendar date.");
+                        }
                     }
                 }
             }
@@ -287,4 +295,182 @@ class Entrada_Utilities {
 
         return $timestamp;
     }
+
+    public static function fetchUserPhotoDetails($proxy_id, $privacy_level = 1) {
+        global $ENTRADA_ACL, $db;
+
+        $photo_details                      = array();
+        $photo_details["official_active"]	= false;
+        $photo_details["official_url"]	    = false;
+        $photo_details["uploaded_active"]	= false;
+        $photo_details["uploaded_url"]	    = false;
+        $photo_details["default_photo"]     = "official";
+
+        /**
+         * If the photo file actually exists, and either
+         * 	If the user is in an administration group, or
+         *  If the user is trying to view their own photo, or
+         *  If the proxy_id has their privacy set to "Any Information"
+         */
+        if ((@file_exists(STORAGE_USER_PHOTOS."/".$proxy_id."-official")) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($proxy_id, (int) $privacy_level, "official"), "read"))) {
+            $photo_details["official_active"]	= true;
+            $photo_details["official_url"]= webservice_url("photo", array($proxy_id, "official"));
+        } else {
+            $photo_details["official_url"] = ENTRADA_URL."/images/headshot-male.gif";
+        }
+
+        /**
+         * If the photo file actually exists, and
+         * If the uploaded file is active in the user_photos table, and
+         * If the proxy_id has their privacy set to "Basic Information" or higher.
+         */
+        $query			= "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($proxy_id);
+        $photo_active	= $db->GetOne($query);
+        if ((@file_exists(STORAGE_USER_PHOTOS."/".$proxy_id."-upload")) && ($photo_active) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($proxy_id, (int) $privacy_level, "upload"), "read"))) {
+            $photo_details["uploaded_active"] = true;
+            $photo_details["uploaded_url"] = webservice_url("photo", array($proxy_id, "upload"));
+            if (!$photo_details["official_active"]) {
+                $photo_details["default_photo"] = "uploaded";
+            }
+        }
+
+
+        return $photo_details;
+    }
+
+    /**
+     * Given an associative array of URL params and filters, output the sanitized version of each param
+     * @param  array  $params_to_clean  array("id" => "int", "encoded_param" => "decode")
+     * @return array                    array("id" => 123, "encoded_param" => "now decoded")
+     */
+    public static function getCleanUrlParams($params_to_clean = array()) {
+        // Get URL params, clean each then return as variable name ready for use
+        parse_str($_SERVER['QUERY_STRING'], $url_params);
+
+        $clean_params = array();
+
+        // clean each requested param using the associated filter
+        foreach($params_to_clean as $param => $filter) {
+            if (isset($url_params[$param]) && $cleaned_param = clean_input($url_params[$param], $filter)) {
+                $clean_params[$param] = $cleaned_param;
+            }
+        }
+
+        // return array of param => cleaned_value
+        return $clean_params;
+    }
+
+    /** 
+     * Retrieves the value of a param coming from among $_GET variables or from module session
+     * @param  string       $param
+     * @return $param|false
+     */
+    public static function getSessionParam($param, $filter = 'int') {
+        if ($_GET[$param]) {
+            return clean_input($_GET[$param], $filter);
+        }
+        elseif (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE][$param]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE][$param]) {
+            return $_SESSION[APPLICATION_IDENTIFIER][$MODULE][$param];
+        }
+
+        return false;
+    }
+
+    /**
+     * Sets a session variable in the current module
+     * @param string  $param
+     * @param any     $value 
+     */
+    public static function setSessionParam($param, $value) {
+        $_SESSION[APPLICATION_IDENTIFIER][$MODULE][$param] = $value;
+    }
+
+    /**
+     * Get calculated grade from the response items
+     * @param array  $items 
+     */
+    public static function calculate_grade_from_items($items) {
+        $weightedScore = 0.0;
+
+        foreach($items as $item) {
+            $multi_types = array("DropdownMultipleResponse", "HorizontalMultipleChoiceMultipleResponse", "VerticalMultipleChoiceMultipleResponse");
+            $item_type = in_array($item["details"]["type"], $multi_types) ? "multi" : "single";
+            $highest = 0;
+            $checked_score = 0;
+            $score = 0;
+            
+            foreach($item["item"]["item_responses"] AS $response) {
+                $score = (!is_null($response['proxy_score']) ? intval($response["proxy_score"]) : intval($response["item_response_score"]));
+                $highest = ($item_type == "single" ? max($score, $highest) : $highest + $score);
+                
+                if (!is_null($response["score"])) { 
+                    $checked_score += $score; 
+                }
+            }
+            $weight = intval($item['item']['weight']);
+            $weightedItemScore = ($highest > 0 ? ($checked_score / $highest) * $weight : 0); 
+            $weightedScore += $weightedItemScore;
+        }
+
+        return round($weightedScore, 2);
+    }
+
+    public static function buildInsertUpdateDelete($array) {
+        $return = array(
+            "insert" => "",
+            "update" => "",
+            "delete" => ""
+        );
+
+        if (isset($array) && is_array($array)) {
+            $insert = array();
+            $update = array();
+            $delete = array();
+            $add    = $array["add"];
+            $remove = $array["remove"];
+            if (isset($add) && is_array($add) && !empty($add)) {
+                foreach($add as $key => $item) {
+                    // If the key is not set in the remove
+                    if (is_array($remove)) {
+                        if (!array_key_exists($key, $remove)) {
+                            $insert[$key] = unserialize($item);
+                        } else {
+                            $update[$key] = unserialize($item);
+                            unset($remove[$key]);
+                        }
+                    }
+                }
+                if (is_array($remove) && !empty($remove)) {
+                    foreach ($remove as $key => $item) {
+                        $delete[$key] = unserialize($item);
+                    }
+                }
+            } else if (isset($remove) && is_array($remove) && !empty($remove)) {
+                // There is no add and there are some to remove, so they're delete not update
+                foreach($remove as $key => $item) {
+                    $delete[$key] = unserialize($item);
+                }
+            }
+            $return = array(
+                "insert" => $insert,
+                "update" => $update,
+                "delete" => $delete
+            );
+        }
+        return $return;
+    }
+
+    public static function buildAudienceArray($audience_array) {
+        if (isset($audience_array) && is_array($audience_array)) {
+            $new_audience = array(
+                "audience_type"     => $audience_array["audience_type"],
+                "audience_value"    => (int)$audience_array["audience_value"],
+                "custom_time"       => (int)$audience_array["custom_time"],
+                "custom_time_start" => (int)$audience_array["custom_time_start"],
+                "custom_time_end"   => (int)$audience_array["custom_time_end"]
+            );
+        }
+        return $new_audience;
+    }
+
 }

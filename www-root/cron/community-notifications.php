@@ -62,6 +62,36 @@ function build_post($post) {
 	$mail->setFrom($from_email_address, $post['community']. ' Community');
 	$mail->setSubject($post['subject']);
 	switch ($post["type"]) {
+		case "announcement_moderate" :
+		case "announcement_release" :
+		case "announcement_delete" :
+			$search		= array(
+				"%COMMUNITY_TITLE%",
+				"%CONTENT_BODY%",
+				"%URL%"
+			);
+			$query 		= "	SELECT a.*, c.`community_id`, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`
+							FROM `community_announcements` AS a
+							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+							ON b.`id` = ".$db->qstr($post["author_id"])."
+							LEFT JOIN `communities` AS c
+							ON a.`community_id` = c.`community_id`
+							LEFT JOIN `community_pages` AS d
+							ON a.`cpage_id` = d.`cpage_id`
+							WHERE a.`cannouncement_id` = ".$db->qstr($post["record_id"]);
+
+			$result		= $db->GetRow($query);
+			if ($result) {
+				$ENTRADA_URL = ENTRADA_URL;
+				$COMMUNITY_URL = COMMUNITY_URL;
+
+				$replace	= array(
+					$result["community_title"],
+					clean_input($result["announcement_description"],array("notags")),
+					$COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?section=moderate"
+				);
+			}
+			break;
 		case "announcement" :
 		case "event"		:
 			$search		= array(
@@ -72,7 +102,8 @@ function build_post($post) {
 				"%URL%",
 				"%UNSUBSCRIBE_URL%",
 				"%SENDER_NAME%",
-				"%ENTRADA_URL%"
+				"%ENTRADA_URL%",
+				"%APPLICATION_NAME%"
 			);
 			$query 		= "	SELECT a.*, c.`community_id`, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`
 							FROM `community_".$post["type"]."s` AS a
@@ -108,7 +139,8 @@ function build_post($post) {
 					$COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?id=".$post["record_id"],
 					$COMMUNITY_URL.$result["community_url"].":".$result["page_url"],
 					$result["fullname"],
-					$ENTRADA_URL
+					$ENTRADA_URL,
+					APPLICATION_NAME
 				);
 			}
 			break;

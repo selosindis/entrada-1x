@@ -1137,7 +1137,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								ORDER BY c.`erubric_id`, c.`question_order`, b.`questiontype_id`";
 					$question_revisions = $db->GetAll($query);
 					if ($question_revisions && count($question_revisions) > 1) {
-						$question_revision_controls = Models_Evaluation::getQuestionControlsArray($question_revisions);
+						$question_revision_controls = Classes_Evaluation::getQuestionControlsArray($question_revisions);
 						$HEAD[] = "<script type=\"text/javascript\">
 						var question_controls = ".json_encode($question_revision_controls).";
 						var modalDialog;
@@ -1273,7 +1273,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						</td>
 					</tr>
 					<?php
-						echo Models_Evaluation::getEditQuestionControls($PROCESSED);
+						echo Classes_Evaluation::getEditQuestionControls($PROCESSED);
 					?>
 				</tbody>
 				</table>

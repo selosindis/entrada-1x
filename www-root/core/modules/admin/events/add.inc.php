@@ -30,7 +30,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("event", "create", false)) {
-
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -39,9 +38,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.iris.min.js?release=". html_encode(APPLICATION_VERSION) ."\"></script>";
+   	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/color-picker.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+	$HEAD[] = "<script type=\"text/javascript\">var COURSE_COLOR_PALETTE = ".json_encode($translate->_("course_color_palette")).";</script>\n";
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
-
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "add")), "title" => "Adding Event");
 
 	$PROCESSED["associated_faculty"] = array();
 	$PROCESSED["event_audience_type"] = "course";
@@ -62,7 +62,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		if (isset($_GET["draft_id"]) && (int) $_GET["draft_id"] != 0) {
 			$draft_id = (int) $_GET["draft_id"];
 
-			$query = "SELECT `draft_id`, `status` FROM `drafts` WHERE `draft_id` = ".$db->qstr($draft_id);
+			$query = "SELECT `draft_id`, `status`, `name` FROM `drafts` WHERE `draft_id` = ".$db->qstr($draft_id);
 			$draft_info = $db->GetAssoc($query);
 
 			if (!empty($draft_info) && array_key_exists($draft_id, $draft_info)) {
@@ -76,8 +76,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						$tables["contacts"]		= "draft_contacts";
 						$tables["event_types"]	= "draft_eventtypes";
 						$is_draft = true;
+                        $model = new Models_Event_Draft_Event_Audience();
 					break;
 				}
+				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events/drafts", "title" => "Learning Event Draft Schedule");
+                $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id, "title" => $draft_info[$draft_id]["name"]);
 			} else {
 				add_error("The specified draft id does not exist.");
 			}
@@ -94,8 +97,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$tables["links"]		= "event_links";
 		$tables["files"]		= "event_files";
 		$tables["event_types"]	= "event_eventtypes";
+
+        $model = new Models_Event_Audience();
 	}
 
+    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "add")), "title" => "Adding Event");
 	echo "<h1>Adding Event</h1>\n";
 
 	// Error Checking
@@ -130,6 +136,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$PROCESSED["event_title"] = $event_title;
 			} else {
 				add_error("The <strong>Event Title</strong> field is required.");
+			}
+
+			/**
+			 * Non-required field "event_color" / Event Colour.
+			 */
+			if ((isset($_POST["event_color"])) && ($event_color = clean_input($_POST["event_color"], array("notags", "trim")))) {
+				$PROCESSED["event_color"] = $event_color;
+			} else {
+				$PROCESSED["event_color"] = null;
 			}
 
 			/**
@@ -306,7 +321,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         $query = "	SELECT *
                                                     FROM `groups`
                                                     WHERE `group_id` = ".$db->qstr($group_id)."
-                                                    AND `group_type` = 'cohort'
+                                                    AND (`group_type` = 'cohort' OR `group_type` = 'course_list')
                                                     AND `group_active` = 1";
                                         $result	= $db->GetRow($query);
                                         if ($result) {
@@ -324,7 +339,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 $custom_time_end    = 0;
                                             }
 
-                                            $audience = new Models_Event_Audience(array(
+                                            $audience_arr = array(
                                                 "audience_type"     => $audience_type,
                                                 "audience_value"    => $audience_value,
                                                 "custom_time"       => $custom_time,
@@ -332,7 +347,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 "custom_time_end"   => $custom_time_end,
                                                 "updated_date"      => time(),
                                                 "updated_by"        => $ENTRADA_USER->getID()
-                                            ));
+                                            );
+                                            $audience = new $model($audience_arr);
 
                                             if (isset($cohort_times_o) && is_array($cohort_times_o) && !array_key_exists($audience_value, $cohort_times_o)) {
                                                 $cohort_times_o[$audience_value] = $audience;
@@ -541,7 +557,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				break;
 			}
 
-			/**
+            /*
+             * Attendance Required/Optional
+             */
+            if (isset($_POST["attendance_required"]) && ($_POST["attendance_required"] == 1)) {
+                $PROCESSED["attendance_required"] = 1;
+            } else {
+                $PROCESSED["attendance_required"] = 0;
+            }
+
+            /**
 			 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
 			 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
 			 */
@@ -579,6 +604,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
 			}
+
+            if (isset($_POST["audience_visible"]) && $tmp_input = clean_input($_POST["audience_visible"], "int")) {
+                $PROCESSED["audience_visible"] = "1";
+            } else {
+                $PROCESSED["audience_visible"] = "0";
+            }
 
 			if (!$ERROR) {
 				if ($is_draft) {
@@ -676,6 +707,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             if ($is_draft) {
                                                 $draft_audience_array = $audience->toArray();
                                                 $draft_audience_array["devent_id"] = $devent_id;
+                                                $draft_audience_array["eaudience_id"]  = 0;
                                                 $audience = new Models_Event_Draft_Event_Audience($draft_audience_array);
                                             }
                                             if (!$audience->insert()) {
@@ -698,6 +730,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             if ($is_draft) {
                                                 $draft_audience_array = $audience->toArray();
                                                 $draft_audience_array["devent_id"] = $devent_id;
+                                                $draft_audience_array["eaudience_id"]  = 0;
                                                 $audience = new Models_Event_Draft_Event_Audience($draft_audience_array);
                                             }
                                             if (!$audience->insert()) {
@@ -719,6 +752,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             if ($is_draft) {
                                                 $draft_audience_array = $audience->toArray();
                                                 $draft_audience_array["devent_id"] = $devent_id;
+                                                $draft_audience_array["eaudience_id"]  = 0;
                                                 $audience = new Models_Event_Draft_Event_Audience($draft_audience_array);
                                             }
                                             if (!$audience->insert()) {
@@ -736,26 +770,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						}
                         
                         if (isset($PROCESSED["recurring_events"]) && @count($PROCESSED["recurring_events"]) && !$ERROR) {
-                            $query = "UPDATE `events` SET `recurring_id` = ".$db->qstr($EVENT_ID)." WHERE `event_id` = ".$db->qstr($EVENT_ID);
+                            if (!$is_draft) {
+                                $query = "UPDATE `events` SET `recurring_id` = " . $db->qstr($EVENT_ID) . " WHERE `event_id` = " . $db->qstr($EVENT_ID);
+                            } else {
+                                $query = "UPDATE `draft_events` SET `recurring_id` = " . $db->qstr($devent_id) . " WHERE `devent_id` = " . $db->qstr($devent_id);
+                            }
                             $db->Execute($query);
                             $RECURRING_EVENT_RECORD = array();
                             foreach ($PROCESSED["recurring_events"] AS $PROCESSED_RECURRING) {
                                 $PROCESSED_RECURRING = array_merge($PROCESSED, $PROCESSED_RECURRING);
-                                $PROCESSED_RECURRING["recurring_id"] = $EVENT_ID;
+                                $PROCESSED_RECURRING["recurring_id"] = ($is_draft ? $devent_id : $EVENT_ID);
                                 $recurring_event_start = $PROCESSED_RECURRING["event_start"];
                                 $recurring_event_finish = $PROCESSED_RECURRING["event_finish"];
                                 if ($db->AutoExecute($tables["events"], $PROCESSED_RECURRING, "INSERT")) {
                                     if ($RECURRING_EVENT_ID = $db->Insert_Id()) {
                                         if ($is_draft) {
                                             $RECURRING_EVENT_ID = 0;
-                                            $devent_id = $db->Insert_ID();
+                                            $devent_id_recurring = $db->Insert_ID();
                                         } else {
                                             history_log($RECURRING_EVENT_ID, "created this learning event.", $ENTRADA_USER->getID());
                                         }
                                         foreach($PROCESSED["event_types"] as $event_type) {
                                             $type_details = array("event_id" => $RECURRING_EVENT_ID, "eventtype_id" => $event_type[0], "duration" => $event_type[1]);
                                             if ($is_draft) {
-                                                $type_details["devent_id"] = $devent_id;
+                                                $type_details["devent_id"] = $devent_id_recurring;
+                                                $type_details["eaudience_id"]  = 0;
                                             }
                                             if (!$db->AutoExecute($tables["event_types"], $type_details, "INSERT")) {
                                                 application_log("error", "Unable to insert a new event_eventtype record while adding a new event. Database said: ".$db->ErrorMsg());
@@ -770,7 +809,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             foreach($PROCESSED["associated_faculty"] as $contact_order => $proxy_id) {
                                                 $contact_details =  array("event_id" => $RECURRING_EVENT_ID, "proxy_id" => $proxy_id, "contact_role"=>$PROCESSED["contact_role"][$contact_order],"contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
                                                 if ($is_draft) {
-                                                    $contact_details["devent_id"] =  $devent_id;
+                                                    $contact_details["devent_id"] =  $devent_id_recurring;
+                                                    $contact_details["eaudience_id"]  = 0;
                                                 }
                                                 if (!$db->AutoExecute($tables["contacts"], $contact_details, "INSERT")) {
                                                     application_log("error", "Unable to insert a new event_contact record while adding a new event. Database said: ".$db->ErrorMsg());
@@ -789,7 +829,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     foreach($PROCESSED["associated_course_ids"] as $course_id) {
                                                         $audience_details = array("event_id" => $RECURRING_EVENT_ID, "audience_type" => "course_id", "audience_value" => (int) $course_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
                                                         if ($is_draft) {
-                                                            $audience_details["devent_id"] =  $devent_id;
+                                                            $audience_details["devent_id"] =  $devent_id_recurring;
+                                                            $audience_details["eaudience_id"]  = 0;
                                                         }
                                                         if (!$db->AutoExecute($tables["audience"], $audience_details, "INSERT")) {
                                                             application_log("error", "Unable to insert a new event_audience, course_id record while adding a new event. Database said: ".$db->ErrorMsg());
@@ -808,7 +849,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             if (isset($audience) && is_object($audience)) {
                                                                 $audience_array = $audience->toArray();
                                                                 unset($audience_array["eaudience_id"]);
-                                                                $audience = new Models_Event_Audience($audience_array);
+                                                                if ($is_draft) {
+                                                                    $audience_array["devent_id"] = $devent_id_recurring;
+                                                                    $audience_array["eaudience_id"] = 0;
+                                                                }
+                                                                $audience = new $model($audience_array);
                                                                 $audience->setEventID($RECURRING_EVENT_ID);
                                                                 $custom_time_start = ($audience->getCustomTimeStart() ? $recurring_event_start + ($audience->getCustomTimeStart() - $PROCESSED["event_start"]): $recurring_event_start);
                                                                 $custom_time_end   = ($audience->getCustomTimeEnd()   ? $recurring_event_finish + ($audience->getCustomTimeEnd() - $PROCESSED["event_finish"]): $recurring_event_start);
@@ -833,7 +878,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             if (isset($audience) && is_object($audience)) {
                                                                 $audience_array = $audience->toArray();
                                                                 unset($audience_array["eaudience_id"]);
-                                                                $audience = new Models_Event_Audience($audience_array);
+                                                                if ($is_draft) {
+                                                                    $audience_array["devent_id"] = $devent_id_recurring;
+                                                                    $audience_array["eaudience_id"] = 0;
+                                                                }
+                                                                $audience = new $model($audience_array);
                                                                 $audience->setEventID($RECURRING_EVENT_ID);
                                                                 $custom_time_start = ($audience->getCustomTimeStart() ? $recurring_event_start + ($audience->getCustomTimeStart() - $PROCESSED["event_start"]): $recurring_event_start);
                                                                 $custom_time_end   = ($audience->getCustomTimeEnd()   ? $recurring_event_finish + ($audience->getCustomTimeEnd() - $PROCESSED["event_finish"]): $recurring_event_start);
@@ -859,7 +908,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             if (isset($audience) && is_object($audience)) {
                                                                 $audience_array = $audience->toArray();
                                                                 unset($audience_array["eaudience_id"]);
-                                                                $audience = new Models_Event_Audience($audience_array);
+                                                                if ($is_draft) {
+                                                                    $audience_array["devent_id"] = $devent_id_recurring;
+                                                                    $audience_array["eaudience_id"] = 0;
+                                                                }
+                                                                $audience = new $model($audience_array);
                                                                 $audience->setEventID($RECURRING_EVENT_ID);
                                                                 $custom_time_start = ($audience->getCustomTimeStart() ? $recurring_event_start + ($audience->getCustomTimeStart() - $PROCESSED["event_start"]): $recurring_event_start);
                                                                 $custom_time_end   = ($audience->getCustomTimeEnd()   ? $recurring_event_finish + ($audience->getCustomTimeEnd() - $PROCESSED["event_finish"]): $recurring_event_start);
@@ -1113,14 +1166,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     </div>
                 </div>
                 <div class="control-group">
-                    <label for="event_title" class="control-label form-required">Event Title:</label>
+                    <label for="event_title" class="control-label form-required"><?php echo $translate->_("Event Title"); ?>:</label>
                     <div class="controls">
                         <div id="course_id_path" class="content-small"><?php echo (isset($PROCESSED["course_id"]) && $PROCESSED["course_id"] ? fetch_course_path($PROCESSED["course_id"]) : ""); ?></div>
                         <input type="text" id="event_title" name="event_title" value="<?php echo ((isset($PROCESSED["event_title"]) && $PROCESSED["event_title"]) ? html_encode($PROCESSED["event_title"]) : ""); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
                     </div>
                 </div>
+                <div class="control-group">
+                    <label for="event_color" class="control-label form-nrequired"><?php echo $translate->_("Event")." ".$translate->_("Colour"); ?>:</label>
+                    <div class="controls">
+                        <input type="text" id="event_color" name="event_color" value="<?php echo html_encode(!empty($PROCESSED["event_color"]) ? $PROCESSED["event_color"] : ""); ?>" maxlength="20" class="span3">
+                    </div>
+                </div>
 
-                <?php echo Entrada_Utilities::generate_calendars("event", "Event Date", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
+                <?php echo Entrada_Utilities::generate_calendars("event", $translate->_("Event Date"), true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
 
                 <div class="control-group">
                     <label for="repeat_frequency" class="control-label form-nrequired">Repeat Frequency</label>
@@ -1159,25 +1218,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $restricted_days = Models_RestrictedDays::fetchAll($ENTRADA_USER->getActiveOrganisation());
 
                                 $date_string = date("Y-m-d", $recurring_event["event_start"]);
-                                foreach ($restricted_days as $restricted_day) {
-                                    $restricted_string = date("Y-m-d", $restricted_day->getCalculatedDate(date("Y", $recurring_event["event_start"]), date("n", $recurring_event["event_start"]), $recurring_event["event_start"]));
-                                    if ($restricted_string == $date_string) {
-                                        $restricted_date_found = true;
+                                if ($restricted_days) {
+                                    foreach ($restricted_days as $restricted_day) {
+                                        $restricted_string = date("Y-m-d", $restricted_day->getCalculatedDate(date("Y", $recurring_event["event_start"]), date("n", $recurring_event["event_start"]), $recurring_event["event_start"]));
+                                        if ($restricted_string == $date_string) {
+                                            $restricted_date_found = true;
+                                            break;
+                                        }
+                                    }
+                                    if (isset($restricted_date_found) && $restricted_date_found) {
+                                        ?>
+                                        <div id="display-error-box" class="alert alert-block alert-error">
+                                            <button type="button" class="close" data-dismiss="alert">×</button>
+                                            <ul>
+                                                <li>
+                                                    Each of the highlighted events takes place during a restricted day. Please review to ensure those events take place on the correct date.
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <?php
                                         break;
                                     }
-                                }
-                                if ($restricted_date_found) {
-                                    ?>
-                                    <div id="display-error-box" class="alert alert-block alert-error">
-                                        <button type="button" class="close" data-dismiss="alert">×</button>
-                                        <ul>
-                                            <li>
-                                                Each of the highlighted events takes place during a restricted day. Please review to ensure those events take place on the correct date.
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <?php
-                                    break;
                                 }
                             }
                         }
@@ -1187,11 +1248,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $restricted_days = Models_RestrictedDays::fetchAll($ENTRADA_USER->getActiveOrganisation());
 
                                 $date_string = date("Y-m-d", $recurring_event["event_start"]);
-                                foreach ($restricted_days as $restricted_day) {
-                                    $restricted_string = date("Y-m-d", $restricted_day->getCalculatedDate(date("Y", $recurring_event["event_start"]), date("n", $recurring_event["event_start"]), $recurring_event["event_start"]));
-                                    if ($restricted_string == $date_string) {
-                                        $this_date_restricted = true;
-                                        break;
+                                if ($restricted_days) {
+                                    foreach ($restricted_days as $restricted_day) {
+                                        $restricted_string = date("Y-m-d", $restricted_day->getCalculatedDate(date("Y", $recurring_event["event_start"]), date("n", $recurring_event["event_start"]), $recurring_event["event_start"]));
+                                        if ($restricted_string == $date_string) {
+                                            $this_date_restricted = true;
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -1202,13 +1265,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 </span>
                                 <span class="span8">
                                     <div class="row-fluid">
-                                        <label for="recurring_event_title_<?php echo ($key + 1); ?>" class="span2 form-required">Title:</label>
+                                        <label for="recurring_event_title_<?php echo ($key + 1); ?>" class="span2 form-required"><?php echo $translate->_("Title"); ?>:</label>
                                         <span class="span7">
                                             <input type="text" id="recurring_event_title_<?php echo ($key + 1); ?>" name="recurring_event_title[]" value="<?php echo html_encode($recurring_event["event_title"]); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
                                         </span>
                                     </div>
                                     <div class="row-fluid">
-                                        <label class="span2" for="recurring_event_start_<?php echo ($key + 1); ?>">Event Start:</label>
+                                        <label class="span2" for="recurring_event_start_<?php echo ($key + 1); ?>"><?php echo $translate->_("Event Start"); ?>:</label>
                                         <span class="span7">
                                             <div class="input-append">
                                                 <input type="text" class="input-small inpage-datepicker" value="<?php echo date("Y-m-d", $recurring_event["event_start"]); ?>" name="recurring_event_start[]" id="recurring_event_start_<?php echo ($key + 1); ?>" />
@@ -1232,7 +1295,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     ?>
                 </div>
                 <div class="control-group">
-                    <label for="event_location" class="control-label form-nrequired">Event Location:</label>
+                    <label for="event_location" class="control-label form-nrequired"><?php echo $translate->_("Event Location"); ?>:</label>
                     <div class="controls">
                         <input type="text" id="event_location" name="event_location" value="<?php echo (isset($PROCESSED["event_location"]) && $PROCESSED["event_location"] ? html_encode($PROCESSED["event_location"]) : ""); ?>" maxlength="255"/>
                     </div>
@@ -1300,9 +1363,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     </div>
                 </div>
                 <div class="control-group">
-                    <label for="faculty_name" class="control-label form-nrequired">Associated Faculty:</label>
+                    <label for="faculty_name" class="control-label form-nrequired"><?php echo $translate->_("Associated Faculty"); ?>:</label>
                     <div class="controls">
-                        <input type="text" id="faculty_name" name="fullname" autocomplete="off" placeholder="Example: <?php echo html_encode($ENTRADA_USER->getLastname().", ".$ENTRADA_USER->getFirstname()); ?>" />
+                        <input type="text" id="faculty_name" name="fullname" autocomplete="off" placeholder="Example: <?php echo html_encode($ENTRADA_USER->getLastname().", ".$ENTRADA_USER->getFirstname()); ?>" class="span5" />
                         <?php
                         $ONLOAD[] = "faculty_list = new AutoCompleteList({ type: 'faculty', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
                         ?>
@@ -1326,7 +1389,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         <input type="hidden" id="faculty_id" name="faculty_id" value="" />
                     </div>
                 </div>
-                
+
+                <div class="control-group">
+                    <label class="control-label form-nrequired"><?php echo $translate->_("Audience Options"); ?>:</label>
+                    <div class="controls">
+                        <label for="audience_visible" class="checkbox">
+                            <input type="checkbox" name="audience_visible" id="audience_visible" value="1"<?php echo ((!isset($PROCESSED["audience_visible"]) || $PROCESSED["audience_visible"] == "1") ? " checked=\"checked\"" : ""); ?> />
+                            Show the audience to the learners
+                            <div class="content-small">This option controls the learner's ability to view who else is in the learning event.</div>
+                        </label>
+
+                        <label for="attendance_required" class="checkbox">
+                            <input type="checkbox" name="attendance_required" id="attendance_required" value="1"<?php echo ((!isset($PROCESSED["attendance_required"]) || $PROCESSED["attendance_required"] == "1") ? " checked=\"checked\"" : ""); ?> />
+                            Learner's attendance at this Learning Event is required
+                            <div class="content-small">This option controls whether or not attendance is required by the Associated Learners.</div>
+                        </label>
+                    </div>
+                </div>
+
                 <div id="audience-options"<?php echo ((!$PROCESSED["event_audience_type"]) ? " style=\"display: none\"" : ""); ?>>
                     <?php
                     require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");
@@ -1420,7 +1500,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         if (isset($cohort_times_o) && is_array($cohort_times_o) && !empty($cohort_times_o)) {
                                             foreach ($cohort_times_o as $audience) {
                                                 if (isset($audience) && is_object($audience)) {
-                                                    $cohort_view = new Views_Event_Audience($audience);
+                                                    if ($is_draft) {
+                                                        $cohort_view = new Views_Event_Draft_Audience($audience);
+                                                    } else {
+                                                        $cohort_view = new Views_Event_Audience($audience);
+                                                    }
                                                     if (isset($cohort_view) && is_object($cohort_view)) {
                                                         echo $cohort_view->renderTimeRow();
                                                     }
@@ -1430,7 +1514,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                         if (isset($cgroup_times_o) && is_array($cgroup_times_o) && !empty($cgroup_times_o)) {
                                             foreach ($cgroup_times_o as $audience) {
-                                                $cgroup_view = new Views_Event_Audience($audience);
+                                                if ($is_draft) {
+                                                    $cgroup_view = new Views_Event_Draft_Audience($audience);
+                                                } else {
+                                                    $cgroup_view = new Views_Event_Audience($audience);
+                                                }
                                                 if (isset($cgroup_view) && is_object($cgroup_view)) {
                                                     echo $cgroup_view->renderTimeRow();
                                                 }
@@ -1439,7 +1527,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                         if (isset($proxy_times_o) && is_array($proxy_times_o) && !empty($proxy_times_o)) {
                                             foreach ($proxy_times_o as $audience) {
-                                                $proxy_view = new Views_Event_Audience($audience);
+                                                if ($is_draft) {
+                                                    $proxy_view = new Views_Event_Draft_Audience($audience);
+                                                } else {
+                                                    $proxy_view = new Views_Event_Audience($audience);
+                                                }
                                                 if (isset($proxy_view) && is_object($proxy_view)) {
                                                     echo $proxy_view->renderTimeRow();
                                                 }
@@ -1462,7 +1554,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         </div>
                     </div>
                 </div>
-                
+
                 <h2>Time Release Options</h2>
 
                 <?php echo Entrada_Utilities::generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
@@ -1496,7 +1588,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         <input type="submit" class="btn btn-primary" value="Save" />
                     </div>
                 </div>
-				<div id="selected_list_container"></div>
             </form>
             <div id="recurringModal" class="modal hide fade" style="width: 450px;" tabindex="-1" role="dialog" aria-labelledby="recurringModalLabel" aria-hidden="true">
                 <div class="modal-header">
@@ -1999,11 +2090,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							event_types: {
 								label: "<?php echo $translate->_("Event Types"); ?>",
 								data_source: event_types,
-                                mode: "radio"
+                                mode: "radio",
+                                set_button_text_to_selected_option: false
 							}
 						},
 						no_results_text: "<?php echo $translate->_("No Event Types found matching the search criteria"); ?>",
-						selected_list_container: jQuery("#selected_list_container"),
 						parent_form: $("#addEventForm"),
 						width: 300
 					});
@@ -2089,7 +2180,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 							cleanupList();
 
-                            $("#selected_list_container").html("");
+                            $("#" + $(this).attr("data-filter") + "_" + $(this).val()).remove();
                         }
 					});
                 });

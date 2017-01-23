@@ -42,8 +42,8 @@ class Models_Community_Share_Html extends Models_Base {
                 $updated_by,
                 $notify;
 
-    protected $table_name = "community_share_html";
-    protected $default_sort_column = "cshtml_id";
+    protected static $table_name = "community_share_html";
+    protected static $default_sort_column = "cshtml_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -199,5 +199,10 @@ class Models_Community_Share_Html extends Models_Base {
         }
 
         return $output;
+    }
+
+    public static function fetchRowByID($cshtml_id = 0) {
+        $self = new self();
+        return $self->fetchRow(array("cshtml_id" => $cshtml_id));
     }
 }

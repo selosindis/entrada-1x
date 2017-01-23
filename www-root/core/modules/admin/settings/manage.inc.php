@@ -41,7 +41,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
             $ORGANISATION_ID = $org;
 		}
 
-		if($ORGANISATION_ID){
+		if(isset($ORGANISATION_ID) && $ORGANISATION_ID){
 			$query = "SELECT * FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ORGANISATION_ID);
 			$ORGANISATION = $db->GetRow($query);
 			if($ORGANISATION){
@@ -52,10 +52,13 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage?org=".$ORGANISATION['organisation_id'], "title" => $ORGANISATION["organisation_title"]);
 
 					$sidebar_html  = "<ul class=\"menu\">";
-                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/characteristics?org=".$ORGANISATION_ID."\">" . $translate->_("Assessment Characteristics") . "</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/characteristics?org=".$ORGANISATION_ID."\">" . $translate->_("Assessment Types") . "</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/assessmentresponsecategories?org=".$ORGANISATION_ID."\">Assessment Response Categories</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID."\">Clinical Rotation Categories</a></li>\n";
-                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes?org=".$ORGANISATION_ID."\">Curriculum Layout</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes?org=".$ORGANISATION_ID."\">Curriculum Layout</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtracks?org=".$ORGANISATION_ID."\">Curriculum Tracks</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/objectives?org=".$ORGANISATION_ID."\">Curriculum Tags</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/gradingscale?org=".$ORGANISATION_ID."\">Grading Scale</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/departments?org=".$ORGANISATION_ID."\">Departments</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/descriptors?org=".$ORGANISATION_ID."\">Evaluation Response Descriptors</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/hottopics?org=".$ORGANISATION_ID."\">Hot Topics</a></li>\n";

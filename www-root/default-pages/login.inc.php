@@ -52,7 +52,7 @@ if ($PROCEED_TO && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_
 }
 ?>
 <div class="row-fluid">
-    <div class="span6">
+    <div id="login-form" class="span4">
         <?php
         if (defined("AUTH_SSO_ENABLED") && (AUTH_SSO_ENABLED == true) && !$SSO_ERROR) {
         ?>
@@ -68,7 +68,7 @@ if ($PROCEED_TO && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_
         <h2><?php echo APPLICATION_NAME; ?> Login</h2>
         <p>Please enter your <?php echo APPLICATION_NAME; ?> username and password to log in.</p>
 
-        <form class="form-horizontal login-form" action="<?php echo ENTRADA_URL; ?>/<?php echo(($PROCEED_TO) ? "?url=" . rawurlencode($PROCEED_TO) : ""); ?>" method="post">
+        <form class="login-form" action="<?php echo ENTRADA_URL; ?>/<?php echo(($PROCEED_TO) ? "?url=" . rawurlencode($PROCEED_TO) : ""); ?>" method="post">
             <input type="hidden" name="action" value="login"/>
             <input type="hidden" name="ssobypass" value="1"/>
             <div class="control-group">
@@ -83,11 +83,13 @@ if ($PROCEED_TO && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_
                     <input type="password" id="password" name="password" value=""/>
                 </div>
             </div>
-            <div class="form-actions">
+            <div class="clearfix"></div>
+            <div class="login-actions">
                 <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("login"); ?>">
-                <strong style="margin-left: 5px">or</strong> <a href="<?php echo ENTRADA_RELATIVE; ?>/password_reset">Forgot your password?</a>
+                <a href="<?php echo ENTRADA_RELATIVE; ?>/password_reset">Forgot your password?</a>
             </div>
         </form>
+        <div class="clearfix"></div>
         <?php
         }
         ?>
@@ -96,13 +98,13 @@ if ($PROCEED_TO && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_
     $public_notices = Models_Notice::fetchPublicNotices();
     if ($public_notices) {
     ?>
-    <div class="span6">
+    <div class="span8">
         <h2>Public Notices</h2>
         <ul class="public-notices">
             <?php
             foreach ($public_notices as $notice) {
                 echo "<li>";
-                echo "	<span class=\"label label-info\">".date(DEFAULT_DATE_FORMAT, $notice["updated_date"])."</span>\n";
+                echo "	<span class=\"content-small\">".date(DEFAULT_DATE_FORMAT, $notice["updated_date"])."</span>\n";
                 echo "	<p>".trim(strip_selected_tags(clean_input($notice["notice_summary"], "html"), "p"))."</p>";
                 echo "</li>";
             }

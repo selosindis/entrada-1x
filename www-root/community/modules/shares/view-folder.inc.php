@@ -679,12 +679,22 @@ if ($RECORD_ID) {
                                         "action_value"  => $document_result["ID"],
                                         "module"        => "community:" . $COMMUNITY_ID . ":shares"
                                     );
+
+                                // get the time the last version was edited
+
+                                    $file_versions = Models_Community_Share_File_Version::fetchAllByCSFile_ID($document_result["id"]);
+                                    if ($file_versions && is_array($file_versions)) {
+                                        $version_count = count($file_versions);
+                                        $latest_version = $file_versions[$version_count - 1];
+                                        $last_updated = $latest_version->getUpdatedDate();
+                                    }
+
                                     $statistics = Models_Statistic::getCountByParams($params);
                                     $download_button = Models_Community_Share_File::getDownloadButton($document_result["ID"]);
                                     echo "<tr>\n";
                                         echo "<td style=\"vertical-align: top\">\n";
                                             echo "<img src=\"".ENTRADA_URL."/serve-icon.php?ext=" . $ext['ext'] . "&hidden=" . $student_hidden . "\" width=\"16\" height=\"16\" alt=\"" . $ext['english'] . " \" title=\"" . $ext['english'] . " \" style=\"vertical-align: middle; margin-right: 4px\" />";
-                                                echo "<a " . ($student_hidden ? "class='hidden_shares'" : "") . "id=\"file-".(int) $document_result["ID"]."-title\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".$document_result["ID"]."\" style=\"font-weight: bold; vertical-align: middle\">".limit_chars(html_encode($document_result["title"]), 50, true)."</a>\n";
+                                            echo "<a " . ($student_hidden ? "class='hidden_shares'" : "") . "id=\"file-".(int) $document_result["ID"]."-title\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".$document_result["ID"]."\" style=\"font-weight: bold; vertical-align: middle\">".limit_chars(html_encode($document_result["title"]), 47, true)."</a>\n";
                                             echo $download_button;
                                             echo (!$accessible) ? "<span><i class='icon-time'></i> </span>" : "";
                                                 //edit/create pencil
@@ -692,7 +702,7 @@ if ($RECORD_ID) {
                                                 echo "<div  class=\"content-small\" style=\"padding-left: 23px\">".html_encode(limit_chars($document_result["description"], 125))."</div>";
                                         echo "</td>\n";
                                             echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($document_result["owner_username"])."\" style=\"font-size: 10px\">".html_encode($document_result["owner"])."</a></td>\n";
-                                            echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $document_result["updated_date"])."</td>\n";
+                                        echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $last_updated)."</td>\n";
                                         if ($COMMUNITY_ADMIN) {
                                             if ($statistics['views'] && $statistics['views'] != '0') {
                                                 echo "<td class=\"accesses\" style=\"text-align: center\"><a class=\"views-dialog\" href=\"#file-views\" data-action='" . $params['action'] . "' data-action_field='" . $params['action_field'] . "' data-action_value='" . $params['action_value'] . "' title=\"Click to see access log ".html_encode($statistics['views'])."\" style=\"font-weight: bold\">".html_encode($statistics['views'])."</a></td>\n";

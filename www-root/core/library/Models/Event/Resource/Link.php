@@ -38,8 +38,9 @@ class Models_Event_Resource_Link extends Models_Base {
             $updated_date,
             $updated_by;
     
-    protected $table_name = "event_links";
-    protected $default_sort_column = "elink_id";
+    protected static $table_name = "event_links";
+    protected static $default_sort_column = "elink_id";
+    protected static $primary_key = "elink_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -159,7 +160,7 @@ class Models_Event_Resource_Link extends Models_Base {
     public function insert() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->elink_id = $db->Insert_ID();
             return $this;
         } else {
@@ -170,7 +171,7 @@ class Models_Event_Resource_Link extends Models_Base {
     public function update() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`elink_id` = ".$db->qstr($this->elink_id))) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`elink_id` = ".$db->qstr($this->elink_id))) {
             return $this;
         } else {
             return false;
@@ -180,7 +181,7 @@ class Models_Event_Resource_Link extends Models_Base {
     public function delete() {
         global $db;
         
-        $query = "DELETE FROM `".$this->table_name."` WHERE `elink_id` = ?";
+        $query = "DELETE FROM `".static::$table_name."` WHERE `elink_id` = ?";
         if ($db->Execute($query, $this->elink_id)) {
             return true;
         } else {

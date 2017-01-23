@@ -35,8 +35,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	require_once("Models/awards/InternalAwards.class.php");
-	require_once("Models/awards/InternalAwardReceipts.class.php");
+	require_once("Classes/awards/InternalAwards.class.php");
+	require_once("Classes/awards/InternalAwardReceipts.class.php");
 	
 	process_manage_award_details();
 	$awards = InternalAwards::get(true);

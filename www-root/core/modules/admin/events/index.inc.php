@@ -237,7 +237,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("eventcontent", "update", false)) {
 							?>
-							<input type="button" class="btn" id="export-results-button" value="Export Results" />
+							<a href="#export-results" id="export-results-button" class="btn btn-default" data-toggle="modal"><i class="fa fa-download"></i> <?php echo $translate->_("Export Results"); ?></a>
 							<?php
 						}
 						?>
@@ -276,13 +276,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     echo "          <i class=\"icon-cog\"></i>\n";
                     echo "      </button>";
                     echo "      <ul class=\"dropdown-menu toggle-left\">\n";
-                	if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update')) {
-                        echo "      <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=edit&amp;id=".$result["event_id"]."\">Event Details</a></li>";
+					if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update')) {
+                        echo "      <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=edit&amp;id=".$result["event_id"]."\">" . $translate->_("Setup") . "</a></li>";
                     }
-                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=content&amp;id=".$result["event_id"]."\">Event Content</a></li>";
-                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=attendance&amp;id=".$result["event_id"]."\">Event Attendance</a></li>";
-                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=history&amp;id=".$result["event_id"]."\">Event History</a></li>";
-                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=statistics&amp;id=".$result["event_id"]."\">Event Statistics</a></li>";
+                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=content&amp;id=".$result["event_id"]."\">" . $translate->_("Content") . "</a></li>";
+                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=attendance&amp;id=".$result["event_id"]."\">" . $translate->_("Attendance") . "</a></li>";
+                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=history&amp;id=".$result["event_id"]."\">" . $translate->_("History") . "</a></li>";
+                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=statistics&amp;id=".$result["event_id"]."\">" . $translate->_("Statistics") . "</a></li>";
                     echo "      </ul>\n";
                     echo "  </div>\n";
                 } else {
@@ -342,34 +342,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
 	echo "</form>\n"; ?>
 
-	<div id="modal_export_container" style="display: none;">
-		<div class="display-generic">
-			<p>Select the fields you would like to export by dragging them from the left to the right.  Remove fields from the Export by dragging them from the right to the left.</p>
+	<div class="modal hide fade" id="export-results">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			<h3>Export Results</h3>
 		</div>
-		<div id="available-wrap">
-			<h3>Available Fields:</h3>
-			<div id="available_export_options_container" class="ui-widget-content">
-				<ul id="available_export_options">
-				</ul>
+		<div class="modal-body">
+			<?php echo display_notice("Select the fields you would like to export by dragging them from the left to the right.  Remove fields from the Export by dragging them from the right to the left."); ?>
+			<div id="available-wrap">
+				<h3>Available Fields:</h3>
+				<div id="available_export_options_container" class="ui-widget-content">
+					<ul id="available_export_options">
+					</ul>
+				</div>
 			</div>
-		</div>
-		<div id="export-wrap">
-			<h3>Export Fields:</h3>
-			<div id="selected_export_options_container" class="ui-widget-content">
-				<ul id="selected_export_options">
-					<?php
+			<div id="export-wrap">
+				<h3>Export Fields:</h3>
+				<div id="selected_export_options_container" class="ui-widget-content">
+					<ul id="selected_export_options">
+						<?php
 						if ($default_csv_headings) {
 							foreach($default_csv_headings as $key => $value) {
 								echo "<li class=\"ui-widget-content ui-state-default\" data-field=\"" . $key . "\"><span class=\"ui-icon ui-icon-arrowthick-2-n-s\"></span>" . $value . "</li>";
 							}
 						}
-					?>
-				</ul>
+						?>
+					</ul>
+				</div>
 			</div>
+			<form id="my_export_options_form" action="<?php echo ENTRADA_URL . "/admin/events/export"; ?>">
+				<input type="hidden" name="my_export_options" value="" />
+			</form>
 		</div>
-		<form id="my_export_options_form" action="<?php echo ENTRADA_URL . "/admin/events/export"; ?>">
-			<input type="hidden" name="my_export_options" value="" />
-		</form>
+		<div class="modal-footer">
+			<button data-dismiss="modal" class="btn">Close</button>
+			<a href="#" class="btn btn-primary" id="export-button">Export</a>
+		</div>
 	</div>
 
 			<script type="text/javascript">
@@ -394,6 +402,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 					$(".draggable").draggable({
 						revert:"invalid"
+					});
+					$("#export-button").on("click", function() {
+						$("#my_export_options_form").submit();
 					});
 				});
 			</script>

@@ -29,8 +29,9 @@ class Models_Quiz_Attached extends Models_Base {
               $quiztype_id, $quiz_timeout, $quiz_attempts, $accesses, $release_date, 
               $release_until, $updated_date, $updated_by;
     
-    protected $table_name = "attached_quizzes";
-    protected $default_sort_column = "aquiz_id";
+    protected static $table_name = "attached_quizzes";
+    protected static $default_sort_column = "aquiz_id";
+    protected static $primary_key = "aquiz_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -186,7 +187,7 @@ class Models_Quiz_Attached extends Models_Base {
     public function insert() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->aquiz_id = $db->Insert_ID();
             return $this;
         } else {
@@ -198,7 +199,7 @@ class Models_Quiz_Attached extends Models_Base {
     public function update() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`aquiz_id` = ".$db->qstr($this->aquiz_id))) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`aquiz_id` = ".$db->qstr($this->aquiz_id))) {
             return $this;
         } else {
             return false;
@@ -208,7 +209,7 @@ class Models_Quiz_Attached extends Models_Base {
     public function delete() {
         global $db;
         
-        $query = "DELETE FROM `".$this->table_name."` WHERE `aquiz_id` = ?";
+        $query = "DELETE FROM `".static::$table_name."` WHERE `aquiz_id` = ?";
         if ($db->Execute($query, $this->aquiz_id)) {
             return true;
         } else {

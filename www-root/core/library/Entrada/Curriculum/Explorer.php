@@ -85,19 +85,18 @@ class Entrada_Curriculum_Explorer {
     public static function getMappedAssessments($objective_parent, $start = NULL, $end = NULL, $course_id = NULL, $group_id = NULL) {
         global $db;
         
-        $query = "SELECT a.`assessment_id`, a.`objective_id`, b.`name`, b.`description`, b.`cohort`, c.`course_code`, c.`course_name`, d.`group_name`, e.`event_id`, f.`event_start`
+        $query = "SELECT a.`assessment_id`, a.`objective_id`, b.`name`, b.`description`, b.`cohort`, c.`course_code`, c.`course_name`, c.`course_id`, e.`event_id`, f.`event_start`
                     FROM `assessment_objectives` AS a
                     JOIN `assessments` AS b
                     ON a.`assessment_id` = b.`assessment_id`
                     JOIN `courses` AS c
                     ON b.`course_id` = c.`course_id`
-                    JOIN `groups` AS d
-                    ON b.`cohort` = d.`group_id`
                     JOIN `assessment_events` AS e
                     ON a.`assessment_id` = e.`assessment_id`
                     JOIN `events` AS f
                     ON e.`event_id` = f.`event_id`
-                    WHERE a.`objective_id` = " . $db->qstr($objective_parent).
+                    WHERE a.`objective_id` = " . $db->qstr($objective_parent) . "
+                    AND e.`active` = 1" .
                     (!is_null($start) ? " AND (f.`event_start` >= ".$db->qstr($start)." AND f.`event_start` <= ".$db->qstr($end).")" : "").
                     (!is_null($course_id) ? " AND b.`course_id` = " . $db->qstr($course_id) : "").
                     (!is_null($group_id) ? " AND b.`cohort` = " . $db->qstr($group_id) : "")."
@@ -272,13 +271,12 @@ class Entrada_Curriculum_Explorer {
                     ON a.`assessment_id` = b.`assessment_id`
                     JOIN `courses` AS c
                     ON b.`course_id` = c.`course_id`
-                    JOIN `groups` AS d
-                    ON b.`cohort` = d.`group_id`
                     JOIN `assessment_events` AS e
                     ON a.`assessment_id` = e.`assessment_id`
                     JOIN `events` AS f
                     ON e.`event_id` = f.`event_id`
-                    WHERE a.`objective_id` = " . $db->qstr($objective_id).
+                    WHERE a.`objective_id` = " . $db->qstr($objective_id) . "
+                    AND e.`active` = 1" .
                     (!is_null($start) && !is_null($end) ? " AND (f.`event_start` >= ".$db->qstr($start)." AND f.`event_start` <= ".$db->qstr($end).")" : "").
                     (!is_null($course_id) ? " AND b.`course_id` = " . $db->qstr($course_id) : "").
                     (!is_null($group_id) ? " AND b.`cohort` = " . $db->qstr($group_id) : "");

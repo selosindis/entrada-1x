@@ -40,8 +40,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 
 	echo "<h1>My Observership Reflection</h1>";
 	
-	require_once("Models/mspr/Observership.class.php");
-	require_once("Models/mspr/ObservershipReflection.class.php");
+	require_once("Classes/mspr/Observership.class.php");
+	require_once("Classes/mspr/ObservershipReflection.class.php");
 	
 	$reflection_id = (int) $_GET["id"];
 	

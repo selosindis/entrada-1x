@@ -68,8 +68,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
         if (!$is_draft) {
             $event = Models_Event::get($EVENT_ID);
+            $model = new Models_Event_Audience();
         } else {
             $event = Models_Event_Draft_Event::fetchRowByID($EVENT_ID);
+            $model = new Models_Event_Draft_Event_Audience();
+            $draft = Models_Event_Draft::fetchRowByID($event->getDraftID());
+            ($event ? $EVENT_ID = $event->getEventID() : $EVENT_ID = 0);
         }
         $event_start = $event->getEventStart();
 
@@ -87,6 +91,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 header("Location: ".ENTRADA_URL."/admin/".$MODULE);
                 exit;
             } else {
+                if ($is_draft) {
+                    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events/drafts", "title" => "Learning Event Draft Schedule");
+                    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft->getID(), "title" => $draft->getName());
+                }
                 $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $EVENT_ID)), "title" => "Editing Event");
 
                 $PROCESSED["associated_faculty"]    = array();
@@ -154,6 +162,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             }
                         } else {
                             add_error("The <strong>Event Title</strong> field is required.");
+                        }
+
+                        /**
+                         * Non-required field "event_color" / Event Colour.
+                         */
+                        if ((isset($_POST["event_color"])) && ($event_color = clean_input($_POST["event_color"], array("notags", "trim")))) {
+                            $PROCESSED["event_color"] = $event_color;
+                        } else {
+                            $PROCESSED["event_color"] = null;
                         }
 
                         /**
@@ -243,6 +260,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             $PROCESSED["event_audience_type"] = $tmp_input;
                         }
 
+                        /*
+                         * Attendance Required/Optional
+                         */
+                        if (isset($_POST["attendance_required"]) && ($_POST["attendance_required"] == 1)) {
+                            $PROCESSED["attendance_required"] = 1;
+                        } else {
+                            $PROCESSED["attendance_required"] = 0;
+                        }
+                        
+                        $changed = false;
+                        $changed = md5_change_value($EVENT_ID, "event_id", "attendance_required", $PROCESSED["attendance_required"], "events");
+                        if ($changed) {
+                            $stats[] = "Attendance Required";
+                        }
+
                         switch ($PROCESSED["event_audience_type"]) {
                             case "course" :
                                 $PROCESSED["associated_course_ids"][] = $PROCESSED["course_id"];
@@ -306,7 +338,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $query = "    SELECT *
                                                                 FROM `groups`
                                                                 WHERE `group_id` = ".$db->qstr($group_id)."
-                                                                AND `group_type` = 'cohort'
+                                                                AND (`group_type` = 'cohort' OR `group_type` = 'course_list')
                                                                 AND `group_active` = 1";
                                                     $result    = $db->GetRow($query);
                                                     if ($result) {
@@ -324,7 +356,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                         }
 
                                                         $PROCESSED["associated_cohort_ids"][] = $audience_value;
-                                                        $audience = Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value);
+                                                        $audience = ($is_draft ? Models_Event_Draft_Event_Audience::fetchRowByDraftEventIdTypeValue($devent_id, $audience_type, $audience_value) : Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value));
 
                                                         if ($audience) {
                                                             $audience->setUpdatedBy($ENTRADA_USER->getID());
@@ -333,7 +365,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             $audience->setCustomTimeStart($custom_time_start);
                                                             $audience->setCustomTimeEnd($custom_time_end);
                                                         } else {
-                                                            $audience = new Models_Event_Audience(array(
+                                                            $audience_arr = array(
                                                                 "event_id"          => $EVENT_ID,
                                                                 "audience_type"     => $audience_type,
                                                                 "audience_value"    => $audience_value,
@@ -342,12 +374,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                                 "custom_time_end"   => $custom_time_end,
                                                                 "updated_date"      => time(),
                                                                 "updated_by"        => $ENTRADA_USER->getID()
-                                                            ));
+                                                            );
+                                                            $audience = new $model($audience_arr);
                                                         }
 
                                                         if (isset($cohort_times_a) && is_array($cohort_times_a) && !array_key_exists($audience_value, $cohort_times_a)) {
                                                             $audience_array = $audience->toArray();
-                                                            $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                            $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                             $cohort_times_o[$audience_value] = $audience;
                                                             $cohort_times_a[$audience_value] = $audience_array;
                                                         }
@@ -434,7 +467,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                         }
 
                                                         $PROCESSED["associated_cgroup_ids"][] = $audience_value;
-                                                        $audience = Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value);
+                                                        $audience = ($is_draft ? Models_Event_Draft_Event_Audience::fetchRowByDraftEventIdTypeValue($devent_id, $audience_type, $audience_value) : Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value));
                                                         if ($audience) {
                                                             $audience->setUpdatedBy($ENTRADA_USER->getID());
                                                             $audience->setUpdatedDate(time());
@@ -442,20 +475,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             $audience->setCustomTimeStart($custom_time_start);
                                                             $audience->setCustomTimeEnd($custom_time_end);
                                                         } else {
-                                                            $audience = new Models_Event_Audience(array(
-                                                                "event_id"          => $EVENT_ID,
-                                                                "audience_type"     => $audience_type,
-                                                                "audience_value"    => $audience_value,
-                                                                "custom_time"       => $custom_time,
-                                                                "custom_time_start" => $custom_time_start,
-                                                                "custom_time_end"   => $custom_time_end,
-                                                                "updated_date"      => time(),
-                                                                "updated_by"        => $ENTRADA_USER->getID()
-                                                            ));
+                                                            $insert = array();
+                                                            $insert["event_id"]             = $EVENT_ID;
+                                                            $insert["audience_type"]        = $audience_type;
+                                                            $insert["audience_value"]       = $audience_value;
+                                                            $insert["custom_time"]          = $custom_time;
+                                                            $insert["custom_time_start"]    = $custom_time_start;
+                                                            $insert["custom_time_end"]      = $custom_time_end;
+                                                            $insert["updated_date"]         = time();
+                                                            $insert["updated_by"]           = $ENTRADA_USER->getID();
+                                                            if ($is_draft) {
+                                                                $insert["devent_id"]  = $devent_id;
+                                                                $insert["eaudience_id"]  = 0;
+                                                                $audience = new Models_Event_Draft_Event_Audience($insert);
+                                                            } else {
+                                                                $audience = new Models_Event_Audience($insert);
+                                                            }
                                                         }
                                                         if (isset($cgroup_times_a) && is_array($cgroup_times_a) && !array_key_exists($audience_value, $cgroup_times_a)) {
                                                             $audience_array = $audience->toArray();
-                                                            $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                            $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                             $cgroup_times_o[$audience_value] = $audience;
                                                             $cgroup_times_a[$audience_value] = $audience_array;
                                                         }
@@ -546,7 +585,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                         }
 
                                                         $PROCESSED["associated_proxy_ids"][] = $audience_value;
-                                                        $audience = Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value);
+                                                        $audience = ($is_draft ? Models_Event_Draft_Event_Audience::fetchRowByDraftEventIdTypeValue($devent_id, $audience_type, $audience_value) : Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value));
                                                         if ($audience) {
                                                             $audience->setUpdatedBy($ENTRADA_USER->getID());
                                                             $audience->setUpdatedDate(time());
@@ -554,7 +593,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             $audience->setCustomTimeStart($custom_time_start);
                                                             $audience->setCustomTimeEnd($custom_time_end);
                                                         } else {
-                                                            $audience = new Models_Event_Audience(array(
+                                                            $audience_arr = array(
                                                                 "event_id"          => $EVENT_ID,
                                                                 "audience_type"     => $audience_type,
                                                                 "audience_value"    => $audience_value,
@@ -563,11 +602,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                                 "custom_time_end"   => $custom_time_end,
                                                                 "updated_date"      => time(),
                                                                 "updated_by"        => $ENTRADA_USER->getID()
-                                                            ));
+                                                            );
+                                                            $audience = new $model($audience_arr);
                                                         }
                                                         if (isset($proxy_times_a) && is_array($proxy_times_a) && !array_key_exists($audience_value, $proxy_times_a)) {
                                                             $audience_array = $audience->toArray();
-                                                            $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                            $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                             $proxy_times_o[$audience_value] = $audience;
                                                             $proxy_times_a[$audience_value] = $audience_array;
                                                         }
@@ -659,7 +699,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             FROM `" . $tables["event_types"] . "` AS `et`
                                             JOIN `events_lu_eventtypes` AS `et_lu`
                                             ON `et`.`eventtype_id` = `et_lu`.`eventtype_id`
-                                            WHERE `et`.`event_id` = " . $db->qstr($EVENT_ID);
+                                            WHERE " . (!$is_draft ? "`et`.`event_id` = " . $db->qstr($EVENT_ID) : "`et`.`devent_id` = " . $devent_id);
 
                                 $current_event_types = $db->GetAll($query);
                                 $current_et         = array();
@@ -800,9 +840,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 }
 
                                 if ($is_draft) {
-                                    $current_audiences = Models_Event_Draft_Event_Audience::fetchAllByEventID($devent_id);
+                                    $current_audiences = $model->fetchAllByDraftEventID($devent_id);
                                 } else {
-                                    $current_audiences = Models_Event_Audience::fetchAllByEventID($EVENT_ID);
+                                    $current_audiences = $model->fetchAllByEventID($EVENT_ID);
                                 }
 
                                 $current_audience_course    = array();
@@ -815,7 +855,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             $audience_type  = $audience->getAudienceType();
                                             $audience_value = $audience->getAudienceValue();
                                             $audience_array = $audience->toArray();
-                                            $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                            $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
 
                                             switch ($audience_type) {
                                                 case "course_id" :
@@ -848,19 +888,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $cohort_update = compare_mlti_array($current_audience_cohort, $cohort_times_a, "audience_value");
 
                                 if (isset($cohort_update) && is_array($cohort_update)) {
-                                    $cohort_changes = Models_Event_Audience::buildInsertUpdateDelete($cohort_update);
+                                    $cohort_changes = Entrada_Utilities::buildInsertUpdateDelete($cohort_update);
                                 }
 
                                 $cgroup_update = compare_mlti_array($current_audience_cgroup, $cgroup_times_a, "audience_value");
 
                                 if (isset($cgroup_update) && is_array($cgroup_update)) {
-                                    $cgroup_changes = Models_Event_Audience::buildInsertUpdateDelete($cgroup_update);
+                                    $cgroup_changes = Entrada_Utilities::buildInsertUpdateDelete($cgroup_update);
                                 }
 
                                 $proxy_update = compare_mlti_array($current_audience_proxy_id, $proxy_times_a, "audience_value");
 
                                 if (isset($proxy_update) && is_array($proxy_update)) {
-                                    $proxy_changes = Models_Event_Audience::buildInsertUpdateDelete($proxy_update);
+                                    $proxy_changes = Entrada_Utilities::buildInsertUpdateDelete($proxy_update);
                                 }
 
                                 $cohort_insert     = $cohort_changes["insert"];
@@ -960,8 +1000,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $insert["event_id"]     = $EVENT_ID;
                                                     if ($is_draft) {
                                                         $insert["devent_id"]  = $devent_id;
-                                                        $draft_audience_array = $insert->toArray();
-                                                        $audiences = new Models_Event_Draft_Event_Audience($draft_audience_array);
+                                                        $insert["eaudience_id"]  = 0;
+                                                        $audience = new Models_Event_Draft_Event_Audience($insert);
                                                     } else {
                                                         $audience = new Models_Event_Audience($insert);
                                                     }
@@ -979,7 +1019,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 foreach ($cohort_delete as $delete) {
                                                     $audience_type  = $delete["audience_type"];
                                                     $audience_value = $delete["audience_value"];
-                                                    $audience = Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value);
+                                                    $audience = ($is_draft ? Models_Event_Draft_Event_Audience::fetchRowByDraftEventIdTypeValue($devent_id, $audience_type, $audience_value) : Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value));
                                                     if ($audience) {
                                                         if (!$audience->delete()) {
                                                             add_error("There was an error while trying to delete the selected <strong>Cohort</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.");
@@ -999,7 +1039,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $custom_time        = ($update["custom_time"] ? $update["custom_time"] : 0);
                                                     $custom_time_start  = ($update["custom_time_start"] ? $update["custom_time_start"] : 0);
                                                     $custom_time_end    = ($update["custom_time_end"] ? $update["custom_time_end"] : 0);
-                                                    $audience = Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value);
+                                                    $audience = ($is_draft ? Models_Event_Draft_Event_Audience::fetchRowByDraftEventIdTypeValue($devent_id, $audience_type, $audience_value) : Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value));
                                                     $audience->setUpdatedBy($ENTRADA_USER->getID());
                                                     $audience->setUpdatedDate(time());
                                                     $audience->setCustomTime($custom_time);
@@ -1024,7 +1064,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $insert["event_id"]     = $EVENT_ID;
                                                     $insert["updated_by"]   = $ENTRADA_USER->getID();
                                                     $insert["updated_date"] = time();
-                                                    $audience = new Models_Event_Audience($insert);
+                                                    if ($is_draft) {
+                                                        $insert["devent_id"]  = $devent_id;
+                                                        $insert["eaudience_id"]  = 0;
+                                                        $audience = new Models_Event_Draft_Event_Audience($insert);
+                                                    } else {
+                                                        $audience = new Models_Event_Audience($insert);
+                                                    }
                                                     if (!$audience->insert()) {
                                                         add_error("There was an error while trying to attach the selected <strong>Course Group</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.");
                                                         application_log("error", "Unable to insert a new event_audience, course group record while adding a new event. Database said: ".$db->ErrorMsg());
@@ -1038,7 +1084,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 foreach ($cgroup_delete as $delete) {
                                                     $audience_type  = $delete["audience_type"];
                                                     $audience_value = $delete["audience_value"];
-                                                    $audience = Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value);
+                                                    $audience = ($is_draft ? Models_Event_Draft_Event_Audience::fetchRowByDraftEventIdTypeValue($devent_id, $audience_type, $audience_value) : Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value));
                                                     if ($audience) {
                                                         if (!$audience->delete()) {
                                                             add_error("There was an error while trying to delete the selected <strong>Course Group</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.");
@@ -1057,7 +1103,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $custom_time        = $update["custom_time"];
                                                     $custom_time_start  = $update["custom_time_start"];
                                                     $custom_time_end    = $update["custom_time_end"];
-                                                    $audience = Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value);
+                                                    $audience = ($is_draft ? Models_Event_Draft_Event_Audience::fetchRowByDraftEventIdTypeValue($devent_id, $audience_type, $audience_value) : Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value));
                                                     $audience->setUpdatedBy($ENTRADA_USER->getID());
                                                     $audience->setUpdatedDate(time());
                                                     $audience->setCustomTime($custom_time);
@@ -1082,7 +1128,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $insert["event_id"]     = $EVENT_ID;
                                                     $insert["updated_by"]   = $ENTRADA_USER->getID();
                                                     $insert["updated_date"] = time();
-                                                    $audience = new Models_Event_Audience($insert);
+                                                    if ($is_draft) {
+                                                        $insert["devent_id"]  = $devent_id;
+                                                        $insert["eaudience_id"]  = 0;
+                                                        $audience = new Models_Event_Draft_Event_Audience($insert);
+                                                    } else {
+                                                        $audience = new Models_Event_Audience($insert);
+                                                    }
                                                     if (!$audience->insert()) {
                                                         add_error("There was an error while trying to attach the selected <strong>Proxy ID</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.");
                                                         application_log("error", "Unable to insert a new event_audience, Proxy ID record while adding a new event. Database said: ".$db->ErrorMsg());
@@ -1096,7 +1148,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 foreach ($proxy_delete as $delete) {
                                                     $audience_type  = $delete["audience_type"];
                                                     $audience_value = $delete["audience_value"];
-                                                    $audience = Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value);
+                                                    $audience = ($is_draft ? Models_Event_Draft_Event_Audience::fetchRowByDraftEventIdTypeValue($devent_id, $audience_type, $audience_value) : Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value));
                                                     if ($audience) {
                                                         if (!$audience->delete()) {
                                                             add_error("There was an error while trying to delete the selected <strong>Proxy ID</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.");
@@ -1115,7 +1167,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $custom_time        = $update["custom_time"];
                                                     $custom_time_start  = $update["custom_time_start"];
                                                     $custom_time_end    = $update["custom_time_end"];
-                                                    $audience = Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value);
+                                                    $audience = ($is_draft ? Models_Event_Draft_Event_Audience::fetchRowByDraftEventIdTypeValue($devent_id, $audience_type, $audience_value) : Models_Event_Audience::fetchRowByEventIdTypeValue($EVENT_ID, $audience_type, $audience_value));
                                                     $audience->setUpdatedBy($ENTRADA_USER->getID());
                                                     $audience->setUpdatedDate(time());
                                                     $audience->setCustomTime($custom_time);
@@ -1224,6 +1276,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         if (in_array("event_location", $_POST["update_recurring_fields"])) {
                                             $PROCESSED_RECURRING_EVENT["event_location"] = $PROCESSED["event_location"];
                                         }
+                                        
+                                        if (in_array("attendance_required", $_POST["update_recurring_fields"])) {
+                                            $PROCESSED_RECURRING_EVENT["attendance_required"] = $PROCESSED["attendance_required"];
+                                        }
 
                                         if (in_array("audience_visible", $_POST["update_recurring_fields"])) {
                                             $PROCESSED_RECURRING_EVENT["audience_visible"] = $PROCESSED["audience_visible"];
@@ -1282,8 +1338,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 } else {
                                                     //add all as none are set.
                                                     if (isset($PROCESSED["event_types"]) && is_array($PROCESSED["event_types"]) && !empty($PROCESSED["event_types"])) {
+                                                        $event_duration = 0;
                                                         foreach($PROCESSED["event_types"] as $type) {
                                                             $event_type_add[] = $type;
+                                                            $event_duration = $event_duration + $type[1];
                                                         }
                                                     }
                                                 }
@@ -1337,6 +1395,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             $recurring_stats[] = $insert_value;
                                                         }
                                                     }
+                                                    
+                                                    //now get the total time for the event duration
+
+                                                    if (!isset($event_duration)) {
+                                                        if (isset($PROCESSED["event_types"]) && is_array($PROCESSED["event_types"]) && !empty($PROCESSED["event_types"])) {
+                                                            $event_duration = 0;
+                                                            foreach($PROCESSED["event_types"] as $type) {
+                                                                $event_type_add[] = $type;
+                                                                $event_duration = $event_duration + $type[1];
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    //update event with new duration of $event_duration
+                                                    $PROCESSED_RECURRING_EVENT["event_duration"] = $event_duration;
+                                                    //updates event finish time based on the event duration time.
+                                                    $PROCESSED_RECURRING_EVENT["event_finish"] = $recurring_event["event_start"] + $event_duration * 60;
+
                                                 }
                                             }
 
@@ -1413,7 +1489,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             $audience_type  = $audience->getAudienceType();
                                                             $audience_value = $audience->getAudienceValue();
                                                             $audience_array = $audience->toArray();
-                                                            $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                            $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
 
                                                             switch ($audience_type) {
                                                                 case "course_id" :
@@ -1478,7 +1554,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                                         if (isset($cohort_times_recur_a) && is_array($cohort_times_recur_a) && !array_key_exists($audience_value, $cohort_times_recur_a)) {
                                                             $audience_array = $audience->toArray();
-                                                            $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                            $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                             $cohort_times_recur_o[$audience_value] = $audience;
                                                             $cohort_times_recur_a[$audience_value] = $audience_array;
                                                         }
@@ -1520,7 +1596,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                                         if (isset($cgroup_times_recur_a) && is_array($cgroup_times_recur_a) && !array_key_exists($audience_value, $cgroup_times_recur_a)) {
                                                             $audience_array = $audience->toArray();
-                                                            $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                            $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                             $cgroup_times_recur_o[$audience_value] = $audience;
                                                             $cgroup_times_recur_a[$audience_value] = $audience_array;
                                                         }
@@ -1562,7 +1638,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                                         if (isset($proxy_times_recur_a) && is_array($proxy_times_recur_a) && !array_key_exists($audience_value, $proxy_times_recur_a)) {
                                                             $audience_array = $audience->toArray();
-                                                            $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                            $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                             $proxy_times_recur_o[$audience_value] = $audience;
                                                             $proxy_times_recur_a[$audience_value] = $audience_array;
                                                             }
@@ -1572,19 +1648,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 $cohort_update = compare_mlti_array($current_audience_cohort, $cohort_times_recur_a, "audience_value");
 
                                                 if (isset($cohort_update) && is_array($cohort_update)) {
-                                                    $cohort_changes = Models_Event_Audience::buildInsertUpdateDelete($cohort_update);
+                                                    $cohort_changes = Entrada_Utilities::buildInsertUpdateDelete($cohort_update);
                                                 }
 
                                                 $cgroup_update = compare_mlti_array($current_audience_cgroup, $cgroup_times_recur_a, "audience_value");
 
                                                 if (isset($cgroup_update) && is_array($cgroup_update)) {
-                                                    $cgroup_changes = Models_Event_Audience::buildInsertUpdateDelete($cgroup_update);
+                                                    $cgroup_changes = Entrada_Utilities::buildInsertUpdateDelete($cgroup_update);
                                                 }
 
                                                 $proxy_update = compare_mlti_array($current_audience_proxy_id, $proxy_times_recur_a, "audience_value");
 
                                                 if (isset($proxy_update) && is_array($proxy_update)) {
-                                                    $proxy_changes = Models_Event_Audience::buildInsertUpdateDelete($proxy_update);
+                                                    $proxy_changes = Entrada_Utilities::buildInsertUpdateDelete($proxy_update);
                                                 }
 
                                                 $cohort_insert     = $cohort_changes["insert"];
@@ -1883,7 +1959,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 }
                                             }
 
-                                            if (!has_error() && @array_intersect($_POST["update_recurring_fields"], array("event_title", "event_location", "course", "audience_visible", "attendance_required", "time_release"))) {
+                                                if (!has_error() && @array_intersect($_POST["update_recurring_fields"], array("event_title", "event_location", "course", "audience_visible", "attendance_required", "time_release", "event_types"))) {
                                                 //checks if the description, objectives, or message has changed before saving.
                                                 $changed_course_id = false;
                                                 $changed_course_id = md5_change_value($recurring_event["event_id"], "event_id", "course_id", $PROCESSED_RECURRING_EVENT["course_id"], "events");
@@ -1905,6 +1981,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                                 $changed_release_until = false;
                                                 $changed_release_until = md5_change_value($recurring_event["event_id"], "event_id", "release_until", $PROCESSED_RECURRING_EVENT["release_until"], "events");
+
+                                                    $changed_event_duration = false;
+                                                    $changed_event_duration = md5_change_value($recurring_event["event_id"], "event_id", "event_duration", $PROCESSED_RECURRING_EVENT["event_duration"], "events");
 
                                                 if (!$db->AutoExecute("`events`", $PROCESSED_RECURRING_EVENT, "UPDATE", "`event_id` = ".$db->qstr($recurring_event["event_id"]))) {
                                                     add_error("There was an error while trying to save changes to the selected <strong>Recurring Event</strong>.<br /><br />The system administrator was informed of this error; please try again later.");
@@ -1931,6 +2010,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             $recurring_stats[] = $insert_value;
                                                         }
                                                     }
+                                                        
+                                                        if ($changed_event_duration) {
+                                                            $insert_value = "Event Duration";
+                                                            if (!in_array($insert_value, $recurring_stats)) {
+                                                                $recurring_stats[] = $insert_value;
+                                                            }
+                                                        }
+
                                                     if ($changed_audience_visible) {
                                                         $insert_value = "Audience Display";
                                                         if (!in_array($insert_value, $recurring_stats)) {
@@ -2073,7 +2160,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         }
 
                         if ($is_draft) {
-                            $audiences = Models_Event_Draft_Event_Audience::fetchAllByEventID($devent_id);
+                            $audiences = Models_Event_Draft_Event_Audience::fetchAllByDraftEventID($devent_id);
                         } else {
                             $audiences = Models_Event_Audience::fetchAllByEventID($EVENT_ID);
                         }
@@ -2095,7 +2182,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             $PROCESSED["associated_cohort_ids"][] = (int) $audience_value;
                                             if (isset($cohort_times_a) && is_array($cohort_times_a) && !array_key_exists($audience_value, $cohort_times_a)) {
                                                 $audience_array = $audience->toArray();
-                                                $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                 $cohort_times_o[$audience_value] = $audience;
                                                 $cohort_times_a[$audience_value] = $audience_array;
                                             }
@@ -2104,7 +2191,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             $PROCESSED["associated_cgroup_ids"][] = (int) $audience_value;
                                             if (isset($cgroup_times_a) && is_array($cgroup_times_a) && !array_key_exists($audience_value, $cgroup_times_a)) {
                                                 $audience_array = $audience->toArray();
-                                                $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                 $cgroup_times_o[$audience_value] = $audience;
                                                 $cgroup_times_a[$audience_value] = $audience_array;
                                             }
@@ -2113,7 +2200,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             $PROCESSED["associated_proxy_ids"][] = (int) $audience_value;
                                             if (isset($proxy_times_a) && is_array($proxy_times_a) && !array_key_exists($audience_value, $proxy_times_a)) {
                                                 $audience_array = $audience->toArray();
-                                                $audience_array = Models_Event_Audience::buildSimpleArray($audience_array);
+                                                $audience_array = Entrada_Utilities::buildAudienceArray($audience_array);
                                                 $proxy_times_o[$audience_value] = $audience;
                                                 $proxy_times_a[$audience_value] = $audience_array;
                                             }
@@ -2136,11 +2223,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
                         $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
                         $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+                        $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.iris.min.js?release=". html_encode(APPLICATION_VERSION) ."\"></script>";
                         $HEAD[] = "<script>var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
                         $HEAD[] = "<script type=\"text/javascript\" src=\"".  ENTRADA_URL ."/javascript/jquery/jquery.advancedsearch.js\"></script>\n";
                         $HEAD[] = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".  ENTRADA_URL ."/css/jquery/jquery.advancedsearch.css\" />\n";
                         $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/events/admin/edit.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
                         $HEAD[] = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".  ENTRADA_URL ."/css/events/time_override.css?release=". html_encode(APPLICATION_VERSION) ."\" />";
+                        $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/color-picker.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+                        $HEAD[] = "<script type=\"text/javascript\">var EVENT_COLOR_PALETTE = ".json_encode($translate->_("event_color_palette")).";</script>\n";
 
                         $LASTUPDATED = (isset($event_info["updated_date"]) && $event_info["updated_date"] ? $event_info["updated_date"] : 0);
 
@@ -2275,17 +2365,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label for="event_title" class="control-label form-required">Event Title:</label>
+                                <label for="event_title" class="control-label form-required"><?php echo $translate->_("Event Title"); ?>:</label>
                                 <div class="controls">
                                     <div id="course_id_path" class="content-small"><?php echo fetch_course_path($PROCESSED["course_id"]); ?></div>
                                     <input type="text" id="event_title" name="event_title" value="<?php echo html_encode($PROCESSED["event_title"]); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
                                 </div>
                             </div>
+                            <div class="control-group">
+                                <label for="event_color" class="control-label form-nrequired"><?php echo $translate->_("Event")." ".$translate->_("Colour"); ?>:</label>
+                                <div class="controls">
+                                    <input type="text" id="event_color" name="event_color" value="<?php echo html_encode(!empty($PROCESSED["event_color"]) ? $PROCESSED["event_color"] : ""); ?>" maxlength="20" class="span3">
+                                </div>
+                            </div>
 
-                            <?php echo Entrada_Utilities::generate_calendars("event", "Event Date & Time", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
+                            <?php echo Entrada_Utilities::generate_calendars("event", $translate->_("Event Date & Time"), true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
 
                             <div class="control-group">
-                                <label for="event_location" class="control-label form-nrequired">Event Location:</label>
+                                <label for="event_location" class="control-label form-nrequired"><?php echo $translate->_("Event Location"); ?>:</label>
                                 <div class="controls">
                                     <input type="text" id="event_location" name="event_location" value="<?php echo html_encode($PROCESSED["event_location"]); ?>" maxlength="255" />
                                 </div>
@@ -2305,7 +2401,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 ON c.`organisation_id` = b.`organisation_id`
                                                 WHERE b.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
                                                 AND a.`eventtype_active` = '1'
-                                                ORDER BY a.`eventtype_order` ASC";
+                                                ORDER BY a.`eventtype_title` ASC";
                                     $results = $db->GetAll($query);
                                     if ($results) {
                                         foreach($results as $result) {
@@ -2354,9 +2450,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label for="faculty_name" class="control-label form-nrequired">Associated Faculty:</label>
+                                <label for="faculty_name" class="control-label form-nrequired"><?php echo $translate->_("Associated Faculty"); ?>:</label>
                                 <div class="controls">
-                                    <input type="text" id="faculty_name" name="fullname" autocomplete="off" placeholder="Example: <?php echo html_encode($ENTRADA_USER->getLastname().", ".$ENTRADA_USER->getFirstname()); ?>" />
+                                    <input type="text" id="faculty_name" name="fullname" autocomplete="off" placeholder="Example: <?php echo html_encode($ENTRADA_USER->getLastname().", ".$ENTRADA_USER->getFirstname()); ?>" class="span5" />
                                     <?php
                                     $ONLOAD[] = "faculty_list = new AutoCompleteList({ type: 'faculty', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
                                     ?>
@@ -2398,19 +2494,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label class="control-label form-nrequired" for="faculty_name">Audience Display:</label>
+                                <label class="control-label form-nrequired"><?php echo $translate->_("Audience Options"); ?>:</label>
                                 <div class="controls">
-                                    <table>
-                                        <tbody>
-                                        <tr>
-                                            <td style="vertical-align:top;"><input type="checkbox" name="audience_visible" id="audience_visible" value="1" <?php echo ($event_info["audience_visible"] == "1" || $PROCESSED["audience_visible"] == "1") ? "checked=\"checked\"" : ""; ?> /></td>
-                                            <td>
-                                                <label for="audience_visible" class="radio-group-title">Show audience to learners</label>
-                                                <div class="content-small">This option controls students ability to view the audience.</div>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
+                                    <label for="audience_visible" class="checkbox">
+                                        <input type="checkbox" name="audience_visible" id="audience_visible" value="1"<?php echo (($event_info["audience_visible"] == "1" || $PROCESSED["audience_visible"] == "1") ? " checked=\"checked\"" : ""); ?> />
+                                        Show the audience to the learners
+                                        <div class="content-small">This option controls the learner's ability to view who else is in the learning event.</div>
+                                    </label>
+
+                                    <label for="attendance_required" class="checkbox">
+                                        <input type="checkbox" name="attendance_required" id="attendance_required" value="1"<?php echo (($event_info["attendance_required"] == "1" || $PROCESSED["attendance_required"] == "1") ? "checked=\"checked\"" : ""); ?> />
+                                        Learner's attendance at this Learning Event is required
+                                        <div class="content-small">This option controls whether or not attendance is required by the Associated Learners.</div>
+                                    </label>
                                 </div>
                             </div>
                             <?php
@@ -2496,7 +2592,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     if (isset($cohort_times_o) && is_array($cohort_times_o) && !empty($cohort_times_o)) {
                                                         foreach ($cohort_times_o as $audience) {
                                                             if (isset($audience) && is_object($audience)) {
-                                                                $cohort_view = new Views_Event_Audience($audience);
+                                                                if ($is_draft) {
+                                                                    $cohort_view = new Views_Event_Draft_Audience($audience);
+                                                                } else {
+                                                                    $cohort_view = new Views_Event_Audience($audience);
+                                                                }
                                                                 if (isset($cohort_view) && is_object($cohort_view)) {
                                                                     echo $cohort_view->renderTimeRow();
                                                                 }
@@ -2506,7 +2606,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                                     if (isset($cgroup_times_o) && is_array($cgroup_times_o) && !empty($cgroup_times_o)) {
                                                         foreach ($cgroup_times_o as $audience) {
-                                                            $cgroup_view = new Views_Event_Audience($audience);
+                                                            if ($is_draft) {
+                                                                $cgroup_view = new Views_Event_Draft_Audience($audience);
+                                                            } else {
+                                                                $cgroup_view = new Views_Event_Audience($audience);
+                                                            }
                                                             if (isset($cgroup_view) && is_object($cgroup_view)) {
                                                                 echo $cgroup_view->renderTimeRow();
                                                             }
@@ -2515,7 +2619,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                                     if (isset($proxy_times_o) && is_array($proxy_times_o) && !empty($proxy_times_o)) {
                                                         foreach ($proxy_times_o as $audience) {
-                                                            $proxy_view = new Views_Event_Audience($audience);
+                                                            if ($is_draft) {
+                                                                $proxy_view = new Views_Event_Draft_Audience($audience);
+                                                            } else {
+                                                                $proxy_view = new Views_Event_Audience($audience);
+                                                            }
                                                             if (isset($proxy_view) && is_object($proxy_view)) {
                                                                 echo $proxy_view->renderTimeRow();
                                                             }
@@ -2627,6 +2735,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $sidebar_html .= "      <li><label for=\"cascade_associated_faculty\" class=\"checkbox\"><input type=\"checkbox\" value=\"associated_faculty\" id=\"cascade_associated_faculty\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Associated Faculty</label></li>\n";
                                 $sidebar_html .= "      <li><label for=\"cascade_audience_visible\" class=\"checkbox\"><input type=\"checkbox\" value=\"audience_visible\" id=\"cascade_audience_visible\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Audience Display</label></li>\n";
                                 $sidebar_html .= "      <li><label for=\"cascade_associated_learners\" class=\"checkbox\"><input type=\"checkbox\" value=\"associated_learners\" id=\"cascade_associated_learners\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Associated Learners</label></li>\n";
+                            $sidebar_html .= "      <li><label for=\"cascade_attendance_required\" class=\"checkbox\"><input type=\"checkbox\" value=\"attendance_required\" id=\"cascade_attendance_required\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Event Attendance</label></li>\n";
                                 $sidebar_html .= "      <li><label for=\"cascade_time_release\" class=\"checkbox\"><input type=\"checkbox\" value=\"time_release\" id=\"cascade_time_release\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> Time Release</label></li>\n";
                                 $sidebar_html .= "  </ul>\n";
                                 $sidebar_html .= "</div>\n";
@@ -2638,13 +2747,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         position: fixed;
                                         top: 20px;
                                         z-index: 1;
-                                        width: 225px;
-                                        border-bottom: 5px solid #ffffff;
+                                        width: 22%;
+                                        max-width: 313px;
+                                        min-width: 206px;
                                     }
-                                    #recurring-events-sidebar .panel-head {
-                                        background: linear-gradient(to bottom, #8A0808 0%, #3B0B0B 100%);
-                                    }
-
                                 </style>
                                 <script type="text/javascript">
                                     var shown = false;
@@ -2713,22 +2819,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 <?php
                             }
                             ?>
-                            <div id="selected_list_container"></div>
                         </form>
 
                         <script type="text/javascript">
                             jQuery(document).ready(function ($) {
                                 $("#eventtype_ids").advancedSearch({
+                                    closeAfterSelect: true,
                                     resource_url: ENTRADA_URL,
                                     filters: {
                                         event_types: {
                                             label: "<?php echo $translate->_("Event Types"); ?>",
                                             data_source: event_types,
-                                            mode: "radio"
+                                            mode: "radio",
+                                            set_button_text_to_selected_option: false
                                         }
                                     },
                                     no_results_text: "<?php echo $translate->_("No Event Types found matching the search criteria"); ?>",
-                                    selected_list_container: jQuery("#selected_list_container"),
                                     parent_form: $("#editEventForm"),
                                     width: 300
                                 });
@@ -2814,7 +2920,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                         cleanupList();
 
-                                        $("#selected_list_container").html("");
+                                        $("#" + $(this).attr("data-filter") + "_" + $(this).val()).remove();
                                     }
                                 });
                             });

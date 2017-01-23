@@ -107,4 +107,37 @@ class Models_Assignment_File extends Models_Base {
         $self = new self();
         return $self->fetchAll(array(array("key" => "file_active", "value" => $file_active, "method" => "=")));
     }
+    
+    public static function getRowFileAssignmentByAssignmentIDProxyID($assignment_id, $proxy_id, $file_active = true, $assignment_active = true) {
+        global $db;
+
+        $query = "SELECT a.*, b.`course_id`, b.`assignment_title`, c.`number`
+                    FROM `assignment_files` AS a
+                    JOIN `assignments` AS b
+                    ON a.`assignment_id` = b.`assignment_id`
+                    JOIN `".AUTH_DATABASE."`.`user_data` AS c
+                    ON a.`proxy_id` = c.`id`
+                    WHERE `file_active` = ?
+                    AND b.`assignment_active` = ?
+                    AND a.`assignment_id` = ?
+                    AND a.`proxy_id` = ? ";
+
+        $assignment = $db->GetRow($query, array($file_active, $assignment_active, $assignment_id, $proxy_id));
+
+        if ($assignment) {
+            return $assignment;
+        }
+
+        return false;
+    }
+
+    public static function fetchAllByAssignmentIDProxyIDFileType($assignment_id, $proxy_id, $file_type = "submission", $file_active = true) {
+        $self = new self();
+        return $self->fetchAll(array(
+            array("key" => "assignment_id", "value" => $assignment_id, "method" => "="),
+            array("key" => "proxy_id", "value" => $proxy_id, "method" => "="),
+            array("key" => "file_active", "value" => $file_active, "method" => "="),
+            array("key" => "file_type", "value" => $file_type, "method" => "=")
+        ));
+    }
 }

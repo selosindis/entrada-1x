@@ -4,13 +4,13 @@ require_once("functions.inc.php");
 require_once("Entrada/metadata/functions.inc.php"); //include the general metadata functions as well
 
 
-require_once("Models/users/UserPhoto.class.php");
-require_once("Models/users/UserPhotos.class.php");
-require_once("Models/users/Cohort.class.php");
-require_once("Models/organisations/Organisation.class.php");
-require_once("Models/organisations/Organisations.class.php");
-require_once("Models/users/Department.class.php");
-require_once("Models/users/Departments.class.php");
+require_once("Classes/users/UserPhoto.class.php");
+require_once("Classes/users/UserPhotos.class.php");
+require_once("Classes/users/Cohort.class.php");
+require_once("Classes/organisations/Organisation.class.php");
+require_once("Classes/organisations/Organisations.class.php");
+require_once("Classes/users/Department.class.php");
+require_once("Classes/users/Departments.class.php");
 
 
 function getExpandedFeatures() {

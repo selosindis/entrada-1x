@@ -168,6 +168,7 @@ function get_next_ancestor_sibling($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER) {
 function on_checkout($buffer) {
 	$buffer = check_head($buffer);
 	$buffer = check_jquery($buffer);
+    $buffer = check_javascript_translations($buffer);
 	$buffer = check_meta($buffer);
 	$buffer = check_body($buffer);
 	$buffer = check_sidebar($buffer);
@@ -194,11 +195,11 @@ function check_script($buffer) {
 	$elements = array();
 	if ((isset($ONLOAD)) && (count($ONLOAD))) {
 		$ONLOAD = array_map('add_try_catch_js',$ONLOAD);
-		$elements["load"] = "document.observe('dom:loaded', function() {\n".implode(";\n\t", $ONLOAD)."\n});\n";
+        $elements["load"] = "jQuery(document).ready(function() {\n".implode(";\n\t", $ONLOAD)."\n});\n";
 	}
 
 	if ((isset($ONUNLOAD)) && (count($ONUNLOAD))) {
-		$elements["unload"] = "document.observe('unload', function() {\n".implode(";\n\t", $ONUNLOAD).";\n});\n";
+        $elements["unload"] = "jQuery(window).unload(function() {\n".implode(";\n\t", $ONUNLOAD).";\n});\n";
 	}
 
 	if ($elements) {
@@ -248,6 +249,26 @@ function check_jquery($buffer) {
 	}
 
 	return str_replace("%JQUERY%", $output, $buffer);
+}
+
+/**
+ * Function is called by on_checkout. Adds any jquery elements that are required, specified in the $JQUERY array,
+ * which loads above Prototype to prevent conflicts. This is a quick fix until we can rewrite all of the Javascript
+ * to use jQuery.
+ *
+ * @param string $buffer
+ * @return string buffer
+ */
+function check_javascript_translations($buffer) {
+    global $JAVASCRIPT_TRANSLATIONS;
+
+    $output = "";
+
+    if ((isset($JAVASCRIPT_TRANSLATIONS)) && (count($JAVASCRIPT_TRANSLATIONS))) {
+        $output = implode("\n", $JAVASCRIPT_TRANSLATIONS);
+    }
+
+    return str_replace("%JAVASCRIPT_TRANSLATIONS%", $output, $buffer);
 }
 
 /**
@@ -313,7 +334,7 @@ function load_system_navigator() {
 }
 
 function navigator_tabs() {
-	global $ENTRADA_ACL, $MODULE, $MODULES, $translate;
+	global $ENTRADA_USER, $ENTRADA_ACL, $MODULE, $MODULES, $translate;
 
 	if (!defined("MAX_NAV_TABS")) {
 		$max_public = 9;
@@ -348,8 +369,13 @@ function navigator_tabs() {
 		/**
 		 * Administrative tab entries.
 		 */
+		$assertion_check = false;
+		if ($ENTRADA_USER->getActiveGroup() == "student") {
+			$assertion_check = true;
+		}
+
 		foreach ($navigation["admin"] as $shortname => $module_info) {
-			if ($ENTRADA_ACL->amIAllowed($module_info["resource"], $module_info["permission"], false)) {
+			if ($ENTRADA_ACL->amIAllowed($module_info["resource"], $module_info["permission"], $assertion_check)) {
 				$admin_tabs[] = "<li class=\"%".$shortname."%\"><a href=\"".ENTRADA_URL."/admin/".$shortname."\"><span>".html_encode(((isset($module_info["title"])) ? $module_info["title"] : ucwords(strtolower($shortname))))."</span></a></li>\n";
 			}
 		}
@@ -369,7 +395,6 @@ function navigator_tabs() {
 			$tabs_admin .= "	<a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" id=\"admin_tab_link\"><span>Admin</span> <b class=\"caret\"></b></a>";
 			$tabs_admin .= "	<ul class=\"dropdown-menu\" id=\"admin_drop_options\">";
 			$tabs_admin .=			$admin_text;
-			$tabs_admin .= "		<li class=\"bottom\"><div>&nbsp;</div></li>";
 			$tabs_admin .= "	</ul>";
 			$tabs_admin .= "	<!--[if lte IE 6.5]><iframe src=\"".ENTRADA_RELATIVE."/blank.html\"></iframe><![endif]-->";
 			$tabs_admin .= "</li>\n";
@@ -385,6 +410,8 @@ function navigator_tabs() {
 			$tab_children = "";
 			$has_children = false;
 
+			$include_item = false;
+
 			/**
 			 * If this menu item has a resource attached check to see if the user
 			 * has permission before adding it to the stack. If there is no resource
@@ -392,81 +419,105 @@ function navigator_tabs() {
 			 */
 			if (isset($module_item["resource"]) && isset($module_item["permission"])) {
 				if ($ENTRADA_ACL->amIAllowed($module_item["resource"], $module_item["permission"])) {
-					$counter++;
-				} else {
-					continue;
+
+                    if (isset($module_item["limit-to-groups"]) && $module_item["limit-to-groups"]) {
+                        if (!is_array($module_item["limit-to-groups"])) {
+                            $module_item["limit-to-groups"] = array($module_item["limit-to-groups"]);
+                        }
+
+                        if (in_array($ENTRADA_USER->getActiveGroup(), $module_item["limit-to-groups"])) {
+                            $counter++;
+
+                            $include_item = true;
+                        }
+                    } else {
+                        $counter++;
+
+                        $include_item = true;
+                    }
 				}
 			} else {
 				$counter++;
+
+                $include_item = true;
 			}
 
-			if (isset($module_item["children"]) && is_array($module_item["children"]) && !empty($module_item["children"])) {
-				$has_children = true;
-				$css_classes[] = "dropdown";
-			}
+			if ($include_item) {
+                if (isset($module_item["children"]) && is_array($module_item["children"]) && !empty($module_item["children"])) {
+                    $has_children = true;
+                    $css_classes[] = "dropdown";
+                }
 
-			if ($counter == 1) {
-				$css_classes[] = "first";
-			}
+                if ($counter == 1) {
+                    $css_classes[] = "first";
+                }
 
-			if ($has_children) {
-				$tab_children .= "<ul class=\"dropdown-menu\">";
+                if ($has_children) {
+                    $tab_children .= "<ul class=\"dropdown-menu\">";
 
-				foreach ($module_item["children"] as $child_shortname => $child_item) {
-					$child_active = false;
+                    foreach ($module_item["children"] as $child_shortname => $child_item) {
+                        $child_active = false;
 
-					if (isset($child_item["resource"]) && isset($child_item["permission"])) {
-						if (!$ENTRADA_ACL->amIAllowed($child_item["resource"], $child_item["permission"])) {
-							continue;
-						}
-					}
+                        if (isset($child_item["resource"]) && isset($child_item["permission"])) {
+                            if (!$ENTRADA_ACL->amIAllowed($child_item["resource"], $child_item["permission"])) {
+                                continue;
+                            } elseif (isset($child_item["limit-to-groups"]) && $child_item["limit-to-groups"]) {
+                                if (!is_array($child_item["limit-to-groups"])) {
+                                    $child_item["limit-to-groups"] = array($child_item["limit-to-groups"]);
+                                }
 
-					if ($MODULE == $child_shortname) {
-						$child_active = true;
+                                if (!in_array($ENTRADA_USER->getActiveGroup(), $child_item["limit-to-groups"])) {
+                                    continue;
+                                }
+                            }
+                        }
 
-						/**
-						 * This will make the childs' parent active as well.
-						 */
-						if (!in_array("current", $css_classes)) {
-							$css_classes[] = "current";
-						}
-					}
+                        if ($MODULE == $child_shortname) {
+                            $child_active = true;
 
-					$tab_children .= "<li".($child_active ? " class=\"current\"" : "").">";
-					$tab_children .= "	<a href=\"".((isset($child_item["url"])) ? $child_item["url"] : ENTRADA_RELATIVE."/".$child_shortname)."\"".((isset($child_item["target"])) ? " target=\"".$child_item["target"]."\"" : "")."><span>".$child_item["title"]."</span></a>";
-					$tab_children .= "</li>";
-				}
+                            /**
+                             * This will make the childs' parent active as well.
+                             */
+                            if (!in_array("current", $css_classes)) {
+                                $css_classes[] = "current";
+                            }
+                        }
 
-				$tab_children .= "	<li class=\"bottom\"><div></div></li>";
-				$tab_children .= "</ul>";
-				$tab_children .= "<!--[if lte IE 6.5]><iframe src=\"".ENTRADA_RELATIVE."/blank.html\"></iframe><![endif]-->";
-			}
+                        $tab_children .= "<li" . ($child_active ? " class=\"current\"" : "") . ">";
+                        $tab_children .= "	<a href=\"" . ((isset($child_item["url"])) ? $child_item["url"] : ENTRADA_RELATIVE . "/" . $child_shortname) . "\"" . ((isset($child_item["target"])) ? " target=\"" . $child_item["target"] . "\"" : "") . "><span>" . $child_item["title"] . "</span></a>";
+                        $tab_children .= "</li>";
+                    }
 
-			if ($MODULE == $shortname) {
-				$css_classes[] = "current";
-				$active = true;
-			}
+                    $tab_children .= "</ul>";
+                    $tab_children .= "<!--[if lte IE 6.5]><iframe src=\"" . ENTRADA_RELATIVE . "/blank.html\"></iframe><![endif]-->";
+                }
 
-			$tab  = "<li".(!empty($css_classes) ? " class=\"".implode(" ", $css_classes)."\"" : "").">";
-			if ($tab_children) {
-    			$tab .= "<a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\">".$module_item["title"]." <b class=\"caret\"></b></a>";
-				$tab .= $tab_children;
-			} else {
-    			$tab .= "<a href=\"".ENTRADA_RELATIVE."/".$shortname."\">".$module_item["title"]."</a>";
+                if ($MODULE == $shortname) {
+                    $css_classes[] = "current";
+                    $active = true;
+                }
+
+                $tab = "<li" . (!empty($css_classes) ? " class=\"" . implode(" ", $css_classes) . "\"" : "") . ">";
+                if ($tab_children) {
+                    $tab .= "<a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\">" . $module_item["title"] . " <b class=\"caret\"></b></a>";
+                    $tab .= $tab_children;
+                } else {
+                    $tab .= "<a href=\"" . ENTRADA_RELATIVE . "/" . $shortname . "\">" . $module_item["title"] . "</a>";
+                }
+                $tab .= "</li>\n";
+
+                // Push excess public tabs into more
+                if ($counter > $max_public) {
+                    $more_tabs[] = $tab;
+
+                    if ($active == true) {
+                        $more_bold = " current";
+                    }
+                } else {
+                    $public_tabs[] = $tab;
+                }
             }
-			$tab .= "</li>\n";
-
-			// Push excess public tabs into more
-			if ($counter > $max_public) {
-				$more_tabs[] = $tab;
-
-				if ($active == true) {
-					$more_bold = " current";
-				}
-			} else {
-				$public_tabs[] = $tab;
-			}
-		}
+        }
 
 		/**
 		 * Add "More" tabs.
@@ -479,7 +530,6 @@ function navigator_tabs() {
 			$tabs_more .= "	<a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\">More <b class=\"caret\"></b></a>";
 			$tabs_more .= "	<ul class=\"dropdown-menu\" id=\"more_drop_options\">";
 			$tabs_more .=		implode("\n", $more_tabs);
-			$tabs_more .= "		<li class=\"bottom\"><div></div></li>";
 			$tabs_more .= "	</ul>";
 			$tabs_more .= "	<!--[if lte IE 6.5]><iframe src=\"".ENTRADA_RELATIVE."/blank.html\"></iframe><![endif]-->";
 			$tabs_more .= "</li>\n";
@@ -649,6 +699,29 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 	}
 
 	return true;
+}
+
+function assessment_sidebar_item($html = "", $id = "", $state = "open", $position = SIDEBAR_APPEND) {
+    global $SIDEBAR, $NOTICE, $NOTICESTR;
+
+    $state = (($state == "open") ? $state : "close");
+    $id = (($id == "") ? "sidebar-".$weight : $id);
+
+    $output  = "<div class=\"assessment-sidebar-panel\" id=\"".html_encode($id)."\">\n";
+    $output .= "    <div class=\"clearfix\">".$html."</div>\n";
+    $output .= "</div>\n";
+
+    switch ($position) {
+        case SIDEBAR_PREPEND:
+            array_unshift($SIDEBAR, $output);
+            break;
+        case SIDEBAR_APPEND:
+        default:
+            array_push($SIDEBAR, $output);
+            break;
+    }
+
+    return true;
 }
 
 /**
@@ -865,6 +938,9 @@ function get_account_data($type = "", $id = 0) {
 
 	if($id = (int) trim($id)) {
 		switch(strtolower($type)) {
+			case "number" :
+				$query = "SELECT `number` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
+            break;
 			case "firstname" :
 				$query = "SELECT `firstname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
 			break;
@@ -2715,6 +2791,9 @@ function application_log($type, $message) {
 				@error_log($log_entry, 1, $AGENT_CONTACTS["administrator"]["email"], "Subject: ".APPLICATION_NAME.": Errorlog Entry\nFrom: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">\n");
 			}
 			break;
+		case "mobile" :
+			$log_file = "mobile_log.txt";
+			break;
 		default :
 			$log_file = "default_log.txt";
 			break;
@@ -2796,6 +2875,12 @@ function clean_input($string, $rules = array()) {
 	if (count($rules) > 0) {
 		foreach ($rules as $rule) {
 			switch ($rule) {
+				case "strtotime" :
+                    $string = strtotime($string);
+                break;
+                case "end_of_day" :
+                    $string = strtotime(date("Y-m-d", $string)." 23:59:59");
+                break;
 				case "page_url" :		// Acceptable characters for community page urls.
 				case "module" :
 					$string = preg_replace("/[^a-z0-9_\-]/i", "", $string);
@@ -2850,7 +2935,7 @@ function clean_input($string, $rules = array()) {
 					$string = quotemeta($string);
 				break;
 				case "credentials" :	// Acceptable characters for login credentials.
-					$string = preg_replace("/[^a-z0-9_\-\.]/i", "", $string);
+					$string = preg_replace("/[^a-z0-9_\-\.@]/i", "", $string);
 				break;
 				case "alphanumeric" :	// Remove anything that is not alphanumeric.
 					$string = preg_replace("/[^a-z0-9]+/i", "", $string);
@@ -2933,24 +3018,34 @@ function clean_input($string, $rules = array()) {
                 case "msword" :
                     $string = iconv("UTF-8", "ASCII//TRANSLIT", $string);
                 break;
+                case "strtotime" :
+                    $string = strtotime($string);
+                break;
+                case "strtotimeonly" :
+                    $time = strtotime($string);
+                    if ($time) {
+                        $midnight = strtotime("00:00:00", $time);
+                        $string = $time - $midnight;
+                    }
+                break;
 				case preg_match("/^min:[0-9]+$/", $rule) === 1:
 					$rule = explode(":", $rule);
 					$min = (int) $rule[1];
-                    $value = is_int($string) ? $string : strlen($string);
+					$value = is_int($string) ? $string : strlen($string);
 
-                    if ($value < $min) {
-                        return false;
-                    }
+					if ($value < $min) {
+						return false;
+					}
 				break;
-                case preg_match("/^max:[0-9]+$/", $rule) === 1:
+				case preg_match("/^max:[0-9]+$/", $rule) === 1:
 					$rule = explode(":", $rule);
-                    $max = (int) $rule[1];
-                    $value = is_int($string) ? $string : strlen($string);
+					$max = (int) $rule[1];
+					$value = is_int($string) ? $string : strlen($string);
 
-                    if ($value > $max) {
-                        return false;
-                    }
-                break;
+					if ($value > $max) {
+						return false;
+					}
+				break;
 				default :				// Unknown rule, log notice.
 					application_log("notice", "Unknown clean_input function rule [".$rule."]");
 				break;
@@ -3859,7 +3954,12 @@ function validate_calendars($fieldname, $require_start = true, $require_finish =
 					$day	= (int) trim($pieces[2]);
 					$year	= (int) trim($pieces[0]);
 
-					$timestamp_start = mktime($hour, $minute, $second, $month, $day, $year);
+                    if (checkdate($month, $day, $year)) {
+                        $timestamp_start = mktime($hour, $minute, $second, $month, $day, $year);
+                    } else {
+                        $ERROR++;
+                        $ERRORSTR[] = "Invalid format for calendar date.";
+                    }
 				}
 			}
 		}
@@ -3889,7 +3989,12 @@ function validate_calendars($fieldname, $require_start = true, $require_finish =
 					$day	= (int) trim($pieces[2]);
 					$year	= (int) trim($pieces[0]);
 
-					$timestamp_finish = mktime($hour, $minute, $second, $month, $day, $year);
+                    if (checkdate($month, $day, $year)) {
+                        $timestamp_finish = mktime($hour, $minute, $second, $month, $day, $year);
+                    } else {
+                        $ERROR++;
+                        $ERRORSTR[] = "Invalid format for calendar date.";
+                    }
 				}
 			}
 		}
@@ -4045,7 +4150,7 @@ function add_statistic($module_name = "", $action = "", $action_field = "", $act
 		}
 	}
 
-	if (((int) $proxy_id == 0) && isset($ENTRADA_USER)) {
+	if (((int) $proxy_id == 0) && isset($ENTRADA_USER) && $ENTRADA_USER && is_object($ENTRADA_USER) && method_exists($ENTRADA_USER, "getID")) {
 		$proxy_id = (int) $ENTRADA_USER->getID();
 	}
 
@@ -4217,6 +4322,9 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
                     array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
                 );
 			break;
+            case "list" :
+                $custom_toolbar = true;
+            break;
             case "mspr" : 
             case "minimal" :
             case "basic" :
@@ -4232,9 +4340,15 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
         array("name" => "links", "items" => array('Link', 'Unlink', 'Anchor')),
         array("name" => "text", "items" => array('Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent')),
     );
+    
+    if (isset($toolbar_groups) && (is_scalar($toolbar_groups) && ($toolbar_groups = clean_input($toolbar_groups, "alpha")) && ($toolbar_groups === "list"))) {
+        $custom_toolbar_items = array(
+            array("name" => "text", "items" => array('Bold', 'Italic', 'Underline', 'Strike', 'BulletedList')),
+        );
+    }
 
-	$output  = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/ckeditor/ckeditor.js\"></script>\n";
-	$output .= "<script type=\"text/javascript\" defer=\"defer\">\n";
+	$output  = "<script src=\"".ENTRADA_RELATIVE."/javascript/ckeditor/ckeditor.js\"></script>\n";
+	$output .= "<script defer=\"defer\">\n";
     $output .= "CKEDITOR.editorConfig = function( config ) {\n";
     $output .= "    config.customConfig = '';\n";
     $output .= "    config.allowedContent = true;\n";
@@ -8000,6 +8114,11 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$permission_required = 1;
 			}
 			break;
+		case "announcement_moderate" :
+			$permission_required = 1;
+		case "announcement_release" :
+		case "announcement_delete" :
+			$permission_required = 0;
 		case "event" :
 			$query = "	SELECT b.`allow_member_view`
 						FROM `community_events` AS a
@@ -8056,6 +8175,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 	 */
 	switch ($content_type) {
 		case "announcement" :
+		case "announcement_moderate" :
 		case "event" :
 			$query = "	SELECT a.`proxy_id` FROM `community_members` AS a
 						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -8071,6 +8191,13 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 						AND a.`community_id` = ".$db->qstr($community_id)."
 						AND b.`notifications` = '1'
 						AND a.`member_acl` >= ".$db->qstr($permission_required);
+			break;
+		case "announcement_release" :
+		case "announcement_delete" :
+			$query = "	SELECT a.`proxy_id`
+						FROM `community_announcements` AS a
+						WHERE a.`cannouncement_id` = ".$db->qstr($record_id);
+
 			break;
 		case "poll" :
 			$query = "	SELECT COUNT(`proxy_id`) AS `members_count`
@@ -8286,6 +8413,9 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$subject = "New photo comment added";
 				break;
 			case "announcement" :
+			case "announcement_moderate" :
+			case "announcement_release" :
+			case "announcement_delete" :
 				$query	 = "SELECT a.`announcement_title`, b.`community_title`
 							FROM `community_announcements` AS a
 							LEFT JOIN `communities` AS b
@@ -8295,7 +8425,14 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$result = $db->GetRow($query);
 				$community_title = $result["community_title"];
 				$content_title = $result["announcement_title"];
-				$subject = "New announcement added";
+				if ($content_type == "announcement_release") {
+					$subject = "Announcement approved";
+				} elseif ($content_type == "announcement_delete") {
+					$subject = "Announcement rejected";
+				}
+				else {
+					$subject = "New announcement added";
+				}
 				break;
 			case "event" :
 				$query	 = "SELECT a.`event_title`, b.`community_title`
@@ -9800,26 +9937,32 @@ function search_subnavigation($tab = "details") {
 function courses_subnavigation($course_details, $tab="details") {
 	global $ENTRADA_ACL, $translate;
 
+	// Inline queries deliver arrays, new models deliver objects, 
+	// so course_id and course_organization get set dynamically
+	$course_id = !is_array($course_details) ? $course_details->getID() : $course_details["course_id"];
+	$course_organization = !is_array($course_details) ? $course_details->getOrganisationID() : $course_details["organisation_id"];
+
 	echo "<div class=\"no-printing\">\n";
     echo "    <ul class=\"nav nav-tabs\">\n";
-	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="details"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" >Details</a></li>\n";
+	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_id, $course_organization), "update")) {
+        echo "<li".($tab=="details"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_id, "step" => false))."\" >" . $translate->_("Setup") . "</a></li>\n";
 	}
-	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read") && $ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read", true)) {
-        echo "<li".($tab=="content"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" >Content</a></li>\n";
+	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_id, $course_organization), "read") && $ENTRADA_ACL->amIAllowed(new CourseContentResource($course_id, $course_organization), "read", true)) {
+        echo "<li".($tab=="content"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_id, "step" => false))."\" >" . $translate->_("Content") . "</a></li>\n";
 	}
-	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >Enrolment</a></li>\n";
+	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_id, $course_organization), "update")) {
+		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_id, "step" => false))."\" >" . $translate->_("Enrolment") ."</a></li>\n";
 	}
-	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\">Groups</a></li>\n";
+	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_id, $course_organization), "update")) {
+        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_id, "step" => false))."\">" . $translate->_("Groups") ."</a></li>\n";
 	}
-	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\">Gradebook</a></li>";
+	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_id, $course_organization), "read")) {
+        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_id."\">" . $translate->_("Gradebook") ."</a></li>";
 	}
-	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"], true), "update")) {
-		echo "<li".($tab=="reports"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/reports?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >Reports</a></li>\n";
+	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_id, $course_organization, true), "update")) {
+		echo "<li".($tab=="reports"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/reports?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_id, "step" => false))."\" >" . $translate->_("Reports") ."</a></li>\n";
 	}
+
 	echo "	</ul>\n";
 	echo "</div>\n";
 }
@@ -10439,7 +10582,7 @@ function events_subnavigation($event_info,$tab='content'){
 	echo "<div class=\"no-printing\">\n";
 	echo "	<ul class=\"nav nav-tabs\">";
 	if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
-		echo "		<li".($tab=='edit'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info['event_id'], "step" => false))."\" >Details</a></li>";
+		echo "		<li".($tab=='edit'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info['event_id'], "step" => false))."\" >Setup</a></li>";
 	}
 	echo "		<li".($tab=='content'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $event_info['event_id'], "step" => false))."\" >Content</a></li>";
 
@@ -10535,9 +10678,6 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 	}
 	return false;
 }
-
-
-
 
 /**
  * Function used by public events and admin events index to setup and process the selected sort ordering
@@ -10799,50 +10939,33 @@ function tracking_output_filter_controls($module_type = "") {
  * the left hand sidebar.
  */
 function events_output_sidebar($module_type = "") {
-	/**
-	 * Determine whether or not this is being called from the admin section.
-	 */
-	if ($module_type == "admin") {
-		$module_type = "/admin";
-	} else {
-		$module_type = "";
-	}
+    global $translate;
 
-	/**
-	 * Sidebar item that will provide another method for sorting, ordering, etc.
-	 */
-	$sidebar_html  = "Sort columns:\n";
-	$sidebar_html .= "<ul class=\"menu none\">\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "date"))."\" title=\"Sort by Date &amp; Time\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "date") ? "on" : "off").".gif\" alt=\"\" /> <span>by date &amp; time</span></a></li>\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "course"))."\" title=\"Sort by Course\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "course") ? "on" : "off").".gif\" alt=\"\" /> <span>by course</span></a></li>\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "title"))."\" title=\"Sort by Event Title\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "title") ? "on" : "off").".gif\" alt=\"\" /> <span>by event title</span></a></li>\n";
-	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "Rows per page:\n";
-	$sidebar_html .= "<ul class=\"menu none\">\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == "15") ? "on" : "off").".gif\" alt=\"\" /> <span>15 rows per page</span></a></li>\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == "25") ? "on" : "off").".gif\" alt=\"\" /> <span>25 rows per page</span></a></li>\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == "50") ? "on" : "off").".gif\" alt=\"\" /> <span>50 rows per page</span></a></li>\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("pp" => "100"))."\" title=\"Display 100 Rows Per Page\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == "100") ? "on" : "off").".gif\" alt=\"\" /> <span>100 rows per page</span></a></li>\n";
-	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "&quot;Show Only&quot; settings:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"item\"><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("action" => "filter_defaults"))."\" title=\"Apply default filters\">apply default filters</a></li>\n";
-	$sidebar_html .= "	<li class=\"item\"><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("action" => "filter_removeall"))."\" title=\"Remove all filters\">remove all filters</a></li>\n";
-	$sidebar_html .= "</ul>\n";
+    /**
+     * Determine whether or not this is being called from the admin section.
+     */
+    if ($module_type == "admin") {
+        $module_type = "/admin";
+    } else {
+        $module_type = "";
+    }
 
-	new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
+    $sidebar_html = "";
 
-	$sidebar_html  = "<ul class=\"menu none\">\n";
+    $sidebar_html .= "<ul class=\"menu none\">";
+    $sidebar_html .= "    <li><i class=\"fa fa-filter\"></i> <a href=\"" . ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("action" => "filter_defaults")) . "\">" . $translate->_("Apply Default Filters") . "</a></li>";
+    $sidebar_html .= "    <li><i class=\"fa fa-trash\"></i> <a href=\"" . ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("action" => "filter_removeall")) . "\">" . $translate->_("Remove All Filters") . "</a></li>";
+    $sidebar_html .= "</ul>";
+    $sidebar_html .= "<br /><br />";
+	$sidebar_html .= "<ul class=\"menu none\">";
+    if ($module_type == "/admin") {
+        $sidebar_html .= "<li><img src=\"" . ENTRADA_RELATIVE . "/images/legend-not-accessible.gif\" alt=\"\" /> " . $translate->_("Currently Not Accessible") . "</li>\n";
+    }
+    $sidebar_html .= "    <li><img src=\"" . ENTRADA_RELATIVE . "/images/legend-updated.gif\" alt=\"\" /> " . $translate->_("Recently Updated") . "</li>\n";
+    $sidebar_html .= "    <li><img src=\"" . ENTRADA_RELATIVE . "/images/legend-individual.gif\" alt=\"\" /> " . $translate->_("Individual Learning Event") . "</li>\n";
+    $sidebar_html .= "</ul>\n";
 
-	if ($module_type == "/admin") {
-		$sidebar_html .= "<li><img src=\"".ENTRADA_RELATIVE."/images/legend-not-accessible.gif\" alt=\"\" /> <span>currently not accessible</span></li>\n";
-	}
-
-	$sidebar_html .= "	<li><img src=\"".ENTRADA_RELATIVE."/images/legend-updated.gif\" alt=\"\" /> <span>recently updated</span></li>\n";
-	$sidebar_html .= "	<li><img src=\"".ENTRADA_RELATIVE."/images/legend-individual.gif\" alt=\"\" /> <span>individual learning event</span></li>\n";
-	$sidebar_html .= "</ul>\n";
-
-	new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
+	new_sidebar_item($translate->_("Learning Events"), $sidebar_html, "event-legend", "open");
 }
 
 
@@ -11256,8 +11379,9 @@ function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organi
 		case "faculty" :
 			/**
 			 * Teaching faculty see events which they are involved with by default.
+                         *  Add 'faculty' role. Issue #1236.  Oct 2016 Bob Walker UBC
 			 */
-			if (in_array($role, array("resident", "director", "lecturer", "teacher"))) {
+			if (in_array($role, array("resident", "director", "lecturer", "teacher", "faculty"))) {
 				$filters["teacher"][0] = (int) $proxy_id;
 			}
 		break;
@@ -11873,7 +11997,7 @@ function events_fetch_sorting_query($sort_by = "", $sort_order = "ASC") {
  * Function used by public events and admin events index to generate the SQL queries based on the users
  * filter settings and results that can be iterated through by these views.
  */
-function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $sort_by = "", $sort_order = "", $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15, $community_id = false, $respect_time_release = true) {
+function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $sort_by = "", $sort_order = "", $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15, $community_id = false, $respect_time_release = true, $fetch_colors = false) {
     global $db, $ENTRADA_ACL, $ENTRADA_USER, $ENTRADA_CACHE;
 
     $output = array(
@@ -12005,6 +12129,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
                             `events`.`release_until`,
                             `events`.`updated_date`,
                             `events`.`objectives_release_date`,
+                            `events`.`attendance_required`,
                             `event_audience`.`audience_type`,
                             `courses`.`organisation_id`,
                             `courses`.`course_code`,
@@ -12436,6 +12561,29 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
                     $i++;
                 }
             }
+            if ($fetch_colors) {
+                $event_ids = array();
+                foreach ($learning_events as $event) {
+                    $event_ids[] = $event["event_id"];
+                }
+                $query_colors = "SELECT a.`event_id`, COALESCE(a.`event_color`, b.`course_color`) AS `event_color`
+                                 FROM `events` AS a
+                                 INNER JOIN `courses` AS b ON b.`course_id` = a.`course_id`
+                                 WHERE a.`event_id` IN (".implode(", ", $event_ids).")
+                                 AND b.`course_active` = 1";
+                $event_colors = $db->GetAll($query_colors);
+                if ($event_colors === false) {
+                    application_log("error", "Couldn't get event colors, DB said: \"".$db->ErrorMsg()."\"");
+                } else {
+                    $color_by_event = array();
+                    foreach ($event_colors as $event_color) {
+                        $color_by_event[$event_color["event_id"]] = $event_color["event_color"];
+                    }
+                    foreach ($learning_events as &$ref_event) {
+                        $ref_event["event_color"] = $color_by_event[$ref_event["event_id"]];
+                    }
+                }
+            }
             if ($user_group == "student") {
                 $event_ids = array();
                 foreach ($learning_events as $event) {
@@ -12567,6 +12715,601 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
     return $output;
 }
+/**
+ * Function used by public draft events and admin draft events index to generate the SQL queries based on the users
+ * filter settings and results that can be iterated through by these views.
+ */
+function draft_events_fetch_filtered_draft_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $draft_id = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15, $community_id = false, $respect_time_release = true) {
+        global $db, $ENTRADA_ACL, $ENTRADA_USER, $ENTRADA_CACHE;
+
+        $output = array(
+            "duration_start" => 0,
+            "duration_end" => 0,
+            "total_rows" => 0,
+            "total_pages" => 0,
+            "page_current" => 0,
+            "page_previous" => 0,
+            "page_next" => 0,
+            "result_ids_map" => array(),
+            "events" => array()
+        );
+
+        if (!$proxy_id = (int) $proxy_id) {
+            return false;
+        }
+
+        $user_group = clean_input($user_group);
+        $user_role = clean_input($user_role);
+
+        if (!$organisation_id = (int) $organisation_id) {
+            return false;
+        }
+
+        $date_type = clean_input($date_type);
+
+        if (!$timestamp_start = (int) $timestamp_start) {
+            return false;
+        }
+
+        $timestamp_finish = (int) $timestamp_finish;
+
+        $draft_id = (int) $draft_id;
+
+        if (!is_array($filters)) {
+            $filters = array();
+        }
+
+        $pagination = (bool) $pagination;
+
+        if (!$current_page = (int) $current_page) {
+            $current_page = 1;
+        }
+
+        if (!$results_per_page = (int) $results_per_page) {
+            $results_per_page = 15;
+        }
+
+        $filter_clerkship_events = false;
+
+
+        /**
+         * This fetches the unix timestamps from the first and last second of the day, week, month, year, etc.
+         */
+        $display_duration = fetch_timestamps($date_type, $timestamp_start, $timestamp_finish);
+
+        $output["duration_start"] = $display_duration["start"];
+        $output["duration_end"] = $display_duration["end"];
+
+        $query_events = "";
+
+        $query_events_select = "SELECT '".(int) $respect_time_release."' AS `respect_time_release`,
+                            `draft_events`.`devent_id`,
+                            `draft_events`.`event_id`,
+                            `draft_events`.`course_id`,
+                            `draft_events`.`parent_id`,
+                            `draft_events`.`recurring_id`,
+                            `draft_events`.`event_title`,
+                            `draft_events`.`event_description`,
+                            `draft_events`.`event_duration`,
+                            `draft_events`.`event_message`,
+                            `draft_events`.`event_location`,
+                            `draft_events`.`event_start`,
+                            `draft_events`.`event_finish`,
+                            `draft_events`.`release_date`,
+                            `draft_events`.`release_until`,
+                            `draft_events`.`updated_date`,
+                            `draft_events`.`objectives_release_date`,
+                            `draft_events`.`attendance_required`,
+                            `draft_audience`.`audience_type`,
+                            `courses`.`organisation_id`,
+                            `courses`.`course_code`,
+                            `courses`.`course_name`,
+                            `courses`.`permission`,
+                            `curriculum_lu_types`.`curriculum_type_id`,
+                            `curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
+                            `curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
+                            CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
+                            FROM `draft_events`";
+
+        $query_events_count = "SELECT COUNT(DISTINCT `draft_events`.`event_id`) AS `event_count` FROM `draft_events`";
+
+        /**
+         * If there are filters set by the user, build the SQL to reflect the filters.
+         */
+        if (is_array($filters) && !empty($filters)) {
+            $build_query = array();
+
+            $where_teacher = array();
+            $where_student_course_ids = array();    // Students' enrolled in courses only
+            $where_student_cohorts = array();       // Students' cohort events
+            $where_student_proxy_ids = array();     // Students' indivdual events
+            $where_student_cgroup_ids = array();    // Students' course small groups events
+            $where_cohort = array();
+            $where_course = array();
+            $where_term = array();
+            $where_eventtype = array();
+            $where_clinical_presentation = array();
+            $where_curriculum_objective = array();
+            $where_topic = array();
+            $where_department = array();
+            $join_event_contacts = array();
+
+            $contact_sql = "";
+            $objective_sql = "";
+            $topic_sql = "";
+
+            $query_events .= "  LEFT JOIN `draft_contacts` AS `primary_teacher`
+                            ON `primary_teacher`.`devent_id` = `draft_events`.`devent_id`
+                            AND `primary_teacher`.`contact_order` = '0'
+                            LEFT JOIN `event_eventtypes`
+                            ON `draft_eventtypes`.`devent_id` = `draft_events`.`devent_id`
+                            LEFT JOIN `draft_audience`
+                            ON `draft_audience`.`devent_id` = `draft_events`.`devent_id`
+                            %CONTACT_JOIN%
+                            LEFT JOIN `".AUTH_DATABASE."`.`user_data`
+                            ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
+                            LEFT JOIN `courses`
+                            ON `courses`.`course_id` = `draft_events`.`course_id`
+                            LEFT JOIN `curriculum_lu_types`
+                            ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
+                            %OBJECTIVE_JOIN%
+                            %TOPIC_JOIN%
+                            WHERE `draft_events`.`draft_id` = ".$db->qstr($draft_id)." AND `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
+                            ".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "");
+                            echo $query_events;
+            if (!is_array($filters) || empty($filters)) {
+                // Apply default filters.
+            }
+
+            if (!empty($filters)) {
+                foreach ($filters as $filter_type => $filter_contents) {
+                    if ((is_array($filter_contents)) && (!empty($filter_contents))) {
+                        foreach ($filter_contents as $filter_key => $filter_value) {
+                            switch ($filter_type) {
+                                case "teacher" :
+                                    $where_teacher[] = (int) $filter_value;
+                                    break;
+                                case "student" :
+                                    if (($user_group != "student") || ($filter_value == $proxy_id)) {
+                                        // Students' enrolled in courses only
+                                        $course_ids = groups_get_explicitly_enrolled_course_ids((int) $filter_value, false, $organisation_id);
+                                        if ($course_ids) {
+                                            $where_student_course_ids = $course_ids;
+                                        }
+
+                                        // Students' cohort events
+                                        $cohorts = groups_get_cohorts((int) $filter_value);
+                                        if ($cohorts) {
+                                            foreach ($cohorts as $cohort) {
+                                                $where_student_cohorts[] = $cohort["group_id"];
+                                            }
+                                        }
+
+                                        // Students' indivdual events
+                                        $where_student_proxy_ids[] = (int) $filter_value;
+
+                                        // Students' course small groups events
+                                        $cgroup_ids = course_fetch_enrolled_course_groups((int) $filter_value);
+                                        if ($cgroup_ids) {
+                                            $where_student_cgroup_ids = $cgroup_ids;
+                                        }
+                                    }
+                                    break;
+                                case "group" :
+                                    $where_cohort[] = (int) $filter_value;
+                                    break;
+                                case "course" :
+                                    $where_course[] = (int) $filter_value;
+                                    break;
+                                case "term" :
+                                    $where_term[] = (int) $filter_value;
+                                    break;
+                                case "eventtype" :
+                                    $where_eventtype[] = (int) $filter_value;
+                                    break;
+                                case "department" :
+                                    $where_department[] = (int) $filter_value;
+                                    break;
+                                default :
+                                    continue;
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($where_teacher) {
+                $build_query[] = "(`primary_teacher`.`proxy_id` IN (".implode(", ", $where_teacher).") OR `draft_contacts`.`proxy_id` IN (".implode(", ", $where_teacher)."))";
+            }
+
+            if ($where_student_course_ids || $where_student_cohorts || $where_student_proxy_ids || $where_student_cgroup_ids) {
+                $where_student = array();
+
+                if ($where_student_course_ids) {
+                    $where_student_course_ids = array_unique($where_student_course_ids);
+                    $where_student[] = "(`draft_audience`.`audience_type` = 'course_id' AND `draft_audience`.`audience_value` IN (".implode(", ", $where_student_course_ids)."))";
+                }
+
+                if ($where_student_cohorts) {
+                    $where_student_cohorts = array_unique($where_student_cohorts);
+                    $where_student[] = "(`draft_audience`.`audience_type` = 'cohort' AND `draft_audience`.`audience_value` IN (".implode(", ", $where_student_cohorts)."))";
+                }
+
+                if ($where_student_proxy_ids) {
+                    $where_student_proxy_ids = array_unique($where_student_proxy_ids);
+                    $where_student[] = "(`draft_audience`.`audience_type` = 'proxy_id' AND `draft_audience`.`audience_value` IN (".implode(", ", $where_student_proxy_ids)."))";
+                }
+
+                if ($where_student_cgroup_ids) {
+                    $where_student_cgroup_ids = array_unique($where_student_cgroup_ids);
+                    $where_student[] = "(`draft_audience`.`audience_type` = 'group_id' AND `draft_audience`.`audience_value` IN (".implode(", ", $where_student_cgroup_ids)."))";
+                }
+
+                $build_query[] = "(".implode(" OR ", $where_student).")";
+            }
+
+            if ($where_cohort) {
+                $build_query[] = "(`draft_audience`.`audience_type` = 'cohort' AND `draft_audience`.`audience_value` IN (".implode(", ", $where_cohort)."))";
+            }
+
+            if ($where_course) {
+                $build_query[] = "(`draft_events`.`course_id` IN (".implode(", ", $where_course)."))";
+            }
+
+            if ($where_term) {
+                $build_query[] = "(`curriculum_lu_types`.`curriculum_type_id` IN (".implode(", ", $where_term)."))";
+            }
+
+            if ($where_eventtype) {
+                $build_query[] = "(`draft_eventtypes`.`eventtype_id` IN (".implode(", ", $where_eventtype)."))";
+            }
+
+            if ($build_query) {
+                $query_events .= " AND (".implode(") AND (", $build_query).")";
+            }
+
+            if ($where_teacher) {
+                $contact_sql = "    LEFT JOIN `draft_contacts`
+                                ON `draft_contacts`.`devent_id` = `draft_events`.`devent_id`
+                                AND (`draft_contacts`.`proxy_id` IN (".implode(", ", $where_teacher)."))";
+            }
+
+            if ($where_department) {
+                $event_ids = "";
+
+                // fetch the user_id of members in the selected departments
+                $department_members_query = "   SELECT `a`.`id`
+                                            FROM `".AUTH_DATABASE."`.`user_data` AS `a`
+                                            JOIN `".AUTH_DATABASE."`.`user_departments` AS `b`
+                                            ON `a`.`id` = `b`.`user_id`
+                                            JOIN `".AUTH_DATABASE."`.`departments` AS `c`
+                                            ON `b`.`dep_id` = `c`.`department_id`
+                                            WHERE `b`.`dep_id` IN (".implode(',', $where_department).")
+                                            GROUP BY `a`.`id`";
+                $department_members = $db->GetAll($department_members_query);
+                if ($department_members) {
+                    foreach ($department_members as $member) {
+                        $members_list[] = $member["id"];
+                    }
+
+                    // fetch the event_id the members are assigned to
+                    $department_events_query = "    SELECT `a`.`devent_id`
+                                                FROM `draft_events` AS `a`
+                                                JOIN `draft_contacts` AS `b`
+                                                ON `a`.`devent_id` = `b`.`devent_id`
+                                                WHERE `b`.`proxy_id` IN (".implode(',', $members_list).")
+                                                AND `a`.`draft_id` = ".$db->qstr($draft_id)."
+                                                GROUP BY `a`.`devent_id`";
+                    $department_events = $db->GetAll($department_events_query);
+                    if ($department_events) {
+                        foreach ($department_events as $event) {
+                            $event_list[] = $event["devent_id"];
+                        }
+                    }
+
+                    $event_ids = (!empty($event_list)) ? implode(", ", $event_list) : '';
+                }
+
+                $query_events .= " AND `draft_events`.`devent_id` IN (".$event_ids.")";
+            }
+
+            $query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events);
+
+            $query_events = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_events);
+
+            $query_events = str_replace("%TOPIC_JOIN%", $topic_sql, $query_events);
+        } else {
+            $query_events .= "  LEFT JOIN `draft_contacts`
+                            ON `draft_contacts`.`devent_id` = `draft_events`.`devent_id`
+                            AND `draft_contacts`.`contact_order` = '0'
+                            LEFT JOIN `draft_audience`
+                            ON `draft_audience`.`devent_id` = `draft_events`.`devent_id`
+                            LEFT JOIN `".AUTH_DATABASE."`.`user_data`
+                            ON `".AUTH_DATABASE."`.`user_data`.`id` = `draft_contacts`.`proxy_id`
+                            LEFT JOIN `courses`
+                            ON (`courses`.`course_id` = `draft_events`.`course_id`)
+                            LEFT JOIN `curriculum_lu_types`
+                            ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
+                            WHERE `draft_events`.`draft_id` = ".$db->qstr($draft_id);
+        }
+
+        /**
+         * This builds the counting query that is run to see whether or not
+         * the cache gets hit.
+         */
+
+        $query_events_count .= " " . $query_events;
+
+        $query_events_select .= " " . $query_events . "GROUP BY `draft_events`.`devent_id` ORDER BY `draft_events`.`event_title` DESC, `draft_events`.`event_start` ASC";
+
+        $limitless_query_events = sprintf($query_events_select);
+
+        /**
+         * Provide the previous query so we can have previous / next event links on the details page.
+         */
+        if (session_id()) {
+            $stored_query = false;
+            $stored_events_count = false;
+            if (($community_id && isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"]) || (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"])) {
+                if ($community_id == false) {
+                    if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"])) {
+                        $stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"];
+                        $stored_events_count = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_returned_rows"];
+                    }
+                } else {
+                    if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"])) {
+                        $stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"];
+                        $stored_events_count = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_returned_rows"];
+                    }
+                }
+            }
+
+            $live_events_count = (int) $db->GetOne($query_events_count);
+
+            $current_result_ids_map = $ENTRADA_CACHE->load(($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID());
+
+            if (!$stored_query || $stored_query != $limitless_query_events || !isset($current_result_ids_map) || !$current_result_ids_map || !$stored_events_count || ($live_events_count != $stored_events_count)) {
+                $all_events = $db->GetAll($limitless_query_events);
+                $result_ids_map = array();
+                if ($all_events) {
+                    if ($user_group == "student") {
+                        $enroled_courses = groups_get_enrolled_course_ids($proxy_id, true, $output["duration_start"], $output["duration_end"]);
+                    } else {
+                        $enroled_courses = array();
+                    }
+
+                    foreach ($all_events as $map_event) {
+                        if ($user_group != "student" || in_array($map_event["course_id"], $enroled_courses)) {
+                            if ($respect_time_release) {
+                                $event_resource = new EventResource($map_event["event_id"], $map_event["course_id"], $map_event["organisation_id"]);
+                                if (((!$map_event["release_date"]) || ($map_event["release_date"] <= time())) && ((!$map_event["release_until"]) || ($map_event["release_until"] >= time())) && $ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
+                                    $result_ids_map[] = $map_event["event_id"];
+                                }
+                            } else {
+                                $result_ids_map[] = $map_event["event_id"];
+                            }
+                        }
+                    }
+                }
+
+                $ENTRADA_CACHE->save($result_ids_map, ($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID(), array("events", "community"), 10800);
+            } else {
+                $result_ids_map = $current_result_ids_map;
+            }
+
+            $output["total_rows"] = count($result_ids_map);
+
+            if ($output["total_rows"] <= $results_per_page) {
+                $output["total_pages"] = 1;
+            } elseif (($output["total_rows"] % $results_per_page) == 0) {
+                $output["total_pages"] = (int) ($output["total_rows"] / $results_per_page);
+            } else {
+                $output["total_pages"] = (int) ($output["total_rows"] / $results_per_page) + 1;
+            }
+
+            /**
+             * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
+             */
+            if ($current_page) {
+                $output["page_current"] = (int) trim($current_page);
+
+                if (($output["page_current"] < 1) || ($output["page_current"] > $output["total_pages"])) {
+                    $output["page_current"] = 1;
+                }
+            } else {
+                $output["page_current"] = 1;
+            }
+
+            $output["page_previous"] = (($output["page_current"] > 1) ? ($output["page_current"] - 1) : false);
+            $output["page_next"] = (($output["page_current"] < $output["total_pages"]) ? ($output["page_current"] + 1) : false);
+            $output["result_ids_map"] = $result_ids_map;
+
+            if ($pagination) {
+                $event_ids_string = "";
+                for ($i = (($output["page_current"] - 1) * $results_per_page); $i < ($output["page_current"] * $results_per_page); $i++) {
+                    if (($i + 1) > count($result_ids_map)) {
+                        break;
+                    }
+                    $event_ids_string .= ($event_ids_string ? ", " : "").$db->qstr($result_ids_map[$i]);
+                }
+
+                if (!strlen($event_ids_string)) {
+                    $event_ids_string = "0";
+                }
+
+                $query_events = "SELECT `draft_events`.`devent_id`,
+                            `draft_events`.`course_id`,
+                            `draft_events`.`parent_id`,
+                            `draft_events`.`recurring_id`,
+                            `draft_events`.`event_title`,
+                            `draft_events`.`event_description`,
+                            `draft_events`.`event_duration`,
+                            `draft_events`.`event_message`,
+                            `draft_events`.`event_location`,
+                            `draft_events`.`event_start`,
+                            `draft_events`.`event_finish`,
+                            `draft_events`.`release_date`,
+                            `draft_events`.`release_until`,
+                            `draft_events`.`updated_date`,
+                            `draft_events`.`objectives_release_date`,
+                            `draft_audience`.`audience_type`,
+                            `courses`.`organisation_id`,
+                            `courses`.`course_code`,
+                            `courses`.`course_name`,
+                            `courses`.`permission`,
+                            `curriculum_lu_types`.`curriculum_type_id`,
+                            `curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
+                            `curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
+                            CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
+                            FROM `draft_events`
+                            LEFT JOIN `draft_contacts`
+                            ON `draft_contacts`.`devent_id` = `draft_events`.`devent_id`
+                            AND `draft_contacts`.`contact_order` = '0'
+                            LEFT JOIN `draft_audience`
+                            ON `draft_audience`.`event_id` = `draft_events`.`event_id`
+                            LEFT JOIN `".AUTH_DATABASE."`.`user_data`
+                            ON `".AUTH_DATABASE."`.`user_data`.`id` = `draft_contacts`.`proxy_id`
+                            LEFT JOIN `courses`
+                            ON (`courses`.`course_id` = `draft_events`.`course_id`)
+                            LEFT JOIN `curriculum_lu_types`
+                            ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
+                            WHERE `draft_events`.`devent_id` IN (".$event_ids_string.")
+                            GROUP BY `draft_events`.`devent_id`
+                            ORDER BY `draft_events`.`event_title` DESC, `draft_events`.`event_start` ASC";
+                $query_events = sprintf($query_events);
+                $learning_events = $db->GetAll($query_events);
+            } else {
+                $learning_events = $db->GetAll($limitless_query_events);
+            }
+
+            if ($learning_events) {
+                if ($respect_time_release) {
+                    $i = 0;
+                    foreach ($learning_events as $event) {
+                        if ($event["course_id"]) {
+                            $event_resource = new EventResource($event["devent_id"], $event["course_id"], $event["organisation_id"]);
+                        }
+                        if ((($event["release_date"] != 0 && $event["release_date"] > time()) || ($event["release_until"] != 0 && $event["release_until"] < time())) || !$ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
+                            unset($learning_events[$i]);
+                        }
+                        $i++;
+                    }
+                }
+                if ($user_group == "student") {
+                    $event_ids = array();
+                    foreach ($learning_events as $event) {
+                        $event_ids[] = $event["devent_id"];
+                    }
+                    if (!empty($event_ids)) {
+                        $query = "  SELECT `action_value` AS `event_id`, MAX(`statistics`.`timestamp`) AS `last_visited` FROM `statistics`
+                                WHERE `action_value` IN (".implode(", ", $event_ids).")
+                                AND `module` = 'events'
+                                AND `proxy_id` = ".$db->qstr($proxy_id)."
+                                AND `action` = 'view'
+                                AND `action_field` = 'event_id'
+                                GROUP BY `proxy_id`, `module`, `action_field`, `action`, `action_value`";
+                        $last_visited_dates = $db->GetAll($query);
+                        if (!empty($last_visited_dates)) {
+                            $dates_array = array();
+                            foreach ($last_visited_dates as $event_last_visited) {
+                                $dates_array[$event_last_visited["event_id"]] = $event_last_visited["last_visited"];
+                            }
+                            foreach ($learning_events as &$event) {
+                                if (array_key_exists($event["event_id"], $dates_array)) {
+                                    $event["last_visited"] = $dates_array[$event["event_id"]];
+                                }
+                            }
+                        }
+                    }
+
+                    /**
+                     * Include custom times only from the Learning Events.
+                     */
+                    foreach ($learning_events as &$event) {
+                        $audience_types = array();
+                        $event["custom_time"] = 0;
+
+                        $query = " SELECT *
+                                FROM `draft_audience`
+                                WHERE `devent_id` = ?";
+                        $results = $db->GetAll($query, array($event["devent_id"]));
+                        if ($results) {
+                            foreach ($results as $key => $result) {
+                                if ($result["custom_time"]) {
+                                    switch ($result["audience_type"]) {
+                                        case "cohort":
+                                            //check membership in cohort
+                                            //if true add to $audience_types["cohort"]
+                                            if (in_array($result["audience_value"], $where_student_cohorts)) {
+                                                $event["custom_time"] = 1;
+                                                $audience_types["cohort"] = array("true" => true, "key" => $key);
+                                            }
+                                            break;
+                                        case "group_id":
+                                            //check membership in course group
+                                            //if true add to $audience_types["group_id"]
+                                            if (in_array($result["audience_value"], $where_student_cgroup_ids)) {
+                                                $event["custom_time"] = 1;
+                                                $audience_types["group_id"] = array("true" => true, "key" => $key);
+                                            }
+                                            break;
+                                        case "proxy_id":
+                                            if ($result["audience_value"] == $proxy_id) {
+                                                $event["custom_time"] = 1;
+                                                $audience_types["proxy_id"] = array("true" => true, "key" => $key);
+                                            }
+                                            break;
+                                    }
+                                }
+                            }
+
+                            $event_audience_array = $audience_types;
+                            $event["audience_array"] = $event_audience_array;
+                            if ($event["custom_time"]) {
+                                if ($audience_types["proxy_id"]["true"]) {
+                                    $event["custom_type"] = "proxy_id";
+                                    $event["custom_time_start"] = $results[$audience_types["proxy_id"]["key"]]["custom_time_start"];
+                                    $event["custom_time_end"] = $results[$audience_types["proxy_id"]["key"]]["custom_time_end"];
+                                } else if ($audience_types["group_id"]["true"]) {
+                                    $event["custom_type"] = "group_id";
+                                    $event["custom_time_start"] = $results[$audience_types["group_id"]["key"]]["custom_time_start"];
+                                    $event["custom_time_end"] = $results[$audience_types["group_id"]["key"]]["custom_time_end"];
+                                } else if ($audience_types["cohort"]["true"]) {
+                                    $event["custom_type"] = "cohort";
+                                    $event["custom_time_start"] = $results[$audience_types["cohort"]["key"]]["custom_time_start"];
+                                    $event["custom_time_end"] = $results[$audience_types["cohort"]["key"]]["custom_time_end"];
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $parent_ids = array();
+                foreach ($learning_events as $temp_event) {
+                    if ($temp_event["parent_id"]) {
+                        $parent_ids[] = $temp_event["parent_id"];
+                    }
+                }
+
+                if (!empty($parent_ids)) {
+                    $query = "  SELECT * FROM `draft_events`
+                            WHERE `devent_id` IN (".implode(", ", $parent_ids).")
+                            GROUP BY `devent_id`";
+                    $parent_events = $db->GetAll($query);
+                    if (!empty($parent_events)) {
+                        $parent_events_array = array();
+                        foreach ($parent_events as $parent_event) {
+                            $parent_events_array[$parent_event["devent_id"]] = $parent_event;
+                        }
+                    }
+                }
+                $output["events"] = $learning_events;
+            }
+        }
+
+        return $output;
+    }
 
 function events_fetch_transversal_ids ($event_id, $community_id) {
 	global $ENTRADA_CACHE, $ENTRADA_USER;
@@ -13260,7 +14003,7 @@ function assessment_objectives_display_leaf($objective){
 				<?php
 				$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
 				if ($set) {
-					echo "From the " . $translate->_("Objective Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
+					echo "From the " . $translate->_("Curriculum Tag Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
 				}
 				?>
 				<?php echo $objective["objective_description"];?>
@@ -13477,7 +14220,7 @@ function event_objectives_display_leaf($objective, $editable = true){
                     <?php
                     $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
                     if ($set) {
-                        echo "From the " . $translate->_("Objective Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
+                        echo "From the " . $translate->_("Curriculum Tag Set") . ": <strong>".$set["objective_name"]."</strong><br/>";
                     }
                     ?>
                     <?php echo $objective["objective_description"];?>
@@ -13948,6 +14691,7 @@ function regionaled_apartment_occupants($apartment_id = 0, $event_start = 0, $ev
 					".$db->qstr($event_finish)." BETWEEN a.`inhabiting_start` AND a.`inhabiting_finish` OR
 					a.`inhabiting_start` BETWEEN ".$db->qstr($event_start)." AND ".$db->qstr($event_finish)." OR
 					a.`inhabiting_finish` BETWEEN ".$db->qstr($event_start)." AND ".$db->qstr($event_finish).")
+					GROUP BY a.`aschedule_id`					
 					ORDER BY a.`inhabiting_start` ASC";
 		$results = $db->GetAll($query);
 		if ($results) {
@@ -15562,11 +16306,12 @@ function get_user_departments($user_id, $join_on_organisation = true) {
 				JOIN `".AUTH_DATABASE."`.`user_access` AS b
 				ON a.`user_id` = b.`user_id`
 				JOIN `".AUTH_DATABASE."`.`departments` AS c
-				ON a.`dep_id` = c.`department_id` " .
+				ON a.`dep_id` = c.`department_id`" .
 				($join_on_organisation ? "AND b.`organisation_id` = c.`organisation_id`" : "") . "
-				WHERE a.`user_id` = ".$db->qstr($user_id);
+				WHERE a.`user_id` = ?
+				GROUP BY c.`department_id`";
 
-	$results = $db->GetAll($query);
+	$results = $db->GetAll($query, array($user_id));
 
 	return $results;
 }
@@ -16335,109 +17080,6 @@ function evaluations_fetch_attempts($evaluation_id = 0) {
 	}
 
 	return 0;
-}
-
-function evaluation_save_response($eprogress_id, $eform_id, $equestion_id, $eqresponse_id, $comments) {
-	global $db, $ENTRADA_USER;
-	/**
-	 * Check to ensure that this response is associated with this question.
-	 */
-	if ($eqresponse_id !== 0) {
-		$query	= "SELECT * FROM `evaluations_lu_question_responses` WHERE `eqresponse_id` = ".$db->qstr($eqresponse_id)." AND `equestion_id` = ".$db->qstr($equestion_id);
-	} else {
-		$query	= "SELECT * FROM `evaluation_form_questions` AS a JOIN `evaluations_lu_questions` AS b ON a.`equestion_id` = b.`equestion_id` WHERE a.`equestion_id` = ".$db->qstr($equestion_id)." AND a.`eform_id` = ".$db->qstr($eform_id)." AND b.`allow_comments` = 1";
-	}
-	$result	= $db->GetRow($query);
-	if ($result) {
-		$query	= "SELECT a.`efquestion_id` FROM `evaluation_form_questions` AS a JOIN `evaluations_lu_questions` AS b ON a.`equestion_id` = b.`equestion_id` WHERE a.`equestion_id` = ".$db->qstr($equestion_id)." AND a.`eform_id` = ".$db->qstr($eform_id);
-		$efquestion_id = $db->GetOne($query);
-		/**
-		 * See if they have already responded to this question or not as this
-		 * determines whether an INSERT or an UPDATE is required.
-		 */
-		$query = "	SELECT `eresponse_id`, `eqresponse_id`, `comments`, `eprogress_id`
-					FROM `evaluation_responses`
-					WHERE `eprogress_id` = ".$db->qstr($eprogress_id)."
-					AND `eform_id` = ".$db->qstr($eform_id)."
-					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-					AND `efquestion_id` = ".$db->qstr($efquestion_id);
-		$result	= $db->GetRow($query);
-		if ($result) {
-			$query = "SELECT d.`eresponse_id` FROM `evaluation_rubric_questions` AS a
-						JOIN `evaluations_lu_questions` AS b
-						ON a.`equestion_id` = b.`equestion_id`
-						JOIN `evaluation_form_questions` AS c
-						ON b.`efquestion_id` = c.`efquestion_id`
-						JOIN `evaluation_responses` AS d
-						ON a.`equestion_id` = d.`equestion_id`
-						AND d.`eprogress_id` = ".$db->qstr($result["eprogress_id"])."
-						WHERE a.`erubric_id` = (
-							SELECT `erubric_id` FROM `evaluation_rubric_questions`
-							WHERE `equestion_id` = ".$db->qstr($equestion_id)."
-						)
-						ORDER BY c.`question_order` ASC
-						LIMIT 0, 1";
-			$comment_response_id = $db->GetOne($query);
-            /**
-             * Checks to see if the response is different from what was previously
-             * stored in the event_evaluation_responses table.
-             */
-			if ($eqresponse_id != $result["eqresponse_id"] || $comments != $result["comments"]) {
-                if ($eqresponse_id != $result["eqresponse_id"] && $eqresponse_id == 0) {
-                    $eqresponse_id = $result["eqresponse_id"];
-                }
-				$evaluation_response_array	= array (
-					"eqresponse_id" => $eqresponse_id,
-					"efquestion_id" => $efquestion_id,
-					"comments" => (!$comment_response_id ? $comments : NULL),
-					"updated_date" => time(),
-					"updated_by" => $ENTRADA_USER->getID()
-				);
-				if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "UPDATE", "`eresponse_id` = ".$db->qstr($result["eresponse_id"]))) {
-					if ($comment_response_id) {
-						$evaluation_response_array	= array (
-							"efquestion_id" => $efquestion_id,
-							"comments" => $comments,
-							"updated_date" => time(),
-							"updated_by" => $ENTRADA_USER->getID()
-						);
-						if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "UPDATE", "`eresponse_id` = ".$db->qstr($comment_response_id))) {
-							return true;
-						} else {
-							application_log("error", "Unable to update the comments for a question that has already been recorded. Database said: ".$db->ErrorMsg());
-						}
-					} else {
-						return true;
-					}
-				} else {
-					application_log("error", "Unable to update a response to a question that has already been recorded. Database said: ".$db->ErrorMsg());
-				}
-			} else {
-				return true;
-			}
-		} else {
-			$evaluation_response_array	= array (
-				"eprogress_id" => $eprogress_id,
-				"eform_id" => $eform_id,
-				"proxy_id" => $ENTRADA_USER->getID(),
-				"efquestion_id" => $efquestion_id,
-				"eqresponse_id" => $eqresponse_id,
-				"comments" => $comments,
-				"updated_date" => time(),
-				"updated_by" => $ENTRADA_USER->getID()
-			);
-
-			if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "INSERT")) {
-				return true;
-			} else {
-				application_log("error", "Unable to record a response to a question that was submitted. Database said: ".$db->ErrorMsg());
-			}
-		}
-	} else {
-		application_log("error", "A submitted eqresponse_id was not a valid response for the equestion_id that was provided when attempting to submit a response to a question.");
-	}
-
-	return false;
 }
 
 function evaluation_generate_description($min_submittable = 0, $evaluation_questions = 1, $evaluation_attempts = 0, $evaluation_finish = 0) {
@@ -17262,21 +17904,22 @@ function groups_get_all_groups($organisation_id = 0, $only_active_groups = false
  * @param int $organisation_id
  * @return array $groups
  */
-function groups_get_active_cohorts($organisation_id = 0) {
+function groups_get_active_cohorts($organisation_id = 0, $limit = 6) {
 	global $db;
 
 	$organisation_id = (int) $organisation_id;
+	$limit = (int) $limit;
 
 	if ($organisation_id) {
 		$query = "	SELECT a.*
 					FROM `groups` AS a
 					JOIN `group_organisations` AS b
 					ON a.`group_id` = b.`group_id`
-					WHERE b.`organisation_id` = ".$db->qstr($organisation_id)."
+					WHERE b.`organisation_id` = ?
 					AND a.`group_type` = 'cohort'
-					ORDER BY a.`group_id` DESC
-					LIMIT 0, 4";
-		$cohorts = $db->GetAll($query);
+					ORDER BY a.`group_name` DESC
+					LIMIT 0, ?";
+		$cohorts = $db->GetAll($query, array($organisation_id, $limit));
 		if ($cohorts) {
 			return $cohorts;
 		}
@@ -18037,10 +18680,8 @@ function load_active_organisation($organisation_id = 0, $user_access_id = 0) {
 }
 
 function get_allowed_mime_types($identifier = "default") {
-    global $ENTRADA_SETTINGS;
-
     $valid_mimetypes = array();
-    $json_data = $ENTRADA_SETTINGS->fetchValueByShortname("valid_mimetypes");
+    $json_data = Entrada_Settings::fetchValueByShortname("valid_mimetypes");
     if ($json_data) {
         $all_mimetypes = json_decode($json_data, true);
         if (!empty($all_mimetypes) && is_array($all_mimetypes)) {
@@ -18055,4 +18696,211 @@ function get_allowed_mime_types($identifier = "default") {
     }
 
     return $valid_mimetypes;
+}
+
+function assessments_items_subnavigation($tab = "items") {
+    global $ENTRADA_ACL;
+
+    echo "<div class=\"no-printing\">\n";
+    echo "    <ul class=\"nav nav-tabs\">\n";
+    if($ENTRADA_ACL->amIAllowed("assessments", "update", false)) {
+        echo "<li".($tab=="items"?" class=\"active\"":"")."><a href=\"".ENTRADA_RELATIVE."/admin/assessments/items\">Items</a></li>\n";
+        if(!isset($_GET["id"])) {
+            echo "<li" . ($tab == "rubrics" ? " class=\"active\"" : "") . "><a href=\"" . ENTRADA_RELATIVE . "/admin/assessments/rubrics\">Grouped Items</a></li>\n";
+        }
+    }
+    echo "	</ul>\n";
+    echo "</div>\n";
+}
+
+function fetchAssessmentTargets($adistibution_id) {
+    global $ENTRADA_USER;
+    $targets = Models_Assessments_Distribution_Target::fetchAllByDistributionID($adistibution_id);
+    $target_members = array();
+
+    if ($targets) {
+        foreach($targets as $target) {
+            switch($target->getTargetType()) {
+                case "proxy_id":
+                    $user = User::fetchRowByID($target->getTargetID());
+                    if ($user) {
+                        $target_members[] = array("name" => $user->getFullname(true), "proxy_id" => $user->getProxyId());
+                    }
+                    break;
+                case "group_id":
+                    $group_members = Models_Group_Member::getAssessmentGroupMembers($ENTRADA_USER->getActiveOrganisation(), $target->getTargetID());
+                    if ($group_members) {
+                        foreach($group_members as $member) {
+                            $target_members[] = array("name" => $member["name"], "proxy_id" => $member["proxy_id"]);
+                        }
+                    }
+                    break;
+                case "cgroup_id":
+
+                    break;
+                case "schedule_id":
+                    $schedule = Models_Schedule::fetchRowByID($target->getTargetID());
+                    if ($schedule->getScheduleParentID()) {
+                        $schedule_parent = Models_Schedule::fetchRowByID($schedule->getScheduleParentID());
+                        $target_text = $schedule_parent->getTitle();
+                    } else {
+                        $target_text = $schedule->getTitle();
+                    }
+
+                    $target_members[] = array("name" => $target_text, "schedule_id" => $target->getTargetID());
+                    break;
+            }
+        }
+    }
+
+    return $target_members;
+}
+
+function fetchFormTypeTitle($distribution_id) {
+    $target = Models_Assessments_Distribution_Target::fetchRowByDistributionID($distribution_id);
+    //$target_type_option = Models_Assessments_Distribution_TargetTypesOptions::fetchRowByID($target->getAdttoID());
+    //$target_type = Models_Assessments_Distribution_TargetType::fetchRowByID($target_type_option->getAdttypeID());
+    //$target_option = Models_Assessments_Distribution_TargetOption::fetchRowByID($target_type_option->getAdtoptionID());
+    $form_type_data = array();
+
+    if ($target) {
+        switch($target->getTargetType()) {
+            case "proxy_id":
+                $user = User::fetchRowByID($target->getTargetID());
+                $form_type_data["title"] = $user->getFullname(true);
+                $form_type_data["type"] = "proxy_id";
+                break;
+            case "cgroup_id":
+                $course = Models_Course::fetchRowByID($target->getTargetID());
+                $form_type_data["title"] = "";
+                if ($course) {
+                    $form_type_data["title"] = $course->getCourseName();
+                }
+                $form_type_data["type"] = "course_id";
+                break;
+            case "group_id":
+                $group = Models_Group::fetchRowByID($target->getTargetID());
+                $form_type_data["title"] = "Group Name Not Found";
+                /*if ($target_option && $group) {
+                    switch($target_option->getName()) {
+                        case "group":
+                            $form_type_data["title"] = $group->getGroupName();
+                            break;
+                        case "individuals":
+                            $form_type_data["title"] = $group->getGroupName();
+                            break;
+                        case "schedule":
+                            $form_type_data["title"]= $group->getGroupName();
+                            break;
+                    }
+                }*/
+                $form_type_data["type"] = "group_id";
+                break;
+            case "cgroup_id":
+                $form_type_data["title"] = "Assessment of Learners";
+                $form_type_data["type"] = "cgroup_id";
+                break;
+            case "schedule_id":
+                $schedule = Models_Schedule::fetchRowByID($target->getTargetID());
+                if ($schedule->getScheduleParentID()) {
+                    $schedule_parent = Models_Schedule::fetchRowByID($schedule->getScheduleParentID());
+                    $form_type_data["title"] = $schedule_parent->getTitle();
+                } else {
+                    $form_type_data["title"] = $schedule->getTitle();
+                }
+                $form_type_data["type"] = "schedule_id";
+                break;
+            default:
+                $form_type_data["title"] = "";
+                $form_type_data["type"] = "";
+                break;
+        }
+    }
+
+    return $form_type_data;
+}
+
+function fetchTargetStatus($targets, $assessor, $schedule_child) {
+    global $ENTRADA_USER;
+
+    $progress_value = array();
+    if ($targets) {
+        $target_num = 0;
+        $progress_value["name"] = "Awaiting Completion";
+        $progress_value["shortname"] = "awaitingcompletion";
+        foreach($targets as $t) {
+            $progress = Models_Assessments_Progress::fetchRowByAdistributionIDAssessorTypeAssessorValueTargetRecordIDLearningContextID($assessor->getAdistributionID(), $ENTRADA_USER->getActiveId(), $t["proxy_id"], $schedule_child->getID());
+            if ($progress && $progress->getProgressValue() == "inprogress") {
+                $progress_value["name"] = "In Progress";
+                $progress_value["shortname"] = "inprogress";
+            }
+            if ($progress && $progress->getProgressValue() == "complete") {
+                $target_num++;
+            }
+        }
+        if ($target_num == count($targets)) {
+            $progress_value["name"] = "Complete";
+            $progress_value["shortname"] = "complete";
+        }
+    }
+    return $progress_value;
+}
+
+function fetchUserPhoto($proxy_id) {
+    global $ENTRADA_ACL, $db;
+
+    $user = User::fetchRowByID($proxy_id);
+    $user = $user->toArray();
+
+    $image = "";
+
+    $query			= "SELECT `privacy_level` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($proxy_id);
+    $privacy_level	= $db->GetOne($query);
+
+    $official_file_active	= false;
+    $uploaded_file_active	= false;
+
+    /**
+     * If the photo file actually exists, and either
+     * 	If the user is in an administration group, or
+     *  If the user is trying to view their own photo, or
+     *  If the proxy_id has their privacy set to "Any Information"
+     */
+    if ((@file_exists(STORAGE_USER_PHOTOS."/".$proxy_id."-official")) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($proxy_id, (int) $privacy_level, "official"), "read"))) {
+        $official_file_active	= true;
+    }
+
+    /**
+     * If the photo file actually exists, and
+     * If the uploaded file is active in the user_photos table, and
+     * If the proxy_id has their privacy set to "Basic Information" or higher.
+     */
+    $query			= "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($proxy_id);
+    $photo_active	= $db->GetOne($query);
+    if ((@file_exists(STORAGE_USER_PHOTOS."/".$proxy_id."-upload")) && ($photo_active) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($proxy_id, (int) $privacy_level, "upload"), "read"))) {
+        $uploaded_file_active = true;
+    }
+    $image .= "<div id=\"img-holder-".$proxy_id."\" class=\"img-holder pull-left\">";
+    if ($official_file_active) {
+        $image .= "		<img id=\"official_photo_".$proxy_id."\" class=\"official people-search-thumb img-rounded\" src=\"".webservice_url("photo", array($proxy_id, "official"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($user["prefix"]." ".$user["firstname"]." ".$user["lastname"])."\" title=\"".html_encode($user["prefix"]." ".$user["firstname"]." ".$user["lastname"])."\" />\n";
+    }
+
+    if ($uploaded_file_active) {
+        $image .= "		<img id=\"uploaded_photo_".$proxy_id."\" class=\"uploaded people-search-thumb img-rounded\" src=\"".webservice_url("photo", array($proxy_id, "upload"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($user["prefix"]." ".$user["firstname"]." ".$user["lastname"])."\" title=\"".html_encode($user["prefix"]." ".$user["firstname"]." ".$user["lastname"])."\" />\n";
+    }
+
+    if (($official_file_active) || ($uploaded_file_active)) {
+        $image .= "		<a id=\"zoomin_photo_".$proxy_id."\" class=\"zoomin\" onclick=\"growPic($('official_photo_".$proxy_id."'), $('uploaded_photo_".$proxy_id."'), $('official_link_".$proxy_id."'), $('uploaded_link_".$proxy_id."'), $('zoomout_photo_".$proxy_id."'));\">+</a>";
+        $image .= "		<a id=\"zoomout_photo_".$proxy_id."\" class=\"zoomout\" onclick=\"shrinkPic($('official_photo_".$proxy_id."'), $('uploaded_photo_".$proxy_id."'), $('official_link_".$proxy_id."'), $('uploaded_link_".$proxy_id."'), $('zoomout_photo_".$proxy_id."'));\"></a>";
+    } else {
+        $image .= "		<img class=\"media-object people-search-thumb img-rounded\" src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+    }
+
+    if (($official_file_active) && ($uploaded_file_active)) {
+        $image .= "		<a id=\"official_link_".$proxy_id."\" class=\"img-selector one\" onclick=\"showOfficial($('official_photo_".$proxy_id."'), $('official_link_".$proxy_id."'), $('uploaded_link_".$proxy_id."'));\" href=\"javascript: void(0);\">1</a>";
+        $image .= "		<a id=\"uploaded_link_".$proxy_id."\" class=\"img-selector two\" onclick=\"hideOfficial($('official_photo_".$proxy_id."'), $('official_link_".$proxy_id."'), $('uploaded_link_".$proxy_id."'));\" href=\"javascript: void(0);\">2</a>";
+    }
+    $image .= "</div>";
+
+    return $image;
 }

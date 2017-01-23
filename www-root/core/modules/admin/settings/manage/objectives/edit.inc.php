@@ -48,15 +48,18 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 	}
 
 	if ($OBJECTIVE_ID) {
-		$query = "	SELECT a.*, GROUP_CONCAT(c.`audience_value`) AS `audience` FROM `global_lu_objectives` AS a
+		$query = "	SELECT a.*, GROUP_CONCAT(c.`audience_value`) AS `audience`, d.`standard` FROM `global_lu_objectives` AS a
 					JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
 					LEFT JOIN `objective_audience` AS c
 					ON a.`objective_id` = c.`objective_id`
 					AND b.`organisation_id` = c.`organisation_id`
+					LEFT JOIN `global_lu_objective_sets` AS d
+					ON a.`objective_set_id` = d.`objective_set_id`
 					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)."
 					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-					AND a.`objective_active` = '1'";					
+					AND a.`objective_active` = '1'
+					AND d.`deleted_date` IS NULL";
 		$objective_details	= $db->GetRow($query);
 		if ($MODE == "ajax") {
 			ob_clear_open_buffers();
@@ -267,20 +270,12 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 							case 1 :
 							default :
 								?>
-								<script type="text/javascript">
-								function selectObjective(parent_id, objective_id) {
-									new Ajax.Updater('m_selectObjectiveField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/objectives-list.api.php', {parameters: {'pid': parent_id, 'id': objective_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
-									return;
-								}
-								function selectOrder(objective_id, parent_id) {
-									new Ajax.Updater('m_selectOrderField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/objectives-list.api.php', {parameters: {'id': objective_id, 'type': 'order', 'pid': parent_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
-									return;
-								}
-								jQuery(function(){
-									selectObjective(<?php echo (isset($objective_details["objective_parent"]) && $objective_details["objective_parent"] ? $objective_details["objective_parent"] : "0"); ?>, <?php echo $OBJECTIVE_ID; ?>);
-									selectOrder(<?php echo $OBJECTIVE_ID; ?>, <?php echo (isset($objective_details["objective_parent"]) && $objective_details["objective_parent"] ? $objective_details["objective_parent"] : "0"); ?>);
-								});
-								</script>
+                                <script type="text/javascript">
+                                jQuery(function(){
+                                    selectObjective('#m_selectObjectiveField_<?php echo $time; ?>', <?php echo (isset($objective_details["objective_parent"]) && $objective_details["objective_parent"] ? $objective_details["objective_parent"] : "0"); ?>, <?php echo $OBJECTIVE_ID; ?>);
+                                    selectOrder('#m_selectOrderField_<?php echo $time; ?>', <?php echo $OBJECTIVE_ID; ?>, <?php echo (isset($objective_details["objective_parent"]) && $objective_details["objective_parent"] ? $objective_details["objective_parent"] : "0"); ?>);
+                                });
+                                </script>
 
 								<div class="row-fluid">
 									<h2>Curriculum Tag<?php echo ($objective_details["objective_parent"] == 0) ? " Set" : ""; ?> Details</h2>
@@ -393,6 +388,25 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 						}
 
 						/**
+						 * Required field "shortname" / Tag Set Shortname
+						 */
+						if (isset($_POST["objective_shortname"]) && ($objective_shortname = clean_input($_POST["objective_shortname"], array("notags", "trim")))) {
+							$PROCESSED["objective_shortname"] = $objective_shortname;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>Tag Set Shortname</strong> is a required field.";
+						}
+
+						/**
+						 * Non-required field "standard" / Tag Set Standard
+						 */
+						if (isset($_POST["standard"]) && ($tmp_input = clean_input($_POST["standard"], array("trim", "int")))) {
+							$PROCESSED["standard"] = $tmp_input;
+						} else {
+							$PROCESSED["standard"] = 0;
+						}
+
+						/**
 						 * Non-required field "objective_description" / Tag Set Description
 						 */
 						if (isset($_POST["objective_description"]) && ($objective_description = clean_input($_POST["objective_description"], array("notags", "trim")))) {
@@ -470,48 +484,81 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 							$PROCESSED["updated_date"] = time();
 							$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
-							if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "UPDATE", "`objective_id` = ".$db->qstr($OBJECTIVE_ID))) {
+							$method = "update";
+							$objective_set_array = array();
+							$objective_set_model = new Models_ObjectiveSet();
+							$objective_set = $objective_set_model->fetchRowByID($objective_details["objective_set_id"]);
 
-								$query = "DELETE FROM `objective_audience` WHERE `objective_id` = ".$db->qstr($OBJECTIVE_ID);
-								if ($db->Execute($query)) {
-									if ($objective_details["objective_parent"] == 0 || $PROCESSED["objective_parent"] == 0) {
-										if ($PROCESSED["objective_audience"] == "all" || $PROCESSED["objective_audience"] == "none") {
-											$query = "	INSERT INTO `objective_audience` (`objective_id`, `organisation_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
-														VALUES(".$db->qstr($OBJECTIVE_ID).", ".$db->qstr($ORGANISATION_ID).", ".$db->qstr("course").", ".$db->qstr($PROCESSED["objective_audience"]).", ".$db->qstr(time()).", ".$db->qstr($ENTRADA_USER->getID()).")";
-											if (!$db->Execute($query)) {
-												add_error("An error occurred while updating objective audience.");
-											}
-										} else if ($PROCESSED["objective_audience"] == "selected" && is_array($PROCESSED["course_ids"]) && !empty($PROCESSED["course_ids"])) {
-											foreach ($PROCESSED["course_ids"] as $course => $course_id) {
+							if (!$objective_set) {
+								$objective_set = new Models_ObjectiveSet();
+								$method = "insert";
+								$objective_set_array["created_date"] = time();
+								$objective_set_array["created_by"] = $ENTRADA_USER->getActiveId();
+							} else {
+								$objective_set_array["created_date"] = $objective_set->getCreatedDate();
+								$objective_set_array["created_by"] = $objective_set->getCreatedBy();
+							}
+
+							$objective_set_array["title"] = $PROCESSED["objective_name"];
+							$objective_set_array["description"] = $PROCESSED["objective_description"];
+							$objective_set_array["shortname"] = $PROCESSED["objective_shortname"];
+							$objective_set_array["start_date"] = null;
+							$objective_set_array["end_date"] = null;
+							$objective_set_array["standard"] = $PROCESSED["standard"];
+							$objective_set_array["updated_date"] = $PROCESSED["updated_date"];
+							$objective_set_array["updated_by"] = $PROCESSED["updated_by"];
+
+							if ($objective_set->fromArray($objective_set_array)->$method()) {
+								if ($method == "insert") {
+									$PROCESSED["objective_set_id"] = $db->Insert_Id();
+								}
+
+								if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "UPDATE", "`objective_id` = " . $db->qstr($OBJECTIVE_ID))) {
+									$query = "DELETE FROM `objective_audience` WHERE `objective_id` = " . $db->qstr($OBJECTIVE_ID);
+									if ($db->Execute($query)) {
+										if ($objective_details["objective_parent"] == 0 || $PROCESSED["objective_parent"] == 0) {
+											if ($PROCESSED["objective_audience"] == "all" || $PROCESSED["objective_audience"] == "none") {
 												$query = "	INSERT INTO `objective_audience` (`objective_id`, `organisation_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
-															VALUES(".$db->qstr($OBJECTIVE_ID).", ".$db->qstr($ORGANISATION_ID).", ".$db->qstr("course").", ".$db->qstr($course_id).", ".$db->qstr(time()).", ".$db->qstr($ENTRADA_USER->getID()).")";
+													VALUES(" . $db->qstr($OBJECTIVE_ID) . ", " . $db->qstr($ORGANISATION_ID) . ", " . $db->qstr("course") . ", " . $db->qstr($PROCESSED["objective_audience"]) . ", " . $db->qstr(time()) . ", " . $db->qstr($ENTRADA_USER->getID()) . ")";
+												if (!$db->Execute($query)) {
+													add_error("An error occurred while updating objective audience.");
+												}
+											} else if ($PROCESSED["objective_audience"] == "selected" && is_array($PROCESSED["course_ids"]) && !empty($PROCESSED["course_ids"])) {
+												foreach ($PROCESSED["course_ids"] as $course => $course_id) {
+													$query = "	INSERT INTO `objective_audience` (`objective_id`, `organisation_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
+														VALUES(" . $db->qstr($OBJECTIVE_ID) . ", " . $db->qstr($ORGANISATION_ID) . ", " . $db->qstr("course") . ", " . $db->qstr($course_id) . ", " . $db->qstr(time()) . ", " . $db->qstr($ENTRADA_USER->getID()) . ")";
+													if (!$db->Execute($query)) {
+														add_error("An error occurred while updating objective audience.");
+													}
+												}
+											} else {
+												$query = "	INSERT INTO `objective_audience` (`objective_id`, `organisation_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
+													VALUES(" . $db->qstr($OBJECTIVE_ID) . ", " . $db->qstr($ORGANISATION_ID) . ", " . $db->qstr("course") . ", " . $db->qstr("none") . ", " . $db->qstr(time()) . ", " . $db->qstr($ENTRADA_USER->getID()) . ")";
 												if (!$db->Execute($query)) {
 													add_error("An error occurred while updating objective audience.");
 												}
 											}
-										} else {
-											$query = "	INSERT INTO `objective_audience` (`objective_id`, `organisation_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
-														VALUES(".$db->qstr($OBJECTIVE_ID).", ".$db->qstr($ORGANISATION_ID).", ".$db->qstr("course").", ".$db->qstr("none").", ".$db->qstr(time()).", ".$db->qstr($ENTRADA_USER->getID()).")";
-											if (!$db->Execute($query)) {
-												add_error("An error occurred while updating objective audience.");
-											}
 										}
 									}
-								} 
 
-								if (!has_error()) {
-									$url = ENTRADA_URL . "/admin/settings/manage/objectives?org=".$ORGANISATION_ID;
+									if (!has_error()) {
+										$url = ENTRADA_URL . "/admin/settings/manage/objectives?org=" . $ORGANISATION_ID;
 
-									add_success("You have successfully updated <strong>".html_encode($PROCESSED["objective_name"])."</strong> in the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+										add_success("You have successfully updated <strong>" . html_encode($PROCESSED["objective_name"]) . "</strong> in the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . $url . "\" style=\"font-weight: bold\">click here</a> to continue.");
 
-									$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+										$ONLOAD[] = "setTimeout('window.location=\\'" . $url . "\\'', 5000)";
 
-									application_log("success", "Objective [".$OBJECTIVE_ID."] updated in the system.");		
+										application_log("success", "Objective [" . $OBJECTIVE_ID . "] updated in the system.");
+									}
+								} else {
+									add_error("There was a problem updating this objective in the system. The system administrator was informed of this error; please try again later.");
+
+									application_log("error", "There was an error updating an objective. Database said: " . $db->ErrorMsg());
 								}
 							} else {
-								add_error("There was a problem updating this objective in the system. The system administrator was informed of this error; please try again later.");
+								add_error("There was a problem updating this objective set in the system. The system administrator was informed of this error; please try again later. ". $db->ErrorMsg());
 
-								application_log("error", "There was an error updating an objective. Database said: ".$db->ErrorMsg());
+								application_log("error", "There was an error updating an objective set. Database said: " . $db->ErrorMsg());
 							}
 						}
 
@@ -563,35 +610,10 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 						$HEAD[] = "<script src=\"".ENTRADA_RELATIVE."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 						$HEAD[] = "<script src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 						$HEAD[] = "<script src=\"".ENTRADA_RELATIVE."/javascript/picklist.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-						$ONLOAD[] = "$('courses_list').style.display = 'none'";
-
-						$HEAD[]	= "<script type=\"text/javascript\">
-									function selectObjective(parent_id, objective_id) {
-										new Ajax.Updater('selectObjectiveField', '".ENTRADA_URL."/api/objectives-list.api.php', {
-										    parameters: {
-										        'pid' : parent_id,
-										        'id' : objective_id,
-										        'organisation_id' : $ORGANISATION_ID
-                                            }
-                                        });
-
-										return;
-									}
-									function selectOrder(objective_id, parent_id) {
-										new Ajax.Updater('selectOrderField', '".ENTRADA_URL."/api/objectives-list.api.php', {
-										    parameters: {
-										        'id' : objective_id,
-										        'type' : 'order',
-										        'pid' : parent_id,
-										        'organisation_id' : $ORGANISATION_ID
-                                            }
-                                        });
-
-										return;
-									}
-									</script>";
-						$ONLOAD[] = "selectObjective(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").", ".$OBJECTIVE_ID.")";
-						$ONLOAD[] = "selectOrder(".$OBJECTIVE_ID.", ".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
+                        
+						$ONLOAD[] = "jQuery('#courses_list').css('display', 'none')";
+						$ONLOAD[] = "selectObjective('#selectObjectiveField', ".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").", ".$OBJECTIVE_ID.")";
+						$ONLOAD[] = "selectOrder('#selectOrderField', ".$OBJECTIVE_ID.", ".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
 						?>
 						<script type="text/javascript">
 						var SITE_URL = "<?php echo ENTRADA_URL;?>";
@@ -599,17 +621,19 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 						var org_id = "<?php echo $ORGANISATION_ID; ?>";
 						var objective_set_id = "<?php echo $OBJECTIVE_ID; ?>";
 
-                        jQuery(function() {
-                            jQuery("#objective-form").submit(function() {
-                                jQuery("#PickList").each(function() {
-                                    jQuery("#PickList option").attr("selected", "selected");
+                        jQuery(function($) {
+                            $("#objective-form").submit(function() {
+                                $("#PickList").each(function() {
+                                    $("#PickList option").attr("selected", "selected");
                                 });
                             });
-                            jQuery("input[name=objective_audience]").click(function() {
-                                if (jQuery(this).val() == "selected" && !jQuery("#course-selector").is(":visible")) {
-                                    jQuery("#course-selector").show();
-                                } else if (jQuery("#course-selector").is(":visible")) {
-                                    jQuery("#course-selector").hide();
+                            $("input[name=objective_audience]").click(function() {
+                                if ($(this).val() == "selected") {
+                                    if (!$("#course-selector").is(":visible")) {
+                                        $("#course-selector").show();
+                                    }
+                                } else if ($("#course-selector").is(":visible")) {
+                                    $("#course-selector").hide();
                                 }
                             });
                         });
@@ -631,6 +655,22 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 									<label for="objective_name" class="form-required control-label">Tag Set Name</label>
 									<div class="controls">
 										<input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($PROCESSED["objective_name"])) ? html_encode($PROCESSED["objective_name"]) : ""); ?>" class="span11" />
+									</div>
+								</div>
+
+								<div class="control-group">
+									<label for="objective_shortname" class="form-required control-label">Tag Set Shortname</label>
+									<div class="controls">
+										<input type="text" id="objective_shortname" name="objective_shortname" value="<?php echo ((isset($PROCESSED["objective_shortname"])) ? html_encode($PROCESSED["objective_shortname"]) : ""); ?>" class="span11">
+									</div>
+								</div>
+
+								<div class="control-group">
+									<div class="controls">
+										<label class="checkbox">
+											<input type="checkbox" id="standard" value="1" name="standard" <?php echo ((isset($PROCESSED["standard"]) && $PROCESSED["standard"] == 1) ? "checked=\"checked\"" : ""); ?> />
+											<?php echo $translate->_("This is a standardized Curriculum Tag Set."); ?>
+										</label>
 									</div>
 								</div>
 
@@ -697,19 +737,21 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 													}
 											echo "	</select>\n";
 											echo "</div>\n";
-											echo "<script type=\"text/javascript\">\n";
-											echo "\$('PickList').observe('keypress', function(event) {\n";
-											echo "	if (event.keyCode == Event.KEY_DELETE) {\n";
-											echo "		delIt();\n";
-											echo "	}\n";
-											echo "});\n";
-											echo "\$('SelectList').observe('keypress', function(event) {\n";
-											echo "    if (event.keyCode == Event.KEY_RETURN) {\n";
-											echo "		addIt();\n";
-											echo "	}\n";
-											echo "});\n";
-											echo "</script>\n";
-											?>
+                                            ?>
+                                            <script type="text/javascript">
+                                                jQuery(function($) {
+                                                    $('#PickList').on('keydown', function(event) {
+                                                        if (event.which == $.ui.keyCode.DELETE) {
+                                                            delIt();
+                                                        }
+                                                    });
+                                                    $('#SelectList').on('keydown', function(event) {
+                                                        if (event.which == $.ui.keyCode.ENTER) {
+                                                            addIt();
+                                                        }
+                                                    });
+                                                })
+                                            </script>
 										</div>
 									</div>
 									<?php
@@ -833,7 +875,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 										}
 									});
 
-									jQuery('.remove').live('click',function(){
+									jQuery(document).on('click', '.remove', function(){
 										var id = jQuery(this).attr('data-id');
 										var key = jQuery.inArray(id,mapped);
 										if(key != -1){
@@ -851,7 +893,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_OBJECTIVES")) {
 										}									
 									});
 
-									jQuery('.checked-objective').live('change',function(){
+									jQuery(document).on('change', '.checked-objective', function(){
 										var id = jQuery(this).val();
 										var title = jQuery('#objective_title_'+id).attr('data-title');
 										if (jQuery(this).is(':checked')) {

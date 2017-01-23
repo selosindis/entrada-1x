@@ -133,7 +133,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$clinical_presentations_list = array();
 				$clinical_presentations = array();
 
-				$results = Models_Evaluation::getClinicalPresentations();
+				$results = Classes_Evaluation::getClinicalPresentations();
 				if ($results) {
 					foreach ($results as $result) {
 						$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];

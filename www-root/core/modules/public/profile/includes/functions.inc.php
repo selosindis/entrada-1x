@@ -43,7 +43,7 @@ class MSPRPublicController {
 			$inputs = filter_input_array(INPUT_POST,$params);
 			extract($inputs);
 
-			if (!$action) {
+			if (!isset($action)) {
 				add_error($translator->translate("mspr_no_action"));
 			}
 			if (!array_key_exists($section, $valid)) {
@@ -93,11 +93,12 @@ class MSPRPublicController {
 				} elseif ( $action == "resequence") {
 					switch($section) {
 						case 'research_citations':
-							ResearchCitations::setSequence($user_id, $inputs['research_citations']);
-							break; 
+						    $research_citations = new ResearchCitations();
+                            $research_citations->setSequence($user_id, $inputs['research_citations']);
+							break;
 					}
 				} else { //everything else requires an entity
-					if ($entity_id) {
+					if (isset($entity_id)) {
 						$entity = get_mspr_entity($section, $entity_id);
 						if ($entity) {
 							switch($action) {
@@ -172,7 +173,7 @@ class MSPRPublicController {
 		extract($inputs);
 		
 		if (!has_error()) {
-			if ($user_id && $details) {
+			if (isset($user_id) && isset($details)) {
 				ResearchCitation::create($user_id,$details);
 			} else {
 				add_error($translator->translate("mspr_insufficient_info"));
@@ -189,8 +190,8 @@ class MSPRPublicController {
 		
 		$inputs = filter_input_array(INPUT_POST,$params);
 		extract($inputs);
-		
-		if ($entity && $details) {
+
+        if (isset($entity) && isset($details)) {
 			$entity->update($details);
 		}  else {
 			add_error($translator->translate("mspr_insufficient_info"));
@@ -212,7 +213,7 @@ class MSPRPublicController {
 		
 		$user = User::fetchRowByID($user_id);
 		
-		if ($user && $research_citations && is_array($research_citations)) {
+		if (isset($user) && isset($research_citations) && is_array($research_citations)) {
 			ResearchCitations::setSequence($user,$research_citations);
 		} else {
 			add_error($translator->translate("mspr_insufficient_info"));

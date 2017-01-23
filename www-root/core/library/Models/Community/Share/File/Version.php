@@ -37,8 +37,8 @@ class Models_Community_Share_File_Version extends Models_Base {
                 $updated_date,
                 $updated_by;
 
-    protected $table_name = "community_share_file_versions";
-    protected $default_sort_column = "csfversion_id";
+    protected static $table_name = "community_share_file_versions";
+    protected static $default_sort_column = "csfversion_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -136,6 +136,13 @@ class Models_Community_Share_File_Version extends Models_Base {
         }
 
         return $output;
+    }
+
+    public static function fetchRowByID($csfversion_id) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "csfversion_id", "value" => $csfversion_id, "method" => "=")
+        ));
     }
 }
 ?>

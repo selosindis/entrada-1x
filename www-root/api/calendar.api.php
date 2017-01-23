@@ -212,6 +212,7 @@ if ($user_proxy_id) {
             1,
             1750,
             0,
+            ($user_group == "student" ? true : false),
             ($user_group == "student" ? true : false));
     } else {
         $learning_events = events_fetch_filtered_events(
@@ -229,6 +230,7 @@ if ($user_proxy_id) {
             1,
             1750,
             0,
+            ($user_group == "student" ? true : false),
             ($user_group == "student" ? true : false));
     }
 
@@ -349,6 +351,7 @@ if ($user_proxy_id) {
                                 "title" => strip_tags($event["event_title"]),
                                 "loc" => strip_tags($event["event_location"]),
                                 "type" => $cal_type,
+                                "color" => strip_tags($event["event_color"]),
                                 "updated" => $cal_updated
                     );
                 }

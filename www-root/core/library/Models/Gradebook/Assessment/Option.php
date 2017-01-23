@@ -25,8 +25,9 @@
 class Models_Gradebook_Assessment_Option extends Models_Base {
     protected $aoption_id, $assessment_id, $option_id, $option_active;
 
-    protected $table_name = "assessment_options";
-    protected $default_sort_column = "assessment_id";
+    protected static $table_name = "assessment_options";
+    protected static $default_sort_column = "assessment_id";
+    protected static $primary_key = "aoption_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -60,15 +61,21 @@ class Models_Gradebook_Assessment_Option extends Models_Base {
         ));
     }
 
-    public static function fetchAllByAssessmentID($assessment_id) {
+    public static function fetchAllByAssessmentID($assessment_id, $option_active = null) {
         $self = new self();
-        return $self->fetchAll(array(array("key" => "assessment_id", "value" => $assessment_id, "method" => "=")));
+
+        $active_query = $option_active ? array("key" => "option_active", "value" => $option_active, "method" => "=") : null;
+
+        return $self->fetchAll(array(
+            array("key" => "assessment_id", "value" => $assessment_id, "method" => "="),
+            $active_query
+        ));
     }
 
     public function insert() {
         global $db;
 
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->aoption_id = $db->Insert_ID();
             return $this;
         } else {
@@ -80,7 +87,7 @@ class Models_Gradebook_Assessment_Option extends Models_Base {
     public function update() {
         global $db;
 
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`aoption_id` = ".$this->aoption_id)) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`aoption_id` = ".$this->aoption_id)) {
             return $this;
         } else {
             return false;

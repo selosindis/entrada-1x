@@ -28,5 +28,23 @@
         <?php
     }
     ?>
+    <?php
+    if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) :
+        $maxlifetime = ini_get("session.gc_maxlifetime");
+        ?>
+        <script src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.session.timeout.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
+        <script type = "text/javascript" >
+            jQuery(document).ready(function($) {
+                $.timeoutMonitor({
+                    sessionTime: <?php echo ($maxlifetime -1) * 1000; ?>,
+                    warnTime: 180000,    // 3 minutes before it expires
+                    title: '<?php echo $translate->_("Your session will expire."); ?>',
+                    message: '<?php echo $translate->_("Your session will expire in %%timeleft%%. Any information entered will be lost.<br /><br />Do you want to extend your session?");?>',
+                    keepAliveURL: '<?php echo ENTRADA_RELATIVE; ?>/index.php',
+                    logoutURL: '<?php echo ENTRADA_RELATIVE; ?>/?action=logout'
+                });
+            });
+        </script >
+    <?php endif; ?>
 </body>
 </html>

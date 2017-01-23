@@ -32,7 +32,6 @@ require_once("autoload.php");
 
 require_once("includes/functions.inc.php");
 require_once("includes/constants.inc.php");
-require_once("includes/Entrada_Setup.php");
 
 $ERROR = 0;
 $TOTAL_ERRORS = 0;
@@ -219,14 +218,17 @@ switch ($STEP) {
 
 			if (!@is_writable($entrada_storage."/annualreports") ||
 				!@is_writable($entrada_storage."/cache") ||
+				!@is_writable($entrada_storage."/community-discussions") ||
 				!@is_writable($entrada_storage."/community-galleries") ||
 				!@is_writable($entrada_storage."/community-shares") ||
-                !@is_writable($entrada_storage."/community-discussions") ||
                 !@is_writable($entrada_storage."/eportfolio") ||
 				!@is_writable($entrada_storage."/event-files") ||
 				!@is_writable($entrada_storage."/logs") ||
-				!@is_writable($entrada_storage."/user-photos") ||
-                !@is_writable($entrada_storage."/lor")) {
+				!@is_writable($entrada_storage."/lor") ||
+				!@is_writable($entrada_storage."/msprs") ||
+				!@is_writable($entrada_storage."/resource-images") ||
+				!@is_writable($entrada_storage."/syllabi") ||
+				!@is_writable($entrada_storage."/user-photos")) {
 
 				$ERROR++;
 				$i = count($ERROR);
@@ -235,14 +237,17 @@ switch ($STEP) {
 				$ERRORSTR[$i] .= "<div style=\"font-family: monospace; font-size: 9px\">\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/annualreports<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/cache<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/community-discussions<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/community-galleries<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/community-shares<br />\n";
-				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/community-discussions<br />\n";
                 $ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/eportfolio<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/event-files<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/logs<br />\n";
-				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/user-photos<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/lor<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/msprs<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/resource-images<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/syllabi<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/user-photos<br />\n";
 				$ERRORSTR[$i] .= "</div>\n";
 			}
 		} elseif (!@is_dir($entrada_storage)) {

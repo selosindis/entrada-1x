@@ -29,11 +29,11 @@ class Models_Event_Draft_Event extends Models_Base {
               $event_description, $include_parent_description, $event_goals,
               $event_objectives, $objectives_release_date, $event_message, 
               $include_parent_message, $event_location, $event_start, $event_finish,
-              $event_duration, $release_date, $release_until, $updated_date, $updated_by;
-    
-    protected $table_name = "draft_events";
-    protected $primary_key          = "devent_id";
-    protected $default_sort_column = "event_start";
+              $event_duration, $attendance_required, $audience_visible, $release_date, $release_until, $updated_date, $updated_by;
+
+    protected static $table_name    = "draft_events";
+    protected static $primary_key   = "devent_id";
+    protected static $default_sort_column = "event_start";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -127,6 +127,14 @@ class Models_Event_Draft_Event extends Models_Base {
         return $this->event_duration;
     }
 
+    public function getAttendanceRequired() {
+        return $this->attendance_required;
+    }
+
+    public function getAudienceVisible() {
+        return $this->audience_visible;
+    }
+
     public function getReleaseDate() {
         return $this->release_date;
     }
@@ -145,26 +153,9 @@ class Models_Event_Draft_Event extends Models_Base {
     
     public static function fetchAllByDraftID($draft_id) {
         $self = new self();
-
-        $constraints = array(
-            array(
-                "mode"      => "AND",
-                "key"       => "draft_id",
-                "value"     => $draft_id,
-                "method"    => "="
-            )
-        );
-        
-        $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
-        $output = array();
-
-        if (!empty($objs)) {
-            foreach ($objs as $o) {
-                $output[] = $o;
-            }
-        }
-
-        return $output;
+        return $self->fetchAll(array(
+            array("key" => "draft_id", "value" => $draft_id, "method" => "=")
+        ));
     }
     
     public static function fetchAllByDraftIDByDate($draft_id, $start, $finish = NULL) {
@@ -191,8 +182,4 @@ class Models_Event_Draft_Event extends Models_Base {
             )
         );
     }
-
-
 }
-
-?>

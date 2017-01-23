@@ -240,8 +240,16 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			} else {
 				application_log("error", "Unknown mode for assessment_id [".$ASSESSMENT_ID."] for proxy_id [".$PROXY_ID."].");
 			}
-			
-		 	echo $GRADE_ID."|". format_retrieved_grade($GRADE_VALUE, $assessment);
+
+			if ($_POST["return_type"] && $_POST["return_type"] == "json") {
+				echo json_encode(array(
+					"grade_id" => str_replace("'", "", $GRADE_ID),
+					"grade_value" => format_retrieved_grade($GRADE_VALUE, $assessment)
+				));
+			}
+			else {
+				echo $GRADE_ID."|". format_retrieved_grade($GRADE_VALUE, $assessment);
+			}
 		} else {
 			echo "Error saving grade!";
 			

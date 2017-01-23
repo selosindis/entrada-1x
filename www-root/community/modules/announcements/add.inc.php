@@ -124,8 +124,12 @@ switch($STEP) {
 		}
 		if ($SUCCESS) {
 			echo display_success();
-			if (COMMUNITY_NOTIFICATIONS_ACTIVE && isset($_POST["notify_members"]) && $_POST["notify_members"]) {
-				community_notify($COMMUNITY_ID, $ANNOUNCEMENT_ID, "announcement", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$ANNOUNCEMENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
+			if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
+				if (!$COMMUNITY_ADMIN && ($PAGE_OPTIONS["moderate_posts"] == 1)) {
+					community_notify($COMMUNITY_ID, $ANNOUNCEMENT_ID, "announcement_moderate", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$ANNOUNCEMENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
+				} elseif (isset($_POST["notify_members"]) && $_POST["notify_members"]) {
+					community_notify($COMMUNITY_ID, $ANNOUNCEMENT_ID, "announcement", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$ANNOUNCEMENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
+				}
 			}
 		}
 	break;

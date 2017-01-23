@@ -124,7 +124,8 @@ class MSPRAdminController {
 				} elseif ( $action == "resequence") {
 					switch($section) {
 						case 'research_citations':
-							ResearchCitations::setSequence($user_id, $inputs['research_citations']);
+                            $research_citations = new ResearchCitations();
+                            $research_citations->setSequence($user_id, $inputs['research_citations']);
 							break;
 					}
 				} else { //everything else requires an entity
@@ -377,8 +378,8 @@ function submission_rejection_notification($type, $to = array(), $keywords = arr
 	$xml_file = $ENTRADA_TEMPLATE->absolute()."/email/mspr-rejection-".$type.".xml";
 
 	try {
-		require_once("Models/utility/Template.class.php");
-		require_once("Models/utility/TemplateMailer.class.php");
+		require_once("Classes/utility/Template.class.php");
+		require_once("Classes/utility/TemplateMailer.class.php");
 		$template = new Template($xml_file);
 		$mail = new TemplateMailer(new Zend_Mail());
 		$mail->addHeader("X-Section", "MSPR Module", true);

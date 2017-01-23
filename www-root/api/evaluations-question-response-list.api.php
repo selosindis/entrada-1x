@@ -40,6 +40,6 @@ if (isset($_POST["questiontype"]) && $_POST["questiontype"]) {
 
 $question_data["responses_count"] = $responses;
 
-echo Models_Evaluation::getQuestionResponseList($question_data, $questiontype);
+echo Classes_Evaluation::getQuestionResponseList($question_data, $questiontype);
 
 ?>

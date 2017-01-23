@@ -42,7 +42,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Clerk Search Results");
 	
 	?>
-	<div class="content-heading">Student Search Results</div>
+	<h1>Student Search Results</h1>
 	<?php
 	if (((isset($_GET["year"]) && trim($_GET["year"]) != "") || (isset($_POST["year"]) && trim($_POST["year"]) != ""))) {
 		if (trim($_POST["year"]) != "") {
@@ -68,17 +68,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					AND d.`group_id` = ".$db->qstr($query_year)."
 					GROUP BY a.`id`
 					ORDER BY `fullname` ASC";
-		
+
 		$results	= $db->GetAll($query);
 		
 		if ($results) {
 			$counter	= 0;
 			$total	= count($results);
 			$split	= (round($total / 2) + 1);
-			
-			echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." in the <b>".checkslashes(trim($results[0]["group_name"]))."</b>. Please choose a student you wish to work with by clicking on their name, or if you wish to add an event to multiple students simply check the checkbox beside their name and click the &quot;Add Mass Event&quot; button.";
-	
-			echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/admin/clerkship/electives?section=add_core\" method=\"post\">\n";
+
+			echo "<div class=\"display-generic\">";
+			echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." in the <b>".checkslashes(trim($results[0]["group_name"]))."</b>.";
+	        echo "</div>";
+
 			echo "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 			echo "<tr>\n";
 			echo "	<td style=\"vertical-align: top\">\n";
@@ -123,7 +124,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						echo "	<td style=\"vertical-align: top\">\n";
 						echo "		<ol start=\"".$split."\">\n";
 					}
-					echo "	<li><input type=\"checkbox\" name=\"ids[]\" value=\"".$result["proxy_id"]."\" />&nbsp;<a href=\"".ENTRADA_URL."/clerkship/clerk?ids=".$result["proxy_id"]."\" style=\"font-weight: bold\">".$result["fullname"]."</a>".$weeksOutput."</li>\n";
+					echo "	<li><a href=\"".ENTRADA_URL."/clerkship/clerk?ids=".$result["proxy_id"]."\">".$result["fullname"]."</a>".$weeksOutput."</li>\n";
 				}
 			}
 			
@@ -133,15 +134,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			echo "		</ol>\n";
 			echo "	</td>\n";
 			echo "</tr>\n";
-			echo "<tr>\n";
-			echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
-			echo "		<input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
-			echo "		<input type=\"button\" class=\"btn\" value=\"Add Mass Elective\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add'; $('clerkship_form').submit();\"/>\n";
-			echo "		<input type=\"button\" class=\"btn\" value=\"Add Mass Core\" style=\"display: inline; margin-left: 10px;\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/admin/clerkship/electives?section=add_core'; $('clerkship_form').submit();\"/>\n";
-			echo "	</td>\n";
-			echo "</tr>\n";
 			echo "</table>\n";
-			echo "</form>\n";
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "Unable to find students in the database with a graduating year of <b>".trim($query_year)."</b>. It's possible that these students are not yet added to this system, so please check the User Management module.";
@@ -160,6 +153,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                     LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
                     ON b.`user_id` = a.`id`
                     WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                    AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
                     AND CONCAT_WS(' ', a.`firstname`, a.`lastname`) LIKE ".($db->qstr("%".trim($query_name)."%"))."
                     AND `group` = 'student'
                     ORDER BY a.`lastname`, a.`firstname` ASC";
@@ -168,10 +162,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			$counter	= 0;
 			$total	= count($results);
 			$split	= (round($total / 2) + 1);
-			
-			echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." that match the search term of <b>".checkslashes(trim($query_name), "display")."</b>. Please choose a student you wish to work with by clicking on their name, or if you wish to add an event to multiple students simply check the checkbox beside their name and click the &quot;Add Mass Event&quot; button.";
+
+			echo "<div class=\"display-generic\">";
+			echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." that match the search term of <b>".checkslashes(trim($query_name), "display")."</b>.";
+			echo "</div>";
 	
-			echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/admin/clerkship/electives?section=add_core\" method=\"post\">\n";
 			echo "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 			echo "<tr>\n";
 			echo "	<td style=\"vertical-align: top\">\n";
@@ -184,22 +179,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					echo "	<td style=\"vertical-align: top\">\n";
 					echo "		<ol start=\"".$split."\">\n";
 				}
-				echo "	<li><input type=\"checkbox\" name=\"ids[]\" value=\"".$result["proxy_id"]."\" />&nbsp;<a href=\"".ENTRADA_URL."/clerkship/clerk?ids=".$result["proxy_id"]."\" style=\"font-weight: bold\">".$result["fullname"]."</a> <span class=\"content-small\">(Class of ".$result["gradyear"].")</span></li>\n";
+				echo "	<li><a href=\"".ENTRADA_URL."/clerkship/clerk?ids=".$result["proxy_id"]."\">".$result["fullname"]."</a> <span class=\"content-small\">(Class of ".$result["gradyear"].")</span></li>\n";
 			}
 			echo "		</ol>\n";
 			echo "	</td>\n";
 			echo "</tr>\n";
-			echo "<tr>\n";
-			echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
-			echo "		<ul type=\"none\">\n";
-			echo "		<li><input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
-			echo "		<input type=\"button\" value=\"Add Mass Elective\" class=\"btn\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add_elective'; $('clerkship_form').submit();\"/>\n";
-			echo "		<input type=\"button\" value=\"Add Mass Core\" class=\"btn\" style=\"display: inline; margin-left: 10px;\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/admin/clerkship/electives?section=add_core'; $('clerkship_form').submit();\"/></li>\n";
-			echo "		</ul>\n";
-			echo "	</td>\n";
-			echo "</tr>\n";
 			echo "</table>\n";
-			echo "</form>\n";
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "Unable to find any students in the database matching <b>".checkslashes(trim($query_name), "display")."</b>. It's possible that the student you're looking for is not yet added to this system, so please check the User Management module.";

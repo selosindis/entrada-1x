@@ -33,7 +33,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 
 	application_log("error", "Group [" . $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] . "] and role [" . $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"] . "] do not have access to this module [" . $MODULE . "]");
 } else {
-	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/settings?section=add", "title" => "Add Organisation");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/settings?section=add", "title" => $translate->_("Add Organisation"));
 
 	switch ($STEP) {
 		case 2 :
@@ -180,20 +180,28 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 						/**
 						 * Select a "template" organisation that we can base the system groups and roles on by default.
 						 */
-						$query = "SELECT `organisation_id` FROM `".ENTRADA_AUTH."`.`organisations` WHERE `organisation_active` = '1' ORDER BY `organisation_id` ASC LIMIT 1";
+						$query = "SELECT `organisation_id` FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_active` = '1' ORDER BY `organisation_id` ASC LIMIT 1";
 						$template_organisation_id = $db->GetOne($query);
 						if ($template_organisation_id) {
-							$query = "SELECT * FROM `".ENTRADA_AUTH."`.`system_group_organisation` WHERE `organisation_id` = ".$db->qstr($template_organisation_id);
+							$query = "SELECT * FROM `".AUTH_DATABASE."`.`system_group_organisation` WHERE `organisation_id` = ".$db->qstr($template_organisation_id);
 							$results = $db->GetAll($query);
 							if ($results) {
 								foreach ($results as $result) {
-									if (!$db->AutoExecute(ENTRADA_AUTH.".system_group_organisation", array("groups_id" => $result["groups_id"], "organisation_id" => $organisation_id), "INSERT")) {
+									if (!$db->AutoExecute(AUTH_DATABASE.".system_group_organisation", array("groups_id" => $result["groups_id"], "organisation_id" => $organisation_id), "INSERT")) {
 										application_log("error", "Unable to attach new organisation_id [".$organisation_id."] to system_group [".$result["groups_id"]."]. Database said: ".$db->ErrorMsg());
 									}
 								}
 							}
 						}
 
+                        /**
+                         * Add a default grading scale for the newly created organisation
+                         */
+                        $default_scale = Models_Gradebook_Grading_Scale::addDefaultScaleForOrganisation($organisation_id);
+                        if (!$default_scale) {
+                            application_log("error", "Unable to create default grading scale for new organisation_id [".$organisation_id."]. Database said: ".$db->ErrorMsg());
+                        }
+                        
 						add_success("You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/settings\" style=\"font-weight: bold\">click here</a> to continue.");
 
 						$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/settings/\\'', 5000)";
@@ -371,22 +379,22 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 			}
 			</script>
 
-			<h1>Add Organisation</h1>
+			<h1><?php echo $translate->_("Add Organisation"); ?></h1>
 			<form id="addOrganisationForm" action="<?php echo ENTRADA_URL; ?>/admin/settings?section=add&amp;step=2" method="post" class="form-horizontal">
 			<div class="control-group">
-				<label for="name_id" class="control-label form-required">Organisation Name:</label>
+				<label for="name_id" class="control-label form-required"><?php echo $translate->_("Organisation Name"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="organisation_title" name="organisation_title" value="<?php echo html_encode($PROCESSED["organisation_title"]); ?>" />
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="description_id" class="control-label form-nrequired">Description:</label>
+				<label for="description_id" class="control-label form-nrequired"><?php echo $translate->_("Description"); ?>:</label>
 				<div class="controls">
 					<textarea class="expandable" id="organisation_desc" name="organisation_desc"><?php echo html_encode($PROCESSED["organisation_desc"]); ?></textarea>
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="countries_id" class="control-label form-required">Country:</label>
+				<label for="countries_id" class="control-label form-required"><?php echo $translate->_("Country"); ?>:</label>
 				<div class="controls">
 					<?php
 							$countries = fetch_countries();
@@ -404,61 +412,61 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="province_id" class="control-label form-required">Province / State:</label>
+				<label for="province_id" class="control-label form-required"><?php echo $translate->_("Province / State"); ?>:</label>
 				<div class="controls">
-					<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
+					<div id="prov_state_div"><?php echo $translate->_("Please select a <b>Country</b> from above first."); ?></div>
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="city_id" class="control-label form-required">City:</label>
+				<label for="city_id" class="control-label form-required"><?php echo $translate->_("City"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="organisation_city" name="organisation_city" value="<?php echo html_encode($PROCESSED["organisation_city"]); ?>" />
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="postal_id" class="control-label form-required">Postal Code:</label>
+				<label for="postal_id" class="control-label form-required"><?php echo $translate->_("Postal Code"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="organisation_postcode" name="organisation_postcode" value="<?php echo html_encode($PROCESSED["organisation_postcode"]); ?>" />
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="address1_id" class="control-label form-required">Address 1:</label>
+				<label for="address1_id" class="control-label form-required"><?php echo $translate->_("Address 1"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="organisation_address1" name="organisation_address1" value="<?php echo html_encode($PROCESSED["organisation_address1"]); ?>" />
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="address2_id" class="control-label">Address 2:</label>
+				<label for="address2_id" class="control-label"><?php echo $translate->_("Address 2"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="organisation_address2" name="organisation_address2" value="<?php echo html_encode($PROCESSED["organisation_address2"]); ?>"/>
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="telephone_id" class="control-label form-required">Telephone:</label>
+				<label for="telephone_id" class="control-label form-required"><?php echo $translate->_("Telephone"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="organisation_telephone" name="organisation_telephone" value="<?php echo html_encode($PROCESSED["organisation_telephone"]); ?>"/>
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="fax_id" class="control-label">Fax:</label>
+				<label for="fax_id" class="control-label"><?php echo $translate->_("Fax"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="organisation_fax" name="organisation_fax" value="<?php echo html_encode($PROCESSED["organisation_fax"]); ?>" />
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="email_id" class="control-label">E-Mail Address:</label>
+				<label for="email_id" class="control-label"><?php echo $translate->_("E-Mail Address"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="organisation_email" name="organisation_email" value="<?php echo html_encode($PROCESSED["organisation_email"]); ?>" />
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="url_id" class="control-label form-nrequired">Website:</label>
+				<label for="url_id" class="control-label form-nrequired"><?php echo $translate->_("Website"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="organisation_url" name="organisation_url" value="<?php echo html_encode($PROCESSED["organisation_url"]); ?>" />
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="template" class="control-label form-required">Interface Template:</label>
+				<label for="template" class="control-label form-required"><?php echo $translate->_("Interface Template"); ?>:</label>
 				<div class="controls">
 					<?php
 								$templates = fetch_templates();
@@ -481,25 +489,25 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="aamc_institution_id" class="control-label form-nrequired">AAMC Institution ID:</label>
+				<label for="aamc_institution_id" class="control-label form-nrequired"><?php echo $translate->_("AAMC Institution ID"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="aamc_institution_id" name="aamc_institution_id" value="<?php echo html_encode($PROCESSED["aamc_institution_id"]); ?>"/>
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="aamc_institution_name" class="control-label form-nrequired">AAMC Institution Name:</label>
+				<label for="aamc_institution_name" class="control-label form-nrequired"><?php echo $translate->_("AAMC Institution Name"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="aamc_institution_name" name="aamc_institution_name" value="<?php echo html_encode($PROCESSED["aamc_institution_name"]); ?>" />
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="aamc_program_id" class="control-label form-nrequired">AAMC Program ID:</label>
+				<label for="aamc_program_id" class="control-label form-nrequired"><?php echo $translate->_("AAMC Program ID"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="aamc_program_id" name="aamc_program_id" value="<?php echo html_encode($PROCESSED["aamc_program_id"]); ?>"/>
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="aamc_program_name" class="control-label form-nrequired">AAMC Program Name:</label>
+				<label for="aamc_program_name" class="control-label form-nrequired"><?php echo $translate->_("AAMC Program Name"); ?>:</label>
 				<div class="controls">
 					<input type="text" id="aamc_program_name" name="aamc_program_name" value="<?php echo html_encode($PROCESSED["aamc_program_name"]); ?>"/>
 				</div>

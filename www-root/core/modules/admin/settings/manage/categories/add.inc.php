@@ -181,18 +181,10 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CATEGORIES")) {
             default :
                 ?>
                 <script type="text/javascript">
-                function selectCategory(parent_id) {
-                    new Ajax.Updater('m_selectCategoryField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/categories-list.api.php', {parameters: {'pid': parent_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
-                    return;
-                }
-                function selectOrder(parent_id) {
-                    new Ajax.Updater('m_selectOrderField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/categories-list.api.php', {parameters: {'type': 'order', 'pid': parent_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
-                    return;
-                }
-                jQuery(function(){
-                    selectCategory(<?php echo (isset($PARENT_ID) && $PARENT_ID ? $PARENT_ID : "0"); ?>);
-                    selectOrder(<?php echo (isset($PARENT_ID) && $PARENT_ID ? $PARENT_ID : "0"); ?>);
-                });
+                    jQuery(function(){
+                        selectCategory('#m_selectCategoryField_<?php echo $time; ?>', <?php echo (isset($PARENT_ID) && $PARENT_ID ? $PARENT_ID : "0"); ?>, 0, <?php echo $ORGANISATION_ID; ?>);
+                        selectOrder('#m_selectOrderField_<?php echo $time; ?>', 0, <?php echo (isset($PARENT_ID) && $PARENT_ID ? $PARENT_ID : "0"); ?>, <?php echo $ORGANISATION_ID; ?>);
+                    });
                 </script>
                 <div class="row-fluid">
                     <form id="sub-category-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/categories"."?".replace_query(array("action" => "add", "step" => 2, "mode" => "ajax")); ?>" method="post" class="form-horizontal">
@@ -371,18 +363,12 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CATEGORIES")) {
                 if (has_error()) {
                     echo display_error();
                 }
-                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/clerkship_categories.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";						$ONLOAD[] = "$('courses_list').style.display = 'none'";
-
-                $ONLOAD[]	= "$('courses_list').style.display = 'none'";
-
-                $HEAD[]	= "<script type=\"text/javascript\">
-                            function selectOrder(parent_id) {
-                                new Ajax.Updater('selectOrderField', '".ENTRADA_URL."/api/categories-list.api.php', {parameters: {'type': 'order', 'pid': parent_id, 'organisation_id': ".$ORGANISATION_ID."}});
-                                return;
-                            }
-                            </script>";
-                $ONLOAD[] = "selectOrder(".(isset($PARENT_ID) && $PARENT_ID ? $PARENT_ID : "0").")";
+                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/clerkship_categories.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+                $ONLOAD[] = "selectOrder('#selectOrderField', 0, ".(isset($PARENT_ID) && $PARENT_ID ? $PARENT_ID : "0").", ".$ORGANISATION_ID.")";
                 ?>
+                <script type="text/javascript">
+                    var SITE_URL = "<?php echo ENTRADA_URL;?>";
+                </script>
                 <h1>Add Clinical Rotation Category</h1>
 
                 <form id="category-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/categories"."?".replace_query(array("action" => "add", "step" => 2)); ?>" method="post" class="form-horizontal">

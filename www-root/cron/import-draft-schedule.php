@@ -75,6 +75,12 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 							application_log("notice", "Draft schedule importer found ".count($events)." events in draft ".$draft["draft_id"].".");
 
 							foreach ($events as $event) {
+                                // Get the community id, if one exists
+                                $community_course = Models_Community_Course::fetchRowByCourseID($event["course_id"]);
+                                if ($community_course) {
+                                    $community_id = $community_course->getCommunityID();
+                                }
+                                
                                 $recurring_id_updated = false;
 
                                 if (isset($event["recurring_id"]) && $event["recurring_id"] && array_key_exists($event["recurring_id"], $recurring_event_id_map)) {
@@ -163,6 +169,10 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 										unset($contact["econtact_id"]);
 										unset($contact["devent_id"]);
 										if ($db->AutoExecute("`event_contacts`", $contact, "INSERT")) {
+                                            // Add the event contact to the community, if there is one.
+                                            if (isset($community_id)) {
+                                                Models_Community_Member::insert_members($contact["proxy_id"], $community_id);
+                                            }
 											application_log("success", "Successfully inserted event contact [".$db->Insert_ID()."] for event [".$event_id."].");
 											$msg[$draft["draft_id"]]["contacts"][$contact["proxy_id"]][] = $contact["email"];
 											$msg[$draft["draft_id"]]["contacts"][$contact["proxy_id"]][] = $contact["fullname"];
@@ -225,7 +235,6 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 								}
 
 								if ($old_event_id) {
-
 									if ($draft_options["files"]) {
 										/*
 										*  add the event files associated with the event
@@ -251,7 +260,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 															application_log("success", "Successfully copied file [".$old_event_file."] to file [".$new_file_id."], for new event [".$event_id."].");
 															$copied_files[] = $processed_file["file_name"];
 														} else {
-															application_log("success", "Failed to copy file [".$old_event_file."] to file [".$new_file_id."].");
+															application_log("error", "Failed to copy file [".$old_event_file."] to file [".$new_file_id."].");
 														}
 													}
                                                     
@@ -313,7 +322,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 												unset($link["elink_id"]);
 												$link["event_id"]		= $event_id;
 												$link["accesses"]		= 0;
-												$file["updated_by"]		= $draft_creators[0]["proxy_id"];
+												$link["updated_by"]		= $draft_creators[0]["proxy_id"];
 												if ($db->AutoExecute("`event_links`", $link, "INSERT")) {
 													application_log("success", "Successfully inserted link [".$db->Insert_ID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
                                                     
@@ -369,6 +378,35 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 											}
 										} else {
 											application_log("notice", "Found no event objectives attached to original event [".$old_event_id."].");
+										}
+									}
+									
+									if ($draft_options["keywords"]) {
+										/*
+										 *  add the event objectives associated with the draft event
+										 */
+                                        $event_keywords = Models_Event_Keywords::fetchAllByEventID($old_event_id);
+										if ($event_keywords) {
+                                            if (is_array($event_keywords) && !empty($event_keywords)) {
+                                                foreach ($event_keywords as $keyword_object) {
+                                                    $keyword = $keyword_object->toArray();
+                                                    unset($keyword["ekeyword_id"]);
+                                                    $keyword["event_id"]    = $event_id;
+                                                    $keyword["updated_by"]	= $draft_creators[0]["proxy_id"];
+                                                    $new_keyword = new Models_Event_Keywords();
+                                                    $new_keyword->fromArray($keyword);
+                                                    if ($new_keyword->insert()) {
+                                                        application_log("success", "Successfully inserted keyword [".$db->Insert_ID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
+                                                    } else {
+                                                        $error++;
+                                                        application_log("error", "Error inserting event_keywords [".$event_id."] on draft schedule import. DB said: " . $db->ErrorMsg());
+                                                    }
+                                                }
+                                            } else {
+                                                application_log("notice", "No event keywords found attached to original event [".$old_event_id."].");
+                                            }
+										} else {
+											application_log("error", "Error selecting event keywords [".$old_event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
 										}
 									}
 									
@@ -464,7 +502,8 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 							$message .= $notification_events;
 
 							if ($draft_creators) {
-								$mail = new Zend_Mail();
+								$mail = new Zend_Mail(DEFAULT_CHARSET);
+                                $mail->setReturnPath($config->admin->email);
 								$mail->addHeader("X-Section", "Learning Events Notification System", true);
 								$mail->setFrom($AGENT_CONTACTS["administrator"]["email"], $AGENT_CONTACTS["administrator"]["name"]);
 								$mail->clearSubject();
@@ -475,6 +514,8 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 								foreach ($draft_creators as $result) {
 									$mail->addTo($result["email"], $result["name"]);
 								}
+
+								$mail->addTo($AGENT_CONTACTS["administrator"]["email"], $AGENT_CONTACTS["administrator"]["name"]);
 
 								if ($mail->send()) {
 									application_log("success", "Successfully sent email to draft [".$draft_id."] creators.");

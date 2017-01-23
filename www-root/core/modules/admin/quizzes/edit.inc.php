@@ -296,55 +296,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                         }
 
                         if ($questions) {
-                            $i = 1;
+                            $i = 0;
                             $last_group_id = NULL;
                             ?>
-                            <div class="quiz-questions">
-                                    <?php
-                                    foreach ($questions as $question) {
-
-                                    if (is_null($question->getQquestionGroupID()) || ($i > 1 && $last_group_id != $question->getQquestionGroupID())) {
-                                    ?>
-                                        <ol start="<?php echo $i; ?>" class="questions <?php echo !is_null($question->getQquestionGroupID()) ? "question-group" : "";  echo $question->getQuestionTypeID() == 3 ?  " skip" : "";?>">
-                                            <li class="question">
-                                                <div class="question">
-                                                    <?php if ($ALLOW_QUESTION_MODIFICATIONS) { ?><input type="checkbox" class="question-ids" name="qquestion_ids[]" value="<?php echo $question->getQquestionID(); ?>" data-qquestion-group-id="<?php echo !is_null($question->getQquestionGroupID()) ? $question->getQquestionGroupID() : "0"; ?>" /><?php } ?> <span class="question-text"><?php echo $question->getQuestionText(); ?></span>
-                                                    <?php if ($ALLOW_QUESTION_MODIFICATIONS) { ?>
-                                                        <div class="pull-right">
-                                                            <i class="icon-move drag-handle"></i>
-                                                            <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit-question&amp;id=<?php echo $question->getQquestionID(); ?>"><i class="icon-pencil question-controls" title="Edit Question"></i></a>
-                                                        </div>
-                                                    <?php } ?>
-                                                </div>
-                                                <div class="row-fluid responses">
-                                                    <?php
-                                                    $responses = Models_Quiz_Question_Response::fetchAllRecords($question->getQquestionID());
-                                                    if ($responses) {
-                                                        ?>
-                                                        <ul class="responses">
-                                                            <?php foreach ($responses as $response) { ?>
-                                                                <li class="<?php echo (($response->getResponseCorrect() == 1) ? "display-correct" : "display-incorrect"); ?>"><?php echo clean_input($response->getResponseText(), (($response->getResponseIsHTML() == 1) ? "trim" : "encode")); ?></li>
-                                                            <?php } ?>
-                                                        </ul>
-                                                        <?php
-                                                    }
-                                                    ?>
-                                                </div>
-                                            </li>
-                                        </ol>
-                                            <?php
-                                            $last_group_id = $question->getQquestionGroupID();
-                                            if ($question->getQuestionTypeID() != 3) {
-                                                $i++;
-                                            }
-
-
-                                        }
-                                    }
-                                    ?>
-
-                            </div>
-
                             <style type="text/css">
                                 .question-group .question-text, .drag-handle {
                                     cursor:pointer;
@@ -366,8 +320,68 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 .skip {
                                     list-style-type:none;
                                 }
-                          
+
                             </style>
+                            <div class="quiz-questions">
+                                <ol start="<?php echo $i; ?>" class="questions skip <?php echo !is_null($questions[0]->getQquestionGroupID()) ? "question-group" : ""; ?>">
+                                    <?php
+                                    foreach ($questions as $question) {
+
+                                    if ($question->getQuestionTypeID() != 3) {
+                                        $i++;
+                                    }
+
+                                    if (is_null($question->getQquestionGroupID()) || ($i > 1 && $last_group_id != $question->getQquestionGroupID())) {
+                                    ?>
+                                </ol>
+
+                                <ol start="<?php echo $i; ?>" class="questions skip <?php echo !is_null($question->getQquestionGroupID()) ? "question-group" : ""; ?>">
+                                    <?php
+                                    }
+                                    ?>
+                                    <li class="question">
+                                        <div class="question">
+                                            <?php
+                                            if ($question->getQuestionTypeID() != 3) {
+                                                echo $i.". ";
+
+                                            }
+                                            if ($ALLOW_QUESTION_MODIFICATIONS) { ?>
+                                                <input type="checkbox" class="question-ids" name="qquestion_ids[]" value="<?php echo $question->getQquestionID(); ?>" data-qquestion-group-id="<?php echo !is_null($question->getQquestionGroupID()) ? $question->getQquestionGroupID() : "0"; ?>" />
+                                            <?php } ?>
+                                            <span class="question-text"><?php echo $question->getQuestionText(); ?></span>
+                                            <?php if ($ALLOW_QUESTION_MODIFICATIONS) { ?>
+                                                <div class="pull-right">
+                                                    <i class="icon-move drag-handle"></i>
+                                                    <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit-question&amp;id=<?php echo $question->getQquestionID(); ?>">
+                                                        <i class="icon-pencil question-controls" title="Edit Question"></i>
+                                                    </a>
+                                                </div>
+                                            <?php } ?>
+                                        </div>
+                                        <div class="row-fluid responses">
+                                            <?php
+                                            $responses = Models_Quiz_Question_Response::fetchAllRecords($question->getQquestionID());
+                                            if ($responses) {
+                                                ?>
+                                                <ul class="responses">
+                                                    <?php foreach ($responses as $response) { ?>
+                                                        <li class="<?php echo(($response->getResponseCorrect() == 1) ? "display-correct" : "display-incorrect"); ?>"><?php echo clean_input($response->getResponseText(), (($response->getResponseIsHTML() == 1) ? "trim" : "encode")); ?></li>
+                                                    <?php } ?>
+                                                </ul>
+                                                <?php
+                                            }
+                                            ?>
+                                        </div>
+                                    </li>
+                                    <?php
+                                    $last_group_id = $question->getQquestionGroupID();
+                                    }
+                                    ?>
+                                </ol>
+                            </div>
+
+
                         <?php
                         if ($ALLOW_QUESTION_MODIFICATIONS) {
                         ?>

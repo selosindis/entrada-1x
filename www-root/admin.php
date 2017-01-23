@@ -95,8 +95,13 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	 * Redirect guests and students users away from the admin section.
 	 */
 	if (in_array($ENTRADA_USER->getActiveGroup(), array("guest", "student"))) {
-		header("Location: ".ENTRADA_URL);
-		exit;
+
+		$course_contact = Models_Course_Contact::fetchRowByProxyIDContactType($proxy_id, "ta");
+		if(!$course_contact) {
+				header("Location: ".ENTRADA_URL);
+				exit;
+		}
+		
 	}
 
 	if($PATH_SEPARATED[1] != "") {

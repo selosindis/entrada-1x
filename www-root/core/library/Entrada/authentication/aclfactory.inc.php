@@ -177,23 +177,24 @@ class ACL_Factory {
                         application_log("error", "Resource [".$resource."] isn't defined in the ACL resource tree. Please fix this in the entrada_acl.php.");
                     }
 				} else {
-                    if(isset($perm["assertion"])) {
+					$asserter = null;
+                    if (isset($perm["assertion"])) {
                         $assertions = explode('&', $perm["assertion"]);
 
-                        if(isset($assertions[1])) {
+                        if (isset($assertions[1])) {
                             $asserter = new MultipleAssertion($assertions);
                         } else {
-                            $assertion_name = $perm["assertion"]."Assertion";
-                            $asserter      	= new $assertion_name();
+                            $assertion_name = $perm["assertion"] . "Assertion";
+                            if (class_exists($assertion_name, true)) {
+                                $asserter = new $assertion_name();
+                            }
                         }
-                    } else {
-                        $asserter = null;
                     }
 
                     $permissions_to_be_granted	= array();
                     $permissions_to_be_denyed	= array();
 
-                    foreach($this->crud as $individual_perm) {
+                    foreach ($this->crud as $individual_perm) {
                         //Only set a rule if the permission is 1 or 0, disregard null values.
                         if($perm[$individual_perm] == '1') {
                             $permissions_to_be_granted[] = $individual_perm;
@@ -202,12 +203,12 @@ class ACL_Factory {
                         }
                     }
 
-                    if(count($permissions_to_be_granted) > 0) {
+                    if (count($permissions_to_be_granted) > 0) {
                         $this->acl->allow($entity, $resource, $permissions_to_be_granted, $asserter);
                         //echo "Granting $entity ".$permissions_to_be_granted[0].$permissions_to_be_granted[1].$permissions_to_be_granted[2].$permissions_to_be_granted[3]." on $resource with ".get_class($asserter).". \n";
                     }
 
-                    if(count($permissions_to_be_denyed) > 0) {
+                    if (count($permissions_to_be_denyed) > 0) {
                         $this->acl->deny($entity, $resource, $permissions_to_be_denyed, $asserter);
                     }
                 }

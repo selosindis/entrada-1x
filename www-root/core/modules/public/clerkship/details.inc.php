@@ -197,7 +197,7 @@ if ($EVENT_ID) {
 							if (is_array($apt_occupants)) {
 								foreach ($apt_occupants as $occupant) {
 									echo "		<tr>\n";
-									echo "			<td class=\"modified\"><img src=\"".ENTRADA_URL."/images/display-gender-".html_encode($occupant["gender"]).".gif\" width=\"14\" height=\"14\" alt=\"Gender: ".ucwords($occupant["gender"])."\" title=\"Gender: ".ucwords($occupant["gender"])."\" /></td>\n";
+									echo "			<td class=\"modified\"><img src=\"".ENTRADA_URL."/images/display-gender-".html_encode(display_gender($occupant["gender"])).".gif\" width=\"14\" height=\"14\" alt=\"Gender: ".ucwords($occupant["gender"])."\" title=\"Gender: ".ucwords($occupant["gender"])."\" /></td>\n";
 									echo "			<td class=\"title\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($occupant["username"])."\" target=\"_blank\">".html_encode($occupant["fullname"])."</a></td>\n";
 									echo "			<td class=\"date-smallest\">".date("D M d/y", $occupant["inhabiting_start"])."</td>\n";
 									echo "			<td class=\"date-smallest\">".date("D M d/y", $occupant["inhabiting_finish"])."</td>\n";

@@ -27,8 +27,9 @@ class Models_Quiz_Progress_Response extends Models_Base {
     
     protected $qpresponse_id, $qprogress_id, $aquiz_id, $content_type, $content_id, $quiz_id, $proxy_id, $qquestion_id, $qqresponse_id, $updated_date, $updated_by;
     
-    protected $table_name = "quiz_progress_responses";
-    protected $default_sort_column = "qpresponse_id";
+    protected static $table_name = "quiz_progress_responses";
+    protected static $default_sort_column = "qpresponse_id";
+    protected static $primary_key = "qpresponse_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);

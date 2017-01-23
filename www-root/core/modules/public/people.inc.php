@@ -204,7 +204,7 @@ if (!defined("PARENT_INCLUDED")) {
 											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 											ON b.`user_id` = a.`id`
 											AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-											JOIN `group_members` AS c
+											INNER JOIN `group_members` AS c
 											ON a.`id` = c.`proxy_id`
 											AND c.`member_active` = 1
 											JOIN `groups` AS d
@@ -212,8 +212,7 @@ if (!defined("PARENT_INCLUDED")) {
 											AND d.`group_active` = 1
 											WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 											AND b.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
-											AND b.`group` = ".$db->qstr($PROCESSED["group"])."
-											AND d.`group_id` = ".$db->qstr($PROCESSED["role"])."
+											AND c.`group_id` = ".$db->qstr($PROCESSED["role"])."
 											GROUP BY a.`id`
 											ORDER BY `fullname` ASC
 											LIMIT %s, %s";
@@ -230,8 +229,7 @@ if (!defined("PARENT_INCLUDED")) {
 											AND d.`group_active` = 1
 											WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 											AND b.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
-											AND b.`group` = ".$db->qstr($PROCESSED["group"])."
-											AND d.`group_id` = ".$db->qstr($PROCESSED["role"])."
+											AND c.`group_id` = ".$db->qstr($PROCESSED["role"])."
 											GROUP BY a.`id`
 											ORDER BY `fullname` ASC";
 					}
@@ -369,12 +367,7 @@ if (!defined("PARENT_INCLUDED")) {
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
 									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-									AND b.`organisation_id` IN (" . $ENTRADA_USER->getActiveOrganisation() . ")
-									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")									
-									OR (b.`group` = 'student' 
-										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
-									AND b.`role` IN (".$role_string."))" : ( $group_string ? "IN (".$group_string."))" : "!= 'guest')")))."
+									WHERE b.`organisation_id` IN (" . $ENTRADA_USER->getActiveOrganisation() . ")
 									AND (a.`number` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 									OR a.`username` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 									OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
@@ -390,10 +383,6 @@ if (!defined("PARENT_INCLUDED")) {
 									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 									AND a.`organisation_id` IN (" . $ORGANISATION_ID . ")
-									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")
-									OR (b.`group` = 'student' 
-										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
-									AND b.`role` IN (".$role_string."))" : ( $group_string ? "IN (".$group_string."))" : "!= 'guest')")))."
 									AND (a.`number` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 									OR a.`username` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 									OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
@@ -453,20 +442,23 @@ if (!defined("PARENT_INCLUDED")) {
 	 * Check if preferences need to be updated on the server at this point.
 	 */
 	preferences_update($MODULE, $PREFERENCES);
-
+	$existcohorts = true;
 	$student_classes = array();
 	$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
 	if (isset($active_cohorts) && !empty($active_cohorts)) {
+		$existcohorts = true;
 		foreach ($active_cohorts as $cohort) {
 			$student_classes[$cohort["group_id"]] = $cohort["group_name"];
 		}
+	}else{
+		$existcohorts = false;
 	}
 	
 	$browse_people		= array();
 	$browse_people[]	= array(
 							"value"		=> "student",
 							"title"		=> "Browse Students",
-							"options"	=> $student_classes
+							"options"	=> (sizeof($student_classes) > 0) ? $student_classes : array("student" => "Show All Students")
 							);
 	$browse_people[]	= array(
 							"value"		=> "resident",
@@ -487,10 +479,11 @@ if (!defined("PARENT_INCLUDED")) {
 	$i = count($HEAD);
 	$HEAD[$i]  = "<script type=\"text/javascript\">\n";
 	$HEAD[$i] .= "addListGroup('account_type', 'cs-top');\n";
+
 	if (is_array($browse_people)) {
 		foreach ($browse_people as $key => $result) {
 				$HEAD[$i] .= "addList('cs-top', '".$result["title"]."', '".$result["value"]."', 'cs-sub-".$key."', ".(((isset($PROCESSED["group"])) && ($PROCESSED["group"] == $result["value"])) ? "1" : "0").");\n";
-				if (is_array($result["options"])) {
+				if (is_array($result["options"]) && sizeof($result["options"])>0) {
 					foreach ($result["options"] as $option => $value) {
 						$HEAD[$i] .= "addOption('cs-sub-".$key."', '".$value."', '".$option."', ".(((isset($PROCESSED["role"])) && ($PROCESSED["role"] == $option)) ? "1" : "0").");\n";
 					}
@@ -500,10 +493,9 @@ if (!defined("PARENT_INCLUDED")) {
 	$HEAD[$i] .= "</script>\n";
 
 	$ONLOAD[] = "initListGroup('account_type', $('group'), $('role'))";
-	$ONLOAD[] = "toggle_visibility_checkbox($('send_notification'), 'send_notification_msg')";
 	
 	if ($ERROR) {
-		echo display_error();	
+		echo display_error();
 	}
 	
 	if ($NOTICE) {
@@ -527,16 +519,16 @@ if (!defined("PARENT_INCLUDED")) {
 			?>
 			<script type="text/javascript">
 			function toggle_search(searchType) {
-				$('ps-basic-mode').hide();
-				$('ps-advanced-mode').hide();
+				$('target-basic-mode').hide();
+				$('target-advanced-mode').hide();
 				$('advanced_search').hide();
 
 				if (searchType == 'advanced') {
-					$('ps-advanced-mode').show();
+					$('target-advanced-mode').show();
 					$('advanced_search').show();
 
 				} else {
-					$('ps-basic-mode').show();
+					$('target-basic-mode').show();
 				}
 			}
 				jQuery(document).ready(function($) {
@@ -552,43 +544,31 @@ if (!defined("PARENT_INCLUDED")) {
 					} 
 				});
 			</script>
-			<form id="search_form" action="<?php echo ENTRADA_URL; ?>/people" method="get">
+			<form id="search_form" class="form-search form-horizontal" action="<?php echo ENTRADA_URL; ?>/people" method="get">
 				<input type="hidden" name="pv" id="search_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
 				<input type="hidden" name="pp" id="search_pp" value="<?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]; ?>" />
 				<input type="hidden" name="type" value="search" />
 				<input type="hidden" name="active_tab" value="" />
-				<div class="row-fluid">
-					<div class="span2">
-						<label for="q" class="form-required">People Search:</label>
-					</div>
-					<div class="span6">
-						<input type="text" id="q" name="q" class="ps-box" value="<?php echo html_encode($plaintext_query); ?>" />
-					</div>
-					<div class="span4">
-						<span class="pull-right">
-							<span id="ps-advanced-mode" onclick="toggle_search('basic')" style="display: none">
-								<i class="icon-arrow-up"></i> <span>Advanced Search</span>
-							</span>
-							<span id="ps-basic-mode" onclick="toggle_search('advanced')">
-								<i class="icon-arrow-down"></i> <span>Advanced Search</span>
-							</span>
-						</span>
-					</div>
+				<div class="input-append space-right">
+					<input type="text" class="input-xxlarge search-query" placeholder="<?php echo $translate->_("Search for name, username, email address or staff / student number."); ?>" id="q" name="q" value="<?php echo html_encode($plaintext_query); ?>" />
+					<button class="btn btn-default" type="submit"><i class="icon-search"></i> Search</button>
 				</div>
-				<div class="row-fluid">
-					<div class="span11 content-small ps-row-margin-top">
-						<strong>Note:</strong> You can search for name, username, e-mail address or staff / student number.
-					</div>
-				</div>
-				
-				<div id="advanced_search" style="display: none;">
+
+				<a id="target-advanced-mode" onclick="toggle_search('basic')" style="display: none" href="#">
+					<i class="fa fa-caret-up"></i> Basic Search
+				</a>
+				<a id="target-basic-mode" onclick="toggle_search('advanced')" href="#">
+					<i class="fa fa-caret-down"></i> Advanced Search
+				</a>
+
+				<div id="advanced_search">
 					<input type="hidden" name="search_groups" id="search_groups" value="<?php echo (isset($_GET["search_groups"]) ? $_GET["search_groups"] : "faculty,resident,staff"); ?>" />
 					<input type="hidden" name="search_organisations" id="search_organisations" value="<?php echo (isset($_GET["search_organisations"]) ? $_GET["search_organisations"] : $ORGANISATION_ID); ?>" />
-					<input type="hidden" name="search_classes" id="search_classes" value="<?php echo (isset($_GET["search_classes"]) ? $_GET["search_classes"] : (date("Y", time()) + $year_offset).",".(date("Y", time()) + $year_offset + 1).",".(date("Y", time()) + $year_offset + 2).",".(date("Y", time()) + $year_offset + 3)); ?>" />				
-						
-					<div class="row-fluid ps-row-margin-top">
-						<div class="span3">
-							<label class="form-required">Groups to search:</label>
+					<input type="hidden" name="search_classes" id="search_classes" value="<?php echo (isset($_GET["search_classes"]) ? $_GET["search_classes"] : (date("Y", time()) + $year_offset).",".(date("Y", time()) + $year_offset + 1).",".(date("Y", time()) + $year_offset + 2).",".(date("Y", time()) + $year_offset + 3)); ?>" />
+
+					<div class="row-fluid space-above">
+						<div class="span2">
+							<label class="form-required pull-right"><?php echo $translate->_("Search within:"); ?></label>
 							<script type="text/javascript">
 								function addSomething(which) {
 									$('search_'+which).value = "0";
@@ -612,129 +592,109 @@ if (!defined("PARENT_INCLUDED")) {
 									addSomething('organisations');
 								}
 							</script>
-						</div>						
-						<div class="span2">
+						</div>
+
+						<div class="span10">
 							<div class="row-fluid">
-								<input id="alumni" type="checkbox" <?php echo (isset($_REQUEST["search_alumni"]) && $_REQUEST["search_alumni"] ? "checked=\"checked\" " : ""); ?>value="1" name="search_alumni" /><label class="content-small" for="alumni"> Alumni</label>
+								<label class="span3 checkbox content-small" for="alumni"><input id="alumni" type="checkbox" <?php echo (isset($_REQUEST["search_alumni"]) && $_REQUEST["search_alumni"] ? "checked=\"checked\" " : ""); ?>value="1" name="search_alumni" /> Alumni</label>
+
+								<label class="span3 checkbox content-small" for="faculty"><input class="search_groups" id="faculty" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("faculty", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "faculty") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="faculty" onclick="addGroup()" /> Faculty</label>
+
+								<label class="span3 checkbox content-small" for="resident"><input class="search_groups" id="resident" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("resident", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "resident") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="resident" onclick="addGroup()" /> Residents</label>
+
+								<label class="span3 checkbox content-small" for="staff"><input class="search_groups" id="staff" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("staff", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "staff") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="staff" onclick="addGroup()" /> Staff</label>
 							</div>
+
 							<div class="row-fluid">
-								<input class="search_groups" id="faculty" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("faculty", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "faculty") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="faculty" onclick="addGroup()" /><label class="content-small" for="faculty"> Faculty</label>
-							</div>
-							<div class="row-fluid">
-								<input class="search_groups" id="resident" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("resident", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "resident") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="resident" onclick="addGroup()" /><label class="content-small" for="resident"> Residents</label>
-							</div>
-							<div class="row-fluid">
-								<input class="search_groups" id="staff" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("staff", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "staff") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="staff" onclick="addGroup()" /><label class="content-small" for="staff"> Staff</label>
+								<?php
+									if ($existcohorts) {
+										foreach ($active_cohorts as $cohort) {
+											echo "<label class=\"span3 checkbox content-small\" for=class_\"" . strtolower(str_replace(' ', '_', $cohort["group_id"])) . "\"><input class=\"search_classes\" id=\"class_" . strtolower(str_replace(' ', '_', $cohort["group_id"])) . "\" type=\"checkbox\" " . ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search($cohort["group_id"], (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == $cohort["group_id"]) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : "") . "value=\"" . $cohort["group_id"] . "\" onclick=\"addClass()\" />" . $cohort["group_name"] . "</label>";
+										}
+									}
+								?>
 							</div>
 						</div>
-						<div class="span2">	
-							<div class="row-fluid">
-								<input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset); ?>"> Class of <?php echo (date("Y", time()) + $year_offset); ?></label>
-							</div>
-							<div class="row-fluid">
-								<input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 1); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 1), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 1)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 1); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 1); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 1); ?></label>
-							</div>
-							<div class="row-fluid">
-								<input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 2), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 2)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 2); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 2); ?></label>
-							</div>
-							<div class="row-fluid">
-								<input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 3), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 3)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 3); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 3); ?></label>
-							</div>
-						</div>
-					</div>
-				</div>
-				
-				<div class="row-fluid ps-row-margin-top">	
-					<div class="span12">
-						<i class="pull-right"><input type="submit" class="btn btn-primary" value="Search" /></i>
+
 					</div>
 				</div>
 			</form>
 		</div>
 		<div class="tab-pane" id="browse_group_tab">
-			<form id="browse-group_form" action="<?php echo ENTRADA_URL; ?>/people" method="get">
-			<input type="hidden" name="type" value="browse-group" />
-			<input type="hidden" name="pv" id="browse-group_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
-			<input type="hidden" name="pp" id="browse-group_pp" value="<?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]; ?>" />
-			<input type="hidden" name="active_tab" value="" />
-			<div class="row-fluid">
-				<div class="span2">
-					<label for="group" class="form-required">Browse Group:</label>
-
+			<form id="browse-group_form" action="<?php echo ENTRADA_URL; ?>/people" method="get" class="form-horizontal">
+				<input name="type" value="browse-group" type="hidden">
+				<input name="pv" id="browse-group_pv" value="1" type="hidden">
+				<input name="pp" id="browse-group_pp" value="50" type="hidden">
+				<input name="active_tab" value="#browse_group_tab" type="hidden">
+				<div class="control-group">
+					<label for="group" class="form-required control-label">Browse Group:</label>
+					<div class="controls">
+						<select id="group" name="g" class="ps-group-select span5"></select>
+					</div>
 				</div>
-				<div class="span6">
-					<select id="group" name="g" class="ps-group-select"></select>
+				<div class="control-group">
+					<label for="role" class="control-label form-required">Browse Role:</label>
+					<div class="controls">
+						<select id="role" name="r" class="ps-role-select span5"></select>
+					</div>
 				</div>
-			</div>
-					
-			<div class="row-fluid ps-row-margin-top">
-				<div class="span2">
-					<label for="role" class="form-nrequired">Browse Role:</label>
+				<div class="control-group">
+					<div class="controls">
+						<button class="btn btn-primary" type="submit"><i class="icon-search icon-white"></i> Browse People</button>
+					</div>
 				</div>
-				<div class="span6">
-					<select id="role" name="r" class="ps-role-select"></select>
-				</div>
-			</div>
-				
-			<div class="row-fluid ps-row-margin-top">	
-				<div class="span12">
-					<i class="pull-right"><input type="submit" class="btn btn-primary" value="Browse" /></i>
-				</div>
-			</div>
 			</form>
 		</div>
 		<div class="tab-pane" id="browse_dept_tab">
-			<form id="browse-dept_form" action="<?php echo ENTRADA_URL; ?>/people" method="get">
+			<form id="browse-dept_form" action="<?php echo ENTRADA_URL; ?>/people" method="get" class="form-horizontal">
 			<input type="hidden" name="type" value="browse-dept" />
 			<input type="hidden" name="pv" id="browse-dept_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
 			<input type="hidden" name="pp" id="browse-dept_pp" value="<?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]; ?>" />
 			<input type="hidden" name="active_tab" value="" />
 			
 			<div class="row-fluid">
-				<div class="span3">
-					<label for="department" class="form-required">Browse Department:</label>
-				</div>
-				
 				<div class="span9">
-					<select id="department" name="d" class="ps-department-select">
-
-					<?php
-					$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
+					<div class="control-group">
+						<label for="department" class="control-label form-required">Browse Department:</label>
+						<div class="controls">
+							<select id="department" name="d" class="ps-department-select">
+								<?php
+								$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
 								FROM `".AUTH_DATABASE."`.`departments` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
 								ON a.`entity_id` = b.`entity_id`
 								LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
 								ON a.`organisation_id` = c.`organisation_id`
-								WHERE a.`department_active` = '1'
+								WHERE a.`department_active` = '1' AND a.`organisation_id` = ".$ORGANISATION_ID."
 								ORDER BY c.`organisation_title` ASC, a.`department_title`";
-					$results	= $db->GetAll($query);
-					if ($results) {
-						$organisation_title = "";
+								$results	= $db->GetAll($query);
+								if ($results) {
+									$organisation_title = "";
 
-						foreach ($results as $key => $result) {
-							if ($organisation_title != $result["organisation_title"]) {
-								if ($key) {
+									foreach ($results as $key => $result) {
+										if ($organisation_title != $result["organisation_title"]) {
+											if ($key) {
+												echo "</optgroup>";
+											}
+											echo "<optgroup label=\"".html_encode($result["organisation_title"])."\">";
+
+											$organisation_title = $result["organisation_title"];
+										}
+
+										echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($browse_department)) && ((int) $browse_department) && ($browse_department == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["department_title"])."</option>\n";
+									}
 									echo "</optgroup>";
 								}
-								echo "<optgroup label=\"".html_encode($result["organisation_title"])."\">";
-
-								$organisation_title = $result["organisation_title"];
-							}
-
-							echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($browse_department)) && ((int) $browse_department) && ($browse_department == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["department_title"])."</option>\n";
-						}
-						echo "</optgroup>";
-					}
-					?>
-					</select>
+								?>
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="span3">
+					<button class="btn btn-primary pull-right" type="submit"><i class="icon-search icon-white"></i> Browse Departments</button>
 				</div>
 			</div>
-			
-			<div class="row-fluid ps-vertical-margins">	
-				<div class="span12">
-					<i class="pull-right"><input type="submit" class="btn btn-primary" value="Browse" /></i>
-				</div>
-			</div>
+
 			</form>
 		</div>
 	</div>
@@ -743,33 +703,43 @@ if (!defined("PARENT_INCLUDED")) {
 	if (($search_query) || (isset($load_profile) && $load_profile)) {
 		if ($search_query) {
 			if ($total_pages > 1) {
-				echo "<div class=\"row-fluid\">\n";
-				echo "<div class=\"pull-right ps-vertical-margins\">\n";
-				echo "<form action=\"".ENTRADA_URL."/".$MODULE."\" method=\"get\" id=\"pageSelector\" class=\"ps-pagination-form\">\n";
-				echo "<span class=\"ps-pagination-link\">\n";
-				if ($page_previous) {
-					echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_previous))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$page_previous.".\" title=\"Back to page ".$page_previous.".\" class=\"ps-pagination-image\" /></a>\n";
-				} else {
-					echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" class=\"ps-pagination-image\" title=\"\" />";
-				}
-				echo "</span>";
-				echo "<span class=\"ps-pagination-select\">\n";
-				echo "<select name=\"pv\" onchange=\"window.location = '".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => false))."&amp;pv='+this.options[this.selectedIndex].value;\"".(($total_pages <= 1) ? " disabled=\"disabled\"" : "").">\n";
+
 				for ($i = 1; $i <= $total_pages; $i++) {
-					echo "<option value=\"".$i."\"".(($i == $page_current) ? " selected=\"selected\"" : "").">".(($i == $page_current) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
+					$pagesarray[$i-1] = $i;
 				}
-				echo "</select>\n";
-				echo "</span>\n";
-				echo "<span class=\"ps-pagination-link\">\n";
-				if ($page_current < $total_pages) {
-					echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_next))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$page_next.".\" title=\"Forward to page ".$page_next.".\" class=\"ps-pagination-image\" /></a>";
-				} else {
-					echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" class=\"ps-pagination-image\" />";
+
+				$intervals = array_chunk($pagesarray, 12);
+				$intervalindex = 0;
+
+				foreach ($intervals as $key => $val) {
+					foreach ($val as $ind => $num) {
+						if ($num === $page_current) {
+							$intervalindex = $key;
+							break;
+						}
+					}
 				}
-				echo "</span>\n";
-				echo "</form>\n";
-				echo "</div>\n";
-				echo "</div>\n";
+
+				$paginationbar .= "<div class=\"pagination pagination-small pagination-centered\"><ul>";
+				$paginationbar .= "<li><a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => 1))."\"><i class=\"fa fa-angle-double-left\"></i></a></li>";
+
+				if ($page_previous) {
+					$paginationbar .= "<li><a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_previous))."\"><i class=\"fa fa-angle-left\"></i></a></li>";
+				}
+
+				//for ($i = ($page_current < 5 ? 1 : ($page_current-5)); $i <= ($page_current+5); $i++) {
+				for ($i = $intervals[$intervalindex][0]; $i <= $intervals[$intervalindex][sizeof($intervals[$intervalindex]) - 1]; $i++) {
+					$paginationbar .= "<li ".(($i == $page_current) ? " class=\"active\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => false))."&amp;pv=".$i."\">".$i."</a></li>";
+				}
+
+				if ($page_next) {
+					$paginationbar .= "<li><a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_next))."\"><i class=\"fa fa-angle-right\"></i></a></li>";
+				}
+
+				$paginationbar .= "<li><a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $total_pages))."\"><i class=\"fa fa-angle-double-right\"></i></a></li>";
+				$paginationbar .= "</ul></div>";
+
+				echo $paginationbar;
 			}
 			/**
 			 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
@@ -782,9 +752,13 @@ if (!defined("PARENT_INCLUDED")) {
 			$results			= $db->GetAll($query_profile);
 			if (!$results) {
 				$query_profile	= "
-								SELECT a.*, b.`group`, b.`role`, b.`organisation_id`
+								SELECT a.*, c.`country`, d.`province`, b.`group`, b.`role`, b.`organisation_id`
 								FROM `".AUTH_DATABASE."`.`user_data` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+								LEFT JOIN `global_lu_countries` AS c
+								ON c.`countries_id` = a.`country_id`
+								LEFT JOIN `global_lu_provinces` AS d
+								ON d.`province_id` = a.`province_id`
 								ON b.`user_id` = a.`id`
 								WHERE  b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 								AND b.`account_active` = 'true'
@@ -792,6 +766,7 @@ if (!defined("PARENT_INCLUDED")) {
 								AND (b.`access_expires` = '0' OR b.`access_expires` >= ".$db->qstr(time()).")
 								AND ".((is_numeric($load_profile)) ? "a.`id` = ".$db->qstr((int) $load_profile) : "a.`username` = ".$db->qstr($load_profile))."
 								GROUP BY a.`id`";
+				echo $query_profile;
 				$results		= $db->GetAll($query_profile);
 			}
 			$search_query		= $load_profile;
@@ -802,12 +777,13 @@ if (!defined("PARENT_INCLUDED")) {
 		
 		if ($results) {
 			echo "<div class=\"row-fluid ps-search-summary-bar\">\n";
-			echo "	<div class=\"span3 ps-search-result-title ps-vertical-margins\">People Search Results:</div>\n";
+			echo "	<div class=\"span3 ps-search-result-title ps-vertical-margins\">" . $translate->_("Search Results:") . "</div>\n";
 			echo "	<div class=\"span9 ps-search-result-summary ps-vertical-margins\"><span class=\"pull-right\">".$total_rows." Result".(($total_rows != 1) ? "s" : "")." Found. Results ".($limit_parameter + 1)." - ".((($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) <= $total_rows) ? ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) : $total_rows)." for &quot;<strong>".$search_query."</strong>&quot; shown below.</span></div>\n";
 			echo "</div>";
-			
+			echo "<div class=\"row-fluid\">";
+			$flag = 1;
 			foreach ($results as $key => $result) {
-				echo "<div id=\"result-".$result["id"]."\" class=\"media ps-media-padding\" style=\"overflow: visible;".($key % 2 == 1 ? " background-color: rgb(238, 238, 238);" : "")."\">\n";
+				echo "<div id=\"result-".$result["id"]."\" class=\"media ps-media-padding span6\" style=\"border:none; overflow: visible;".($key % 2 == 1 ? " background-color: rgb(238, 238, 238);" : "")."\">\n";
 			
 				$offical_file_active	= false;
 				$uploaded_file_active	= false;
@@ -834,18 +810,18 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 				echo "<div id=\"img-holder-".$result["id"]."\" class=\"img-holder pull-left\">";
 				if ($offical_file_active) {
-					echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official people-search-thumb\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+					echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official people-search-thumb img-circle img-polaroid\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
 				}
  
 				if ($uploaded_file_active) {
-					echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded people-search-thumb\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
+					echo "		<img id=\"uploaded_photo_".$result["id"]."\" class=\"uploaded people-search-thumb img-circle img-polaroid\" src=\"".webservice_url("photo", array($result["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
 				}
 
 				if (($offical_file_active) || ($uploaded_file_active)) {
-					echo "		<a id=\"zoomin_photo_".$result["id"]."\" class=\"zoomin\" onclick=\"growPic($('official_photo_".$result["id"]."'), $('uploaded_photo_".$result["id"]."'), $('official_link_".$result["id"]."'), $('uploaded_link_".$result["id"]."'), $('zoomout_photo_".$result["id"]."'));\">+</a>";	
+					echo "		<a id=\"zoomin_photo_".$result["id"]."\" class=\"zoomin\" onclick=\"growPic($('official_photo_".$result["id"]."'), $('uploaded_photo_".$result["id"]."'), $('official_link_".$result["id"]."'), $('uploaded_link_".$result["id"]."'), $('zoomout_photo_".$result["id"]."'));\"><i class=\"fa fa-search-plus\" aria-hidden=\"true\"></i></a>";
 					echo "		<a id=\"zoomout_photo_".$result["id"]."\" class=\"zoomout\" onclick=\"shrinkPic($('official_photo_".$result["id"]."'), $('uploaded_photo_".$result["id"]."'), $('official_link_".$result["id"]."'), $('uploaded_link_".$result["id"]."'), $('zoomout_photo_".$result["id"]."'));\"></a>";
 				} else {
-					echo "		<img class=\"media-object people-search-thumb\" src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+					echo "		<img class=\"media-object people-search-thumb img-circle img-polaroid\" src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
 				}
 				
 				if (($offical_file_active) && ($uploaded_file_active)) {
@@ -854,48 +830,45 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 				echo "</div>";
 				echo "<div class=\"media-body\">";
-				echo "<div class=\"pull-left ps-media-body-margin\">";
-				echo "<h5 class\"media-heading ps-media-heading\">" . html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"]) . "</h5>";
-				echo "<span class=\"content-small\">";
-				if($departmentResults = get_user_departments($result["id"])) {
-					$deptCtr = 0;
-					foreach($departmentResults as $key => $departmentValue) {
-						if ($deptCtr == 0) {
-							$deptCtr++;
-							echo ucwords($departmentValue["department_title"]);
-						} else {
-							$deptCtr++;
-							echo "<br />".ucwords($departmentValue["department_title"]);
-						}
+				echo "	<div class=\"pull-left ps-media-body-margin muted\">";
+				echo "		<h4 class=\"media-heading ps-media-heading\">" . html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"]) . "</h4>";
+
+				$departmentResults = get_user_departments($result["id"]);
+				if ($departmentResults) {
+					foreach ($departmentResults as $key => $departmentValue) {
+						echo (($key > 0) ? "<br />" : "") . $departmentValue["department_title"];
 					}
 				} else {
 					if ($result["group"] == "student") {
 						$cohort = groups_get_cohort($result["id"]);
 					}
-					echo ucwords($result["group"])." > ".($result["group"] == "student" && isset($cohort["group_name"]) ? $cohort["group_name"] : ucwords($result["role"]));
+
+					echo ucwords($result["group"])." <i class=\"fa fa-caret-right\" aria-hidden=\"true\"></i> ".($result["group"] == "student" && isset($cohort["group_name"]) ? $cohort["group_name"] : ucwords($result["role"]));
 				}
+
 				echo (isset($ORGANISATIONS_BY_ID[$result["organisation_id"]]) ? "<br />".$ORGANISATIONS_BY_ID[$result["organisation_id"]]["organisation_title"] : "")."\n";
-					echo "<br />";
+
+				echo "<br /><br />";
+
 				if ($result["privacy_level"] > 1 || $is_administrator) {
-					echo "			<a href=\"mailto:".html_encode($result["email"])."\" class=\"ps-email\">".html_encode($result["email"])."</a><br />\n";
+					echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["email"])."</a><br />\n";
 					
 					if ($result["email_alt"]) {
-						echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\" class=\"ps-email\">".html_encode($result["email_alt"])."</a>\n";
+						echo "<a href=\"mailto:".html_encode($result["email_alt"])."\">".html_encode($result["email_alt"])."</a>\n";
 					}
 				}
-				echo "</span></div>";
-				echo "<div class=\"content-small ps-address-margin pull-left\"\">";
+
 				if (($result["privacy_level"] > 2 || $is_administrator)) {
 					if ($result["telephone"]) {
-						echo "Telephone: \n";
-						echo html_encode($result["telephone"]). "\n<br />";
+						echo "Telephone: " . html_encode($result["telephone"]) . "<br />";
 					}
+
 					if ($result["fax"]) {
-						echo "Fax:\n";
-						echo html_encode($result["fax"])."\n<br />";
+						echo "Fax: " . html_encode($result["fax"]) . "<br />";
 					}
+
 					if ($result["address"] && $result["city"]) {
-						echo "Address:\n";
+						echo "<br />Address:";
 						echo "<address>";
                         echo    html_encode($result["address"])."<br />\n";
 						echo    html_encode($result["city"].($result["city"] && $result["province"] ? ", ".$result["province"] : ""))."<br />\n";
@@ -903,8 +876,7 @@ if (!defined("PARENT_INCLUDED")) {
                         echo "</address>";
 					}
 					if ($result["office_hours"]) {
-						echo "Office Hours:\n";
-						echo nl2br(html_encode($result["office_hours"]))."\n";
+						echo "Office Hours: " . nl2br(html_encode($result["office_hours"])) . "<br />";
 					}
 				}
 				
@@ -917,19 +889,25 @@ if (!defined("PARENT_INCLUDED")) {
 								ORDER BY `valid_until` ASC";
 				$assistants	= $db->GetAll($query);
 				if ($assistants) {
-					echo "		<span class=\"content-small\">Administrative Assistants:</span>\n";
-					echo "		<ul class=\"assistant-list\">";
+					echo "<br />Administrative Assistants";
 					foreach ($assistants as $assistant) {
-						echo "		<li><a href=\"mailto:".html_encode($assistant["email"])."\">".html_encode($assistant["fullname"])."</a></li>";
+						echo "<br /> <i class=\"fa fa-user\" aria-hidden=\"true\"></i> <a href=\"mailto:".html_encode($assistant["email"])."\">".html_encode($assistant["fullname"])."</a>";
 					}
-					echo "		</ul>";
 				}
-				echo "</div>\n"; 
-				echo "</div>\n"; ?>
+				?>
+					</div>
+				</div>
 				<div class="clearfix"> </div>
 			<?php
 				echo "</div>\n";
+				if ($flag == 2) {
+					echo "</div><div class=\"row-fluid\">";
+					$flag = 1;
+				} else {
+					$flag = $flag + 1;
+				}
 			}
+			echo "</div>";
 			
 		} else {
 			echo "<div class=\"display-notice\">\n";
@@ -937,34 +915,9 @@ if (!defined("PARENT_INCLUDED")) {
 			echo "	There are no people in the system found which contain matches to &quot;<strong>".$search_query."</strong>&quot;.";
 			echo "</div>\n";
 		}
+
 		if ($total_pages > 1) {
-			echo "<div class=\"row-fluid\">\n";
-			echo "<div class=\"pull-right ps-vertical-margins\">\n";
-			echo "<form action=\"".ENTRADA_URL."/".$MODULE."\" method=\"get\" id=\"pageSelector\" class=\"ps-pagination-form\">\n";
-			echo "<span class=\"ps-pagination-link\">\n";
-			if ($page_previous) {
-				echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_previous))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$page_previous.".\" title=\"Back to page ".$page_previous.".\" class=\"ps-pagination-image\" /></a>\n";
-			} else {
-				echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" class=\"ps-pagination-image\" title=\"\" />";
-			}
-			echo "</span>";
-			echo "<span class=\"ps-pagination-select\">\n";
-			echo "<select name=\"pv\" onchange=\"window.location = '".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => false))."&amp;pv='+this.options[this.selectedIndex].value;\"".(($total_pages <= 1) ? " disabled=\"disabled\"" : "").">\n";
-			for ($i = 1; $i <= $total_pages; $i++) {
-				echo "<option value=\"".$i."\"".(($i == $page_current) ? " selected=\"selected\"" : "").">".(($i == $page_current) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
-			}
-			echo "</select>\n";
-			echo "</span>\n";
-			echo "<span class=\"ps-pagination-link\">\n";
-			if ($page_current < $total_pages) {
-				echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_next))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$page_next.".\" title=\"Forward to page ".$page_next.".\" class=\"ps-pagination-image\" /></a>";
-			} else {
-				echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" class=\"ps-pagination-image\" />";
-			}
-			echo "</span>\n";
-			echo "</form>\n";
-			echo "</div>\n";
-			echo "</div>\n";
+			echo $paginationbar;
 		}
 	}
 	

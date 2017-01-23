@@ -29,7 +29,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ENCOUNTER_TRACKING"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		header("Location: ".ENTRADA_URL);
 		exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('encounter_tracking', 'read')) {
+} elseif (!$ENTRADA_ACL->amIAllowed('encounter_tracking', 'read') && !$ENTRADA_ACL->amIAllowed("academicadvisor", "read", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -48,6 +48,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ENCOUNTER_TRACKING"))) {
 		} else {
 			$entry = new Models_Logbook_Entry();
 		}
+
+        $user_proxy_id = false;
+        if ($ENTRADA_ACL->amIAllowed("academicadvisor", "read", false)) {
+            if (isset($_GET["proxy_id"]) && $tmp_input = clean_input($_GET["proxy_id"], array("trim", "int"))) {
+                $user_proxy_id = $tmp_input;
+            }
+        }
 		
 		switch ($STEP) {
 			case 2 :
@@ -409,7 +416,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ENCOUNTER_TRACKING"))) {
                                 } 
                                 ?>
                             </div>
+                            <?php if (!$user_proxy_id): ?>
                             <input type="button" class="btn btn-danger" value="Remove Selected" onclick="removeObjectives()"/>
+                            <?php endif ?>
                         </span>
                     </div>
                     <br />
@@ -427,14 +436,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ENCOUNTER_TRACKING"))) {
                     </div>
                     <div class="row-fluid">
                         <span class="span3">
-                            <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship'" />
+                            <?php
+                            $back_url = $user_proxy_id ? ENTRADA_URL . "/logbook?proxy_id=" . $user_proxy_id : ENTRADA_URL . "/clerkship";
+                            $back_text = $user_proxy_id ? "Back" : "Cancel";
+                            ?>
+                            <input type="button" class="btn" value="<?php echo $back_text; ?>" onclick="window.location='<?php echo $back_url; ?>'" />
                         </span>
                         <span class="span7">
                             &nbsp;
                         </span>
+                        <?php if (!$user_proxy_id): ?>
                         <span class="span2">
                             <input type="submit" class="btn btn-primary pull-right" value="Submit" />
                         </span>
+                        <?php endif ?>
                     </div>
 				</form>
 				<?php

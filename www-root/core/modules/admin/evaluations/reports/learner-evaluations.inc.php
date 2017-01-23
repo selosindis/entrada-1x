@@ -214,9 +214,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                 $evaluation_question["flat_responses"][$question_response["response_order"]] = ($responses ? count($responses) : 0);
                                 $evaluation_question["question_responses"][$question_response["eqresponse_id"]] = $question_response;
                             }
-                            $evaluation_question["question_parents"] = Models_Evaluation::getQuestionParents($evaluation_question["question_parent_id"]);
+                            $evaluation_question["question_parents"] = Classes_Evaluation::getQuestionParents($evaluation_question["question_parent_id"]);
                             $evaluation_question["question_parent_ids"] = array_keys($evaluation_question["question_parents"]);
-                            $evaluation_question["question_objectives"] = Models_Evaluation::getQuestionObjectives($evaluation_question["equestion_id"]);
+                            $evaluation_question["question_objectives"] = Classes_Evaluation::getQuestionObjectives($evaluation_question["equestion_id"]);
                             $evaluation_question["question_objective_ids"] = array_keys($evaluation_question["question_objectives"]);
                             if (@count($evaluation_question["question_objectives"])) {
                                 $hidden_question_ids[] = $evaluation_question["equestion_id"];

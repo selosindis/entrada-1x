@@ -516,6 +516,9 @@ function clean_input($string, $rules = array()) {
 				case "striptags" :
 					$string = strip_tags($string);
 					break;
+                case "msword" :
+                    $string = iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $string);
+                    break;
 				default :	// Unknown rule, log notice.
 					application_log("notice", "Unknown clean_input function rule [" . $rule . "]");
 					break;

@@ -43,8 +43,8 @@ class Models_Community_Share_File extends Models_Base {
                 $updated_by,
                 $notify;
 
-    protected $table_name = "community_share_files";
-    protected $default_sort_column = "csfile_id";
+    protected static $table_name = "community_share_files";
+    protected static $default_sort_column = "csfile_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -213,4 +213,10 @@ class Models_Community_Share_File extends Models_Base {
         return $output;
     }
 
+    public static function fetchRowByID($csfile_id) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "csfile_id", "value" => $csfile_id, "method" => "=")
+        ));
+    }
 }

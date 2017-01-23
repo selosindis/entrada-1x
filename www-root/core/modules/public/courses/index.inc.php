@@ -30,8 +30,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		header("Location: ".ENTRADA_URL);
 		exit;
 } else {
-
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE, "title" => "View " . $translate->_("courses"));
+    $BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE, "title" => "View " . $translate->_($MODULE));
 
 	/**
 	 * Check for groups which have access to the administrative side of this module
@@ -197,7 +196,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					} ?>
 
 					<div class="control-group">
-						<label for="course_directors" class="form-nrequired control-label"><strong><?php echo $translate->_("course_directors"); ?></strong></label>
+						<label for="course_directors" class="form-nrequired control-label"><strong><?php echo $translate->_("Course Directors"); ?></strong></label>
 						<div class="controls">
 						<?php
 							$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
@@ -221,7 +220,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</div>
 
 					<div class="control-group">
-						<label for="curriculum_coordinators" class="form-nrequired control-label"><strong><?php echo $translate->_("curriculum_coordinators"); ?></strong></label>
+						<label for="curriculum_coordinators" class="form-nrequired control-label"><strong><?php echo $translate->_("Curriculum Coordinators"); ?></strong></label>
 						<div class="controls">
 							<?php
 								$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
@@ -245,7 +244,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</div>
 
 					<div class="control-group">
-						<label for="instructors" class="form-nrequired control-label"><strong><?php echo $translate->_("faculty"); ?></strong></label>
+						<label for="instructors" class="form-nrequired control-label"><strong><?php echo $translate->_("Faculty"); ?></strong></label>
 						<div class="controls">
 							<?php
 							$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
@@ -271,7 +270,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<?php
 					if((int) $course_details["pcoord_id"]) { ?>
 						<div class="control-group">
-							<label for="program_coordinator" class="form-nrequired control-label"><strong><?php echo $translate->_("program_coordinator"); ?></strong></label>
+							<label for="program_coordinator" class="form-nrequired control-label"><strong><?php echo $translate->_("Program Coordinator"); ?></strong></label>
 							<div class="controls">
 								<a href="mailto:<?php echo get_account_data("email", $course_details["pcoord_id"]);?>"><?php echo get_account_data("fullname", $course_details["pcoord_id"]);?></a>
 							</div>
@@ -281,7 +280,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 					if((int) $course_details["evalrep_id"]) { ?>
 						<div class="control-group">
-							<label for="eval_rep" class="form-nrequired control-label"><strong><?php echo $translate->_("evaluation_rep"); ?></strong></label>
+							<label for="eval_rep" class="form-nrequired control-label"><strong><?php echo $translate->_("Evaluation Rep"); ?></strong></label>
 							<div class="controls">
 								<a href="mailto:<?php echo get_account_data("email", $course_details["evalrep_id"]);?>"><?php echo get_account_data("fullname", $course_details["evalrep_id"]);?></a>
 							</div>
@@ -291,7 +290,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 					if((int) $course_details["studrep_id"]) { ?>
 						<div class="control-group">
-							<label for="stud_rep" class="form-nrequired control-label"><strong><?php echo $translate->_("student_rep"); ?></strong></label>
+							<label for="stud_rep" class="form-nrequired control-label"><strong><?php echo $translate->_("Student Rep"); ?></strong></label>
 							<div class="controls">
 								<a href="mailto:<?php echo get_account_data("email", $course_details["studrep_id"]);?>"><?php echo get_account_data("fullname", $course_details["studrep_id"]);?></a>
 							</div>

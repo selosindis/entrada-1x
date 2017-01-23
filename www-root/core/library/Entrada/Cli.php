@@ -30,10 +30,11 @@ class Entrada_Cli {
     protected $commands = array(
         "migrate" => "Allows you to manage database migrations.",
         "model" => "Create blank models based on database information.",
+        "setup" => "Command line installation utility.",
         "help" => "The Entrada CLI help menu.",
     );
 
-    protected $quiet = false;
+    public $quiet = false;
 
     public function gogogo() {
         /*
@@ -55,9 +56,9 @@ class Entrada_Cli {
             $action = $entrada->getCliAction();
 
             if ($action["value"]) {
-                $entrada->$action["action"]($action["value"]);
+                $entrada->{$action["action"]}($action["value"]);
             } else {
-                $entrada->$action["action"]();
+                $entrada->{$action["action"]}();
             }
         } else {
             $help = new Entrada_Cli_Help("help");
@@ -120,6 +121,45 @@ class Entrada_Cli {
         }
 
         print "\n";
+    }
+
+    /**
+     * http://www.sitepoint.com/interactive-cli-password-prompt-in-php/
+     * 
+     * Interactively prompts for input without echoing to the terminal.
+     * Requires a bash shell or Windows and won't work with
+     * safe_mode settings (Uses `shell_exec`)
+     *
+     * @param string $question
+     * @return string|void
+     */
+    public function promptSilent($question = "") {
+        $accepted = false;
+
+        do {
+            if (preg_match("/^win/i", PHP_OS)) {
+                $vbscript = sys_get_temp_dir() . "prompt_password.vbs";
+                file_put_contents($vbscript, 'wscript.echo(InputBox("' . addslashes($question) . ': ", "", "password here"))');
+                $command = "cscript //nologo " . escapeshellarg($vbscript);
+                $password = rtrim(shell_exec($command));
+                unlink($vbscript);
+            } else {
+                $command = "/usr/bin/env bash -c 'echo OK'";
+                if (rtrim(shell_exec($command)) !== 'OK') {
+                    trigger_error("Can't invoke bash");
+                    return;
+                }
+
+                $command = "/usr/bin/env bash -c 'read -s -p \"". addslashes($question) . ": \" mypassword && echo \$mypassword'";
+                $password = rtrim(shell_exec($command));
+            }
+
+            if ($password) {
+                $accepted = true;
+            }
+        } while (!$accepted);
+
+        return $password;
     }
 
     public function prompt($question = "", $acceptable_responses = false, $input_rules = array()) {

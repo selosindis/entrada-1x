@@ -25,10 +25,10 @@
 class Models_Department extends Models_Base {
     protected $department_id, $organisation_id, $entity_id, $parent_id, $department_title, $department_address1, $department_address2, $department_city, $department_province, $province_id, $department_country, $country_id, $department_postcode, $department_telephone, $department_fax, $department_email, $department_url, $department_desc, $department_active, $updated_date, $updated_by;
 
-    protected $database_name = AUTH_DATABASE;
-    protected $table_name = "departments";
-    protected $primary_key = "department_id";
-    protected $default_sort_column = "department_title";
+    protected static $database_name = AUTH_DATABASE;
+    protected static $table_name = "departments";
+    protected static $primary_key = "department_id";
+    protected static $default_sort_column = "department_title";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -127,6 +127,21 @@ class Models_Department extends Models_Base {
         return $self->fetchRow(array(
             array("key" => "department_id", "value" => $department_id, "method" => "=")
         ));
+    }
+
+    public static function fetchRowByName($department_title, $organisation_id, $active = 1) {
+        global $db;
+
+        $organisation_id = (int) $organisation_id;
+        $active = (($active == 1) ? 1 : 0);
+
+        $query = "SELECT *
+                    FROM `" . AUTH_DATABASE . "`.`departments`
+                    WHERE `department_title` = ?
+                    AND `organisation_id` = ?
+                    AND `department_active` = ?";
+
+        return $db->GetRow($query, array($department_title, $organisation_id, $active));
     }
 
     public static function fetchAllRecords() {

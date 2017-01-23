@@ -29,7 +29,9 @@ class Models_Event_EventType extends Models_Base {
               $eventtype_id,
               $duration;
     
-    protected $table_name = "event_eventtypes";
+    protected static $table_name            = "event_eventtypes";
+    protected static $default_sort_column   = "eeventtype_id";
+    protected static $primary_key           = "eeventtype_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -51,21 +53,19 @@ class Models_Event_EventType extends Models_Base {
         return $this->duration;
     }
     
-    public function fetchAllByEventID () {
-        return $this->fetchAll(array("event_id" => $this->event_id));
+    public static function fetchAllByEventID ($event_id) {
+        $self = new self();
+        return $self->fetchAll(array(
+                array("key" => "event_id", "value" => $event_id, "method" => "=", "mode" => "AND")
+            )
+        );
     }
     
-    public function fetchRowByEventID () {
-        return $this->fetchRow(array("event_id" => $this->event_id));
+    public static function fetchRowByEventID ($event_id) {
+        $self = new self();
+        return $self->fetchRow(array(
+                array("key" => "event_id", "value" => $event_id, "method" => "=", "mode" => "AND")
+            )
+        );
     }
-    
-    public function update() {
-		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`eeventtype_id` = ".$db->qstr($this->getID()))) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-    
 }

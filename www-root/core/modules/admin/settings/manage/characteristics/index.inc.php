@@ -34,7 +34,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	?>
-    <h1><?php echo $translate->_("Assessment Characteristics"); ?></h1>
+    <h1><?php echo $translate->_("Assessment Types"); ?></h1>
 
     <div class="row-fluid">
         <span class="pull-right">
@@ -54,7 +54,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 	if ($results) {
         ?>
         <form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/characteristics?section=delete&amp;org=<?php echo $ORGANISATION_ID; ?>" method="post">
-            <table class="table table-striped" summary="<?php echo $translate->_("Assessment Characteristics"); ?>">
+            <table class="table table-striped" summary="<?php echo $translate->_("Assessment Types"); ?>">
                 <colgroup>
                     <col style="width: 3%" />
                     <col style="width: 17%" />
@@ -77,7 +77,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
         </form>
         <?php
 	} else{
-		add_notice("There are currently no " . $translate->_("Assessment Characteristics") . " associated with <strong>".html_encode($ORGANISATION["organisation_title"])."</strong>.");
+		add_notice("There are currently no " . $translate->_("Assessment Types") . " associated with <strong>".html_encode($ORGANISATION["organisation_title"])."</strong>.");
 
 		echo display_notice();
 	}

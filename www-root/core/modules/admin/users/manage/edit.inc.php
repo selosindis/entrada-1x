@@ -198,7 +198,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                 if (valid_address($PROCESSED["email"])) {
                     $user = Models_User::fetchRowByEmail($PROCESSED["email"]);
 
-                    if ($user->getID() != $user_record["id"]) {
+                    if ($user && $user->getID() != $user_record["id"]) {
                         add_error("The e-mail address <strong>".html_encode($PROCESSED["email"])."</strong> already exists in the system under the Username <strong>".html_encode($user->getUsername())."</strong>. Please provide a unique <strong>Primary E-Mail</strong> for this user.");
                     }
                 } else {
@@ -456,6 +456,11 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 				}
 			}
 
+            if (isset($_POST["user_departments"]) && $_POST["user_departments"]) {
+                $user_departments = json_decode(json_decode($_POST["user_departments"]));
+                $PROCESSED["department_ids"] = array_unique($user_departments);
+            }
+
 			if (!$ERROR) {
                 if ($PROCESSED["password"]) {
                     $PROCESSED["password"] = sha1($PROCESSED["password"].$PROCESSED["salt"]);
@@ -466,7 +471,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                 $PROCESSED["updated_date"] = time();
 
 				if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_data`", $PROCESSED, "UPDATE", "id = ".$db->qstr($PROXY_ID))) {
-                    $current_user_permissions = Models_UserAccess::fetchAllByUserIDAppID($PROXY_ID);
+                    $current_user_permissions = Models_User_Access::fetchAllByUserIDAppID($PROXY_ID);
 
 					if ($current_user_permissions) {
 						foreach ($current_user_permissions as $user_permission) {
@@ -528,30 +533,6 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                                 continue;
                             }
 
-                            /**
-                             * Remove the user from any cohorts they may reside in.
-                             */
-                            $cohort_ids = array();
-
-                            $query = "  SELECT a.`group_id`
-                                        FROM `groups` AS a
-                                        JOIN `group_organisations` AS b
-                                        ON a.`group_id` = b.`group_id`
-                                        AND b.`organisation_id` = ".$db->qstr($organisation_id)."
-                                        WHERE `group_type` = 'cohort'
-                                        AND `group_active` = 1";
-                            
-                            $cohorts = $db->GetAll($query);
-                            
-                            if ($cohorts) {
-                                foreach ($cohorts as $cohort) {
-                                    $cohort_ids[] = $cohort["group_id"];
-                                }
-                            }
-
-                            $query = "DELETE FROM `group_members` WHERE `proxy_id` = ".$db->qstr($PROXY_ID)." AND `group_id` IN (".implode(",", $cohort_ids).")";
-                            $db->Execute($query);
-
                             $organisation_permissions = json_decode($permissions[$organisation_id], true);
 
                             foreach ($organisation_permissions as $permission) {
@@ -581,37 +562,6 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                                     if ($PROCESSED_ACCESS["group"] == "medtech" || $PROCESSED_ACCESS["role"] == "admin") {
                                         application_log("error", "USER NOTICE: (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was updated in ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
                                     }
-
-                                    /**
-                                     * If this is a student, try and find a cohort to add them to.
-                                     */
-                                    if ($PROCESSED_ACCESS["group"] == "student") {
-                                        $query = "  SELECT a.`group_id`
-                                                    FROM `groups` AS a
-                                                    JOIN `group_organisations` AS b
-                                                    ON a.`group_id` = b.`group_id`
-                                                    AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
-                                                    WHERE a.`group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."'
-                                                    AND a.`group_type` = 'cohort'
-                                                    AND a.`group_active` = 1";
-
-                                        $group_id = $db->GetOne($query);
-
-                                        if ($group_id) {
-                                            $gmember = array (
-                                                "group_id" => $group_id,
-                                                "proxy_id" => $PROXY_ID,
-                                                "start_date" => 0,
-                                                "finish_date" => 0,
-                                                "member_active" => 1,
-                                                "entrada_only" => 1,
-                                                "updated_date" => time(),
-                                                "updated_by" => $ENTRADA_USER->getID()
-                                            );
-
-                                            $db->AutoExecute("group_members", $gmember, "INSERT");
-                                        }
-                                    }
                                 } else {
                                     application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into the user_access table. Database said: ".$db->ErrorMsg());
                                 }
@@ -626,11 +576,9 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                     $query = "DELETE FROM `".AUTH_DATABASE."`.`user_departments` WHERE `user_id` = ".$db->qstr($PROXY_ID)." AND `entrada_only` = '1'";
                     $db->Execute($query);
 
-                    if (isset($_POST["user_departments"]) && $_POST["user_departments"]) {
-                        $user_departments = json_decode(json_decode($_POST["user_departments"]));
-                        $department_ids = array_unique($user_departments);
+                    if (isset($PROCESSED["department_ids"]) && is_array($PROCESSED["department_ids"])) {
 
-                        foreach ($department_ids as $department_id) {
+                        foreach ($PROCESSED["department_ids"] as $department_id) {
                             $department_id = clean_input($department_id, "int");
 
                             if ($department_id) {
@@ -645,7 +593,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                                 }
                             }
                             ?>
-                            <script>sessionStorage.removeItem("search_target_control_ids");</script>
+                            <script>sessionStorage.removeItem("user_departments_list");</script>
                             <?php
                         }
                     }
@@ -782,7 +730,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 				}
 			}
 
-			$ONLOAD[] = "toggle_visibility_checkbox($('send_notification'), 'send_notification_msg')";
+			$ONLOAD[] = "toggle_visibility_checkbox('#send_notification', '#send_notification_msg')";
 
 			display_status_messages();
 
@@ -940,7 +888,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 				<!--- End control-group ---->
 
 				<div class="control-group">
-					<label id="prov_state_label" for="prov_state" class="control-label">Province / State:</label>
+                    <label id="prov_state_label" for="prov_state_div" class="control-label">Province / State:</label>
 					<div class="controls">
 						<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
 					</div>
@@ -1084,7 +1032,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                                                       AND sr.`groups_id` = " . $db->qstr($group_id);
                                             $role_id = (int) $db->GetOne($query) ?: 0;
 
-                                            $initial_permissions[$result["organisation_id"]] = array(
+                                                $current_role_results = array(
                                                 "org_text" => $result["organisation_title"],
                                                 "group_id" => $group_id,
                                                 "group_text" => ucfirst($result["group"]),
@@ -1094,6 +1042,14 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                                                 "entry_year" => $result["entry_year"],
                                                 "grad_year" => $result["grad_year"],
                                             );
+
+                                            // this only allows for one group per role
+                                            if (array_key_exists($result["organisation_id"], $initial_permissions)) {
+                                                $initial_permissions[$result["organisation_id"]][$group_id] = $current_role_results;
+                                            } else {
+                                                $initial_permissions[$result["organisation_id"]] = array();
+                                                $initial_permissions[$result["organisation_id"]][$group_id] = $current_role_results;
+                                            }
 
                                             $group_role = ucfirst($result["group"]) . " / " . ucfirst($result["role"]);
                                             ?>
@@ -1154,11 +1110,8 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                             }
                         }
                     }
-
                     ?>
-
                     </div>
-
                     <hr>
 
                     <input id="permissions" name="permissions" type="hidden" value="">
@@ -1178,20 +1131,27 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                         </button>
                     </div>
 
-                    <div id="advanced-search-departments-list">
-                        <?php
-                        if ($PROCESSED_DEPARTMENTS) {
-                            foreach ($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
-                                $organisation_title = Models_Department::fetchOrganisationTitleByDepartmentID($department_id);
-                                $organisation_filter_name = str_replace(" ", "_", $organisation_title);
+                    <?php
+                    if (isset($PROCESSED["department_ids"]) && is_array($PROCESSED["department_ids"])) {
+                        foreach ($PROCESSED["department_ids"] as $department_id) {
+                            $organisation_title = Models_Department::fetchOrganisationTitleByDepartmentID($department_id);
+                            $organisation_filter_name = str_replace(" ", "_", $organisation_title);
+                            $department = Models_Department::fetchRowByID($department_id);
+                            $input = "<input type=\"hidden\" name=\"" . $organisation_filter_name . "[]\" value=\"" . $department_id . "\" id=\"" . $organisation_filter_name . "_" . $department_id . "\" data-id=\"" . $department_id . "\" data-label=\"" . $department->getDepartmentTitle() . "\" data-filter=\"" . $organisation_filter_name . "\" class=\"search-target-control " . $organisation_filter_name . "_search_target_control\">";
 
-                                $input = "<input type=\"hidden\" name=\"" . $organisation_filter_name . "[]\" value=\"" . $department_id . "\" id=\"" . $organisation_filter_name . "_" . $department_id . "\" data-id=\"" . $department_id . "\" data-label=\"" . $department_title . "\" data-filter=\"" . $organisation_filter_name . "\" class=\"search-target-control " . $organisation_filter_name . "_search_target_control\">";
-
-                                echo $input;
-                            }
+                            echo $input;
                         }
-                        ?>
-                    </div>
+                    } else if ($PROCESSED_DEPARTMENTS) {
+                        foreach ($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
+                            $organisation_title = Models_Department::fetchOrganisationTitleByDepartmentID($department_id);
+                            $organisation_filter_name = str_replace(" ", "_", $organisation_title);
+
+                            $input = "<input type=\"hidden\" name=\"" . $organisation_filter_name . "[]\" value=\"" . $department_id . "\" id=\"" . $organisation_filter_name . "_" . $department_id . "\" data-id=\"" . $department_id . "\" data-label=\"" . $department_title . "\" data-filter=\"" . $organisation_filter_name . "\" class=\"search-target-control " . $organisation_filter_name . "_search_target_control\">";
+
+                            echo $input;
+                        }
+                    }
+                    ?>
 
                     <ul id="departments-list" class="list-group departments">
                         <?php
@@ -1220,9 +1180,9 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 				<h2>Notification Options</h2>
 
 				<label class="checkbox">
-					<input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (isset($_POST["send_notification"]) && (int) $_POST["send_notification"] ? " checked=\"checked\"" : ""); ?> onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /> Send this user the following password reset e-mail after saving.
+					<input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (isset($_POST["send_notification"]) && (int) $_POST["send_notification"] ? " checked=\"checked\"" : ""); ?> onclick="toggle_visibility_checkbox(this, '#send_notification_msg')" /> Send this user the following password reset e-mail after saving.
 				</label>
-				<div id="send_notification_msg" style="display: block">
+				<div id="send_notification_msg" class="space-below" style="display: block">
 					<div class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</div>
 					<textarea id="notification_message" class="expandable" name="notification_message" style="width: 98%; min-height: 250px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_EDIT_USER_NOTIFICATION); ?></textarea>
 				</div>
@@ -1353,27 +1313,32 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                     provStateFunction(<?php echo (isset($PROCESSED["country_id"]) ? (int) $PROCESSED["country_id"] : 0); ?>, <?php echo (isset($PROCESSED["province_id"]) ? (int) $PROCESSED["province_id"] : 0); ?>);
 
                     <?php
-                    if ($initial_permissions) {
-                        foreach ($initial_permissions as $org_id => $permission) { ?>
-                            var org_id = "<?php echo $org_id; ?>";
+                    if ($initial_permissions && is_array($initial_permissions)) {
+                        foreach ($initial_permissions as $org_id => $group_ids) {
+                            if ($group_ids && is_array($group_ids)) {
+                                foreach ($group_ids as $permission) {
+                                ?>
+                                    var org_id = "<?php echo $org_id; ?>";
 
-                            if (typeof permissions[org_id] === "undefined") {
-                                permissions[org_id] = [];
+                                    if (typeof permissions[org_id] === "undefined") {
+                                        permissions[org_id] = [];
 
-                                organisation_order.push(org_id);
+                                        organisation_order.push(org_id);
+                                    }
+
+                                    permissions[org_id].push({
+                                        "org_text": "<?php echo $permission["org_text"]; ?>",
+                                        "group_id": "<?php echo $permission["group_id"]; ?>",
+                                        "group_text": "<?php echo $permission["group_text"]; ?>",
+                                        "role_id": "<?php echo $permission["role_id"]; ?>",
+                                        "role_text": "<?php echo $permission["role_text"]; ?>",
+                                        "clinical": "<?php echo (int) $permission["clinical"]; ?>",
+                                        "entry_year": "<?php echo $permission["entry_year"]; ?>",
+                                        "grad_year": "<?php echo $permission["grad_year"]; ?>"
+                                    });
+                                    <?php
+                                }
                             }
-
-                            permissions[org_id].push({
-                                "org_text": "<?php echo $permission["org_text"]; ?>",
-                                "group_id": "<?php echo $permission["group_id"]; ?>",
-                                "group_text": "<?php echo $permission["group_text"]; ?>",
-                                "role_id": "<?php echo $permission["role_id"]; ?>",
-                                "role_text": "<?php echo $permission["role_text"]; ?>",
-                                "clinical": "<?php echo (int) $permission["clinical"]; ?>",
-                                "entry_year": "<?php echo $permission["entry_year"]; ?>",
-                                "grad_year": "<?php echo $permission["grad_year"]; ?>"
-                            });
-                            <?php
                         }
                     }
 
@@ -1391,10 +1356,14 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                         refreshAdvancedSearch();
                     }
 
-                    if (sessionStorage.getItem("search_target_control_ids")) {
-                        departments = sessionStorage.getItem("search_target_control_ids");
-                        
-                        rebuildSelectedDepartments(departments);
+                    if (sessionStorage.getItem("user_departments_list")) {
+                        if (step > 1) {
+                            var departments_list = JSON.parse(sessionStorage.getItem("user_departments_list"));
+
+                            rebuildSelectedDepartments(JSON.parse(departments_list));
+                        } else {
+                            sessionStorage.removeItem("user_departments_list");
+                        }
                     }
 
                     if (sessionStorage.getItem("users_permissions")) {
@@ -1573,7 +1542,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 
                         $(this).closest("li").remove();
 
-                        $("#advanced-search-departments-list").find("input[value=" + dept_id + "]").remove();
+                        $("#user-edit").find("input[value=" + dept_id + "]").remove();
                     });
 
                     $("#added-permissions-container").on("click", ".remove-permission", function (e) {
@@ -1622,6 +1591,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 
                         sessionStorage.setItem("users_permissions", JSON.stringify(permissions));
                         sessionStorage.setItem("organisation_order", JSON.stringify(organisation_order));
+                        sessionStorage.setItem("user_departments_list", JSON.stringify(departments));
                     });
 
                     $("#added-permissions-container").on("change", "input[id^=clinical_]", function (e) {
@@ -1981,25 +1951,26 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                     }
 
                     function rebuildSelectedDepartments(selected_departments) {
-                        $(selected_departments).each(function (key, element) {
-                            var dept_id = $(element).attr("data-id");
-
+                        $(selected_departments).each(function (key, dept_id) {
                             var department_li = $(document.createElement("li")).attr("id", "department-" + dept_id).addClass("list-group-item");
                             var icon = $(document.createElement("i")).attr("data-dept", dept_id).addClass("fa fa-minus-circle fa-lg remove-department");
                             var span = $(document.createElement("span")).addClass("department-name");
                             var organisation_title = "";
+                            var department_name = "";
 
                             $.getJSON("<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-departments"; ?>", { method: "get-organisation-title-by-dept-id", dept_id: dept_id }).done(function (data) {
                                 organisation_title = data.organisation_title;
+                                department_name = data.department_name;
 
                                 if (organisation_title) {
                                     organisation_title = " &#45; " + organisation_title;
                                 }
 
-                                $(span).html($(element).attr("data-label") + organisation_title);
+                                $(span).html(department_name + organisation_title);
                                 $(department_li).append(icon).append("&nbsp;&nbsp;").append(span);
 
                                 $("#departments-list").append(department_li);
+                                departments.push(dept_id);
                             });
                         });
                     }
@@ -2054,8 +2025,8 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                             resource_url: ENTRADA_URL,
                             filters: filters,
                             filter_component_label: "Departments",
-                            selected_list_container: $("#advanced-search-departments-list"),
                             parent_form: $("#user-edit"),
+                            list_selections: false,
                             width: 500
                         });
                     }

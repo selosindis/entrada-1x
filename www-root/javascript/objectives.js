@@ -2,7 +2,7 @@ var EDITABLE = false;
 var loaded = [];
 var loading_objectives = false;
 var linked_objective_id = 0;
-jQuery(document).ready(function(){	
+jQuery(document).ready(function(){
 	jQuery("#curriculum-tags-section").on("click", ".objective-link-control", function(e) {
 		linked_objective_id = jQuery(this).attr("data-id");
 		var objective_id = jQuery(this).attr("data-id");
@@ -149,7 +149,7 @@ jQuery(document).ready(function(){
 		e.preventDefault();
 	});
 	
-	jQuery('.objective-collapse-control').live('click',function(){
+	jQuery(document).on('click', '.objective-collapse-control', function(){
 		var id = jQuery(this).attr('data-id');
 		if(jQuery('#children_'+id).is(':visible')){
 			jQuery('#children_'+id).slideUp();
@@ -160,8 +160,8 @@ jQuery(document).ready(function(){
 		}
 	});
 
-	jQuery('.objective-title').live('click',function(){
-		var id = jQuery(this).attr('data-id');		
+	jQuery('#curriculum-tags-section, #assessment-objectives-section, #course-objectives-section, #event-objectives-section').on('click', '.objective-title', function(){
+		var id = jQuery(this).attr('data-id');
 		var children = [];
 		if (loaded[id] === undefined || !loaded[id]) {
 			var query = {'objective_id':id, 'org_id' : (typeof org_id !== 'undefined' && org_id ? org_id : default_org_id)};
@@ -222,10 +222,15 @@ jQuery(document).ready(function(){
 		});
 	});
 	
-	jQuery(".objective-edit-control").live("click", function(){
+	jQuery("#curriculum-tags-section").on("click", ".objective-edit-control", function(){
+		if (jQuery(".edit-objectiv-modal").length > 0) {
+			jQuery(".edit-objectiv-modal").remove();
+		}
+
 		var objective_id = jQuery(this).attr("data-id");
 		var modal_container = jQuery(document.createElement("div"));
-		
+
+		jQuery(modal_container).addClass("edit-objectiv-modal");
 		modal_container.load(SITE_URL + "/admin/settings/manage/objectives?org="+org_id+"&section=edit&id=" + objective_id + "&mode=ajax");
 		
 		modal_container.dialog({
@@ -282,16 +287,22 @@ jQuery(document).ready(function(){
 			},
 			close: function(event, ui){
 				modal_container.dialog("destroy");
+				jQuery(".edit-objectiv-modal").remove();
+
 			}
 		});
 		return false;
 	});
 	
-	jQuery(".objective-add-control").live("click", function(){
+	jQuery("#curriculum-tags-section").on("click", ".objective-add-control", function(){
+		if (jQuery(".add-objectiv-modal").length > 0) {
+			jQuery(".add-objectiv-modal").remove();
+		}
 		var parent_id = jQuery(this).attr("data-id");
 		var modal_container = jQuery(document.createElement("div"));
 		var url = SITE_URL + "/admin/settings/manage/objectives?org="+org_id+"&section=add&mode=ajax&parent_id="+parent_id;
 
+		jQuery(modal_container).addClass("add-objectiv-modal");
 		modal_container.load(url);
 		
 		modal_container.dialog({
@@ -308,7 +319,7 @@ jQuery(document).ready(function(){
 				},
 				Add : function() {
 					var url = modal_container.find("form").attr("action");
-
+					var closeable = true;
 					jQuery.ajax({
 						url: url,
 						type: "POST",
@@ -349,21 +360,31 @@ jQuery(document).ready(function(){
                                 } else {
                                     jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).append(list_item);
                                 }
+							}  else if(jsonData.status == "error"){
+								console.log("aaaaa");
+								console.log(jQuery('#objective_error'));
+								jQuery('#objective_error').html(jsonData.msg);
+								jQuery('#objective_error').show();
+								closeable = false;
 							}
 
 						}
 					});
-                    modal_container.dialog("destroy");
+					if(closeable){
+						jQuery(this).dialog( "close" );
+						jQuery(modal_container).destroy();
+					}
 				}
 			},
 			close: function(event, ui){
 				modal_container.dialog("destroy");
+				jQuery(".add-objectiv-modal").remove();
 			}
 		});
 		return false;
 	});
 	
-	jQuery(".objective-delete-control").live("click", function(){
+	jQuery("#curriculum-tags-section").on("click", ".objective-delete-control", function(){
 		var objective_id = jQuery(this).attr("data-id");
 		var modal_container = jQuery(document.createElement("div"));
 		var url = SITE_URL + "/admin/settings/manage/objectives?org="+org_id+"&section=delete&mode=ajax&objective_id="+objective_id;
@@ -498,4 +519,28 @@ function buildDOM(children,id){
 	}	
 
 	jQuery('#children_'+id).slideDown();
+
+}
+
+function selectObjective(element, parent_id, objective_id) {
+    jQuery.ajax({
+        url: SITE_URL + "/api/objectives-list.api.php",
+        type : 'get',
+        data : {'pid': parent_id, 'id': objective_id, 'organisation_id': (typeof org_id !== 'undefined' && org_id ? org_id : default_org_id)}
+    }).done(function(result) {
+        jQuery(element).html(result)
+    });
+
+    return;
+}
+function selectOrder(element, objective_id, parent_id) {
+    jQuery.ajax({
+        url: SITE_URL + "/api/objectives-list.api.php",
+        type: 'get',
+        data : {'id': objective_id, 'type': 'order', 'pid': parent_id, 'organisation_id': (typeof org_id !== 'undefined' && org_id ? org_id : default_org_id)}
+    }).done(function(result) {
+        jQuery(element).html(result)
+    });
+
+    return;
 }

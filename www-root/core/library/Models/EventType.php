@@ -33,9 +33,10 @@ class Models_EventType extends Models_Base {
               $eventtype_report_calculation,
               $updated_date,
               $updated_by;
-    
-    protected $table_name = "events_lu_eventtypes";
-    protected $default_sort_column = "eventtype_id";
+
+    protected static $primary_key = "eventtype_id";
+    protected static $table_name = "events_lu_eventtypes";
+    protected static $default_sort_column = "eventtype_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -89,9 +90,17 @@ class Models_EventType extends Models_Base {
         return Models_Event_MapEventsEventType::fetchRowByEventTypeID($this->eventtype_id);
     }
     
-    public static function fetchAllByOrganisationID ($organisation_id = null, $active = 1) {
+    public static function fetchAllByOrganisationID ($organisation_id = null, $active = 1, $search_value = NULL) {
         global $db;
         $event_types = false;
+        $AND_SEARCH_LIKE = "";
+
+        if (!is_null($search_value) && $search_value != "") {
+            $AND_SEARCH_LIKE = "AND
+            (
+                a.`eventtype_title` LIKE (". $db->qstr("%". $search_value ."%") .")
+            )";
+        }
         
         $query = "	SELECT a.* FROM `events_lu_eventtypes` AS a 
                     LEFT JOIN `eventtype_organisation` AS b 
@@ -99,7 +108,8 @@ class Models_EventType extends Models_Base {
                     LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
                     ON c.`organisation_id` = b.`organisation_id` 
                     WHERE b.`organisation_id` = ?
-                    AND a.`eventtype_active` = ?
+                    AND a.`eventtype_active` = ? 
+                    $AND_SEARCH_LIKE 
                     ORDER BY a.`eventtype_order` ASC";
         
         $results = $db->GetAll($query, array($organisation_id, $active));
@@ -113,7 +123,7 @@ class Models_EventType extends Models_Base {
     
     public function insert() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "INSERT")) {
+		if ($db->AutoExecute("`". static::$table_name ."`", $this->toArray(), "INSERT")) {
 			$this->eventtype_id = $db->Insert_ID();
 			return true;
 		} else {
@@ -123,7 +133,7 @@ class Models_EventType extends Models_Base {
     
     public function update() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`eventtype_id` = ".$db->qstr($this->getID()))) {
+		if ($db->AutoExecute("`". static::$table_name ."`", $this->toArray(), "UPDATE", "`eventtype_id` = ".$db->qstr($this->getID()))) {
 			return true;
 		} else {
 			return false;

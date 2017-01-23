@@ -33,7 +33,13 @@ $ONLOAD[] = "api_url = \"".ENTRADA_URL."/admin/users/manage/metadata?section=api
 ?>
 <h1><?php echo $translate->translate("Manage User Meta Data"); ?></h1>
 <form id="meta_data_form" method="post">
-<?php echo editMetaDataTable_User($eUser); ?>
+<?php
+if (!empty($eUser)) {
+    echo editMetaDataTable_User($eUser);
+} else {
+    echo display_notice("There are currently no Meta Data Categories applicable to this user.");
+}
+?>
 </form>
 <div id="errModal" class="modal-description">
 	<div id="errModal_content" class="status"></div>

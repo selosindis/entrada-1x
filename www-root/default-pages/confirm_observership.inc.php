@@ -32,7 +32,7 @@ echo "<h1>Observership Confirmation</h1>";
 
 if ($unique_id) {
 	
-	require_once(ENTRADA_CORE."/library/Models/mspr/Observership.class.php");
+	require_once(ENTRADA_CORE."/library/Classes/mspr/Observership.class.php");
 
 	$step = (isset($_POST["step"]) ? (int) $_POST["step"] : '1');
 	

@@ -25,7 +25,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]." and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => "", "title" => $translate->_("Learning Event Types") . " by Course");
-	
+
 	/**
 	 * Add PlotKit to the beginning of the $HEAD array.
 	 */
@@ -37,10 +37,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		"<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/PlotKit/Canvas.js\"></script>",
 		"<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/PlotKit/SweetCanvas.js\"></script>"
 		);
-	
+
 	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/picklist.js\"></script>\n";
 	$ONLOAD[]	= "$('courses_list').style.display = 'none'";
-		
+
 	/**
 	 * Fetch all courses into an array that will be used.
 	 */
@@ -59,26 +59,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	 */
 	if ((isset($_POST["course_ids"])) && (is_array($_POST["course_ids"]))) {
 		$course_ids = array();
-		
+
 		foreach ($_POST["course_ids"] as $course_id) {
 			if ($course_id = (int) $course_id) {
 				$course_ids[] = $course_id;
 			}
 		}
-		
+
 		if (count($course_ids)) {
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] = $course_ids;
 		} else {
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] = array_keys($course_list);
 		}
 	}
-	
+
 	if (isset($_POST["event_title_search"]) && $_POST["event_title_search"]) {
 		$event_title_search = clean_input($_POST["event_title_search"], "notags");
 	}
 	?>
 
-	</style>	
+	</style>
 	<div class="no-printing">
 		<h2>Reporting Dates</h2>
 		<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&step=2" method="post" onsubmit="selIt()" class="form-horizontal">
@@ -154,31 +154,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	if ($STEP == 2) {
 		$output		= array();
 		$appendix	= array();
-		
+
 		$courses_included	= array();
 		$eventtype_legend	= array();
-		
+
 		echo "<h2 style=\"page-break-before: avoid\">" . $translate->_("Learning Event Types") . " by Course</h2>";
 		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
 		echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).".";
 		echo "</div>\n";
-		
-		$query = "	SELECT a.* FROM `events_lu_eventtypes` AS a 
-					LEFT JOIN `eventtype_organisation` AS c 
-					ON a.`eventtype_id` = c.`eventtype_id` 
+
+		$query = "	SELECT a.* FROM `events_lu_eventtypes` AS a
+					LEFT JOIN `eventtype_organisation` AS c
+					ON a.`eventtype_id` = c.`eventtype_id`
 					LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
-					ON b.`organisation_id` = c.`organisation_id` 
+					ON b.`organisation_id` = c.`organisation_id`
 					WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-					AND a.`eventtype_active` = '1' 
+					AND a.`eventtype_active` = '1'
 					ORDER BY a.`eventtype_order`
 			";
 		$event_types = $db->GetAll($query);
 		if ($event_types) {
 			foreach ($event_types as $event_type) {
 				$eventtype_legend[$event_type["eventtype_id"]] = $event_type["eventtype_title"];
-				
+
 				foreach ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] as $course_id) {
-					$query = "	SELECT a.`event_id`, b.`course_name`, a.`event_title`, a.`event_start`, c.`duration`, d.`eventtype_title`
+					$query = "	SELECT a.`event_id`, a.`recurring_id`, b.`course_name`, a.`event_title`, a.`event_start`, c.`duration`, d.`eventtype_title`
 								FROM `events` AS a
 								LEFT JOIN `courses` AS b
 								ON b.`course_id` = a.`course_id`
@@ -195,21 +195,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					$results = $db->GetAll($query);
 					if ($results) {
 						$courses_included[$course_id] = $course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"];
-						
+
 						foreach ($results as $result) {
-							$output[$course_id]["events"][$event_type["eventtype_id"]]["duration"] += $result["duration"];
-							$output[$course_id]["events"][$event_type["eventtype_id"]]["events"] += 1;
-							
-							$appendix[$course_id][$result["event_id"]][] = $result;
+                            if ($result["event_id"] == $result["recurring_id"]  || ($result["recurring_id"] == '0' || $result["recurring_id"] == NULL)) {
+                                $output[$course_id]["events"][$event_type["eventtype_id"]]["duration"] += $result["duration"];
+                                $output[$course_id]["events"][$event_type["eventtype_id"]]["events"] += 1;
+
+                                $appendix[$course_id][$result["event_id"]][] = $result;
+                            }
 						}
-						
+
 						$output[$course_id]["total_duration"] += $output[$course_id]["events"][$event_type["eventtype_id"]]["duration"];
 						$output[$course_id]["total_events"] += $output[$course_id]["events"][$event_type["eventtype_id"]]["events"];
 					}
 				}
 			}
 		}
-		
+
 		if (count($output)) {
 			foreach ($output as $course_id => $result) {
 				?>
@@ -219,7 +221,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				$STATISTICS["labels"]		= array();
 				$STATISTICS["legend"]		= array();
 				$STATISTICS["results"]		= array();
-				?>				
+				?>
 				<div style="text-align: center">
 					<canvas id="graph_1_<?php echo $course_id; ?>" width="675" height="450"></canvas>
 				</div>
@@ -239,7 +241,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					</tr>
 				</thead>
 				<tbody>
-				<?php				
+				<?php
 				foreach ($result["events"] as $eventtype_id => $event) {
 					$STATISTICS["labels"][$eventtype_id] = $eventtype_legend[$eventtype_id];
 					$STATISTICS["legend"][$eventtype_id] = $eventtype_legend[$eventtype_id];
@@ -256,7 +258,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					} else {
 						$percent_duration = 0;
 					}
-					
+
 					echo "<tr>\n";
 					echo "	<td>&nbsp;</td>\n";
 					echo "	<td>".html_encode($eventtype_legend[$eventtype_id])."</td>\n";
@@ -281,15 +283,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				   'yTickPrecision':	1,
 				   'xTicks':			[<?php echo plotkit_statistics_lables($STATISTICS["legend"]); ?>]
 				};
-				
+
 			    var layout	= new PlotKit.Layout('pie', options);
 			    layout.addDataset('results', [<?php echo plotkit_statistics_values($STATISTICS["display"]); ?>]);
 			    layout.evaluate();
-			    
+
 			    var canvas	= MochiKit.DOM.getElement('graph_1_<?php echo $course_id; ?>');
 			    var plotter	= new PlotKit.SweetCanvasRenderer(canvas, layout, options);
 			    plotter.render();
-			    
+
 			    var canvas	= MochiKit.DOM.getElement('graph_2_<?php echo $course_id; ?>');
 			    var plotter	= new PlotKit.SweetCanvasRenderer(canvas, layout, options);
 			    plotter.render();
@@ -297,9 +299,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				<?php
 			}
 		} else {
-			echo display_notice(array("There are no learning events in the system during the timeframe you have selected."));	
+			echo display_notice(array("There are no learning events in the system during the timeframe you have selected."));
 		}
-		
+
 		if (count($output)) {
 			foreach ($output as $course_id => $result) {
 				$total_duration = 0;

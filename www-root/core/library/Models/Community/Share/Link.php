@@ -46,8 +46,8 @@ class Models_Community_Share_Link extends Models_Base {
                 $updated_by,
                 $notify;
 
-    protected $table_name = "community_share_links";
-    protected $default_sort_column = "cslink_id";
+    protected static $table_name = "community_share_links";
+    protected static $default_sort_column = "cslink_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -219,5 +219,10 @@ class Models_Community_Share_Link extends Models_Base {
         }
 
         return $output;
+    }
+
+    public static function fetchRowByID($cslink_id = 0) {
+        $self = new self();
+        return $self->fetchRow(array("cslink_id" => $cslink_id));
     }
 }

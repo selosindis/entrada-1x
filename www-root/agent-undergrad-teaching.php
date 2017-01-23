@@ -144,7 +144,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		}
 		
 		function closeWindow() {
-			jQuery('#feedback-modal').dialog('close')
+			window.close();
 		}
 		</script>
 	</head>

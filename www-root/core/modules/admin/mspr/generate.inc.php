@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 		display_status_messages();
 	}
 	if (!has_error()) {
-		require_once("Models/mspr/MSPRs.class.php");
+		require_once("Classes/mspr/MSPRs.class.php");
 		switch($mode) {
 			case "user_mode":
 				$user = User::fetchRowByID($user_id);

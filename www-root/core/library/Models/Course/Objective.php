@@ -28,7 +28,7 @@ class Models_Course_Objective {
     private $cobjective_id,
             $course_id,
             $objective_id,
-            $importance,
+            $importance = 1,
             $objective_type,
             $objective_details,
             $objective_start,
@@ -37,12 +37,58 @@ class Models_Course_Objective {
             $updated_by,
             $active = 1;
     
-    private $table_name = "course_objectives";
+    protected static $table_name = "course_objectives";
+    protected static $default_sort_column = "cobjective_id";
+    protected static $primary_key = "cobjective_id";
     
     public function __construct($arr = NULL) {
         if (is_array($arr)) {
             $this->fromArray($arr);
         }
+    }
+
+    public function getID() {
+        return $this->cobjective_id;
+    }
+
+    public function getCourseID() {
+        return $this->course_id;
+    }
+
+    public function getObjectiveID() {
+        return $this->objective_id;
+    }
+
+    public function getImportance() {
+        return $this->importance;
+    }
+
+    public function getObjectiveType() {
+        return $this->objective_type;
+    }
+
+    public function getObjectiveDetails() {
+        return $this->objective_details;
+    }
+
+    public function getObjectiveStart() {
+        return $this->objective_start;
+    }
+
+    public function getObjectiveFinish() {
+        return $this->objective_finish;
+    }
+
+    public function getUpdatedDate() {
+        return $this->updated_date;
+    }
+
+    public function getUpdatedBy() {
+        return $this->updated_by;
+    }
+
+    public function getActive() {
+        return $this->active = 1;
     }
 
     /**
@@ -54,7 +100,10 @@ class Models_Course_Objective {
         $class_vars = get_class_vars(get_called_class());
         if (isset($class_vars)) {
             foreach ($class_vars as $class_var => $value) {
-                $arr[$class_var] = $this->$class_var;
+                $static_tester = new ReflectionProperty(get_called_class(), $class_var);
+                if (!$static_tester->isStatic()) {
+                    $arr[$class_var] = $this->$class_var;
+                }
             }
         }
         return $arr;
@@ -114,7 +163,7 @@ class Models_Course_Objective {
                 }
             }
             if (!empty($where)) {
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements;
+                $query = "SELECT * FROM `".static::$table_name."` ".$replacements;
                 $result = $db->GetRow($query, $where);
                 if ($result) {
                     $self = new self();
@@ -178,7 +227,7 @@ class Models_Course_Objective {
                 }
             }
             if (!empty($where)) {
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements;
+                $query = "SELECT * FROM `".static::$table_name."` ".$replacements;
                 $results = $db->GetAll($query, $where);
                 if ($results) {
                     foreach ($results as $result) {
@@ -240,67 +289,39 @@ class Models_Course_Objective {
         return $this->cobjective_id;
     }
 
-    public function getID() {
-        return $this->cobjective_id;
-    }
-    
-    public function getCourseID() {
-        return $this->course_id;
-    }
-    
-    public function getObjectiveID() {
-        return $this->objective_id;
-    }
-
-    public function getImportance() {
-        return $this->importance;
-    }
-    
-    public function getObjectiveType() {
-        return $this->objective_type;
-    }
-    
-    public function getObjectiveDetails() {
-        return $this->objective_details;
-    }
-    
-    public function getObjectiveStart() {
-        return $this->objective_start;
-    }
-    
-    public function getObjectiveFinish() {
-        return $this->objective_finish;
-    }
-    
-    public function getUpdatedDate() {
-        return $this->updated_date;
-    }
-    
-    public function getUpdatedBy() {
-        return $this->updated_by;
-    }
-    
-    public function getActive() {
-        return $this->active = 1;
-    }
-    
     public function update() {
         global $db;
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`cobjective_id` = ".$db->qstr($this->cobjective_id))) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`cobjective_id` = ".$db->qstr($this->cobjective_id))) {
             return $this;
         } else {
+            application_log("error", "Error inserting a ".get_called_class().". DB Said: " . $db->ErrorMsg());
             return false;
         }
     }
 
     public function insert() {
         global $db;
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->cobjective_id = $db->Insert_ID();
             return $this;
         } else {
+            application_log("error", "Error inserting a ".get_called_class().". DB Said: " . $db->ErrorMsg());
             return false;
         }
+    }
+
+    public function getCountByCourseID($course_id) {
+        global $db;
+
+        $query = "	SELECT COUNT(*) FROM course_objectives WHERE course_id = ? ";
+
+        $result = $db->GetOne($query, array($course_id));
+
+        if ($result) {
+            return $result;
+        }
+        
+        return false;
     }
     
 }

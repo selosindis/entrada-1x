@@ -39,21 +39,15 @@ if (!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_GROUPS", true);
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/groups", "title" => "Manage Groups");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/groups", "title" => $translate->_("Manage Cohorts"));
 
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
+
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);
-			
-			$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-			$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-not-accessible.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Inactive</div>\n";
-			$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-individual.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />  Contains inactive members</div>\n";
-			$sidebar_html .= "</div>\n";
-
-			new_sidebar_item("Group Legend", $sidebar_html, "group-legend", "open");
 		}
 
 		/**

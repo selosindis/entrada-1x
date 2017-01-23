@@ -34,9 +34,9 @@ class Models_Evaluation_Form extends Models_Base {
                 $updated_date,
                 $updated_by;
 
-    protected $table_name = "evaluation_forms";
-    protected $primary_key         = "eform_id";
-    protected $default_sort_column = "eform_id";
+    protected static $table_name = "evaluation_forms";
+    protected static $default_sort_column = "eform_id";
+    protected static $primary_key = "eform_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -84,7 +84,7 @@ class Models_Evaluation_Form extends Models_Base {
 
     public function update() {
         global $db;
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`eform_id` = ".$db->qstr($this->getID()))) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`eform_id` = ".$db->qstr($this->getID()))) {
             return true;
         } else {
             return false;
@@ -99,7 +99,7 @@ class Models_Evaluation_Form extends Models_Base {
     public function insert() {
         global $db;
 
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->eform_id = $db->Insert_ID();
             return $this;
         } else {
@@ -107,21 +107,19 @@ class Models_Evaluation_Form extends Models_Base {
         }
     }
 
-    public static function fetchAllByAuthorAndTitle ($proxy_id, $title) {
+    public static function fetchAllByAuthorAndTitle ($proxy_id, $title, $active = 1) {
         global $db;
         
-        $self = new self();
-        $theTableName = $self->table_name;        
-
         $output = array();
 
-        $query = "SELECT a.* FROM `".$theTableName."` AS a
+        $query = "SELECT a.* FROM `".static::$table_name."` AS a
                     JOIN `evaluation_form_contacts` AS b
                     ON a.`eform_id` = b.`eform_id`
                     WHERE b.`contact_role` = 'author'
                     AND b.`proxy_id` = ?
-                    AND a.`form_title` = ?";
-        $results = $db->GetAll($query, array($proxy_id, $title));
+                    AND a.`form_title` = ?
+                    AND a.`form_active` = ?";
+        $results = $db->GetAll($query, array($proxy_id, $title, $active));
         if ($results) {
             foreach ($results as $result) {
                 $output[] = new Models_Evaluation_Form($result);
@@ -131,4 +129,3 @@ class Models_Evaluation_Form extends Models_Base {
         return $output;
     }
 }
-?>

@@ -41,16 +41,14 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_GRADEBOOK",	true);
 	
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.modal.js\"></script>\n";
-	$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/flexigrid.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.js\"></script>\n";
+	/*$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.modal.js\"></script>\n";*/
+	/*$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/flexigrid.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";*/
+	/*$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.js\"></script>\n";*/
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.editable.js\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\">var ENTRADA_URL = '".ENTRADA_URL."';</script>";
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/gradebook.js\"></script>\n";
-	
+	$JQUERY[] = "<link rel=\"stylesheet\" href=\"".  ENTRADA_URL ."/css/". $MODULE ."/". $MODULE .".css\" />";
 	$ASSESSMENT_TYPES = array("Formative", "Summative");
-	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook", "title" => "Gradebooks");
+    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/courses", "title" => $translate->_("Courses"));
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
@@ -61,11 +59,17 @@ if(!defined("PARENT_INCLUDED")) {
 			$COURSE_ID = 0;
 		}
 		
-		$module_file = $router->getRoute();
-		if ($module_file) {
-			require_once($module_file);
-		}
-
+		?>
+        <div class="alert alert-info">
+            <p class="lead">This feature is available in Entrada ME Consortium Edition only at this time. Please feel free to <a href="http://www.entrada.org/contact" target="_blank"><strong>contact us</strong></a> to arrange a demo.</p>
+            <p class="pull-right">
+                <a class="btn btn-primary btn-large" href="http://www.entrada.org" target="_blank">
+                    <i class="fa fa-info-circle"></i> Learn More
+                </a>
+            </p>
+            <div class="clearfix"></div>
+        </div>
+        <?php
 		/**
 		 * Check if preferences need to be updated on the server at this point.
 		 */

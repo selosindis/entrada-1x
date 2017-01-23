@@ -27,8 +27,9 @@ class Models_Quiz_Contact extends Models_Base {
 
     protected $qcontact_id, $quiz_id, $proxy_id, $updated_date, $updated_by;
     
-    protected $table_name = "quiz_contacts";
-    protected $default_sort_column = "qcontact_id";
+    protected static $table_name = "quiz_contacts";
+    protected static $default_sort_column = "qcontact_id";
+    protected static $primary_key = "qcontact_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -54,7 +55,7 @@ class Models_Quiz_Contact extends Models_Base {
             )
         );
 
-        $objs = $self->fetchAll($constraints, "=", "AND", $self->default_sort_column, $sort_order);
+        $objs = $self->fetchAll($constraints, "=", "AND", static::$default_sort_column, $sort_order);
         $output = array();
 
         if (!empty($objs)) {
@@ -94,7 +95,7 @@ class Models_Quiz_Contact extends Models_Base {
 
     public function insert() {
         global $db;
-        if ($db->autoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->autoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->qcontact_id = $db->Insert_ID();
             return $this;
         } else {
@@ -104,7 +105,7 @@ class Models_Quiz_Contact extends Models_Base {
     
     public function update() {
         global $db;
-        if ($db->autoExecute($this->table_name, $this->toArray(), "UPDATE", "`qcontact_id` = ".$this->qcontact_id)) {
+        if ($db->autoExecute(static::$table_name, $this->toArray(), "UPDATE", "`qcontact_id` = ".$this->qcontact_id)) {
             return $this;
         } else {
             return false;
@@ -114,7 +115,7 @@ class Models_Quiz_Contact extends Models_Base {
     public function delete() {
         global $db;
         
-        $query = "DELETE FROM `".$this->table_name."` WHERE `qcontact_id` = ?";
+        $query = "DELETE FROM `".static::$table_name."` WHERE `qcontact_id` = ?";
         if ($db->Execute($query, $this->qcontact_id)) {
             return true;
         } else {

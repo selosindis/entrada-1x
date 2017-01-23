@@ -52,7 +52,7 @@ class Entrada_Curriculum_Search {
         }
 
         if ($search_term) {
-            $search_term = str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $search_term);
+            $search_term = self::parseBooleans($search_term);
 
             $counter_select = "SELECT DISTINCT(`events`.`event_id`)";
 
@@ -209,5 +209,71 @@ SEARCHQUERY;
         }
 
         return false;
+    }
+
+    /**
+     * Parses boolean operators in the search term
+     * @param string $search_term
+     * @return string
+     */
+    private static function parseBooleans($search_term)
+    {
+        $offset = 0;
+        $tokens = array();
+        $token_regex = "/^\s*(\(|\)|\-|\bOR\b|\"[^\"]+\"|[^\s,.;\(\)]+|[^\s])\s*/";
+        while (preg_match($token_regex, substr($search_term, $offset), $match, PREG_OFFSET_CAPTURE)) {
+            list($token, $match_offset) = $match[1];
+            $offset = $offset + $match_offset + strlen($token);
+            $tokens[] = $token;
+        }
+        $last_token_index = array();
+        $previous_token_index = null;
+        $prepend = function ($str, $with) {
+            if (strncmp($str, $with, strlen($with)) != 0) {
+                return $with . $str;
+            } else {
+                return $str;
+            }
+        };
+        foreach ($tokens as $i => $token) {
+            switch ($token) {
+            case ",":
+            case ";":
+            case ".":
+                unset($tokens[$i]);
+                break;
+            case "(":
+                array_push($last_token_index, $i);
+                $previous_token_index = null;
+                break;
+            case ")":
+                $previous_token_index = array_pop($last_token_index);
+                break;
+            case "OR":
+            case "or":
+                $previous_token_index = null;
+                unset($tokens[$i]);
+                break;
+            case "-":
+                $next_token_index = $i + 1;
+                if (isset($tokens[$next_token_index])) {
+                    $tokens[$next_token_index] = $prepend($tokens[$next_token_index], "-");
+                }
+                $previous_token_index = null;
+                unset($tokens[$i]);
+                break;
+            default:
+                if (isset($tokens[$previous_token_index])) {
+                    $tokens[$previous_token_index] = $prepend($tokens[$previous_token_index], "+");
+                    $current_token_index = $i;
+                    if (isset($tokens[$current_token_index])) {
+                        $tokens[$current_token_index] = $prepend($tokens[$current_token_index], "+");
+                    }
+                }
+                $previous_token_index = $i;
+                break;
+            }
+        }
+        return str_replace("%", "%%", implode(" ", $tokens));
     }
 }

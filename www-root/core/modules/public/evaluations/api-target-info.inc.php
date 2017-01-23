@@ -68,7 +68,7 @@ if ($RECORD_ID) {
     }
 
 	if (((isset($etarget_id) && $etarget_id) || (isset($proxy_id) && $proxy_id)) && isset($eevaluator_id) && $eevaluator_id) {
-        $evaluation_targets = Models_Evaluation::getTargetsArray($RECORD_ID, $eevaluator_id, $ENTRADA_USER->getID(), false, true, false, $erequest_id);
+        $evaluation_targets = Classes_Evaluation::getTargetsArray($RECORD_ID, $eevaluator_id, $ENTRADA_USER->getID(), false, true, false, $erequest_id);
         foreach ($evaluation_targets as $evaluation_target) {
             if (!isset($preceptor_evaluation) || !$preceptor_evaluation) {
                 if (isset($proxy_id) && $proxy_id && isset($evaluation_target["proxy_id"]) && $evaluation_target["proxy_id"] == $proxy_id) {
@@ -80,7 +80,7 @@ if ($RECORD_ID) {
                     break;
                 }
             } elseif ($preceptor_evaluation == $evaluation_target["event_id"]) {
-                $preceptors = Models_Evaluation::getPreceptorArray($RECORD_ID, $preceptor_evaluation, $ENTRADA_USER->getID());
+                $preceptors = Classes_Evaluation::getPreceptorArray($RECORD_ID, $preceptor_evaluation, $ENTRADA_USER->getID());
                 foreach ($preceptors as $preceptor) {
                     if ($preceptor["proxy_id"] == $proxy_id) {
                         $found = true;

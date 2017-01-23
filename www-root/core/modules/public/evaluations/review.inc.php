@@ -70,7 +70,7 @@ if ($RECORD_ID) {
 		$questions = array();
 		$responses = array();
 		$criteria_response_ids = array();
-		$permissions = Models_Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
+		$permissions = Classes_Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
 		$query = "SELECT * FROM `evaluation_form_questions` AS a
 					JOIN `evaluations_lu_questions` AS b
 					ON a.`equestion_id` = b.`equestion_id`
@@ -119,7 +119,7 @@ if ($RECORD_ID) {
 		$available_target_ids = array();
 		$available_targets = array();
 		$target_attempts = array();
-		$completed_attempts = Models_Evaluation::getProgressRecordsByPermissions($RECORD_ID, $permissions, true, $evaluation["target_shortname"]);
+		$completed_attempts = Classes_Evaluation::getProgressRecordsByPermissions($RECORD_ID, $permissions, true, $evaluation["target_shortname"]);
 		foreach ($completed_attempts as $completed_attempt) {
 			if (!isset($progress_id) || !$progress_id || $completed_attempt["eprogress_id"] == $progress_id) {
                 if (isset($completed_attempt["preceptor_proxy_id"]) && $completed_attempt["preceptor_proxy_id"]) {

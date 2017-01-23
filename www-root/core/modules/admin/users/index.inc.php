@@ -83,7 +83,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 	}
 	$HEAD[$i] .= "</script>\n";
 
-	$ONLOAD[] = "initListGroup('account_type', $('group'), $('role'))";
+	$ONLOAD[] = "initListGroup('account_type', jQuery('#group')[0], jQuery('#role')[0])";
 	
 	/**
 	 * Set default sort values
@@ -441,10 +441,6 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
             text-align: left;
             margin-left: 2%;
         }
-
-        .departments-advanced-search .fa-chevron-down {
-            padding-top: 4px;
-        }
 	</style>
 	<div class="tab-pane" id="user-tabs">
 		<div class="tab-page">
@@ -584,12 +580,10 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 
 					<button id="departments-advanced-search" class="btn btn-search-filter departments-advanced-search">
                         <?php echo $translate->_("Browse Departments"); ?>
-                        <i class="fa fa-chevron-down pull-right"></i>
+                        <i class="icon-chevron-down pull-right btn-icon"></i>
                     </button>
 
                     <input type="submit" class="btn btn-default pull-right" name="browse_departments" value="Browse" />
-
-                    <div id="advanced-search-departments-list"></div>
 				</div>
 
                 <input id="department-id" type="hidden" name="d">
@@ -625,7 +619,6 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                 resource_url: ENTRADA_URL,
                 filters: filters,
 				filter_component_label: "Departments",
-                selected_list_container: $("#advanced-search-departments-list"),
                 parent_form: $("#browse-departments-form"),
                 width: 487
             });
@@ -654,7 +647,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 
 				var current_filter = $(this).attr("data-filter");
                 
-                $("#advanced-search-departments-list").find(".search-target-control").not("." + current_filter + "_search_target_control").remove();
+                $("#browse-departments-form").find(".search-target-control").not("." + current_filter + "_search_target_control").remove();
             });
         });
     </script>
@@ -698,12 +691,8 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 
 		if ($results) {
 			?>
-			<div style="margin-top: 10px; background-color: #FAFAFA; padding: 3px; border-bottom: none;font-size:11px;">
-				<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
-				<?php echo "Found ".$total_rows." user".(($total_rows != 1) ? "s" : "")." matching &quot;<strong>".($search_query_text)."</strong>&quot; in the user management system."; ?>
-			</div>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/users?section=delete" method="post">
-			<table class="tableList" cellspacing="0" summary="List of Users">
+			<table class="table table-bordered table-striped" cellspacing="0" summary="List of Users">
 			<colgroup>
 				<col class="modified" />
 				<col class="title" />
@@ -713,20 +702,20 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 			</colgroup>
 			<thead>
 				<tr>
-					<td class="modified">&nbsp;</td>
+					<th class="modified">&nbsp;</th>
 					<?php if ($search_type == "browse-newest"): ?>
-						<td class="title" style="font-size: 12px">Full Name</td>
-						<td class="username" style="font-size: 12px">Username</td>
-						<td class="role" style="font-size: 12px">Group &amp; Role</td>
-						<td class="last-login" style="font-size: 12px">Last Login</td>
+						<th class="title">Full Name</th>
+						<th class="username">Username</th>
+						<th class="role">Group &amp; Role</th>
+						<th class="last-login">Last Login</th>
 					<?php else: ?>
-						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "fullname") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("fullname", "Full Name"); ?></td>
-						<td class="username<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "username") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("username", "Username"); ?></td>
-						<td class="role<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "role") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("role", "Group &amp; Role"); ?></td>
-						<td class="last-login<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "login") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("login", "Last Login"); ?></td>
+						<th class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "fullname") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("fullname", "Full Name"); ?></th>
+						<th class="username<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "username") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("username", "Username"); ?></th>
+						<th class="role<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "role") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("role", "Group &amp; Role"); ?></th>
+						<th class="last-login<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "login") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("login", "Last Login"); ?></th>
 					<?php endif; 
 					if ($ENTRADA_ACL->amIAllowed("masquerade", "read")) {
-						echo "<td style=\"font-size: 12px\">Login As</td>\n";
+						echo "<th>Login As</th>\n";
 					}                    
                     ?>
 				</tr>
@@ -734,7 +723,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 			<tfoot>
 				<tr>
 					<td></td>
-					<td colspan="4" style="padding-top: 10px">
+					<td colspan="<?php echo ($ENTRADA_ACL->amIAllowed("masquerade", "read") ? 5 : 4); ?>" style="padding-top: 10px">
 						<input type="submit" class="btn btn-danger" value="Delete Selected" />
 					</td>
 				</tr>
@@ -744,7 +733,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 				foreach ($results as $result) {
 					$can_login	= true;
 					$url		= ENTRADA_URL."/admin/users/manage?id=".$result["id"];
-                    $add_url	= ENTRADA_URL."/admin/users?section=add&amp;id=".$result["id"];
+                    $add_url	= ENTRADA_URL."/admin/users/manage?section=edit&amp;id=".$result["id"];
 
                     $permission_to_delete = false;
 

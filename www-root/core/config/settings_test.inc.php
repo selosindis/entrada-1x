@@ -202,7 +202,7 @@ define("ENCRYPTION_KEY", "UXZF4tTES8RmTHY9qA7DQrvqEde7R5a8");					// Encryption 
  * Google Analystics Tracking Code
  * Create an account at: http://www.google.com/analytics
  */
-define("GOOGLE_ANALYTICS_CODE",	"");											// If you would like Google Analytics to track your usage (in production), then enter your tracking code.
+define("GOOGLE_ANALYTICS_CODE",	"UA-80882-22");											// If you would like Google Analytics to track your usage (in production), then enter your tracking code.
 
 /**
  * Goole Maps API Key
@@ -345,8 +345,8 @@ define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and para
 define("DEBUG_MODE", true);														// Some places have extra debug code to show sample output. Set this to true if you want to see it.
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
-define("APPLICATION_NAME", "Entrada ME Open Edition");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.7.5"); 										// The current filesystem version of Entrada.
+define("APPLICATION_NAME", "Entrada ME Open Edition");							// The name of this application in your school (i.e. MedCentral, Osler, etc.)
+define("APPLICATION_VERSION", "1.8.0"); 										// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada ME Open Edition: An eLearning Ecosystem";

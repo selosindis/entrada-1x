@@ -38,77 +38,70 @@ $PAGE_META["keywords"]		= "";
 
 <!-- "About Us" section of privacy policy -->
 <h2>About Us</h2>
-This is a privacy policy for <?php echo APPLICATION_NAME; ?>, which is located on the Internet at <a href="<?php echo ENTRADA_URL; ?>"><?php echo ENTRADA_URL; ?></a>.
-<br /><br />
-We invite you to contact us if you have questions about this policy. You may contact us by e-mail at <a href="mailto:<?php echo $AGENT_CONTACTS["administrator"]["email"]; ?>"><?php echo $AGENT_CONTACTS["administrator"]["email"]; ?></a>.
-<br /><br />
+<p>This is a privacy policy for <?php echo APPLICATION_NAME; ?>, which is located on the Internet at <a href="<?php echo ENTRADA_URL; ?>"><?php echo ENTRADA_URL; ?></a>.<p>
+<p>We invite you to contact us if you have questions about this policy. You may contact us by e-mail at <a href="mailto:<?php echo $AGENT_CONTACTS["administrator"]["email"]; ?>"><?php echo $AGENT_CONTACTS["administrator"]["email"]; ?></a>.</p>
+
 <!-- "Privacy Seals" section of privacy policy -->
 <h2>Dispute Resolution and Privacy Seals</h2>
-We have the following privacy seals and/or dispute resolution mechanisms. If you think we have not followed our privacy policy in some way, they can help you resolve your concern.
+<p>We have the following privacy seals and/or dispute resolution mechanisms. If you think we have not followed our privacy policy in some way, they can help you resolve your concern.</p>
 <ul>
 	<li>
-		<strong><?php echo APPLICATION_NAME; ?></strong>:<br />
-		You can contact us to resolve privacy policy issues: <a href="mailto:<?php echo $AGENT_CONTACTS["administrator"]["email"]; ?>"><?php echo $AGENT_CONTACTS["administrator"]["email"]; ?></a>
+		<strong><?php echo APPLICATION_NAME; ?></strong>:
+		<p>You can contact us to resolve privacy policy issues: <a href="mailto:<?php echo $AGENT_CONTACTS["administrator"]["email"]; ?>"><?php echo $AGENT_CONTACTS["administrator"]["email"]; ?></a></p>
 	</li>
 </ul>
 
 <!-- "Additional information" section of privacy policy -->
 <h2>Additional Information</h2>
-This policy is valid for 60 days from the time that it is loaded by a client.
-<br /><br />
+<p>This policy is valid for 60 days from the time that it is loaded by a client.</p>
 
 <!-- "Data Collection" section of privacy policy -->
 <h2>Data Collection</h2>
-P3P policies declare the data they collect in groups (also referred to as &quot;statements&quot;). This policy contains 2 data groups. The data practices of each group will be explained separately.
-<blockquote>
-	<strong>Group &quot;Basic information&quot;</strong><br />
-	We collect the following information:
-	<ul>
-		<li>Click-stream data</li>
-		<li>HTTP protocol elements</li>
-		<li>Search terms</li>
-	</ul>
+<p>P3P policies declare the data they collect in groups (also referred to as &quot;statements&quot;). This policy contains 2 data groups. The data practices of each group will be explained separately.</p>
 
-	This data will be used for the following purposes:
-	<ul>
-		<li>Completion and support of the current activity.</li>
-		<li>Web site and system administration.</li>
-		<li>Research and development.</li>
-	</ul>
+<strong>Group &quot;Basic information&quot;</strong>
+<p>We collect the following information:</p>
+<ul>
+	<li>Click-stream data</li>
+	<li>HTTP protocol elements</li>
+	<li>Search terms</li>
+</ul>
 
-	This data will be used by ourselves and our agents.
-	<br /><br />
+<p>This data will be used for the following purposes:</p>
+<ul>
+	<li>Completion and support of the current activity.</li>
+	<li>Web site and system administration.</li>
+	<li>Research and development.</li>
+</ul>
 
-	The following explanation is provided for why this data is collected:
-	<blockquote>
-		Data collected from all Web users: access logs, and search strings (if entered).
-	</blockquote>
+<p>This data will be used by ourselves and our agents.</p>
+<p>The following explanation is provided for why this data is collected:</p>
+<ul>
+	<li>Data collected from all Web users: access logs, and search strings (if entered).</li>
+</ul>
 
-	<strong>Group &quot;Cookies&quot;</strong><br />
-	At the user's option, we will collect the following data:
-	<ul>
-		<li>HTTP cookies</li>
-	</ul>
-	This data will be used for the following purposes:
-	<ul>
-		<li>Research and development.</li>
-		<li>One-time tailoring.</li>
-	</ul>
+<strong>Group &quot;Cookies&quot;</strong>
+<p>At the user's option, we will collect the following data:</p>
+<ul>
+	<li>HTTP cookies</li>
+</ul>
+<p>This data will be used for the following purposes:</p>
+<ul>
+	<li>Research and development.</li>
+	<li>One-time tailoring.</li>
+</ul>
 
-	This data will be used by ourselves and our agents.
-	<br /><br />
+<p>This data will be used by ourselves and our agents.</p>
 
-	The following explanation is provided for why this data is collected:
-	<blockquote>
-		Cookies are used to track visitors to our site, so we can better understand what portions of our site best serve you.
-	</blockquote>
-</blockquote>
+<p>The following explanation is provided for why this data is collected:</p>
+<ul>
+	<li>Cookies are used to track visitors to our site, so we can better understand what portions of our site best serve you.</li>
+</ul>
 
 <!-- "Use of Cookies" section of privacy policy -->
 <h2>Cookies</h2>
-Cookies are a technology which can be used to provide you with tailored information from a Web site. A cookie is an element of data that a Web site can send to your browser, which may then store it on your system. You can set your browser to notify you when you receive a cookie, giving you the chance to decide whether to accept it.
-<br /><br />
-Our site makes use of cookies. Cookies are used for the following purposes:
+<p>Cookies are a technology which can be used to provide you with tailored information from a Web site. A cookie is an element of data that a Web site can send to your browser, which may then store it on your system. You can set your browser to notify you when you receive a cookie, giving you the chance to decide whether to accept it.</p>
+<p>Our site makes use of cookies. Cookies are used for the following purposes:</p>
 <ul>
 	<li>User targeting
 	<li>Research and development
@@ -116,12 +109,10 @@ Our site makes use of cookies. Cookies are used for the following purposes:
 
 <!-- "Compact Policy Explanation" section of privacy policy -->
 <h2>Compact Policy Summary</h2>
-The compact policy which corresponds to this policy is:
-<pre>
-    CP="NON DSP COR CURa ADMa DEVa TAIa OUR BUS IND UNI COM NAV INT"
-</pre>
+<p>The compact policy which corresponds to this policy is:<p>
+<pre>CP="NON DSP COR CURa ADMa DEVa TAIa OUR BUS IND UNI COM NAV INT"</pre>
 
-The following table explains the meaning of each field in the compact policy.
+<p>The following table explains the meaning of each field in the compact policy.</p>
 <div align="center">
 <table width="80%" border="0" cellspacing="0" cellpadding="2">
 <tr>
@@ -130,63 +121,63 @@ The following table explains the meaning of each field in the compact policy.
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>CP=</tt></td>
-	<td align="left" valign="top" width="85%">This is the compact policy header; it indicates that what follows is a P3P compact policy.</td>
+	<td align="left" valign="top" width="85%"><p>This is the compact policy header; it indicates that what follows is a P3P compact policy.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>NON</tt></td>
-	<td align="left" valign="top" width="85%">No access is available to collected information.</td>
+	<td align="left" valign="top" width="85%"><p>No access is available to collected information.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>DSP</tt></td>
-	<td align="left" valign="top" width="85%">The policy contains at least one dispute-resolution mechanism.</td>
+	<td align="left" valign="top" width="85%"><p>The policy contains at least one dispute-resolution mechanism.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>COR</tt></td>
-	<td align="left" valign="top" width="85%">Violations of this policy will be corrected.</td>
+	<td align="left" valign="top" width="85%"><p>Violations of this policy will be corrected.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>CURa</tt></td>
-	<td align="left" valign="top" width="85%">The data is used for completion of the current activity.</td>
+	<td align="left" valign="top" width="85%"><p>The data is used for completion of the current activity.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>ADMa</tt></td>
-	<td align="left" valign="top" width="85%">The data is used for site administration.</td>
+	<td align="left" valign="top" width="85%"><p>The data is used for site administration.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>DEVa</tt></td>
-	<td align="left" valign="top" width="85%">The data is used for research and development.</td>
+	<td align="left" valign="top" width="85%"><p>The data is used for research and development.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>TAIa</tt></td>
-	<td align="left" valign="top" width="85%">The data is used for tailoring the site.</td>
+	<td align="left" valign="top" width="85%"><p>The data is used for tailoring the site.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>OUR</tt></td>
-	<td align="left" valign="top" width="85%">The data is given to ourselves and our agents.</td>
+	<td align="left" valign="top" width="85%"><p>The data is given to ourselves and our agents.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>BUS</tt></td>
-	<td align="left" valign="top" width="85%">Our business practices specify how long the data will be kept.</td>
+	<td align="left" valign="top" width="85%"><p>Our business practices specify how long the data will be kept.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>IND</tt></td>
-	<td align="left" valign="top" width="85%">The data will be kept indefinitely.</td>
+	<td align="left" valign="top" width="85%"><p>The data will be kept indefinitely.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>UNI</tt></td>
-	<td align="left" valign="top" width="85%">Unique identifiers are collected.</td>
+	<td align="left" valign="top" width="85%"><p>Unique identifiers are collected.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>COM</tt></td>
-	<td align="left" valign="top" width="85%">Computer information is collected.</td>
+	<td align="left" valign="top" width="85%"><p>Computer information is collected.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>NAV</tt></td>
-	<td align="left" valign="top" width="85%">Navigation and clickstream data is collected.</td>
+	<td align="left" valign="top" width="85%"><p>Navigation and clickstream data is collected.</p></td>
 </tr>
 <tr>
 	<td align="left" valign="top" width="15%"><tt>INT</tt></td>
-	<td align="left" valign="top" width="85%">Interactive data is collected.</td>
+	<td align="left" valign="top" width="85%"><p>Interactive data is collected.</p></td>
 </tr>
 </table>
 </div>

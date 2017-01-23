@@ -44,7 +44,10 @@ if ($RECORD_ID) {
 								AND `cannouncement_id` = ".$db->qstr($RECORD_ID)." LIMIT 1";
 		if (!$db->Execute($query)) {
 			application_log("error", "Failed to release [".$RECORD_ID."] announcement in community. Database said: ".$db->ErrorMsg());
+		} else {
+			community_notify($COMMUNITY_ID, $RECORD_ID, "announcement_release", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$RECORD_ID, $COMMUNITY_ID, $announcement_record["release_date"]);
 		}
+
 	} else {
 		application_log("error", "The provided announcement record [".$RECORD_ID."] was invalid.");
 	}
@@ -185,6 +188,34 @@ if ($RECORD_ID) {
 				}
 			);
 		}
+<?php
+/**
+ * Add the javascript for deleting announcements.
+ */
+if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
+	?>
+		function announcementDelete(id) {
+			Dialog.confirm('Do you really wish to delete '+ $('announcement-' + id + '-title').innerHTML +' from this community?',
+				{
+					id:				'requestDialog',
+					width:			350,
+					height:			100,
+					title:			'Delete Confirmation',
+					className:		'medtech',
+					okLabel:		'Yes',
+					cancelLabel:	'No',
+					closable:		'true',
+					buttonClass:	'btn',
+					ok:				function(win) {
+										window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?<?php echo (($page_current > 1) ? "pv=".$page_current."&" : ""); ?>action=delete&id='+id;
+										return true;
+									}
+				}
+			);
+		}
+	<?php
+}
+?>
 	</script>
     <div id="module-header">
         <?php

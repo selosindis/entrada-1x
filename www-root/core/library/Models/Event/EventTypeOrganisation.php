@@ -27,7 +27,9 @@ class Models_Event_EventTypeOrganisation extends Models_Base {
     protected $eventtype_id,
               $organisation_id;
     
-    protected $table_name = "eventtype_organisation";
+    protected static $table_name            = "eventtype_organisation";
+    protected static $default_sort_column   = "eventtype_id";
+    protected static $primary_key           = "eventtype_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -52,7 +54,7 @@ class Models_Event_EventTypeOrganisation extends Models_Base {
     
     public function insert() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "INSERT")) {
+		if ($db->AutoExecute("`". static::$table_name ."`", $this->toArray(), "INSERT")) {
 			$this->eventtype_id = $db->Insert_ID();
 			return true;
 		} else {
@@ -62,7 +64,7 @@ class Models_Event_EventTypeOrganisation extends Models_Base {
     
     public function update() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`eventtype_id` = ".$db->qstr($this->getID() . " AND `organisation_id` = " .$db->qstr($this->getOrganisationID())))) {
+		if ($db->AutoExecute("`". static::$table_name ."`", $this->toArray(), "UPDATE", "`eventtype_id` = ".$db->qstr($this->getID() . " AND `organisation_id` = " .$db->qstr($this->getOrganisationID())))) {
 			return true;
 		} else {
 			return false;

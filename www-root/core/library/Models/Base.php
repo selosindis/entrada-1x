@@ -24,20 +24,24 @@
  */
 
 class Models_Base {
-    protected $database_name = DATABASE_NAME;
 
-    protected $table_name = null;
-    protected $primary_key = null;
-    protected $default_sort_column = null;
+    protected static $database_name = DATABASE_NAME;
+
+    // Child models are required to overload these variables.
+    protected static $table_name          = null;
+    protected static $primary_key         = null;
+    protected static $default_sort_column = null;
+    protected static $default_sort_order = "ASC";
 
     public function __construct($arr = NULL) {
         if (is_array($arr)) {
-            if (!isset($this->primary_key) && isset($arr[0])) {
-                $this->primary_key = $arr[0];
+            if (!isset(static::$primary_key) && !empty($arr)) {
+                $arr_keys = array_keys($arr);
+                static::$primary_key = $arr_keys[0];
             }
 
             if (!isset($this->default_sort_column)) {
-                $this->default_sort_column = $this->primary_key;
+                static::$default_sort_column = static::$primary_key;
             }
 
             $this->fromArray($arr);
@@ -136,6 +140,25 @@ class Models_Base {
     }
 
     /**
+     * Method returns te MySQL Engine being used by the provided database and table.
+     *
+     * @param string $database
+     * @param string $table
+     * @return string
+     */
+    public function getTableEngine($database = "", $table = "") {
+        global $db;
+
+        $result = "";
+        if ($database && $table) {
+            $query = "SELECT `engine` FROM `information_schema`.`tables` WHERE `table_schema` = ? AND `table_name` = ?";
+            $result = $db->GetOne($query, array($database, $table));
+        }
+
+        return $result;
+    }
+
+    /**
      * Returns objects values in an array.
      * @return Array
      */
@@ -144,7 +167,8 @@ class Models_Base {
         $class_vars = get_class_vars(get_called_class());
         if (isset($class_vars)) {
             foreach ($class_vars as $class_var => $value) {
-                if ($class_var != "table_name" && $class_var !="default_sort_column") {
+                $static_tester = new ReflectionProperty(get_called_class(), $class_var);
+                if (!$static_tester->isStatic()) {
                     $arr[$class_var] = $this->$class_var;
                 }
             }
@@ -174,7 +198,7 @@ class Models_Base {
      * @param string $default_mode
      * @return array
      */
-    protected function fetchAll($constraints, $default_method = "=", $default_mode = "AND", $sort_column = "use_default", $sort_order = "ASC") {
+    protected static function fetchAll($constraints, $default_method = "=", $default_mode = "AND", $sort_column = "use_default", $sort_order = "ASC", $limit = null) {
         global $db;
 
         $output = array();
@@ -248,9 +272,9 @@ class Models_Base {
                     $value = clean_input($constraint, array("trim", "striptags"));
                 }
                 if (isset($key) && $key && (isset($value) || is_null($value)) && ($value || $value === 0 ||  $value === "0" || is_null($value))) {
-                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode)) .
-                        " `".$key."` ".(isset($method) && $method ? $method : $default_method) .
-                        ($method == "BETWEEN" ? " ? AND ?" : ($method == "IN" ? " (".$replacements_string.")" : " ?"));
+                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode)).
+                        " `".$key."` ".(isset($method) && $method ? $method : $default_method).
+                        (isset($method) && $method == "BETWEEN" ? " ? AND ?" : (isset($method) && $method == "IN" ? " (".$replacements_string.")" : " ?"));
                     if (is_array($value)) {
                         foreach ($value as $v) {
                             $where[] = $v;
@@ -263,7 +287,7 @@ class Models_Base {
 
             if (!empty($where)) {
                 if (!in_array($sort_column, $class_vars)) {
-                    $sort_column = $this->default_sort_column;
+                    $sort_column = static::$default_sort_column;
                 }
 
                 if ($sort_order == "DESC") {
@@ -271,8 +295,7 @@ class Models_Base {
                 } else {
                     $sort_order = "ASC";
                 }
-
-                $query = "SELECT * FROM `" . $this->database_name . "`.`" . $this->table_name . "` " . $replacements . " ORDER BY `" . $sort_column . "` " . $sort_order;
+                $query = "SELECT * FROM `".static::$database_name."`.`".static::$table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order.(isset($limit) && $limit > 0 ? " LIMIT " . $limit : "");
                 $results = $db->GetAll($query, $where);
                 if ($results) {
                     foreach ($results as $result) {
@@ -321,10 +344,10 @@ class Models_Base {
        );
 
        Query:
-       SELECT * FROM `user_data`
-       WHERE `firstname` LIKE '%John%'
-       AND `lastname` LIKE '%Mc%'
-       OR `id` = '1'
+            SELECT * FROM `user_data`
+            WHERE `firstname` LIKE '%John%'
+            AND `lastname` LIKE '%Mc%'
+            OR `id` = '1'
     */
 
     /**
@@ -336,7 +359,7 @@ class Models_Base {
      * @param string $default_mode
      * @return bool|Models_Base
      */
-    protected function fetchRow($constraints, $default_method = "=", $default_mode = "AND") {
+    protected static function fetchRow($constraints, $default_method = "=", $default_mode = "AND") {
         global $db;
 
         $self = false;
@@ -363,9 +386,9 @@ class Models_Base {
                             $value[] = clean_input($constraint_value, array("trim", "striptags"));
                             $replacements_string .= ($replacements_string ? ", " : "")."?";
                         }
-                    } elseif ($constraint["value"]) {
+                    } elseif (isset($constraint["value"]) && $constraint["value"]) {
                         $value = clean_input($constraint["value"], array("trim", "striptags"));
-                    } elseif ($constraint["value"] || $constraint["value"] === "0" || $constraint["value"] === 0) {
+                    } elseif (isset($constraint["value"]) && ($constraint["value"] || $constraint["value"] === "0" || $constraint["value"] === 0)) {
                         $value = clean_input($constraint["value"], array("trim", "striptags"));
                     } else {
                         $value = NULL;
@@ -374,7 +397,7 @@ class Models_Base {
                     $key = clean_input($index, array("trim", "striptags"));
                     $value = clean_input($constraint, array("trim", "striptags"));
                 }
-                if (isset($key) && $key && isset($value) && ($value || $value === "0" || $value === 0)) {
+                if (isset($key) && $key && (isset($value) || is_null($value)) && ($value || $value === 0 ||  $value === "0" || is_null($value))) {
                     $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode)).
                         " `".$key."` ".(isset($method) && $method ? $method : $default_method).
                         (isset($method) && $method == "BETWEEN" ? " ? AND ?" : (isset($method) && $method == "IN" ? " (".$replacements_string.")" : " ?"));
@@ -389,7 +412,7 @@ class Models_Base {
             }
 
             if (!empty($where)) {
-                $query = "SELECT * FROM `" . $this->database_name . "`.`" . $this->table_name . "` " . $replacements;
+                $query = "SELECT * FROM `" . static::$database_name . "`.`" . static::$table_name . "` " . $replacements;
                 $result = $db->GetRow($query, $where);
                 if ($result) {
                     $class = get_called_class();
@@ -403,27 +426,48 @@ class Models_Base {
 
     public function insert() {
         global $db;
-
-        if ($db->AutoExecute("`".$this->database_name."`.`". $this->table_name ."`", $this->toArray(), "INSERT")) {
-            $this->{$this->primary_key} = $db->Insert_ID();
+        if ($db->AutoExecute("`" . static::$database_name . "`.`" . static::$table_name . "`", $this->toArray(), "INSERT")) {
+            $this->{static::$primary_key} = $db->Insert_ID();
 
             return $this;
         } else {
             application_log("error", "Error inserting a ".get_called_class().". DB Said: " . $db->ErrorMsg());
 
+            echo $db->ErrorMsg();
+
             return false;
         }
     }
 
-    public function update() {
+    public function update () {
         global $db;
 
-        if ($db->AutoExecute("`".$this->database_name."`.`". $this->table_name ."`", $this->toArray(), "UPDATE", "`". $this->primary_key ."` = ".$db->qstr($this->getID()))) {
-            return true;
+        if ($db->AutoExecute("`" . static::$database_name . "`.`" . static::$table_name . "`", $this->toArray(), "UPDATE", "`" . static::$primary_key . "` = " . $db->qstr($this->{static::$primary_key}))) {
+            return $this;
         } else {
-            application_log("error", "Error updating  ".get_called_class()." id[" . $this->getID() . "]. DB Said: " . $db->ErrorMsg());
+            application_log("error", "Error updating  ".get_called_class()." id[" . $this->{static::$primary_key} . "]. DB Said: " . $db->ErrorMsg());
 
             return false;
         }
+    }
+
+    public function startTransaction() {
+        global $db;
+
+        if ($response = $db->StartTrans()) {
+            return $response;
+        }
+
+        return false;
+    }
+
+    public function completeTransaction() {
+        global $db;
+
+        if ($response = $db->CompleteTrans()) {
+            return $response;
+        }
+
+        return false;
     }
 }

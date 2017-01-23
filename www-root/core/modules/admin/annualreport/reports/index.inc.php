@@ -101,6 +101,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			A report containing peer reviewed articles and counts for a department.
 		</li>
 		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=clinical-citations">Peer Reviewed Clinical Citations</a><br />
+			A report containing peer reviewed article citations for a department.
+		</li>
+		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=research-invited-lectures">Invited Lectures</a><br />
 			A report containing invited lectures listed and counted for a department.
 		</li>

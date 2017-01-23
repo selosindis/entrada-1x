@@ -254,7 +254,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 				<a href="#" onclick='showAllUpdate();'>Show All</a> / <a href="#" onclick='hideAttentionNotRequiredUpdate();'>Show only those requiring attention</a>
 				<form method="post" action="?section=generate">
 					<input type="hidden" name="year" value="<?php echo $year; ?>" />  
-					<table id="mspr-class-list" class="tableList">
+					<table id="mspr-class-list" class="table table-bordered table-striped">
 						<col width="3%"  />
 						<col width="33%" />
 						<col width="10%" />
@@ -263,53 +263,54 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 						<col width="4%" />
 						<thead>
 							<tr>
-								<td class="general">
+								<th class="general">
 									<input type="checkbox" name="all" value="all" />
-								</td>
-								<td class="general">
+								</th>
+								<th class="general">
 									Student Name
-								</td>
-								<td class="general">
+								</th>
+								<th class="general">
 									Status
-								</td>
-								<td class="general">
+								</th>
+								<th class="general">
 									Submission Deadline
-								</td>
-								<td class="general">
+								</th>
+								<th class="general">
 									Documents
-								</td>
-								<td class="general">
+								</th>
+								<th class="general">
 									Edit
-								</td>
+								</th>
 							</tr>
 						</thead>
 						<tbody>
-							<?php foreach($msprs as $mspr) {
-								$status = ($mspr->isAttentionRequired() ? "attention-required" : "attention-not-required");
-								$user = $mspr->getUser();
+						<?php
+						foreach($msprs as $mspr) {
+							$status = ($mspr->isAttentionRequired() ? "attention-required" : "attention-not-required");
+							$user = $mspr->getUser();
+
+							if ($user) {
 								$user_id = $user->getID();
 								?>
-							<tr class="<?php echo $status; ?>">
-								<td class="general">
-									<input type="checkbox" name="user_id[]" value="<?php echo $user->getID(); ?>" <?php echo ($mspr->isClosed())? "": "disabled=\"disabled\" class=\"disabled\"";?> />
-								</td>
-								<td>
+								<tr class="<?php echo $status; ?>">
+									<td class="general">
+										<input type="checkbox" name="user_id[]" value="<?php echo $user->getID(); ?>" <?php echo ($mspr->isClosed())? "": "disabled=\"disabled\" class=\"disabled\"";?> />
+									</td>
+									<td>
+										<?php echo "<a href=\"".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$user_id."\">".$user->getFullname() ."</a>"; ?>
+									</td>
+									<td>
+										<?php echo $mspr->isClosed() ? "closed" : "open"; ?>
+									</td>
+									<td>
+										<?php
+										$cts = $mspr->getClosedTimestamp();
+										if ($cts) {
+											echo date("Y-m-d @ H:i",$cts);
+										}
+										?>
+									</td>
 									<?php
-										echo "<a href=\"".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$user_id."\">".$user->getFullname() ."</a>";
-									?>
-								</td>
-								<td>
-									<?php echo $mspr->isClosed() ? "closed" : "open"; ?>
-								</td>
-								<td>
-									<?php 
-									$cts = $mspr->getClosedTimestamp();
-									if ($cts) {
-										echo date("Y-m-d @ H:i",$cts); 
-									}
-									?>
-								</td>
-								<?php
 									$revision = $mspr->getGeneratedTimestamp();
 									if (!$revision) {
 										$revisions = $mspr->getMSPRRevisions();
@@ -317,23 +318,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 											$revision = array_shift($revisions);
 										}
 									}
-			
+
 									if ($revision) {
-									?>
-									<td>
-										<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=html&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a> <a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=pdf&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a> (<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>">revisions</a>)		
-									</td>
-									<td><?php if ($mspr->isClosed()) {?>
-										<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-edit&id=<?php echo $user_id; ?>&from=class"><img src="<?php echo ENTRADA_URL; ?>/images/btn-edit.gif" alt="Edit icon" title="Manual Edit" /></a>
-										<?php } ?>
-									</td>
-								<?php
+										?>
+										<td>
+											<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=html&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a> <a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=pdf&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a> (<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>">revisions</a>)
+										</td>
+										<td>
+											<?php
+											if ($mspr->isClosed()) {
+												?>
+												<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-edit&id=<?php echo $user_id; ?>&from=class"><img src="<?php echo ENTRADA_URL; ?>/images/btn-edit.gif" alt="Edit icon" title="Manual Edit" /></a>
+												<?php
+											}
+											?>
+										</td>
+										<?php
 									} else {
 										echo "<td>None</td><td>&nbsp;</td>";
-									} 						
-								?>
-							</tr>
-							<?php } ?>
+									}
+									?>
+								</tr>
+								<?php
+							}
+						}
+						?>
 						</tbody>
 					</table>
 					<br />
@@ -348,55 +357,58 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 			}
 			break;
 		default:
-			$query		= "select distinct(`grad_year`) from `". AUTH_DATABASE . "`.`user_data` where `grad_year` is not null  
-							order by grad_year";
-			
-			$results	= $db->GetAll($query);
-			
 			?>
-			
 			<h1>Manage MSPRs</h1>
-			<div class="instructions alert alert-info">
-			From the options below, either choose a class to manage and press "Go" to view options specific to the selected class; or, click "Manage All MSPRs requiring attention" to view those awaiting staff approval.
-			</div>
-			<div class="row-fluid">
-				<div class="span5">
-					<div class="well mspr-box">
-						<div class="inner-box">
-							<form method="get" class="form-horizontal">
-								<input type="hidden" name="mode" value="year" />
-								<div class="control-group">
-									<label>Choose Class to manage:</label>
-											<select name="year">
-											<?php 
-											
-											//because we ned the current school year, we have to rig it a bit. 
-											$cur_year = (int) date("Y");
+			<?php
+			$query = "SELECT DISTINCT(`grad_year`) FROM `". AUTH_DATABASE . "`.`user_data` WHERE `grad_year` IS NOT NULL AND `grad_year` <> 0 ORDER BY `grad_year` ASC";
+			$results = $db->GetAll($query);
+			if ($results) {
+				?>
+				<div class="instructions alert alert-info">
+					From the options below either select a cohort to manage or click &quot;Manage All MSPRs requiring attention&quot; to view those awaiting staff approval.
+				</div>
+				<div class="row-fluid">
+					<div class="span5">
+						<div class="well mspr-box">
+							<div class="inner-box">
+								<form method="get" class="form-horizontal">
+									<input type="hidden" name="mode" value="year"/>
+									<div class="control-group">
+										<label>Choose cohort to manage:</label>
+										<select name="year">
+											<?php
+											//because we ned the current school year, we have to rig it a bit.
+											$cur_year = (int)date("Y");
 											if (date("n") > 8) $cur_year += 1;
 											foreach ($results as $result) {
 												$year = $result['grad_year'];
-												echo build_option($year, $year, $year == $cur_year);	
+												echo build_option($year, $year, $year == $cur_year);
 											}
 											?>
-											</select>
-								</div>
-									<input type="submit" class="btn btn-primary" value="Go"></input>
-										
+										</select>
+										<input type="submit" class="btn btn-primary" value="Proceed"></input>
+									</div>
+
+
 								</form>
+							</div>
+						</div>
+					</div>
+					<div class="span2" style="text-align:center">
+						<span class="or" style="margin-top:35px">OR</span>
+					</div>
+					<div class="span5">
+						<div class="well mspr-box" style="text-align:center;font-size:1.2em;font-weight:500">
+							<div class="inner-box">
+								<a href="?mode=all" style="margin-top:30px;display:inline-block">Manage All MSPRs
+									requiring attention</a>
+							</div>
 						</div>
 					</div>
 				</div>
-				<div class="span2" style="text-align:center">
-					<span class="or" style="margin-top:35px">OR</span>
-				</div>
-				<div class="span5">
-					<div class="well mspr-box" style="text-align:center;font-size:1.2em;font-weight:500">
-						<div class="inner-box">
-							<a href="?mode=all" style="margin-top:30px;display:inline-block">Manage All MSPRs requiring attention</a>
-						</div>
-					</div>
-				</div>
-			</div>
-		<?php
+				<?php
+			} else {
+				echo display_notice(array($translate->_("There are not presently any learners in the system to manage MSPRs for. Please check back later.")));
+			}
 	}
 }

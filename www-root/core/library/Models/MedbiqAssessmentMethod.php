@@ -25,20 +25,20 @@ class Models_MedbiqAssessmentMethod extends Models_Base {
     /**
      * @var string
      */
-    protected $table_name = "medbiq_assessment_methods";
+    protected static $table_name = "medbiq_assessment_methods";
 
     /**
      * @var string
      */
-    protected $primary_key = "assessment_method_id";
+    protected static $primary_key = "assessment_method_id";
 
     /**
      * @var string
      */
-    protected $default_sort_column = "assessment_method";
+    protected static $default_sort_column = "assessment_method";
 
     /**
-     * Field names within the $this->table_name table.
+     * Field names within the static::$table_name table.
      * @var string
      */
     protected $assessment_method_id,
@@ -148,7 +148,7 @@ class Models_MedbiqAssessmentMethod extends Models_Base {
     public function update() {
 		global $db;
 
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`assessment_method_id` = ".$db->qstr($this->getID()))) {
+		if ($db->AutoExecute("`". static::$table_name ."`", $this->toArray(), "UPDATE", "`assessment_method_id` = ".$db->qstr($this->getID()))) {
 			return true;
 		}
 
@@ -161,7 +161,7 @@ class Models_MedbiqAssessmentMethod extends Models_Base {
     public function insert() {
 		global $db;
 
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "INSERT")) {
+		if ($db->AutoExecute("`". static::$table_name ."`", $this->toArray(), "INSERT")) {
 			$this->assessment_method_id = $db->Insert_ID();
 
 			return true;

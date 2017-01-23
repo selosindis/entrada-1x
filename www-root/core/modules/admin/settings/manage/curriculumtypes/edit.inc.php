@@ -83,7 +83,12 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 					$period_entry["start_date"] = strtotime(clean_input($date, array("trim", "notags")));
 					$period_entry["finish_date"] = strtotime(clean_input($_POST["curriculum_finish_date"][$key], array("trim", "notags")));
 					$period_entry["curriculum_period_title"] = clean_input($_POST["curriculum_period_title"][$key],array("trim","notags"));
-					$period_entry["active"] = clean_input($_POST["curriculum_active"][$key],array("trim","int"));
+                    if (isset($_POST["curriculum_active"])) {
+                        $active = clean_input($_POST["curriculum_active"][$key],array("trim","int"));
+                    } else {
+                        $active = 1;
+                    }
+					$period_entry["active"] = $active;
 
 					if (!$period_entry["start_date"]) {
 						add_error("A start date is required.");
@@ -98,13 +103,12 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				}
 			} else {
 				add_error("A <strong>Curriculum Period</strong> is required.");
-			}				
+			}
 
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 				$PROCESSED["curriculum_type_active"] = 1;
-				$PROCESSED["curriculum_type_order"] = 1;
 
 				if ($db->AutoExecute("curriculum_lu_types", $PROCESSED, "UPDATE","`curriculum_type_id`=".$db->qstr($PROCESSED["curriculum_type_id"]))) {
 
@@ -123,9 +127,14 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
                                 $period_entry = array();
                                 $period_entry["curriculum_type_id"] = $PROCESSED["curriculum_type_id"];
                                 $period_entry["start_date"] = strtotime(clean_input($date, array("trim", "notags")));
-                                $period_entry["finish_date"] = strtotime(clean_input($_POST["curriculum_finish_date"][$key], array("trim", "notags")));
+                                $period_entry["finish_date"] = strtotime(date("Y-m-d", strtotime(clean_input($_POST["curriculum_finish_date"][$key], array("trim", "notags"))))." 23:59:59");
 								$period_entry["curriculum_period_title"] = clean_input($_POST["curriculum_period_title"][$key],array("trim","notags"));
-                                $period_entry["active"] = clean_input($_POST["curriculum_active"][$key],array("trim","int"));
+                                if (isset($_POST["curriculum_active"][$key])) {
+                                    $active = clean_input($_POST["curriculum_active"][$key],array("trim","int"));
+                                } else {
+                                    $active = 1;
+                                }
+                                $period_entry["active"] = $active;
 
                                 switch ($period_action) {
                                     case "add" :
@@ -196,7 +205,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 			}
 
 
-			$query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"])." ORDER BY `start_date` ASC";
+			$query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"])." AND `active` = 1 ORDER BY `start_date` ASC";
 			$result = $db->GetAll($query);
 
 			if($result){
@@ -323,57 +332,52 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 							<table class="table table-striped" summary="Curriculum Periods">
 								<thead>
 									<tr>
-										<th>&nbsp;</th>
+										<th></th>
 										<th>Start Date</th>
 										<th>Finish Date</th>
 										<th>Title</th>
-										<th>Active</th>
+										<th></th>
 									</tr>
 								</thead>
                                 <tfoot>
                                     <tr>
                                         <td colspan="5">
-                                            <input type="button" class="btn btn-danger" id="delete_selected" value="Remove Selected" />
+                                            <input type="button" class="btn btn-danger" id="delete_selected" value="<?php echo $translate->_("Deactivate"); ?>" />
                                         </td>
                                     </tr>
                                 </tfoot>
-								<tbody id="curriculum_periods">
-									<?php
-										if ($PROCESSED["periods"]) {
-											foreach ($PROCESSED["periods"] as $currentIdx => $period) {
-                                                ?>
-                                                <tr id="period_<?php echo $currentIdx;?>" class="curriculum_period">
-                                                    <td>
-														<input type="checkbox" class="remove_checkboxes" id="remove_<?php echo $currentIdx;?>" value="<?php echo $currentIdx;?>"/>
-													</td>
-                                                    <td>
-                                                        <div class="input-append">
-														    <input type="text" name="curriculum_start_date[<?php echo $currentIdx;?>]" id="start_<?php echo $currentIdx;?>" class="start_date input-small" value="<?php echo date("Y-m-d", $period["start_date"]); ?>" />
-                                                            <button class="btn calendar" type="button" id="start_calendar_<?php echo $currentIdx;?>"><i class="icon-calendar"></i></button>
-                                                        </div>
-													</td>
-                                                    <td>
-                                                        <div class="input-append">
-    														<input type="text" name="curriculum_finish_date[<?php echo $currentIdx;?>]" id="finish_<?php echo $currentIdx;?>" class="end_date input-small" value="<?php echo date("Y-m-d", $period["finish_date"]); ?>" />
-                                                            <button class="btn calendar" type="button" id="finish_calendar_<?php echo $currentIdx;?>"><i class="icon-calendar"></i></button>
-                                                        </div>
-													</td>
-													<td>
-														<input type="text" name="curriculum_period_title[<?php echo $currentIdx;?>]" id="curriculum_period_title_<?php echo $currentIdx;?>" value="<?php echo $period["curriculum_period_title"];?>" class="input-small" />
-													</td>
-													<td>
-														<select name="curriculum_active[<?php echo $currentIdx;?>]" id="curriculum_active_<?php echo $currentIdx;?>" class="input-small">
-															<option value="1" selected="selected">Active</option>
-															<option value="0" <?php echo (($period["active"] == 0)?"selected=\"selected\"":"");?>>Inactive</option>
-														</select>
-													</td>
-                                                </tr>
-                                                <?php
-											}
-										}
-									?>
-								</tbody>
-							</table>
+                                <tbody id="curriculum_periods">
+                                <?php
+                                    if ($PROCESSED["periods"]) {
+                                        foreach ($PROCESSED["periods"] as $currentIdx => $period) {
+                                            ?>
+                                            <tr id="period_<?php echo $currentIdx;?>" class="curriculum_period">
+                                                <td>
+                                                    <input type="checkbox" class="remove_checkboxes" id="remove_<?php echo $currentIdx;?>" value="<?php echo $currentIdx;?>"/>
+                                                </td>
+                                                <td>
+                                                    <div class="input-append">
+                                                        <input type="text" name="curriculum_start_date[<?php echo $currentIdx;?>]" id="start_<?php echo $currentIdx;?>" class="start_date input-small" value="<?php echo date("Y-m-d", $period["start_date"]); ?>" />
+                                                        <button class="btn calendar" type="button" id="start_calendar_<?php echo $currentIdx;?>"><i class="icon-calendar"></i></button>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="input-append">
+                                                        <input type="text" name="curriculum_finish_date[<?php echo $currentIdx;?>]" id="finish_<?php echo $currentIdx;?>" class="end_date input-small" value="<?php echo date("Y-m-d", $period["finish_date"]); ?>" />
+                                                        <button class="btn calendar" type="button" id="finish_calendar_<?php echo $currentIdx;?>"><i class="icon-calendar"></i></button>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="curriculum_period_title[<?php echo $currentIdx;?>]" id="curriculum_period_title_<?php echo $currentIdx;?>" value="<?php echo $period["curriculum_period_title"];?>" style="width:90%;" />
+                                                </td>
+                                                <td><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>/<?php echo $SUBMODULE; ?>/curriculumtypes?section=block-schedule&org=<?php echo $ORGANISATION_ID; ?>&cperiod_id=<?php echo clean_input($currentIdx, "numeric"); ?>&type_id=<?php echo $PROCESSED["curriculum_type_id"]; ?>">Block Schedule</a></td>
+                                            </tr>
+                                        <?php
+                                        }
+                                    }
+                                ?>
+                                </tbody>
+                            </table>
 						</div>
 						<div id="no_period_msg">
 							<?php

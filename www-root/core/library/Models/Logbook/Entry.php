@@ -152,7 +152,8 @@ class Models_Logbook_Entry {
         
         if ($this->getCourseID()) {
             $objectives = array("required" => array(), "logged" => array(), "disabled" => array());
-            $required_objectives = Models_Logbook::getAllRequiredObjectives($this->getCourseID());
+            $logbook = new Models_Logbook();
+            $required_objectives = $logbook->getAllRequiredObjectives($this->getCourseID());
             foreach ($required_objectives as $required_objective) {
                 $query = "SELECT a.`objective_id` FROM `logbook_entry_objectives` AS a
                             JOIN `logbook_entries` AS b
@@ -177,7 +178,8 @@ class Models_Logbook_Entry {
         
         if ($this->getCourseID()) {
             $objectives = array("required" => array(), "logged" => array(), "disabled" => array());
-            $required_objectives = Models_Logbook::getAllRequiredObjectivesMobile($this->getCourseID());
+            $logbook = new Models_Logbook();
+            $required_objectives = $logbook->getAllRequiredObjectivesMobile($this->getCourseID());
             foreach ($required_objectives as $required_objective) {
                 $query = "SELECT a.`objective_id` FROM `logbook_entry_objectives` AS a
                             JOIN `logbook_entries` AS b

@@ -128,7 +128,7 @@ if ($ACTION == "login") {
 		}
 
 		// Check for SESSION lockout also
-		if (isset($_SESSION["auth"]) && isset($_SESSION["auth"]["locked_out_until"])) {
+		if (isset($_SESSION["auth"]["locked_out_until"])) {
 			if ($_SESSION["auth"]["locked_out_until"] < time()) {
 				unset($_SESSION["auth"]["locked_out_until"]);
 			} else {
@@ -236,6 +236,7 @@ if ($ACTION == "login") {
 			}
 
 			$_SESSION["isAuthorized"] = true;
+            $_SESSION["auth"]["method"] = (isset($result["METHOD"]) ? $result["METHOD"] : "local");
             $_SESSION["details"] = array();
             $_SESSION["details"]["app_id"] = (int) AUTH_APP_ID;
             $_SESSION["details"]["id"] = $result["ID"];
@@ -348,7 +349,7 @@ if ($ACTION == "login") {
 			header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($PROCEED_TO), array("nows", "url")));
 			exit;
 		}
-	} elseif (($ERROR === 0) && ($LOGIN_ATTEMPTS >= AUTH_MAX_LOGIN_ATTEMPTS)) {
+	} elseif (($ERROR === 0) && (isset($LOGIN_ATTEMPTS)) && ($LOGIN_ATTEMPTS >= AUTH_MAX_LOGIN_ATTEMPTS)) {
 		$locked_out_until = time() + AUTH_LOCKOUT_TIMEOUT;
 
 		if (isset($USER_ACCESS_ID)) {
@@ -357,7 +358,7 @@ if ($ACTION == "login") {
 				application_log("error", "Unable to set `locked_out_until` for user [".$username."]. Database said ".$db->ErrorMsg());
 			}
 		} else {
-			if (isset($_SESSION["auth"]) && isset($_SESSION["auth"]["login_attempts"])) {
+			if (isset($_SESSION["auth"]["login_attempts"])) {
 				$_SESSION["auth"]["login_attempts"] = 0;
 				$_SESSION["auth"]["locked_out_until"] = $locked_out_until;
 			}
@@ -389,7 +390,7 @@ if ($ACTION == "login") {
 					application_log("error", "Unable to increment the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
 				}
 			} else {
-				if (isset($_SESSION["auth"]) && isset($_SESSION["auth"]["login_attempts"])) {
+				if (isset($_SESSION["auth"]["login_attempts"])) {
 					$_SESSION["auth"]["login_attempts"]++;
 				} else {
 					$_SESSION["auth"]["login_attempts"] = 1;
@@ -400,7 +401,9 @@ if ($ACTION == "login") {
 
 	unset($result, $username, $password);
 } elseif ($ACTION == "logout") {
-    users_online("logout");
+	add_statistic("index", "logout", "access_id", $_SESSION["details"]["access_id"], $_SESSION["details"]["id"]);
+
+	users_online("logout");
 
     /**
      * If the user is in masquerade mode, save the session data from before
@@ -454,6 +457,15 @@ if (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 			case "privacy_policy" :
 			case "help" :
 				$MODULE = $PATH_SEPARATED[1];
+			break;
+			case "assessment" :
+				$MODULE = "assessment";
+			break;
+			case "api-assessment-external.inc.php" :
+				$MODULE = "api-assessment-external";
+			break;
+			case "api-assessment-external" :
+				$MODULE = "api-assessment-external";
 			break;
 			default :
 				$MODULE = "login";
@@ -559,6 +571,10 @@ switch ($MODULE) {
 	case "privacy_policy" :
 	case "help" :
 	case "login" :
+	case "assessment" :
+	case "api-assessment-external":
+		define("IN_EXTERNAL_ASSESSMENT", "IN_EXTERNAL_ASSESSMENT");
+		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR.$MODULE.".inc.php");
     case "filebrowser" :
 		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR.$MODULE.".inc.php");
 	break;
@@ -572,6 +588,7 @@ switch ($MODULE) {
 		$router->setSection($SECTION);
 
 		if ($router && ($route = $router->initRoute($MODULE))) {
+            if (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"]) {
             /**
              * Responsible for displaying the permission masks sidebar item
              * if they have more than their own permission set available.
@@ -596,6 +613,7 @@ switch ($MODULE) {
                 if ($display_masks) {
                     new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
                 }
+            }
             }
 
 			$module_file = $router->getRoute();

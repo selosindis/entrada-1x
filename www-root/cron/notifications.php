@@ -300,6 +300,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 								JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON b.`id` = a.`assigned_to`
 								WHERE a.`assigned_by` = ".$db->qstr($event_contact["proxy_id"])."
+								AND a.`teaching_reminders` = 1
 								AND a.`valid_from` <= ".$db->qstr(time())."
 								AND a.`valid_until` > ".$db->qstr(time())."
 								AND b.`email` <> ''";

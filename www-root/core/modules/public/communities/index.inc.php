@@ -325,7 +325,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                     <form class="form-search">
                         <div class="input-append">
                             <input type="text" class="search-query input-xlarge" id="search-query" name="q" value="<?php echo ((isset($_GET["q"])) ? html_encode(trim($_GET["q"])) : ""); ?>" autocomplete="off" />
-                            <button class="btn" id="search-button">Search</button>
+                            <button class="btn" id="search-button"><i class="icon-search"></i> Search</button>
                         </div>
                     </form>
 

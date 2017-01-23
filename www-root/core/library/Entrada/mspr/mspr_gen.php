@@ -1,6 +1,6 @@
 <?php
 header("Content-type: text/html; charset=utf-8");
-require_once("Models/mspr/MSPRs.class.php");
+require_once("Classes/mspr/MSPRs.class.php");
 require_once("Entrada/mspr/functions.inc.php");
 define("MAX_RESEARCH", 6);
 define("MAX_OBSERVERSHIPS", 8);

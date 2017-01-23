@@ -27,8 +27,8 @@ class Models_Community_Course extends Models_Base {
                 $community_id,
                 $course_id;
 
-    protected $table_name = "community_courses";
-    protected $default_sort_column = "community_course_id";
+    protected static $table_name = "community_courses";
+    protected static $default_sort_column = "community_course_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -66,6 +66,10 @@ class Models_Community_Course extends Models_Base {
         return $self->fetchRow(array("community_id" => $community_id));
     }
 
+    public function fetchRowByCommunityIDProxyID($community_id = 0, $proxy_id) {
+        $self = new self();
+        return $self->fetchRow(array("community_id" => $community_id, "proxy_id" => $proxy_id));
+    }
     /**
      * This function checks if the community is linked to a course
      * @param int $community_id

@@ -27,9 +27,9 @@ class Models_Migration extends Models_Base {
     protected $fail = 0;
     protected $updated_date;
 
-    protected $table_name = "migrations";
-    protected $primary_key = "migration";
-    protected $default_sort_column = "migration";
+    protected static $table_name = "migrations";
+    protected static $primary_key = "migration";
+    protected static $default_sort_column = "migration";
 
     public function __construct($arr = NULL) {
         $this->updated_date = time();

@@ -25,8 +25,9 @@
 class Models_Gradebook_Assessment_Objective extends Models_Base {
     protected $aobjective_id, $assessment_id, $objective_id, $importance, $objective_details, $objective_type, $updated_date, $updated_by;
 
-    protected $table_name = "assessment_objectives";
-    protected $default_sort_column = "assessment_id";
+    protected static $table_name = "assessment_objectives";
+    protected static $default_sort_column = "assessment_id";
+    protected static $primary_key = "aobjective_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -83,7 +84,7 @@ class Models_Gradebook_Assessment_Objective extends Models_Base {
     public function insert() {
         global $db;
 
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->aobjective_id = $db->Insert_ID();
             return $this;
         } else {
@@ -95,7 +96,7 @@ class Models_Gradebook_Assessment_Objective extends Models_Base {
     public function update() {
         global $db;
 
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`aobjective_id` = ".$this->aobjective_id)) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`aobjective_id` = ".$this->aobjective_id)) {
             return $this;
         } else {
             return false;

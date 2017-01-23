@@ -126,6 +126,12 @@ jQuery(function($) {
             event_length_changed();
         }, 200);
     });
+
+    if (typeof EVENT_COLOR_PALETTE != 'undefined' && Array.isArray(EVENT_COLOR_PALETTE)) {
+        color_picker('#event_color', EVENT_COLOR_PALETTE);
+    } else {
+        color_picker('#event_color');
+    }
 });
 
 /*

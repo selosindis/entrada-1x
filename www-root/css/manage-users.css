@@ -41,7 +41,7 @@
 .list-group-item {
     position: relative;
     display: block;
-    padding: 5px 15px;
+    padding: 15px;
     margin-top: -1px;
     background-color: #fff;
     border: 1px solid #ddd;
@@ -58,7 +58,7 @@
 }
 
 .student-li {
-    height: 30px;
+    height: 36px;
 }
 
 .student-li .remove-permission {
@@ -66,7 +66,7 @@
 }
 
 .student-years select {
-    width: 60px;
+    width: 70px;
 }
 
 .departments-advanced-search {

@@ -32,29 +32,40 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$province ="";
 
 
+	$out = "html";
+
+	if (isset($_POST["out"]) && ($tmp_input = clean_input($_POST["out"], array("trim", "notags")))) {
+		$out = $tmp_input;
+	} elseif (isset($_GET["out"]) && ($tmp_input = clean_input($_GET["out"], array("trim", "notags")))) {
+		$out = $tmp_input;
+	}
+
 	if (ctype_digit($tmp_input)) {
 		$province_id = (int) $tmp_input;
 	} else {
 		$province = $tmp_input;
 	}
 
+	$output = "";
 	if ($countries_id) {
-		$query		= "SELECT * FROM `global_lu_provinces` WHERE `country_id` = ".$db->qstr($countries_id)." ORDER BY `province` ASC";
-		$results	= $db->GetAll($query);
+		$results = Models_Province::fetchAllByCountryID($countries_id);
 		if ($results) {
-			echo "<select id=\"prov_state\" name=\"prov_state\">\n";
-			echo "<option value=\"0\"".((!$province_id) ? " selected=\"selected\"" : "").">-- Select Province / State --</option>\n";
-			foreach($results as $result) {
-				echo "<option value=\"".clean_input($result["province_id"], array("notags", "specialchars"))."\"".(($province_id == $result["province_id"]) ? " selected=\"selected\"" : ($province == clean_input($result["province"], array("notags", "specialchars")) ? " selected=\"selected\"" : "")).">".clean_input($result["province"], array("notags", "specialchars"))."</option>\n";
+			$output .= "<select id=\"prov_state\" name=\"prov_state\" class=\"input-large\">\n";
+			$output .=  "<option value=\"0\"".((!$province_id) ? " selected=\"selected\"" : "").">-- Select Province / State --</option>\n";
+			foreach($results as $result_object) {
+				$result = $result_object->toArray();
+				$output .=  "<option value=\"".clean_input($result["province_id"], array("notags", "specialchars"))."\"".(($province_id == $result["province_id"]) ? " selected=\"selected\"" : ($province == clean_input($result["province"], array("notags", "specialchars")) ? " selected=\"selected\"" : "")).">".clean_input($result["province"], array("notags", "specialchars"))."</option>\n";
 			}
-			echo "</select>\n";
+			$output .=  "</select>\n";
 		} else {
-			echo "<input type=\"text\" id=\"prov_state\" name=\"prov_state\" value=\"".clean_input($province, array("notags", "specialchars"))."\" maxlength=\"100\" />";
+			$output .=  "<input type=\"text\" id=\"prov_state\" name=\"prov_state\" value=\"".clean_input($province, array("notags", "specialchars"))."\" maxlength=\"100\" />";
 		}
+		echo $output;
 		exit;
 	}
 
-	echo "<input type=\"hidden\" id=\"prov_state\" name=\"prov_state\" value=\"0\" />\n";
-	echo "Please select a <strong>Country</strong> from above first.\n";
+	$output .= "<input type=\"hidden\" id=\"prov_state\" name=\"prov_state\" value=\"0\" />\n";
+	$output .= "<span style=\"line-height:30px;\">Please select a <strong>Country</strong> first.\n";
+    echo $output;
 }
 ?>

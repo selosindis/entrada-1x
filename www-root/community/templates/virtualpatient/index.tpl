@@ -77,6 +77,16 @@
 							{include file="sidebar-blocks/admin_block.tpl"}
 						{/if}
 						{include file="sidebar-blocks/entrada_block.tpl"}
+						{if $twitter}
+							<section>
+								<div class="panel-header">
+									<h1>{translate}Twitter{/translate}</h1>
+								</div>
+								<div class="panel-content">
+									{$twitter}
+								</div>
+							</section>
+						{/if}
 						{if $is_logged_in && $user_is_member}
 							{include file="sidebar-blocks/community_block.tpl"}
 						{/if}
@@ -101,5 +111,18 @@
                 pageTracker._trackPageview();
             </script>
         {/if}
+		{if $isAuthorized}
+			<script src = "{$sys_website_url}/javascript/jquery/jquery.session.timeout.js?release={$application_version}" ></script >
+			<script type = "text/javascript" >
+				jQuery(document) . ready(function ($) {
+					$.timeoutMonitor({
+						sessionTime: {$maxlifetime},
+						warnTime: 60000,    // 60 seconds before it expires
+						title: '{$session_expire_title}',
+						message: '{$session_expire_message}'
+					});
+				});
+			</script >
+		{/if}
 	</body>
 </html>

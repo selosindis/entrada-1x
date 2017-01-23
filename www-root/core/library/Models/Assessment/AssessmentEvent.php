@@ -30,9 +30,10 @@ class Models_Assessment_AssessmentEvent extends Models_Base {
               $updated_date,
               $updated_by,
               $active;
-    
-    protected $table_name = "assessment_events";
-    protected $default_sort_column = "assessment_event_id";
+
+    protected static $primary_key = "assessment_event_id";
+    protected static $table_name = "assessment_events";
+    protected static $default_sort_column = "assessment_event_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -74,7 +75,7 @@ class Models_Assessment_AssessmentEvent extends Models_Base {
         return Models_Assessment::fetchRowByID($this->assessment_id);
     }
 
-    public static function fetchRowByAssessmentID ($assessment_id = null) {
+    public static function fetchRowByAssessmentID ($assessment_id) {
         $self = new self();
         return $self->fetchRow(array(
             array("key" => "assessment_id", "value" => $assessment_id, "method" => "="),
@@ -82,12 +83,32 @@ class Models_Assessment_AssessmentEvent extends Models_Base {
         ));
     }
     
-    public static function fetchRowByEventID ($event_id = null) {
+    public static function fetchRowByEventID ($event_id) {
         $self = new self();
         return $self->fetchRow(array(
             array("key" => "event_id", "value" => $event_id, "method" => "="),
             array("mode" => "AND", "key" => "active", "value" => 1, "method" => "=")    
         ));
+    }
+
+    public static function fetchAllAssessmentByEventID ($event_id) {
+        global $db;
+
+        $query = "SELECT b.`assessment_id`, b.`name`, c.`course_id`  
+                    FROM `assessment_events` AS a
+                    LEFT JOIN assessments AS b 
+                    ON a.`assessment_id` = b.`assessment_id`
+                    LEFT JOIN courses AS c 
+                    ON b.`course_id` = c.`course_id`
+                    WHERE a.`event_id` = ? 
+                    AND a.`active` = 1";
+
+        $results = $db->GetAll($query, array($event_id));
+
+        if ($results) {
+            return $results;
+        }
+        return false;
     }
     
     public function insert() {

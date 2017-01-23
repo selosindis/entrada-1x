@@ -20,11 +20,10 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_DISCUSSIONS"))) {
 }
 
 if ($RECORD_ID) {	
-    require_once("Models/users/UserPhoto.class.php");
-    require_once("Models/users/UserPhotos.class.php");
+    require_once("Classes/users/UserPhoto.class.php");
+    require_once("Classes/users/UserPhotos.class.php");
     
-	$query			= "
-                SELECT a.*, b.`forum_title`, c.`firstname`, c.`lastname`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`, c.`username` AS `poster_username`
+	$query			= "SELECT a.*, b.`forum_title`, c.`firstname`, c.`lastname`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`, c.`username` AS `poster_username`
 					FROM `community_discussion_topics` AS a
 					LEFT JOIN `community_discussions` AS b
 					ON a.`cdiscussion_id` = b.`cdiscussion_id`

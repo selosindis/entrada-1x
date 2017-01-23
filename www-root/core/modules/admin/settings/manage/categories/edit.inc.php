@@ -191,18 +191,10 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CATEGORIES")) {
                         $PROCESSED = $category_details;
                         ?>
                         <script type="text/javascript">
-                        function selectCategory(parent_id, category_id) {
-                            new Ajax.Updater('m_selectCategoryField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/categories-list.api.php', {parameters: {'pid': parent_id, 'id': category_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
-                            return;
-                        }
-                        function selectOrder(category_id, parent_id) {
-                            new Ajax.Updater('m_selectOrderField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/categories-list.api.php', {parameters: {'id': category_id, 'type': 'order', 'pid': parent_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
-                            return;
-                        }
-                        jQuery(function() {
-                            selectCategory(<?php echo (isset($PROCESSED["category_parent"]) && $PROCESSED["category_parent"] ? $PROCESSED["category_parent"] : "0"); ?>, <?php echo $CATEGORY_ID; ?>);
-                            selectOrder(<?php echo $CATEGORY_ID; ?>, <?php echo (isset($PROCESSED["category_parent"]) && $PROCESSED["category_parent"] ? $PROCESSED["category_parent"] : "0"); ?>);
-                        });
+                            jQuery(function() {
+                                selectCategory('#m_selectCategoryField_<?php echo $time; ?>', <?php echo (isset($PROCESSED["category_parent"]) && $PROCESSED["category_parent"] ? $PROCESSED["category_parent"] : "0"); ?>, <?php echo $CATEGORY_ID; ?>, <?php echo $ORGANISATION_ID; ?>);
+                                selectOrder('#m_selectOrderField_<?php echo $time; ?>', <?php echo $CATEGORY_ID; ?>, <?php echo (isset($PROCESSED["category_parent"]) && $PROCESSED["category_parent"] ? $PROCESSED["category_parent"] : "0"); ?>, <?php echo $ORGANISATION_ID; ?>);
+                            });
                         </script>
                         <h2>Clerkship<?php echo (isset($PROCESSED["ctype_name"]) && $PROCESSED["ctype_name"] ? " ".$PROCESSED["ctype_name"] : ""); ?> Category Details</h2>
                         <div class="row-fluid">
@@ -409,29 +401,20 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CATEGORIES")) {
 
                         $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>\n";
                         $HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/picklist.js\"></script>\n";
-                        $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/clerkship_categories.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";						$ONLOAD[] = "$('courses_list').style.display = 'none'";
-
-                        $HEAD[]	= "<script type=\"text/javascript\">
-                                    function selectCategory(parent_id, category_id) {
-                                        new Ajax.Updater('selectCategoryField', '".ENTRADA_URL."/api/categories-list.api.php', {parameters: {'pid': parent_id, 'id': category_id, 'organisation_id': ".$ORGANISATION_ID."}});
-                                        return;
-                                    }
-                                    function selectOrder(category_id, parent_id) {
-                                        new Ajax.Updater('selectOrderField', '".ENTRADA_URL."/api/categories-list.api.php', {parameters: {'id': category_id, 'type': 'order', 'pid': parent_id, 'organisation_id': ".$ORGANISATION_ID."}});
-                                        return;
-                                    }
-                                    </script>";
-                        $ONLOAD[] = "selectCategory(".(isset($PROCESSED["category_parent"]) && $PROCESSED["category_parent"] ? $PROCESSED["category_parent"] : "0").", ".$CATEGORY_ID.")";
-                        $ONLOAD[] = "selectOrder(".$CATEGORY_ID.", ".(isset($PROCESSED["category_parent"]) && $PROCESSED["category_parent"] ? $PROCESSED["category_parent"] : "0").")";
+                        $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/clerkship_categories.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+            
+                        $ONLOAD[] = "selectCategory('#selectCategoryField', ".(isset($PROCESSED["category_parent"]) && $PROCESSED["category_parent"] ? $PROCESSED["category_parent"] : "0").", ".$CATEGORY_ID.", ".$ORGANISATION_ID.")";
+                        $ONLOAD[] = "selectOrder('#selectOrderField', ".$CATEGORY_ID.", ".(isset($PROCESSED["category_parent"]) && $PROCESSED["category_parent"] ? $PROCESSED["category_parent"] : "0").",".$ORGANISATION_ID.")";
                         ?>
                         <script type="text/javascript">
-                        jQuery(function(){
-                            jQuery("#category-form").submit(function(){
-                                jQuery("#PickList").each(function(){
-                                    jQuery("#PickList option").attr("selected", "selected");
+                            var SITE_URL = "<?php echo ENTRADA_URL;?>";
+                            jQuery(function($){
+                                $("#category-form").submit(function(){
+                                    $("#PickList").each(function(){
+                                        $("#PickList option").attr("selected", "selected");
+                                    });
                                 });
                             });
-                        });
                         </script>
 
                         <h1>Edit Clinical Rotation Category</h1>

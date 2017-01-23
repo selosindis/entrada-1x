@@ -25,14 +25,19 @@
 class Models_Event_Draft_Option extends Models_Base {
     
     protected $draft_id, $option, $value;
-    
-    protected $table_name = "draft_options";
-    protected $default_sort_column = "option";
+
+    protected static $table_name           = "draft_options";
+    protected static $primary_key          = "draft_id";
+    protected static $default_sort_column  = "option";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
     }
-    
+
+    public function getID() {
+        return $this->draft_id;
+    }
+
     public function getDraftID() {
         return $this->draft_id;
     }
@@ -47,47 +52,8 @@ class Models_Event_Draft_Option extends Models_Base {
     
     public static function fetchAllByDraftID($draft_id = 0) {
         $self = new self();
-
-        $constraints = array(
-            array(
-                "mode"      => "AND",
-                "key"       => "draft_id",
-                "value"     => $draft_id,
-                "method"    => "="
-            )
-        );
-
-        $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
-        $output = array();
-
-        if (!empty($objs)) {
-            foreach ($objs as $o) {
-                $output[] = $o;
-            }
-        }
-
-        return $output;
+        return $self->fetchAll(array(
+            array("key" => "draft_id", "value" => $draft_id, "method" => "=")
+        ));
     }
-    
-    public function update() {
-        global $db;
-        
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`draft_id` = ".$db->qstr($this->draft_id)." AND `option` = ".$db->qstr($this->option))) {
-            return $this;
-        } else {
-            return false;
-        }
-        
-    }
-    
-    public function insert() {
-        global $db;
-        
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
-            return $this;
-        } else {
-            return false;
-        }
-    }
-    
 }

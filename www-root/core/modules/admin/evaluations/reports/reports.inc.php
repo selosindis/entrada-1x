@@ -130,7 +130,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		}
 		echo "	</tr>\n";
 
-		$evaluators_list = Models_Evaluation::getEvaluators($report["evaluation"]);
+		$evaluators_list = Classes_Evaluation::getEvaluators($report["evaluation"]);
 		$evaluators = count($evaluators_list);
 		
 		if ($STUDENTS) {		

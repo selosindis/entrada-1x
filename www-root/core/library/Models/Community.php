@@ -29,13 +29,45 @@ class Models_Community extends Models_Base {
         $community_theme, $community_shortname, $community_title, $community_description, $community_keywords,
         $community_email, $community_website, $community_protected, $community_registration, $community_members,
         $community_active, $community_opened, $community_notifications, $sub_communities, $storage_usage, $storage_max,
-        $updated_date, $updated_by;
+        $updated_date, $updated_by, $community_twitter_handle, $community_twitter_hashtags;
 
-    protected $table_name = "communities";
-    protected $default_sort_column = "community_title";
+    protected static $table_name = "communities";
+    protected static $default_sort_column = "community_title";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);
+    }
+
+    public function getID() {
+        return $this->community_id;
+    }
+
+    public function getParent() {
+        return $this->community_parent;
+    }
+
+    public function getURL() {
+        return $this->community_url;
+    }
+
+    public function getTitle() {
+        return $this->community_title;
+    }
+
+    public function getDescription() {
+        return $this->community_description;
+    }
+
+    public function getWebsite() {
+        return $this->community_website;
+    }
+
+    public function getTwitterHandle() {
+        return $this->community_twitter_handle;
+    }
+
+    public function getTwitterHashtags() {
+        return $this->community_twitter_hashtags;
     }
 
     public static function search($search_query, $format = "array", $start_results = 0, $max_results = 100) {
@@ -69,5 +101,31 @@ class Models_Community extends Models_Base {
                 return $output;
             break;
         }
+    }
+
+    public static function fetchRowByID($id) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "community_id", "value" => $id, "method" => "=")
+        ));
+    }
+
+    public function getCurrentUserCommunitiesTwitterDetails()
+    {
+        global $ENTRADA_USER, $db;
+
+        $query = "SELECT b.`community_id`, b.`community_twitter_handle` AS `handle`, b.`community_twitter_hashtags` AS hashtags
+					FROM `community_members` AS a
+					LEFT JOIN `communities` AS b
+					ON b.`community_id` = a.`community_id`
+					WHERE a.`proxy_id` = " . $db->qstr($ENTRADA_USER->getActiveId()) . "
+					AND a.`member_active` = '1'
+					AND b.`community_active` = '1'
+					AND b.`community_template` <> 'course'
+					ORDER BY b.`community_title` ASC";
+
+        $results = $db->getAll($query);
+
+        return $results;
     }
 }

@@ -27,9 +27,10 @@ class Models_LearningObject extends Models_Base {
 
     protected $lo_file_id, $filename, $filesize, $mime_type, $description, $proxy_id, $public = 0,
               $updated_date, $updated_by, $active = 1;
-    
-    protected $table_name = "learning_object_files";
-    protected $default_sort_column = "updated_date";
+
+    protected static $primary_key = "lo_file_id";
+    protected static $table_name = "learning_object_files";
+    protected static $default_sort_column = "updated_date";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -85,7 +86,7 @@ class Models_LearningObject extends Models_Base {
     public function insert() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->lo_file_id = $db->Insert_ID();
             return $this;
         } else {
@@ -96,7 +97,7 @@ class Models_LearningObject extends Models_Base {
     public function update() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`lo_file_id` = " . $db->qstr($this->lo_file_id))) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`lo_file_id` = " . $db->qstr($this->lo_file_id))) {
             return $this;
         } else {
             return false;

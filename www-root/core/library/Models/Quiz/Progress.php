@@ -27,8 +27,9 @@ class Models_Quiz_Progress extends Models_Base {
     
     protected $qprogress_id, $aquiz_id, $content_type, $content_id, $quiz_id, $proxy_id, $progress_value, $quiz_score, $quiz_value, $updated_date, $updated_by;
     
-    protected $table_name = "quiz_progress";
-    protected $default_sort_column = "qprogress_id";
+    protected static $table_name = "quiz_progress";
+    protected static $default_sort_column = "qprogress_id";
+    protected static $primary_key = "qprogress_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -38,6 +39,14 @@ class Models_Quiz_Progress extends Models_Base {
         $self = new self();
         return $self->fetchRow(array(
                 array("key" => "qprogress_id", "value" => $qprogress_id, "method" => "=", "mode" => "AND")
+            )
+        );
+    }
+
+    public static function fetchRowByAQuizID($aquiz_id) {
+        $self = new self();
+        return $self->fetchRow(array(
+                array("key" => "aquiz_id", "value" => $aquiz_id, "method" => "=", "mode" => "AND")
             )
         );
     }
@@ -137,7 +146,7 @@ class Models_Quiz_Progress extends Models_Base {
     public function getProgressValue() {
         return $this->progress_value;
     }
-    
+
     public function setProgressValue($value) {
         $this->progress_value = $value;
     }
@@ -161,7 +170,7 @@ class Models_Quiz_Progress extends Models_Base {
     public function insert() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "INSERT")) {
             $this->qprogress_id = $db->Insert_ID();
             return $this;
         } else {
@@ -172,7 +181,7 @@ class Models_Quiz_Progress extends Models_Base {
     public function update() {
         global $db;
         
-        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`qprogress_id` = ".$db->qstr($this->qprogress_id))) {
+        if ($db->AutoExecute(static::$table_name, $this->toArray(), "UPDATE", "`qprogress_id` = ".$db->qstr($this->qprogress_id))) {
             return $this;
         } else {
             return false;
@@ -182,7 +191,7 @@ class Models_Quiz_Progress extends Models_Base {
     public function delete() {
         global $db;
         
-        $query = "DELETE FROM `".$this->table_name."` WHERE `qprogress_id` = ?";
+        $query = "DELETE FROM `".static::$table_name."` WHERE `qprogress_id` = ?";
         if ($db->Execute($query, $this->qprogress_id)) {
             return true;
         } else {

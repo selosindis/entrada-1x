@@ -2,34 +2,6 @@
 	var listed = [];
 	jQuery(document).ready(function($){
 		jQuery('.objectives').hide();
-		/**
-		* @todo fix bugs in draggable/droppable when version control added
-		* bugs include: dropping doesn't work when list expanded, artifacts display from draggable elements after drop
-		*/
-		// jQuery('.draggable').draggable({
-		// 	revert:true
-		// });
-
-		// jQuery('.droppable').droppable({
-		// 	drop: function(event,ui){										
-		// 		var id = jQuery(ui.draggable[0]).attr('data-id');
-		// 		var ismapped = jQuery.inArray(id,mapped);
-		// 		if(ismapped == -1){
-		// 			var title = jQuery('#objective_title_'+id).attr('data-title');
-		// 			var description = jQuery('#objective_'+id).attr('data-description');										
-		// 			var list = jQuery('#objective_'+id).parents('.objective-set').attr('data-list');
-		// 			jQuery('#check_objective_'+id).attr('checked','checked');
-		// 			mapObjective(id,title,description,list,true);
-		// 		}
-		// 		jQuery(this).removeClass('hover');											
-		// 	},
-		// 	over:function(event,ui){
-		// 		jQuery(this).addClass('hover');
-		// 	},
-		// 	out: function(event,ui){
-		// 		jQuery(this).removeClass('hover');	
-		// 	}
-		// });
 
 		jQuery('.objective-remove').live('click',function(){
 			var id = jQuery(this).attr('data-id');
@@ -89,22 +61,21 @@
 
 		jQuery('.mapping-toggle').click(function(){
 			var state = $(this).attr('data-toggle');
-			if(state == "show"){
-				$(this).attr('data-toggle','hide');
-				$(this).html('Hide Additional Objectives');
-				jQuery('.mapped_objectives').animate({width:'60%'},400,'swing',function(){
-					//jQuery('.objectives').animate({display:'block'},400,'swing');											
+
+			if (state == "show") {
+				jQuery(this).attr('data-toggle', 'hide');
+				jQuery(this).html('<i class="icon-minus-sign icon-white"></i> Hide Additional Objectives');
+				jQuery('#mapped_objectives').animate({width:'60%', padding:'0 0 0 20px'}, 400, 'linear');
 					jQuery('.objectives').css({width:'0%'});
 					jQuery('.objectives').show();
-					jQuery('.objectives').animate({width:'38%'},400,'linear');
-				});										
-			}else{
-				$(this).attr('data-toggle','show');
-				$(this).html('Map Additional Objectives');
-				jQuery('.objectives').animate({width:'0%'},400,'linear',function(){
+					jQuery('.objectives').animate({width:'40%'}, 400, 'linear');
+			} else {
+				jQuery(this).attr('data-toggle','show');
+				jQuery(this).html('<i class="icon-plus-sign icon-white"></i> Map Additional Objectives');
+				jQuery('#mapped_objectives').animate({width: '100%', padding:0}, 400, 'linear');
+				jQuery('.objectives').animate({width:'0%'},400,'linear',function() {
 					jQuery('.objectives').hide();
-					jQuery('.mapped_objectives').animate({width:'100%'},400,'swing');
-				});																				
+				});
 			}
 		});
 
@@ -235,7 +206,7 @@
 			var set_id = jQuery(sets_above[sets_above.length-1]).attr('data-id');
 			var set_name = jQuery('#objective_title_'+set_id).attr('data-title');
 			if(set_name){
-				jQuery(desc).html("From the Objective Set: <strong>"+set_name+"</strong><br/>");
+				jQuery(desc).html("Curriculum Tag Set: <strong>"+set_name+"</strong><br/>");
 			}
 			jQuery(desc).append(description);
 			

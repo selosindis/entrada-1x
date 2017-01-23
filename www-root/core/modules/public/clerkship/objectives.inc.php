@@ -77,7 +77,7 @@ if (isset($_GET["rotation"]) && (clean_input($_GET["rotation"], "int"))) {
 $objectives = $db->GetAll($query);
 if ($objectives) {
 	echo "<h1>Clinical Presentations:</h1>";
-	echo "<ul style=\"list-style=\"none\">\n";
+	echo "<ul>\n";
 		$last = 0;
 	foreach ($objectives as $objective) {
 		if (isset($objective["rotation_id"]) && $objective["rotation_id"] != $last) {
@@ -117,7 +117,7 @@ if ($objectives) {
 	if ($procedures) {
 		echo "<br/><br/>\n";
 		echo "<h1>Clinical Tasks:</h1>\n";
-		echo "<ul style=\"list-style=\"none\">\n";
+		echo "<ul>\n";
 			$last = 0;
 		foreach ($procedures as $procedure) {
 			if (isset($procedure["rotation_id"]) && $procedure["rotation_id"] != $last) {

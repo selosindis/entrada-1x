@@ -151,7 +151,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		
 		if ($student || $allow_view) {
 			header("Content-Type:  application/vnd.ms-excel");
-			header("Content-Disposition: \"".$clerk_name."'s clerkship encounters.csv\"; filename=\"".$clerk_name."'s clerkship encounters.csv\"");
+            header("Content-Disposition: attachment; filename=\"".date("Y-m-d") . "-" . $clerk_name . "-patient-encounters.csv\"");
 			echo "\"Encounter Date\",\"Patient ID\",\"Patient Gender\",\"Patient Age Range\",\"Logbook Entry ID\",\"Site Name\",\"Location\",\"Rotation\",\"Reflection on learning experience\",\"Additional comments\",\"Clinical Presentations Encountered\",\"Clinical Tasks Performed\"\n";
 			foreach ($results as $result) {
 				$query = "	SELECT b.`objective_name`
@@ -166,12 +166,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				
 				$objectives = $db->GetAll($query);
 				$result["objectives"] = "";
-				foreach ($objectives as $objective) {
-					if ($result["objectives"]) {
-						$result["objectives"] .= "; ";
-					}
-					$result["objectives"] .= $objective["objective_name"];
-				}
+				if ($objectives) {
+                    foreach ($objectives as $objective) {
+                        if ($result["objectives"]) {
+                            $result["objectives"] .= "; ";
+                        }
+                        $result["objectives"] .= $objective["objective_name"];
+                    }
+                }
 				$query = "	SELECT b.`procedure`
 							FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` AS a
 							JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS b

@@ -40,6 +40,9 @@ if ($RECORD_ID) {
 	$poll_record		= $db->GetRow($query);
 	if ($poll_record) {
 		$terminology = $poll_record["poll_terminology"];
+
+        Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
 		echo "<h1>View ".$terminology." Results</h1>\n";
 		$query = "	SELECT * FROM `community_polls_questions`
 					WHERE `cpolls_id` = ".$RECORD_ID."
@@ -100,17 +103,14 @@ if ($RECORD_ID) {
 								$PROCESSED["updated_by"]			= $ENTRADA_USER->getID();
 								
 								// Use $databaseResponses when inserting into community_polls_responses
-								if ($db->AutoExecute("community_polls_results", $PROCESSED, "INSERT"))
-								{		
-									$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$COMMUNITY_MODULE;
-									$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-				
-									$SUCCESS++;
-									$SUCCESSSTR[]	= "You have successfully voted.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								}
-					
-								if (!$SUCCESS) {
-									$ERROR++;
+								if ($db->AutoExecute("community_polls_results", $PROCESSED, "INSERT")) {
+								    Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully voted."), "success", $MODULE);
+
+                                    $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $COMMUNITY_MODULE;
+                                    header("Location: " . $url);
+                                    exit;
+								} else {
+								    $ERROR++;
 									$ERRORSTR[] = "There was a problem inserting your vote into the system. The MEdTech Unit was informed of this error; please try again later.";
 					
 									application_log("error", "There was an error inserting a vote. Database said: ".$db->ErrorMsg());
@@ -129,14 +129,6 @@ if ($RECORD_ID) {
 			
 					// Page Display
 					switch($STEP) {
-						case 2 :
-							if ($NOTICE) {
-								echo display_notice();
-							}
-							if ($SUCCESS) {
-								echo display_success();
-							}
-						break;
 						case 1 :
 						default :
 							$count = 1;

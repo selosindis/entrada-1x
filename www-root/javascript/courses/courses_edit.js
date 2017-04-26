@@ -250,15 +250,17 @@ jQuery(document).ready(function ($) {
                 }
 
                 var tr        = $(document.createElement("tr")).attr({id: "track_" + this.value});
-                var td_name   = $(document.createElement("td")).addClass("track-name").html($(this).attr("data-label"));
-                var td_option = $(document.createElement("td")).addClass("track-options");
-                var td_remove = $(document.createElement("td"))
+                var td_name   = $(document.createElement("td")).addClass("track-name").addClass("span6").html($(this).attr("data-label"));
+                var td_option = $(document.createElement("td")).addClass("track-options").addClass("span4");
+                var td_remove = $(document.createElement("td")).addClass("span2");
+                var control_group = $(document.createElement("div")).addClass("pull-right");
                 var br = $(document.createElement("br"));
                 var a = $(document.createElement("a")).attr({
                     href: "#",
                     onclick: "$(this).up().up().remove(); jQuery('input#event_types_" + this.value + "').remove(); return false;"
                 }).addClass("remove");
                 var img = $(document.createElement("img")).attr({src: ENTRADA_URL + "/images/action-delete.gif"});
+                var label1 = $(document.createElement("label")).html("Mandatory").addClass("track").addClass(hide);
                 var radio1 = $(document.createElement("input")).attr({
                     type: "radio",
                     name: "track_mandatory_" + this.value,
@@ -269,19 +271,21 @@ jQuery(document).ready(function ($) {
                     type: "hidden",
                     name: "course_track[]",
                     value: this.value
-                })
-                var span1 = $(document.createElement("span")).html("Mandatory").addClass("track").addClass(hide);
+                });
+                var label2 = $(document.createElement("label")).html("Additional").addClass("track").addClass(hide);
                 var radio2 = $(document.createElement("input")).attr({
                     type: "radio",
                     name: "track_mandatory_" + this.value,
                     value: 0,
                     checked: !checked
                 }).addClass("track").addClass(hide);
-                var span2 = $(document.createElement("span")).html("Additional").addClass("track").addClass(hide);
 
                 a.append(img);
                 td_remove.append(a);
-                td_option.append(radio1).append(span1).append(br).append(radio2).append(span2);
+                label1.prepend(radio1);
+                label2.prepend(radio2);
+                td_option.append(label1).append(label2);
+                td_option.html(control_group.html(td_option.html()));
                 tr.append(td_name).append(td_option).append(td_remove).append(hidden1);
 
                 $("#tracks_container").append(tr);
@@ -312,6 +316,7 @@ jQuery(document).ready(function ($) {
                 data_source: curriculum_tracks
             }
         },
+        list_selections :false,
         no_results_text: "No Curriculum Tracks found matching the search criteria",
         parent_form: $("#courseForm"),
         width: 400

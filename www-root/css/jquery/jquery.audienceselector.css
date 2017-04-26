@@ -31,3 +31,7 @@
     cursor:pointer;
     background:#eee;
 }
+li.error-adding-member {
+    color: #CC0000;
+    font-weight: 800;
+}

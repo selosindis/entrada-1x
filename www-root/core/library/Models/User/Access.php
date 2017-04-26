@@ -23,6 +23,7 @@
  */
 
 class Models_User_Access extends Models_Base {
+    const TABLE_NAME = "user_access";
     protected $id, $user_id, $app_id, $organisation_id, $account_active, $access_starts, $access_expires, $last_login, $last_ip, $login_attempts, $locked_out_until, $role, $group, $extras, $private_hash, $notes;
 
     protected static $database_name = AUTH_DATABASE;
@@ -98,11 +99,7 @@ class Models_User_Access extends Models_Base {
         return $this->notes;
     }
 
-    /**
-     * Fetch Row by User ID
-     * @param  bool     $account_active
-     * @return array
-     */
+    /* @return bool|Models_User_Access */
     public function fetchRowByUserIDOrganisationIDGroup($account_active = "true") {
         return $this->fetchRow(array(
             array("key" => "user_id", "value" => $this->user_id, "method" => "="),
@@ -112,6 +109,7 @@ class Models_User_Access extends Models_Base {
         ));
     }
 
+    /* @return bool|Models_User_Access */
     public static function fetchRowByID($id, $account_active = "true") {
         $self = new self();
         return $self->fetchRow(array(
@@ -120,6 +118,7 @@ class Models_User_Access extends Models_Base {
         ));
     }
 
+    /* @return ArrayObject|Models_User_Access[] */
     public static function fetchAllByUserIDOrganisationID ($proxy_id, $organisation_id, $account_active = "true") {
         $self = new self();
         return $self->fetchAll(array(
@@ -129,6 +128,7 @@ class Models_User_Access extends Models_Base {
         ));
     }
 
+    /* @return bool|Models_User_Access */
     public static function fetchRowByUserIDOrganisationIDRoleGroup($user_id, $organisation_id, $role, $group, $active = "true") {
         $self = new self();
         return $self->fetchRow(array(
@@ -140,6 +140,7 @@ class Models_User_Access extends Models_Base {
         ));
     }
 
+    /* @return ArrayObject|Models_User_Access[] */
     public static function fetchAllRecords($account_active) {
         $self = new self();
         return $self->fetchAll(array(array("key" => "account_active", "value" => $account_active, "method" => "=")));
@@ -160,6 +161,7 @@ class Models_User_Access extends Models_Base {
 
     }
 
+    /* @return ArrayObject|Models_User_Access[] */
     public static function fetchAllByUserID ($proxy_id) {
         $self = new self();
         return $self->fetchAll(array(
@@ -167,6 +169,7 @@ class Models_User_Access extends Models_Base {
         ));
     }
 
+    /* @return bool|Models_User_Access */
     public static function fetchRowByUserIDAppID($user_id) {
         $self = new self();
         return $self->fetchRow(array(
@@ -175,6 +178,7 @@ class Models_User_Access extends Models_Base {
         ));
     }
 
+    /* @return ArrayObject|Models_User_Access[] */
     public static function fetchAllByUserIDAppID($user_id) {
         $self = new self();
         return $self->fetchAll(array(

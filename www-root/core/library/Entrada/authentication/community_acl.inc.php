@@ -24,7 +24,8 @@ class Entrada_Community_ACL {
     */
     public function amIAllowed($resource_type, $resource_value, $permission) {
         global $db, $ENTRADA_USER;
-        $PROXY_ID = $ENTRADA_USER->getActiveID();
+
+        $proxy_id = $ENTRADA_USER->getActiveID();
 
         //Get the resource permissions (not pertaining to a particular course group)
         $acl_query = "SELECT * FROM `community_acl`
@@ -47,41 +48,57 @@ class Entrada_Community_ACL {
         //If the row has an assertion, verify that it passes
         switch($acl_results['assertion']) {
             case 'CourseGroupMember' :
-                return CourseGroupMemberAssertion::_checkCourseGroupMember($PROXY_ID, $resource_type, $resource_value, $permission);
+                return CourseGroupMemberAssertion::_checkCourseGroupMember($proxy_id, $resource_type, $resource_value, $permission);
             break;
             case 'CourseCommunityEnrollment' :
                 switch ($resource_type) {
                     case 'communitydiscussion' :
                         $course_query = "SELECT `course_id`
-                            FROM `community_courses` AS a
-                            JOIN `community_discussions` AS b
-                            ON a.`community_id` = b.`community_id`
-                            WHERE b.`cdiscussion_id` = ".$db->qstr($resource_value);
+                                            FROM `community_courses` AS a
+                                            JOIN `community_discussions` AS b
+                                            ON a.`community_id` = b.`community_id`
+                                            WHERE b.`cdiscussion_id` = ".$db->qstr($resource_value);
                     break;
                     case 'communityfolder' :
                         $course_query = "SELECT `course_id`
-                            FROM `community_courses` AS a
-                            JOIN `community_shares` AS b
-                            ON a.`community_id` = b.`community_id`
-                            WHERE b.`cshare_id` = ".$db->qstr($resource_value);
+                                            FROM `community_courses` AS a
+                                            JOIN `community_shares` AS b
+                                            ON a.`community_id` = b.`community_id`
+                                            WHERE b.`cshare_id` = ".$db->qstr($resource_value);
                     break;
                     case 'communityfile' :
                         $course_query = "SELECT `course_id`
-                            FROM `community_courses` AS a
-                            JOIN `community_share_files` AS b
-                            ON a.`community_id` = b.`community_id`
-                            WHERE b.`csfile_id` = ".$db->qstr($resource_value);
+                                            FROM `community_courses` AS a
+                                            JOIN `community_share_files` AS b
+                                            ON a.`community_id` = b.`community_id`
+                                            WHERE b.`csfile_id` = ".$db->qstr($resource_value);
                     break;
                     case 'communitylink' :
                         $course_query = "SELECT `course_id`
-                            FROM `community_courses` AS a
-                            JOIN `community_share_links` AS b
-                            ON a.`community_id` = b.`community_id`
-                            WHERE b.`cslink_id` = ".$db->qstr($resource_value);
+                                            FROM `community_courses` AS a
+                                            JOIN `community_share_links` AS b
+                                            ON a.`community_id` = b.`community_id`
+                                            WHERE b.`cslink_id` = ".$db->qstr($resource_value);
+                    break;
+                    case 'communityhtml' :
+                        $course_query = "SELECT `course_id`
+                                            FROM `community_courses` AS a
+                                            JOIN `community_share_html` AS b
+                                            ON a.`community_id` = b.`community_id`
+                                            WHERE b.`cshtml_id` = ".$db->qstr($resource_value);
+                    break;
+                    default :
+                        application_log("error", "A resource_value of [" . $resource_value . "] was found in community_acl.inc.php. This will result is a missing course_id, which will cause the resource to not be displayed in the community.");
                     break;
                 }
-                $COURSE_ID = $db->GetOne($course_query);
-                return CourseCommunityEnrollmentAssertion::_checkCourseCommunityEnrollment($PROXY_ID, $COURSE_ID);
+
+                $course_id = $db->GetOne($course_query);
+
+                if ($course_id) {
+                    return CourseCommunityEnrollmentAssertion::_checkCourseCommunityEnrollment($proxy_id, $course_id);
+                }
+
+                return false;
             break;
         }
 

@@ -385,14 +385,13 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										if ($db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'allow_member_posts', `option_value` = ".$db->qstr($page_options["allow_member_posts"]["option_value"]))) {
 											if ($db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'allow_troll_posts', `option_value` = ".$db->qstr($page_options["allow_troll_posts"]["option_value"]))) {
 												if (!$ERROR) {
-													$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-
-													$SUCCESS++;
-													$SUCCESSSTR[]	= "You have successfully added the <strong>".html_encode($PROCESSED["menu_title"])."</strong> page to your community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-													$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
+													Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong>."), $PROCESSED["menu_title"]), "success", $MODULE);
 
 													application_log("success", "Page [".$PAGE_ID."] was just created in community_id [".$COMMUNITY_ID."].");
+
+                                                    $url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages?title=" . $PROCESSED["menu_title"];
+                                                    header("Location: " . $url);
+													exit;
 												}
 											} else {
 												$ERROR++;
@@ -409,28 +408,26 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								} elseif ($PAGE_TYPE == "url") { 
 									if ($db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'new_window', `option_value` = ".$db->qstr($page_options["new_window"]["option_value"]))) {
 										if (!$ERROR) {
-											$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-		
-											$SUCCESS++;
-											$SUCCESSSTR[]	= "You have successfully added the <strong>".html_encode($PROCESSED["menu_title"])."</strong> page to your community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-			
-											$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
-			
+											Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong>."), $PROCESSED["menu_title"]), "success", $MODULE);
+
 											application_log("success", "Page [".$PAGE_ID."] was just created in community_id [".$COMMUNITY_ID."].");
+
+                                            $url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
+                                            header("Location: " . $url);
+											exit;
 										}
 									} else {
 										$ERROR++;
 										application_log("error", "There was an error inserting this page option. Database said: ".$db->ErrorMsg());
 									}
 								} else {
-									$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
+									Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong>."), $PROCESSED["menu_title"]), "success", $MODULE);
 
-									$SUCCESS++;
-									$SUCCESSSTR[]	= "You have successfully added the <strong>".html_encode($PROCESSED["menu_title"])."</strong> page to your community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-	
-									$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
-	
 									application_log("success", "Page [".$PAGE_ID."] was just created in community_id [".$COMMUNITY_ID."].");
+
+                                    $url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages?title=" . $PROCESSED["menu_title"];
+                                    header("Location: " . $url);
+									exit;
 								}
 							} else {
 								$ERROR++;
@@ -466,19 +463,6 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 			
 				//Display Page
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-	
-						if ($SUCCESS) {
-							echo display_success();
-						}
-	
-						if ($ERROR) {
-							echo display_error();
-						}
-					break;
 					case 1 :
 					default :
 						if ($NOTICE) {

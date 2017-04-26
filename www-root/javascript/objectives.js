@@ -47,7 +47,7 @@ jQuery(document).ready(function(){
 		var objective_id = jQuery(this).attr("data-id");
 		var clicked = jQuery(this);
 		if (clicked.hasClass("expanded")) {
-			clicked.siblings(".children").html("")
+			clicked.siblings(".children").html("");
 			clicked.removeClass("expanded");
 		} else {
 			clicked.addClass("expanded");
@@ -145,7 +145,7 @@ jQuery(document).ready(function(){
 				}
 			}
 		});
-		
+
 		e.preventDefault();
 	});
 	
@@ -160,11 +160,17 @@ jQuery(document).ready(function(){
 		}
 	});
 
-	jQuery('#curriculum-tags-section, #assessment-objectives-section, #course-objectives-section, #event-objectives-section').on('click', '.objective-title', function(){
+	jQuery('#curriculum-tags-section, #assessment-objectives-section, #course-objectives-section, #event-objectives-section, #exam-objectives-section').on('click', '.objective-title', function() {
 		var id = jQuery(this).attr('data-id');
-		var children = [];
 		if (loaded[id] === undefined || !loaded[id]) {
-			var query = {'objective_id':id, 'org_id' : (typeof org_id !== 'undefined' && org_id ? org_id : default_org_id)};
+			var query = {'objective_id' : id, 'org_id' : (typeof org_id !== 'undefined' && org_id ? org_id : default_org_id)};
+
+            if (typeof by_course_id !== 'undefined' && by_course_id) {
+                query['course_id'] = by_course_id;
+            } else if (typeof by_assessment_id !== 'undefined' && by_assessment_id) {
+                query['assessment_id'] = by_assessment_id;
+            }
+
             if (jQuery("#event-objectives-section").length > 0) {
                 if(jQuery('#mapped_objectives').length>0){
                     var type = jQuery('#mapped_objectives').attr('data-resource-type');
@@ -203,17 +209,15 @@ jQuery(document).ready(function(){
 		} else if (jQuery('#children_'+id).is(':visible')) {
 			jQuery('#children_'+id).slideUp(600);	
 		} else {
-			// children = loaded[id];	
-			// buildDOM(children,id);
 			if (jQuery("#objective_list_"+id).children('li').length == 0) {
 				if(!EDITABLE){
-					jQuery('#check_objective_'+id).trigger('click');
-					jQuery('#check_objective_'+id).trigger('change');
+                    buildDOM(loaded[id],id);
 				}
 			}	else {
 				jQuery('#children_'+id).slideDown(600);	
 			}
 		}
+		return false;
 	});
 
 	jQuery('#expand-all').click(function(){
@@ -436,9 +440,9 @@ function buildDOM(children,id){
 	if(children.error !== undefined){
 		if(!EDITABLE){
 			jQuery('#check_objective_'+id).trigger('click');
-			jQuery('#check_objective_'+id).trigger('change');
+            jQuery('#check_objective_'+id).trigger('change');
 		}
-		return;
+		return false;
 	}
 	for(i = 0;i<children.length;i++){
 		//Javascript to create DOM elements from JSON response

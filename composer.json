@@ -1,8 +1,8 @@
 {
     "name": "entrada/entrada-1x",
     "description": "Entrada is an open source web-based platform created to allow teachers, learners and curriculum managers a simple way of accessing, interacting, and managing the curriculum within their educational environment. Entrada is ideally suited for the health sciences because of its integrated curriculum tagging features and clerkship support; however, it can easily be modified and adapted to almost any professional program. The Entrada project is built upon the philosophies of open access and collaboration, and we welcome new interest in the project.",
-    "version": "1.8.0",
-    "homepage": "http://entrada.org",
+    "version": "1.9.0",
+    "homepage": "https://entrada.org",
     "keywords": ["Entrada", "Entrada ME", "Curriculum Management System", "CMS", "Learning", "Medical", "Education"],
     "license": [
         "GPL-3.0+",
@@ -14,13 +14,6 @@
         "docs": "https://github.com/EntradaProject/entrada-1x/wiki",
         "source": "https://github.com/EntradaProject/entrada-1x"
     },
-    "authors": [
-        {
-            "name": "Geoff Harvey",
-            "email": "gharvey@uottawa.ca",
-            "role": "Developer"
-        }
-    ],
     "repositories": [{
         "type": "package",
         "package": {
@@ -37,7 +30,7 @@
         }
     }],
     "require": {
-        "php": ">=5.3.0",
+        "php": ">=5.6.4",
         "adodb/adodb-php": "5.19",
         "ezyang/htmlpurifier": "~4.7",
         "smarty/smarty": "~3.1",
@@ -46,11 +39,9 @@
         "google/apiclient": "~1.1.6",
         "zendframework/zendframework1": "~1.12.17",
         "entradapackages/mysqldump-php": "dev-master",
-        "mikehaertl/phpwkhtmltopdf": "^2.2"
-    },
-    "suggest": {
-        "rusticisoftware/tincan": "0.12.0",
-        "umich-its-tl/caliper-php": "1.0.1"
+        "mikehaertl/phpwkhtmltopdf": "^2.2",
+        "rusticisoftware/tincan": "~1.0",
+        "umich-its-tl/caliper-php": "~1.0"
     },
     "require-dev": {
         "phpunit/dbunit": "^1.3",

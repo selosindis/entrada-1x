@@ -60,7 +60,9 @@ class Models_Base {
 
         if ($database && $table) {
             $query = "SELECT `table_name` FROM `information_schema`.`columns` WHERE `table_schema` = ? AND `table_name` = ? LIMIT 1";
+
             $result = $db->GetRow($query, array($database, $table));
+
             if ($result) {
                 return true;
             }
@@ -198,7 +200,7 @@ class Models_Base {
      * @param string $default_mode
      * @return array
      */
-    protected static function fetchAll($constraints, $default_method = "=", $default_mode = "AND", $sort_column = "use_default", $sort_order = "ASC", $limit = null) {
+    protected static function fetchAll($constraints, $default_method = "=", $default_mode = "AND", $sort_column = "use_default", $sort_order = "ASC", $sort_column2 = "use_default", $sort_order2 = "ASC", $limit = null) {
         global $db;
 
         $output = array();
@@ -295,7 +297,20 @@ class Models_Base {
                 } else {
                     $sort_order = "ASC";
                 }
-                $query = "SELECT * FROM `".static::$database_name."`.`".static::$table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order.(isset($limit) && $limit > 0 ? " LIMIT " . $limit : "");
+                
+                if (!in_array($sort_column2, $class_vars)) {
+                    $sort_column2_used = 0;
+                } else {
+                    $sort_column2_used = 1;
+                }
+
+                if ($sort_order2 == "DESC") {
+                    $sort_order2 = "DESC";
+                } else {
+                    $sort_order2 = "ASC";
+                }
+
+                $query = "SELECT * FROM `".static::$database_name."`.`".static::$table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order . ($sort_column2_used ? ", `" . $sort_column2 . "` " . $sort_order2 : "") . (isset($limit) && $limit > 0 ? " LIMIT " . $limit : "");
                 $results = $db->GetAll($query, $where);
                 if ($results) {
                     foreach ($results as $result) {

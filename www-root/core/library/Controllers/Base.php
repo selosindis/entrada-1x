@@ -435,5 +435,9 @@ class Controllers_Base {
         }
         return $output;
     }
+    
+    public function getValidationRules(){
+        return $this->validation_rules;
+    }
 
 }

@@ -142,7 +142,9 @@ jQuery(document).ready(function ($) {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     var jsonResponse = JSON.parse(xhr.responseText);
                     if (jsonResponse.status == "success") {
-                        $("#image-container img.img-polaroid").attr("src", jsonResponse.data);
+                        var date = new Date();
+                        var time = date.getTime();
+                        $("#image-container img.img-polaroid").attr("src", jsonResponse.data + "&time="+time);
                         if ($("#image-nav-right").length <= 0) {
                             $("#btn-toggle").append("<a href=\"#\" class=\"btn active\" id=\"image-nav-right\" style=\"display:none;\">Uploaded</a>");
                             $("#image-nav-right").removeClass("active");
@@ -165,7 +167,6 @@ jQuery(document).ready(function ($) {
 
             return false;
         } else {
-            console.log("imageaction");
             $("#courseForm").append("<input type=\"hidden\" name=\"imageaction\" value=\"uploadimage\" />");
         }
     }

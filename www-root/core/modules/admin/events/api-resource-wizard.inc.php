@@ -165,12 +165,23 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                 }
                                 break;
                             case 3 :
+
                                 /**
                                  *  Time release options
                                  *
                                  */
                                 if (isset(${$request_var}["event_resource_release_value"]) && $tmp_input = clean_input(${$request_var}["event_resource_release_value"], array("trim", "alpha"))) {
                                     $PROCESSED["event_resource_release_value"] = $tmp_input;
+
+                                    switch ($tmp_input) {
+                                        case "yes" :
+                                            $PROCESSED["required"] = 1;
+                                            break;
+                                        case "no" :
+                                            $PROCESSED["required"] = 0;
+                                            break;
+                                    }
+
                                 } else {
                                     add_error("Please select a time release option for this resource");
                                 }
@@ -794,7 +805,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                         case 5 :
                                         case 6 :
                                         case 11 :
-                                        case 12 :
                                             /**
                                              * File upload (3 steps)
                                              */
@@ -2174,6 +2184,10 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                         $resource_type = "LTI Provider";
                                                         $resource_title = "";
                                                         break;
+                                                    case 12 :
+                                                        $resource_type = "Exam";
+                                                        $resource_title = "";
+                                                        break;
                                                 }
 
                                                 history_log($resource_entity->getEventID(), "deleted ". $resource_title . " " . $resource_type, $ENTRADA_USER->getID());
@@ -2225,7 +2239,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                     case 5 :
                                     case 6 :
                                     case 11 :
-                                    case 12 :
                                         $resource_type_title = "";
                                         if ($entity->getEntityType() == 1) {
                                             $resource_type_title = "Audio / Video";
@@ -2235,8 +2248,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                             $resource_type_title = "Lecture Slides";
                                         } else if ($entity->getEntityType() == 11) {
                                             $resource_type_title = "Other";
-                                        } else if ($entity->getEntityType() == 12) {
-                                            $resource_type_title = "Podcast";
                                         }
 
                                         $resource = Models_Event_Resource_File::fetchRowByID($entity->getEntityValue());
@@ -2501,7 +2512,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                 case 5 :
                                 case 6 :
                                 case 11 :
-                                case 12 :
                                     //files
                                     $resource               = Models_Event_Resource_File::fetchRowByID($entity->getEntityValue());
                                     $resource_name          = $resource->getFileName();
@@ -2545,13 +2555,17 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                     $resource_title         = $resource->getLtiTitle();
                                     $resource_update_time   = $resource->getUpdatedDate();
                                     break;
+                                case 12 :
+                                    //exam
+                                    $resource = false;
+                                    break;
                             }
 
                             if (isset($recurring_event_ids) && is_string($recurring_event_ids)) {
                                 $recurring_event_ids = json_decode($recurring_event_ids);
                             }
 
-                            if (isset($recurring_event_ids) && is_array($recurring_event_ids)) {
+                            if ($resource && isset($recurring_event_ids) && is_array($recurring_event_ids)) {
                                 $html .= "<table class=\"table table-striped table-bordered\">";
                                 $html .= "<thead>";
                                 $html .= "<tr>";
@@ -2571,7 +2585,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                             case 5 :
                                             case 6 :
                                             case 11 :
-                                            case 12 :
                                                 //files
                                                 $resource = Models_Event_Resource_File::fetchRowByEventIDNameUpdate($recurring_event->getID(), $resource_name, $resource_update_time);
 
@@ -2632,6 +2645,10 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                     $resource_value = $resource->getID();
                                                 }
                                             break;
+
+                                            case 12 :
+                                                //exam
+                                                break;
                                             default :
                                                 continue;
                                             break;
@@ -2666,6 +2683,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                             } else {
                                 $data["resource"] = false;
                             }
+
 
                             echo json_encode(array("status" => "success", "data" => $data));
                         } else {
@@ -2735,14 +2753,8 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                     $resource_type_title = "Podcast";
                                                 }
 
-                                                $resource_views = Models_Statistic::getEventFileViews($entity->getEntityValue());
-
-                                                $views = 0;
-                                                if ($resource_views) {
-                                                    $views = count($resource_views);
-                                                }
-
                                                 $resource = Models_Event_Resource_File::fetchRowByID($entity->getEntityValue());
+
                                                 $resource_array = array(
                                                     "entity_id" => $entity->getID(),
                                                     "resource_id" => $resource->getID(),
@@ -2752,7 +2764,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                     "file_size" => readable_size($resource->getFileSize()),
                                                     "description" => $resource->getFileNotes(),
                                                     "access_method" => $resource->getAccessMethod(),
-                                                    "accesses" => $views,
                                                     "timeframe" => $resource->getTimeframe(),
                                                     "required" => $resource->getRequired(),
                                                     "resource_type" => $entity->getEntityType(),
@@ -2771,12 +2782,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                         case 8 :
                                             $resource = Models_Quiz_Attached::fetchRowByID($entity->getEntityValue());
                                             if ($resource && is_object($resource)) {
-                                                $complete_attemptes = Models_Quiz_Progress::getDistinctAttempts($resource->getAquizID());
-
-                                                $views = 0;
-                                                if ($complete_attemptes) {
-                                                    $views = $complete_attemptes;
-                                                }
 
                                                 $resource_array = array(
                                                     "entity_id" => $entity->getID(),
@@ -2789,7 +2794,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                     "quiz_timeout" => $resource->getQuizTimeout(),
                                                     "quiz_attempts" => $resource->getQuizAttempts(),
                                                     "quiztype_id" => $resource->getQuiztypeID(),
-                                                    "accesses" => $views,
                                                     "timeframe" => $resource->getTimeframe(),
                                                     "required" => $resource->getRequired(),
                                                     "resource_type" => $entity->getEntityType(),
@@ -2883,12 +2887,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                         case 7 :
                                             $resource = Models_Event_Resource_Link::fetchRowByID($entity->getEntityValue());
                                             if ($resource && is_object($resource)) {
-                                                $resource_views = Models_Statistic::getEventLinkViews($entity->getEntityValue());
-
-                                                $views = 0;
-                                                if ($resource_views) {
-                                                    $views = count($resource_views);
-                                                }
 
                                                 $resource_array = array(
                                                     "entity_id" => $entity->getID(),
@@ -2900,7 +2898,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                     "proxyify" => $resource->getProxify(),
                                                     "timeframe" => $resource->getTimeframe(),
                                                     "required" => $resource->getRequired(),
-                                                    "accesses" => $views,
                                                     "resource_type" => $entity->getEntityType(),
                                                     "resource_type_title" => "External Link"
                                                 );
@@ -2941,8 +2938,42 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                 }
                                             }
                                             break;
-                                    }
+                                        case 12 :
+                                            $resource = $entity->getResource();
+                                            if ($resource && is_object($resource)) {
+                                                $event          = Models_Event::fetchRowByID($PROCESSED["event_id"]);
+                                                $EXAM_TEXT      = $translate->_("exams");
+                                                $post_view      = new Views_Exam_Post($resource, $event);
+                                                $edit           = true;
+                                                $post_resources = $post_view->renderEventResource($edit);
 
+                                                $progress       = Models_Exam_Progress::fetchAllByPostID($resource->getID());
+                                                if ($progress && is_array($progress)) {
+                                                    $progress_count = count($progress);
+                                                } else {
+                                                    $progress_count = 0;
+                                                }
+
+                                                $resource_array = array(
+                                                    "entity_id"             => $entity->getID(),
+                                                    "resource_id"           => $resource->getID(),
+                                                    "title"                 => $post_resources["title"],
+                                                    "description"           => $post_resources["description"],
+                                                    "timeframe"             => $resource->getTimeFrame(),
+                                                    "hidden"                => $resource->getHideExam(),
+                                                    "required"              => $resource->getMandatory(),
+                                                    "resource_type"         => $entity->getEntityType(),
+                                                    "resource_type_title"   => $EXAM_TEXT["title_singular"],
+                                                    "available"             => $post_resources["available"],
+                                                    "attempts_allowed"      => $post_resources["attempts_allowed"],
+                                                    "time_limit"            => $post_resources["time_limit"],
+                                                    "post_text"             => $EXAM_TEXT["posts"],
+                                                    "delete"                => ($progress ? 0 : 1),
+                                                    "progress_count"        => ($progress_count ? $progress_count : 0)
+                                                );
+                                            }
+                                            break;
+                                    }
                                     if ($resource) {
                                         $entities[$resource->getTimeframe()][] = $resource_array;
                                     }
@@ -2982,7 +3013,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                             case 5 :
                             case 6 :
                             case 11 :
-                            case 12 :
                                 $resource_views = Models_Statistic::getEventFileViews($PROCESSED["resource_id"]);
                                 break;
                             case 3 :
@@ -3000,7 +3030,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                             if ($resource_views_data) {
                                 echo json_encode(array("status" => "success", "data" => $resource_views_data));
                             } else {
-                                echo json_encode(array("status" => "error", "data" => array("An error occured while attempting to get the view data for this resource.")));
+                                echo json_encode(array("status" => "error", "data" => array("This resource has not been viewed by any learners.")));
                             }
 
                         } else {

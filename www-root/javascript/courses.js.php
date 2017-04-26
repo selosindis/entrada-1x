@@ -1,4 +1,6 @@
 <script type="text/javascript">
+var by_course_id = <?php echo (int) $COURSE_ID; ?>
+
 function addObjective(element, primary) {
 	if (primary == null) {
 		primary = true;

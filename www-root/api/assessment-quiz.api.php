@@ -90,7 +90,7 @@ switch ($request) {
 
                 if (!$ERROR) {
                     if ($cperiod) {
-                        $curriculum_period = Models_CurriculumPeriod::fetchRowByID($cperiod);
+                        $curriculum_period = Models_Curriculum_Period::fetchRowByID($cperiod);
                     }
 
                     $e = new Models_Event();

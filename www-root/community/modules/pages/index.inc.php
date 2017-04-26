@@ -26,6 +26,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 
 	echo display_notice();
 }
+
+Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/effects.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/dragdrop.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/sortable_tree.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";

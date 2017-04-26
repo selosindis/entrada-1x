@@ -40,30 +40,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$HEAD[] = "<script src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-    $HEAD[] = "<script src=\"".ENTRADA_URL."/javascript/jquery/jquery.timepicker.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	?>
 	<script type="text/javascript">
 		var EVENT_LIST_STATIC_TOTAL_DURATION = true;
 	</script>
 	<?php
 	if ($EVENT_ID) {
+        $event = Models_Event::get($EVENT_ID);
+        $course_id = $event->getCourseID();
+
+        $EXAM_TEXT = $translate->_("exams");
+        $POST_TEXT = $EXAM_TEXT["exams"]["posting"];
+        $DEFAULT_LABELS = $translate->_("default");
+        $attached_exams = $event->getAttachedExams();
+        
         $HEAD[] = "<script>var SITE_URL = '".ENTRADA_URL."';</script>";
         $HEAD[] = "<script type=\"text/javascript\" >var ENTRADA_URL = '". ENTRADA_URL ."';</script>\n";
         $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
         $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/objectives_event.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+        $HEAD[] = "<script type=\"text/javascript\" src=\"".  ENTRADA_URL ."/javascript/jquery/jquery.advancedsearch.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+        $HEAD[] = "<script src=\"".ENTRADA_URL."/javascript/jquery/jquery.timepicker.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+        $HEAD[] = "<script type=\"text/javascript\" src=\"".  ENTRADA_URL ."/javascript/jquery/jquery.inputselector.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
         $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/keywords_event.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
         $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/event_resources.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
         $HEAD[]	= "<script src=\"".ENTRADA_RELATIVE."/javascript/events_nl_form.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
         $HEAD[] = "<script type=\"text/javascript\" src=\"".  ENTRADA_URL ."/javascript/jquery/jquery.advancedsearch.js\"></script>";
         $HEAD[] = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".  ENTRADA_URL ."/css/jquery/jquery.advancedsearch.css\" />";
+        $HEAD[] = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".  ENTRADA_URL ."/css/jquery/jquery.timepicker.css?release=".html_encode(APPLICATION_VERSION)."\" />";
+        $HEAD[] = "<link rel=\"stylesheet\" type=\"text/css\" href=\"".  ENTRADA_URL ."/css/jquery/jquery.inputselector.css?release=".html_encode(APPLICATION_VERSION)."\" />";
 
-
-		$query		= "	SELECT a.*, b.`organisation_id`
-						FROM `events` AS a
-						LEFT JOIN `courses` AS b
-						ON b.`course_id` = a.`course_id`
-						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
-		$event_info	= $db->GetRow($query);
+		$event_info = Models_Event::fetchEventById($EVENT_ID);
 		if ($event_info) {
             if ($event_info["recurring_id"]) {
                 $recurring_event_array  = Models_Event::getRecurringEventIds($EVENT_ID);
@@ -1107,6 +1113,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 </tr>
                                 <tr>
                                     <td>Event Location</td>
+                                    <?php
+
+                                    ?>
                                     <td><?php echo (($event_info["event_location"]) ? $event_info["event_location"] : "To Be Announced"); ?></td>
                                 </tr>
                                 <?php
@@ -1861,6 +1870,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                                     </tbody>
                                 </table>
+                                <div id="event-resources-views-loading" class="hide">
+                                    <p id="event_resources_views-loading_msg" class="muted text-center">
+                                        <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
+                                        <span class="sr-only">Loading...</span> Loading resource views...
+                                    </p>
+                                </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>
@@ -2043,13 +2058,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 			echo display_error();
 
-			application_log("notice", "Failed to provide a valid event identifer when attempting to edit a event.");
+			application_log("notice", "Failed to provide a valid event identifier when attempting to edit a event.");
 		}
 	} else {
 		add_error("In order to edit a event you must provide the events identifier.");
 
 		echo display_error();
 
-		application_log("notice", "Failed to provide event identifer when attempting to edit a event.");
+		application_log("notice", "Failed to provide event identifier when attempting to edit a event.");
 	}
 }

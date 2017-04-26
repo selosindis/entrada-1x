@@ -34,11 +34,13 @@ jQuery(function($) {
             "api_url"       : "",
             "min_chars"     : 3,
             "no_results_text" : "No results found",
+            "error_text"    : "Error adding member",
             "target"        : "#added-member-list",
             "delete_icon"   : "icon-remove-circle",
             "delete_attr"   : "data-afauthor-id",
             "content_type"  : "form-author",
             "content_target" : "",
+            "content_style" : "default",
             "add_audience"  : true,
             "api_params" : [],
             "get_method" : "get-filtered-audience",
@@ -171,26 +173,62 @@ jQuery(function($) {
                 },
                 success : function(data) {
                     var jsonResponse = JSON.parse(data);
-                    appendMemberToList(jsonResponse.data.author_id, member.fullname);
+                    if (jsonResponse.status == "success") {
+                        if (jsonResponse.data.view_html) {
+                            var view_html = jsonResponse.data.view_html;
+                        } else {
+                            var view_html = 0;
+                        }
+                        appendMemberToList(jsonResponse.data.author_id, member.fullname, view_html);
+                    } else {
+                        addError(member.fullname);
+                    }
                 }
             });
         }
 
-        function appendMemberToList(author_id, fullname) {
+        function appendMemberToList(author_id, fullname, view_html) {
+            if (settings.content_style == "default") {
+                var member_trash = $(document.createElement("a")).attr({"href" : "#"}).addClass("remove-permission").attr(settings.delete_attr, author_id).html("<i class=\"" + settings.delete_icon + "\"></i> ");
+
             if ($(settings.target).length <= 0) {
                 var member_list = $(document.createElement("ul")).addClass("unstyled").attr({"id" : "added-member-list"});
             } else {
                 var member_list = $(settings.target);
             }
 
-            var member_trash = $(document.createElement("a")).attr({"href" : "#"}).addClass("remove-permission").attr(settings.delete_attr, author_id).html("<i class=\"" + settings.delete_icon + "\"></i> ");
+                var member_list_line = $(document.createElement("li")).append(member_trash, fullname);
+            } else if (settings.content_style == "exam") {
 
-            var member_list_line = $(document.createElement("li")).append(member_trash, fullname);
+                var target_div = $("#author-list-" + settings.filter_type + "-container");
+
+                if (target_div.hasClass("hide")) {
+                    target_div.removeClass("hide");
+                }
+
+                var member_list = $("#author-list-" + settings.filter_type);
+
+                var member_list_line = view_html;
+            }
+
             member_list.append(member_list_line);
             if ($(settings.target).length <= 0) {
                 member_list.insertAfter(self);
             }
         }
 
+        function addError(fullname) {
+            if ($(settings.target).length <= 0) {
+                var member_list = $(document.createElement("ul")).addClass("unstyled").attr({"id" : "added-member-list"});
+            } else {
+                var member_list = $(settings.target);
+            }
+
+            var member_list_line = $(document.createElement("li")).addClass("error-adding-member").append(settings.error_text + ": " + fullname);
+            member_list.append(member_list_line);
+            if ($(settings.target).length <= 0) {
+                member_list.insertAfter(self);
+            }
+        }
     };
 });

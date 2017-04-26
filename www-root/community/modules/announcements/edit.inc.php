@@ -97,22 +97,22 @@ if ($RECORD_ID) {
 								$db->AutoExecute("community_notifications", $notification, "UPDATE", "`cnotification_id` = ".$db->qstr($notification["cnotification_id"]));
 							}
 						}
-						$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
 
 						$SUCCESS++;
 						if (!$COMMUNITY_ADMIN && ($PAGE_OPTIONS["moderate_posts"] == 1)) {
 							community_notify($COMMUNITY_ID, $RECORD_ID, "announcement_moderate", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$RECORD_ID, $COMMUNITY_ID, $announcement_record["release_date"]);
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 15000)";
-							$SUCCESSSTR[]	= "You have successfully updated this announcement, however because you are not an administrator your changes must be reviewed before the announcement will appear on the page again.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+							Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>, however because you are not an administrator your changes must be reviewed before the announcement will appear on the page again."), $PROCESSED["announcement_title"]), "success", $MODULE);
 						} else {
-							if ($COMMUNITY_ADMIN && $announcement_record["pending_moderation"] == 1 && $PAGE_OPTIONS["moderate_posts"] == 1) {
-  								community_notify($COMMUNITY_ID, $RECORD_ID, "announcement_release", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$RECORD_ID, $COMMUNITY_ID, $announcement_record["release_date"]);	
-							}
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-							$SUCCESSSTR[]	= "You have successfully updated this announcement.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+							Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["announcement_title"]), "success", $MODULE);
 						}
 						add_statistic("community:".$COMMUNITY_ID.":announcements", "edit", "cannouncement_id", $RECORD_ID);
 						communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_announcement", 1);
+                        if ($COMMUNITY_ADMIN && $announcement_record["pending_moderation"] == 1 && $PAGE_OPTIONS["moderate_posts"] == 1) {
+                            community_notify($COMMUNITY_ID, $RECORD_ID, "announcement_release", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$RECORD_ID, $COMMUNITY_ID, $announcement_record["release_date"]);
+                        }
+						$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+						header("Location: " . $url);
+						exit;
 					}
 
 					if (!$SUCCESS) {
@@ -139,14 +139,6 @@ if ($RECORD_ID) {
 
 		// Page Display
 		switch($STEP) {
-			case 2 :
-				if ($NOTICE) {
-					echo display_notice();
-				}
-				if ($SUCCESS) {
-					echo display_success();
-				}
-			break;
 			case 1 :
 			default :
 				if ($ERROR) {

@@ -41,11 +41,11 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
             $ORGANISATION_ID = $org;
 		}
 
-		if(isset($ORGANISATION_ID) && $ORGANISATION_ID){
+		if (isset($ORGANISATION_ID) && $ORGANISATION_ID) {
 			$query = "SELECT * FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ORGANISATION_ID);
 			$ORGANISATION = $db->GetRow($query);
-			if($ORGANISATION){
-				if($ENTRADA_ACL->amIAllowed(new ConfigurationResource($ORGANISATION_ID),"read")){
+			if ($ORGANISATION) {
+				if ($ENTRADA_ACL->amIAllowed(new ConfigurationResource($ORGANISATION_ID),"read")) {
 					$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID);
 
 					$ORGANISATION = $db->GetRow($query);
@@ -54,6 +54,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 					$sidebar_html  = "<ul class=\"menu\">";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/characteristics?org=".$ORGANISATION_ID."\">" . $translate->_("Assessment Types") . "</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/assessmentresponsecategories?org=".$ORGANISATION_ID."\">Assessment Response Categories</a></li>\n";
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/locations?org=".$ORGANISATION_ID."\">Location Management</a></li>\n";
                     $sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID."\">Clinical Rotation Categories</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes?org=".$ORGANISATION_ID."\">Curriculum Layout</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtracks?org=".$ORGANISATION_ID."\">Curriculum Tracks</a></li>\n";
@@ -71,27 +72,23 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 					$sidebar_html .= "</ul>";
 					new_sidebar_item($ORGANISATION["organisation_title"], $sidebar_html, "config-org-nav", "open");
 
-
 					$module_file = $router->getRoute();
 					if ($module_file) {
 						require_once($module_file);
 					}
-				}else {
+				} else {
 					add_notice("You don't appear to have access to change this organisation. If you feel you are seeing this in error, please contact your system administrator.");
 					echo display_notice();
 				}
-			}else{
+			} else {
 				add_notice("The organisation appears to be invalid. If you feel you are seeing this in error, please contact your system administrator.");
 				echo display_notice();
 			}
-		}
-		else{
+		} else {
 			$url = ENTRADA_URL."/admin/settings/";
-			$ERROR++;
-			$ERRORSTR[] = "No organisation was selected. Please select an organisation and try again. In five seconds you will now be returned to the organisation screen, or, click <a href = \"".$url."\">here</a> to continue.";
+			add_error("No organisation was selected. Please select an organisation and try again. In five seconds you will now be returned to the organisation screen, or, click <a href = \"".$url."\">here</a> to continue.");
 			echo display_error();
 			$ONLOAD[]	= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
 		}
 
 		/**

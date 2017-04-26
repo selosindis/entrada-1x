@@ -278,16 +278,16 @@ switch($STEP) {
                         $ERRORSTR[] = "Error updating the community ACL.";
                     }
                     
-					$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-					$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
                     if (!$ERROR) {
-					$SUCCESS++;
-					$SUCCESSSTR[]	= "You have successfully added a new shared folder to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-					add_statistic("community:".$COMMUNITY_ID.":shares", "folder_add", "cshare_id", $FOLDER_ID);
-					communities_log_history($COMMUNITY_ID, $PAGE_ID, $FOLDER_ID, "community_history_add_share", 1);
-				}
-			}
+                        Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong>."), $PROCESSED["folder_title"]), "success", $MODULE);
+                        add_statistic("community:".$COMMUNITY_ID.":shares", "folder_add", "cshare_id", $FOLDER_ID);
+                        communities_log_history($COMMUNITY_ID, $PAGE_ID, $FOLDER_ID, "community_history_add_share", 1);
+
+                        $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+                        header("Location: " . $url);
+                        exit;
+				    }
+			    }
 			}
 
 			if (!$SUCCESS) {
@@ -310,14 +310,6 @@ switch($STEP) {
 
 // Page Display
 switch($STEP) {
-	case 2 :
-		if ($NOTICE) {
-			echo display_notice();
-		}
-		if ($SUCCESS) {
-			echo display_success();
-		}
-	break;
 	case 1 :
 	default :
 		if ((!isset($PROCESSED["folder_icon"])) || (!(int) $PROCESSED["folder_icon"]) || ($PROCESSED["folder_icon"] < 1) || ($PROCESSED["folder_icon"] > 6) ) {
@@ -701,7 +693,7 @@ switch($STEP) {
 											<input type="radio" id="student_hidden_1" name="student_hidden" value="1" style="vertical-align: middle"<?php echo (((isset($PROCESSED["student_hidden"])) && ((int) $PROCESSED["student_hidden"])) ? " checked=\"checked\"" : ""); ?> />
 										</td>
 										<td>
-											<label for="student_hidden_1" class="content-small">Hide this file from folder.</label>
+											<label for="student_hidden_1" class="content-small">Hide this folder from students.</label>
 										</td>
 									</tr>
 								</tbody>

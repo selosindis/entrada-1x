@@ -203,6 +203,45 @@ class Models_Course_Group extends Models_Base {
         return $output;
     }
 
+    /* @return ArrayObject|Models_Course_Group[] */
+    public static function fetchAllByCourseIDCperiodID($course_id = 0, $cperiod_id = 0) {
+        $self = new self();
+
+        $constraints = array(
+            array(
+                "mode"      => "AND",
+                "key"       => "course_id",
+                "value"     => $course_id,
+                "method"    => "="
+            ),
+            array(
+                "mode"      => "AND",
+                "key"       => "cperiod_id",
+                "value"     => $cperiod_id,
+                "method"    => "="
+            ),
+            array(
+                "mode"      => "AND",
+                "key"       => "active",
+                "value"     => 1,
+                "method"    => "="
+            )
+        );
+
+        $objs = $self->fetchAll($constraints, "=", "AND");
+        $output = array();
+
+        if (!empty($objs)) {
+            foreach ($objs as $o) {
+                $output[] = $o;
+            }
+        }
+
+        return $output;
+    }
+
+
+
     /* @return bool|Models_Course_Group */
     public static function fetchRowByGroupNameCourseID($group_name = 0, $course_id = 0) {
         $self = new self();

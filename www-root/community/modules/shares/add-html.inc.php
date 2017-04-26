@@ -31,7 +31,7 @@ if ($RECORD_ID) {
 	$folder_record	= $db->GetRow($query);
 	if ($folder_record) {
         if (shares_module_access($RECORD_ID, "add-html")) {
-            $BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$folder_record["cshare_id"], "title" => limit_chars($folder_record["folder_title"], 32));
+            Models_Community_Share::getParentsBreadCrumbs($RECORD_ID);
             $BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-html&id=".$RECORD_ID, "title" => "Add HTML Document");
 
             if ($isCommunityCourse) {
@@ -225,13 +225,20 @@ if ($RECORD_ID) {
                                 }
 
                                 $PROCESSED["cshtml_id"]	= $HTML_ID;
-                                $url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$RECORD_ID;
-                                $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-                                $SUCCESS++;
-                                $SUCCESSSTR[]	= "You have successfully added ".html_encode($PROCESSED["html_title"]).".<br /><br />You will now be redirected to this html document; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-                                add_statistic("community:".$COMMUNITY_ID.":shares", "html_add", "cshtml_id", $VERSION_ID);
-                                communities_log_history($COMMUNITY_ID, $PAGE_ID, $HTML_ID, "community_history_add_html", 1, $RECORD_ID);  
+                                if (!$ERROR) {
+                                    Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong>."), $PROCESSED["html_title"]), "success", $MODULE);
+                                    add_statistic("community:" . $COMMUNITY_ID . ":shares", "html_add", "cshtml_id", $VERSION_ID);
+                                    communities_log_history($COMMUNITY_ID, $PAGE_ID, $HTML_ID, "community_history_add_html", 1, $RECORD_ID);
+                                    if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
+                                        community_notify($COMMUNITY_ID, $HTML_ID, "html", COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-html&id=" . $HTML_ID, $RECORD_ID, $PROCESSES["release_date"]);
+                                    }
+
+                                    $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-folder&id=" . $RECORD_ID;
+                                    header("Location: " . $url);
+                                    exit;
+                                }
+
                             }
                         }
                     }
@@ -247,25 +254,13 @@ if ($RECORD_ID) {
             }
 
             // Page Display
-            switch($STEP) {
-                case 2 :
-                    if ($NOTICE) {
-                        echo display_notice();
-                    }
-                    if ($SUCCESS) {
-                        echo display_success();
-                        if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-                            community_notify($COMMUNITY_ID, $HTML_ID, "html", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-html&id=".$HTML_ID, $RECORD_ID, $PROCESSES["release_date"]);
-                        }
-                    }
-                break;
+            switch ($STEP) {
                 case 1 :
-                default :					
+                default :
                     if ($ERROR) {
                         echo display_error();
-                        $NOTICE++;
-                        $NOTICESTR[] = "There was an error while trying to add your html document.";
                     }
+
                     if ($NOTICE) {
                         echo display_notice();
                     }

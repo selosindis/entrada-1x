@@ -28,7 +28,7 @@ class Models_Event_Draft_Event extends Models_Base {
               $recurring_id, $region_id, $course_id, $event_phase, $event_title,
               $event_description, $include_parent_description, $event_goals,
               $event_objectives, $objectives_release_date, $event_message, 
-              $include_parent_message, $event_location, $event_start, $event_finish,
+              $include_parent_message, $room_id, $event_start, $event_finish,
               $event_duration, $attendance_required, $audience_visible, $release_date, $release_until, $updated_date, $updated_by;
 
     protected static $table_name    = "draft_events";

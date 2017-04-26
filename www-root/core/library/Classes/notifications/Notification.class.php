@@ -415,7 +415,8 @@ class Notification {
 								$targets = Models_Assessments_Distribution_Target::getAssessmentTargets($distribution->getID(), $distribution_assessment->getID(), $distribution_assessment->getAssessorValue(), $distribution_assessment->getAssessorValue(), $is_external);
 								if ($targets) {
 									$target_record_id = $targets[0]["target_record_id"];
-									$creator = Models_User::fetchRowByID((isset($delegator) && $delegator && $delegator->getDelegatorType() == "proxy_id" && $delegator->getDelegatorID() ? $delegator->getDelegatorID() : $distribution->getCreatedBy()));
+                                    $delegator = Models_Assessments_Distribution_Delegator::fetchRowByDistributionID($distribution->getID());
+                                    $creator = Models_User::fetchRowByID((isset($delegator) && $delegator && $delegator->getDelegatorType() == "proxy_id" && $delegator->getDelegatorID() ? $delegator->getDelegatorID() : $distribution->getCreatedBy()));
 									if ($creator) {
 										$from_email = $creator->getEmail();
 										$from_firstname = $creator->getFirstname();
@@ -481,6 +482,13 @@ class Notification {
                         if ($distribution_assessment) {
                             $distribution = Models_Assessments_Distribution::fetchRowByID($distribution_assessment->getADistributionID());
                             if ($distribution) {
+                                $delegator = Models_Assessments_Distribution_Delegator::fetchRowByDistributionID($distribution->getID());
+                                $creator = Models_User::fetchRowByID((isset($delegator) && $delegator && $delegator->getDelegatorType() == "proxy_id" && $delegator->getDelegatorID() ? $delegator->getDelegatorID() : $distribution->getCreatedBy()));
+                                if ($creator) {
+                                    $from_email = $creator->getEmail();
+                                    $from_firstname = $creator->getFirstname();
+                                    $from_lastname = $creator->getLastname();
+                                }
                                 $user = Models_User::fetchRowByID($proxy_id);
                                 if ($user) {
                                     $replace = array(
@@ -508,7 +516,52 @@ class Notification {
                             application_log("error", "Notification failed: Distribution assessment not found.");
                         }
                         break;
-					case "assessment_delegation" :
+                    case "assessment_approver" :
+                        $search = array(
+                            "%TARGET_FIRSTNAME%",
+                            "%TARGET_LASTNAME%",
+                            "%URL%",
+                            "%USERNAME%",
+                            "%EMAIL%",
+                            "%ENTRADA_URL%",
+                            "%CREATOR_FIRSTNAME%",
+                            "%CREATOR_LASTNAME%",
+                            "%CREATOR_EMAIL%"
+                        );
+                        
+                        $progress = Models_Assessments_Progress::fetchRowByDassessmentID($record_id);
+                        if ($progress && $progress->getProgressValue() == "complete") {
+                            $distribution = Models_Assessments_Distribution::fetchRowByID($progress->getAdistributionID());
+                            if ($distribution) {
+                                $target_record_id = $progress->getTargetRecordID();
+                                $creator = Models_User::fetchRowByID($distribution->getCreatedBy());
+                                $approver = Models_User::fetchRowByID($proxy_id);
+
+                                if ($creator && $approver) {
+                                    $from_email = $creator->getEmail();
+                                    $from_firstname = $creator->getFirstname();
+                                    $from_lastname = $creator->getLastname();
+                                    $url = ENTRADA_URL . "/assessments/assessment?adistribution_id=" . $progress->getAdistributionID() . "&target_record_id=" . $target_record_id . "&dassessment_id=" . $progress->getDAssessmentID() . "&approver_task=true";
+                                    
+                                    $replace = array(
+                                        html_encode($approver->getFirstname()),
+                                        html_encode($approver->getLastname()),
+                                        html_encode($url),
+                                        html_encode($approver->getUsername()),
+                                        html_encode($approver->getEmail()),
+                                        html_encode(ENTRADA_URL),
+                                        html_encode($creator->getFirstname()),
+                                        html_encode($creator->getLastname()),
+                                        html_encode($creator->getEmail())
+                                    );
+
+                                    $notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute() . "/email/notification-assessment-approver-reminder.xml");
+                                    $notification_body = str_replace($search, $replace, $notification_body);
+                                }
+                            }
+                        }
+                        break;
+                    case "assessment_delegation" :
 						$search = array("%TARGET_FIRSTNAME%",
 										"%TARGET_LASTNAME%",
 										"%URL%",
@@ -569,6 +622,13 @@ class Notification {
                         if ($adistribution_id) {
                             $distribution = Models_Assessments_Distribution::fetchRowByID($adistribution_id);
                             if ($distribution) {
+                                $delegator = Models_Assessments_Distribution_Delegator::fetchRowByDistributionID($distribution->getID());
+                                $creator = Models_User::fetchRowByID((isset($delegator) && $delegator && $delegator->getDelegatorType() == "proxy_id" && $delegator->getDelegatorID() ? $delegator->getDelegatorID() : $distribution->getCreatedBy()));
+                                if ($creator) {
+                                    $from_email = $creator->getEmail();
+                                    $from_firstname = $creator->getFirstname();
+                                    $from_lastname = $creator->getLastname();
+                                }
                                 $user = User::fetchRowByID($proxy_id);
                                 if ($user) {
                                     $replace = array(
@@ -778,14 +838,15 @@ class Notification {
                         );
 						$distribution = Models_Assessments_Distribution::fetchRowByIDIgnoreDeletedDate($record_id);
 						if ($distribution) {
-                            $creator = User::fetchRowByID($distribution->getCreatedBy());
+                            $delegator = Models_Assessments_Distribution_Delegator::fetchRowByDistributionID($distribution->getID());
+                            $creator = Models_User::fetchRowByID((isset($delegator) && $delegator && $delegator->getDelegatorType() == "proxy_id" && $delegator->getDelegatorID() ? $delegator->getDelegatorID() : $distribution->getCreatedBy()));
                             $target = User::fetchRowByID($proxy_id);
                             if ($creator && $target) {
 								$from_email = $creator->getEmail();
 								$from_firstname = $creator->getFirstname();
 								$from_lastname = $creator->getLastname();
                                 $submitted_by = User::fetchRowByID($subcontent_id);
-								$delegator = Models_Assessments_Distribution_Delegator::fetchRowByDistributionID($distribution->getID());
+
 								$replace = array(
 									html_encode($target->getFirstname()),
 									html_encode($target->getLastname()),
@@ -803,7 +864,7 @@ class Notification {
 							}
 						}
 					break;
-					case "assessment_submitted_notify_releasor" :
+					case "assessment_submitted_notify_approver" :
 						$search = array(
 							"%TARGET_FIRSTNAME%",
 							"%TARGET_LASTNAME%",
@@ -815,25 +876,25 @@ class Notification {
 						);
                         $progress_record = Models_Assessments_Progress::fetchRowByID($record_id);
                         if ($progress_record) {
-                            $distribution_releasor = new Models_Assessments_Distribution_Releasor();
-                            $releasor_record = $distribution_releasor->fetchRowByProxyIDDistributionID($proxy_id, $progress_record->getAdistributionID());
-                            if ($releasor_record) {
+                            $distribution_approver = new Models_Assessments_Distribution_Approver();
+                            $approver_record = $distribution_approver->fetchRowByProxyIDDistributionID($proxy_id, $progress_record->getAdistributionID());
+                            if ($approver_record) {
                                 $assessor = User::fetchRowByID($subcontent_id);
-                                $releasor = User::fetchRowByID($proxy_id);
-                                if ($assessor && $releasor) {
+                                $approver = User::fetchRowByID($proxy_id);
+                                if ($assessor && $approver) {
                                     $from_email = $assessor->getEmail();
                                     $from_firstname = $assessor->getFirstname();
                                     $from_lastname = $assessor->getLastname();
                                     $replace = array(
-                                        html_encode($releasor->getFirstname()),
-                                        html_encode($releasor->getLastname()),
+                                        html_encode($approver->getFirstname()),
+                                        html_encode($approver->getLastname()),
                                         html_encode($assessor->getFirstname() . " " . $assessor->getLastname()),
-                                        html_encode(ENTRADA_URL . "/assessments/assessment?adistribution_id=" . $progress_record->getAdistributionID() . "&target_record_id=" . $progress_record->getTargetRecordID() . "&aprogress_id=" . $record_id . "&dassessment_id=" . $progress_record->getDassessmentID() . "&releasor_task=true"),
-                                        html_encode($releasor->getUsername()),
-                                        html_encode($releasor->getEmail()),
+                                        html_encode(ENTRADA_URL . "/assessments/assessment?adistribution_id=" . $progress_record->getAdistributionID() . "&target_record_id=" . $progress_record->getTargetRecordID() . "&aprogress_id=" . $record_id . "&dassessment_id=" . $progress_record->getDassessmentID() . "&approver_task=true"),
+                                        html_encode($approver->getUsername()),
+                                        html_encode($approver->getEmail()),
                                         html_encode(ENTRADA_URL)
                                     );
-                                    $notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute() . "/email/notification-assessment-submitted-with-releasor.xml");
+                                    $notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute() . "/email/notification-assessment-submitted-with-approver.xml");
                                     $notification_body = str_replace($search, $replace, $notification_body);
                                 }
                             }
@@ -855,7 +916,8 @@ class Notification {
                         $progress_record = Models_Assessments_Progress::fetchRowByID($record_id);
                         $distribution = Models_Assessments_Distribution::fetchRowByIDIgnoreDeletedDate($progress_record->getAdistributionID());
                         if ($progress_record && $distribution) {
-                            $creator = User::fetchRowByID($distribution->getCreatedBy());
+                            $delegator = Models_Assessments_Distribution_Delegator::fetchRowByDistributionID($distribution->getID());
+                            $creator = Models_User::fetchRowByID((isset($delegator) && $delegator && $delegator->getDelegatorType() == "proxy_id" && $delegator->getDelegatorID() ? $delegator->getDelegatorID() : $distribution->getCreatedBy()));
                             $target = User::fetchRowByID($progress_record->getTargetRecordID());
                             if ($creator && $target) {
                                 $from_email = $creator->getEmail();
@@ -1003,6 +1065,54 @@ class Notification {
 							}
 						}
 					break;
+                    case "delegation_task_deleted" :
+                        $search = array(
+                            "%TARGET_FIRSTNAME%",
+                            "%TARGET_LASTNAME%",
+                            "%SUBMITTED_BY%",
+                            "%URL%",
+                            "%REASON%",
+                            "%NOTES%",
+                            "%USERNAME%",
+                            "%EMAIL%",
+                            "%ENTRADA_URL%",
+                            "%CREATOR_FIRSTNAME%",
+                            "%CREATOR_LASTNAME%",
+                            "%CREATOR_EMAIL%"
+                        );
+
+                        $delegation = Models_Assessments_Distribution_Delegation::fetchRowByID($record_id);
+                        if ($delegation) {
+                            $distribution = Models_Assessments_Distribution::fetchRowByID($delegation->getDistributionID());
+                            $deleted_task = Models_Assessments_DeletedTask::fetchRowByID($subcontent_id);
+
+                            if ($distribution && $deleted_task) {
+                                $assessor = Models_User::fetchRowByID($deleted_task->getAssessorValue());
+                                $creator = Models_User::fetchRowByID($distribution->getCreatedBy());
+                                $reason = Models_Assessments_TaskDeletedReason::fetchRowByID($deleted_task->getDeletedReasonID());
+                                $submitted_by = Models_User::fetchRowByID($notification_user->getProxyID());
+
+                                if ($assessor && $creator && $reason && $submitted_by) {
+                                    $from_email = $creator->getEmail();
+                                    $from_firstname = $creator->getFirstname();
+                                    $from_lastname = $creator->getLastname();
+                                    $replace = array(
+                                        html_encode($assessor->getFirstname()),
+                                        html_encode($assessor->getLastName()),
+                                        html_encode($submitted_by->getFirstname() . " " . $submitted_by->getLastname()),
+                                        html_encode(ENTRADA_URL . "/assessments"),
+                                        html_encode((isset($reason) && $reason ? $reason->getDetails() : "")),
+                                        html_encode($deleted_task->getDeletedReasonNotes() ? $deleted_task->getDeletedReasonNotes() : ""),
+                                        html_encode(ENTRADA_URL),
+                                        html_encode($creator->getFirstname()),
+                                        html_encode($creator->getLastname()),
+                                        html_encode($creator->getEmail()));
+                                    $notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute() . "/email/notification-assessment-task-deleted.xml");
+                                    $notification_body = str_replace($search, $replace, $notification_body);
+                                }
+                            }
+                        }
+                        break;
                     case "assessment_flagged_response" :
                         $search = array("%ASSESSOR_FULLNAME%",
                             "%TARGET_TITLE%",

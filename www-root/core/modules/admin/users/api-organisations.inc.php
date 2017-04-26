@@ -59,10 +59,12 @@ switch ($request_method) {
                             ORDER BY `group_name`";
 
                 $groups = $db->GetAll($query);
-
+                $user_group_role = $ENTRADA_USER->getActiveGroup() . ":" . $ENTRADA_USER->getActiveRole();
                 if ($groups) {
                     foreach ($groups as $group) {
-                        $data[] = array("id" => $group["id"], "group_name" => ucfirst($group["group_name"]));
+                        if (($group["group_name"] == "medtech" && $user_group_role == "medtech:admin") || $group["group_name"] != "medtech") {
+                            $data[] = array("id" => $group["id"], "group_name" => ucfirst($group["group_name"]));
+                        }
                     }
                 }
 

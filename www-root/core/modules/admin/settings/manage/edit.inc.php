@@ -53,10 +53,10 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				if ($result) {
 					$PROCESSED["countries_id"] = $tmp_input;
 					$PROCESSED["organisation_country"] = $result["country"];
+                    $PROCESSED["province_id"] = 0;
+                    $PROCESSED["organisation_province"] = "";
 
-					if ((isset($_POST["prov_state"])) && ($tmp_input = clean_input($_POST["prov_state"], array("trim", "notags")))) {
-						$PROCESSED["province_id"] = 0;
-						$PROCESSED["organisation_province"] = "";
+                    if ((isset($_POST["prov_state"])) && ($tmp_input = clean_input($_POST["prov_state"], array("trim", "notags")))) {
 						if (ctype_digit($tmp_input) && ($tmp_input = (int) $tmp_input)) {
 							$query = "SELECT * FROM `global_lu_provinces` WHERE `province_id` = " . $db->qstr($tmp_input) . " AND `country_id` = " . $db->qstr($PROCESSED["countries_id"]);
 							$result = $db->GetRow($query);
@@ -69,8 +69,6 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 						} else {
 							$PROCESSED["organisation_province"] = $tmp_input;
 						}
-					} else {
-						add_error("The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.");
 					}
 				} else {
 					add_error("The selected country does not exist in our countries database. Please select a valid country.");
@@ -188,15 +186,15 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute(AUTH_DATABASE . ".organisations", $PROCESSED, "UPDATE", "`organisation_id`=" . $db->qstr($ORGANISATION_ID))) {
-					add_success("You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/settings/manage?org=" . $ORGANISATION_ID . "\" style=\"font-weight: bold\">click here</a> to continue.");
+					add_success("You have successfully updated <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> in the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/settings/manage?org=" . $ORGANISATION_ID . "\" style=\"font-weight: bold\">click here</a> to continue.");
 
 					$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/settings/manage?org=" . $ORGANISATION_ID . "\\'', 5000)";
 
-					application_log("success", "Updated information for the organisation [" . $PROCESSED["organisation_title"] . "] added to the system.");
+					application_log("success", "Updated information for the organisation [" . $PROCESSED["organisation_title"] . "] in the system.");
 				} else {
-					add_error("We were unable to add this organisation to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.");
+					add_error("We were unable to update this organisation in the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.");
 
-					application_log("error", "Failed to insert a new organisation into the database. Database said: " . $db->ErrorMsg());
+					application_log("error", "Failed to update the organisation in the database. Database said: " . $db->ErrorMsg());
 				}
 			}
 
@@ -414,7 +412,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 					</div>
 				</div>
 				<div class="control-group">
-					<label for="province_id" class="control-label form-required">Province / State:</label>
+					<label for="province_id" class="control-label form-nrequired">Province / State:</label>
 					<div class="controls">
 						<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
 					</div>

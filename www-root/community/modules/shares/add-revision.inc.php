@@ -145,13 +145,16 @@ if ($RECORD_ID) {
 							if ($db->AutoExecute("community_share_file_versions", $PROCESSED, "INSERT")) {
 								if ($VERSION_ID = $db->Insert_Id()) {
 									if (communities_shares_process_file($_FILES["uploaded_file"]["tmp_name"], $VERSION_ID)) {
-										$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID;
-										$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-										$SUCCESS++;
-										$SUCCESSSTR[]	= "You have successfully added a new revision to ".html_encode($file_record["file_title"])." (version ".$PROCESSED["file_version"].").<br /><br />You will now be redirected to this files page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                                        Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added a new revision to <strong>%s</strong>."), $file_record["file_title"]), "success", $MODULE);
 										add_statistic("community:".$COMMUNITY_ID.":shares", "revision_add", "csfversion_id", $VERSION_ID);
 										communities_log_history($COMMUNITY_ID, $PAGE_ID, $VERSION_ID, "community_history_add_file_revision", 1, $RECORD_ID);
+										if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
+											community_notify($COMMUNITY_ID, $RECORD_ID, "file-revision", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID, $RECORD_ID);
+										}
+
+										$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-file&id=" . $RECORD_ID;
+										header("Location: " . $url);
+                                        exit;
 									}
 								}
 							}
@@ -186,17 +189,6 @@ if ($RECORD_ID) {
 
 				// Page Display
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-							echo display_success();
-							if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-								community_notify($COMMUNITY_ID, $RECORD_ID, "file-revision", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID, $RECORD_ID);
-							}
-						}
-					break;
 					case 1 :
 					default :
 						if ($ERROR) {

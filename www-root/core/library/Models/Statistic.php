@@ -167,7 +167,7 @@ class Models_Statistic extends Models_Base {
 
     public static function getEventFileViews($action_value) {
         global $db;
-        
+
         $query = "SELECT DISTINCT (a.`proxy_id`), COUNT(*) AS views, b.`firstname`, b.`lastname`, MAX(a.`timestamp`) as last_viewed_time
                     FROM `".DATABASE_NAME."`.`statistics` AS a
                     JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -188,6 +188,7 @@ class Models_Statistic extends Models_Base {
     
     public static function getEventLinkViews($action_value) {
         global $db;
+
         $query = "SELECT DISTINCT (a.`proxy_id`), COUNT(*) AS views, b.`firstname`, b.`lastname`, MAX(a.`timestamp`) as last_viewed_time
                     FROM `".DATABASE_NAME."`.`statistics` AS a
                     JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -209,6 +210,7 @@ class Models_Statistic extends Models_Base {
     
     public static function getGradebookViews($assessment_id) {
         global $db;
+
         $query = "SELECT DISTINCT (a.`proxy_id`), COUNT(DISTINCT d.`statistic_id`) AS views, c.`firstname`, c.`lastname`, DATE_FORMAT(FROM_UNIXTIME(MIN(d.`timestamp`)), '%Y-%m-%d %H:%i') as `first_viewed_time`, DATE_FORMAT(FROM_UNIXTIME(MAX(d.`timestamp`)), '%Y-%m-%d %H:%i') as `last_viewed_time`
                     FROM `group_members` AS a
                     JOIN `assessments` AS b

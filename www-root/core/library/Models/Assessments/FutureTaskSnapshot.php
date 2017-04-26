@@ -21,7 +21,7 @@
  * @copyright Copyright 2016 Queen's University. All Rights Reserved.
  */
 class Models_Assessments_FutureTaskSnapshot extends Models_Base {
-    protected $future_task_id, $adistribution_id, $assessor_type, $assessor_value, $target_type, $target_value, $title, $rotation_start_date, $rotation_end_date, $delivery_date, $schedule_details, $created_date, $created_by;
+    protected $future_task_id, $adistribution_id, $assessor_type, $assessor_value, $assessment_type, $target_type, $target_value, $title, $rotation_start_date, $rotation_end_date, $delivery_date, $schedule_details, $created_date, $created_by;
 
     protected static $table_name = "cbl_assessment_ss_future_tasks";
     protected static $primary_key = "future_task_id";
@@ -45,6 +45,10 @@ class Models_Assessments_FutureTaskSnapshot extends Models_Base {
 
     public function getAssessorValue() {
         return $this->assessor_value;
+    }
+
+    public function getAssessmentType() {
+        return $this->assessment_type;
     }
 
     public function getTargetType() {
@@ -75,12 +79,16 @@ class Models_Assessments_FutureTaskSnapshot extends Models_Base {
         return $this->schedule_details;
     }
 
-    public function getTarget() {
+    public function getTarget($target_value = null, $target_type = null) {
+        if (!is_null($target_value) && !is_null($target_type)) {
+            $this->target_value = $target_value;
+            $this->target_type = $target_type;
+        }
 
-        if ($this->getTargetValue() && $this->getTargetType()) {
-            switch ($this->getTargetType()) {
+        if (!is_null($this->target_value) && !is_null($this->target_type)) {
+            switch ($this->target_type) {
                 case "proxy_id":
-                    $member_details = Models_User::fetchRowByID($this->getTargetValue());
+                    $member_details = Models_User::fetchRowByID($this->target_value);
                     if ($member_details) {
                         $prefix = $member_details->getPrefix();
                         $target_name = (($prefix) ? $prefix . " " : "") . $member_details->getFirstname() . " " . $member_details->getLastname();
@@ -89,7 +97,7 @@ class Models_Assessments_FutureTaskSnapshot extends Models_Base {
                     }
                     break;
                 case "schedule_id":
-                    $schedule = Models_Schedule::fetchRowByID($this->getTargetValue());
+                    $schedule = Models_Schedule::fetchRowByID($this->target_value);
                     if ($schedule) {
                         $target_name = $schedule->getTitle();
                     } else {
@@ -97,7 +105,7 @@ class Models_Assessments_FutureTaskSnapshot extends Models_Base {
                     }
                     break;
                 case "course_id":
-                    $course = Models_Course::fetchRowByID($this->getTargetValue());
+                    $course = Models_Course::fetchRowByID($this->target_value);
                     if ($course) {
                         $target_name = $course->getCourseName() . " (" . $course->getCourseCode() . ")";
                     } else {
@@ -232,8 +240,7 @@ class Models_Assessments_FutureTaskSnapshot extends Models_Base {
         }
 
         $assessor_type = ($is_external) ? 'external' : 'internal';
-
-        $query = "          SELECT a.* FROM `cbl_assessment_ss_future_tasks` AS a
+        $query = "          SELECT a.*, b.`assessment_type` FROM `cbl_assessment_ss_future_tasks` AS a
                             JOIN `cbl_assessment_distributions` AS b
                             ON a.`adistribution_id` = b.`adistribution_id`                    
                             JOIN `courses` AS c
@@ -340,6 +347,96 @@ class Models_Assessments_FutureTaskSnapshot extends Models_Base {
         }
 
         return $assessments;
+    }
+
+    public static function getAllFutureTasksForAssociatedLearnersAssociatedFaculty($task_type, $offset = 0, $limit = 10, $count = false, $search_value = null, $start_date = null, $end_date = null) {
+        global $db;
+        $tasks = array();
+
+        $AND_date_greater = "";
+        $AND_date_less = "";
+        $LIMIT = "";
+        $OFFSET = "";
+        $AND_TITLE_LIKE = "";
+
+        if ($start_date != "" && $start_date != null) {
+            $AND_date_greater = "   AND b.`delivery_date` >= ". $db->qstr($start_date) . "";
+        }
+
+        if ($end_date != "" && $end_date != null) {
+            $AND_date_less = "      AND b.`delivery_date` <= ". $db->qstr($end_date) . "";
+        }
+
+        if ($limit && !$count) {
+            $LIMIT = " LIMIT $limit";
+        }
+
+        if ($offset && !$count) {
+            $OFFSET = " OFFSET $offset";
+        }
+
+        if (!is_null($search_value) && $search_value != "") {
+            $LIMIT = "";
+            $OFFSET = "";
+            $AND_TITLE_LIKE = " AND (b.`title` LIKE (". $db->qstr("%". $search_value ."%") .") OR CONCAT(c.`firstname`, ' ', c.`lastname`) LIKE (". $db->qstr("%". $search_value ."%") .") )";
+        }
+
+        $SELECT = " SELECT b.`title`, CONCAT(c.`firstname`, ' ', c.`lastname`) AS internal_full_name, CONCAT(d.`firstname`, ' ', d.`lastname`) AS external_full_name, a.`assessor_type`, a.`assessor_value`, a.`target_type`, a.`target_value`, a.`adistribution_id`, a.`delivery_date` ";
+        if ($count) {
+            $SELECT = " SELECT COUNT(*) ";
+        }
+
+        $USER_ID_LIST = Entrada_Utilities_Assessments_AssessmentTask::getAssociatedLearnerFacultyProxyList();
+        $EXTERNAL_ID_LIST = Entrada_Utilities_Assessments_AssessmentTask::getAssociatedExternalIDList();
+        $COURSE_ID_LIST = null;
+        $AND_ASSESSOR = null;
+
+        $active_user_course_id_list = Models_Course::getActiveUserCoursesIDList();
+        if ($active_user_course_id_list) {
+            $COURSE_ID_LIST = implode(",", $active_user_course_id_list);
+        }
+
+        if (!empty($USER_ID_LIST) && $USER_ID_LIST != "" && $COURSE_ID_LIST) {
+            if (!empty($USER_ID_LIST) && $USER_ID_LIST != "" && !empty($EXTERNAL_ID_LIST) && $EXTERNAL_ID_LIST != "") {
+                $AND_ASSESSOR = " AND ((a.`assessor_value` IN ({$USER_ID_LIST}) AND a.`assessor_type` = 'internal' OR a.`assessor_value` IN ({$EXTERNAL_ID_LIST}) AND a.`assessor_type` = 'external') OR a.`target_value` IN ({$USER_ID_LIST}))";
+            } else {
+                if (!empty($USER_ID_LIST) && $USER_ID_LIST != "") {
+                    $AND_ASSESSOR = " AND (a.`assessor_value` IN ({$USER_ID_LIST}) AND a.`assessor_type` = 'internal') OR (a.`target_type` = 'proxy_id' && a.`target_value` IN ({$USER_ID_LIST}))";
+                }
+
+                if (!empty($EXTERNAL_ID_LIST) && $EXTERNAL_ID_LIST != "") {
+                    $AND_ASSESSOR = " AND (a.`assessor_value` IN ({$EXTERNAL_ID_LIST}) AND a.`assessor_type` = 'external') OR (a.`target_type` = 'proxy_id' && a.`target_value` IN ({$USER_ID_LIST}))";
+                }
+            }
+
+            $query = " 
+                    $SELECT 
+                    FROM `cbl_assessment_ss_future_tasks` AS a
+                    JOIN `cbl_assessment_distributions` AS b
+                    ON a.`adistribution_id` = b.`adistribution_id`   
+                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+                    ON a.`assessor_value` = c.`id`
+                    LEFT JOIN `cbl_external_assessors` AS d
+                    ON a.`assessor_value` = d.`eassessor_id`   
+                    WHERE a.`deleted_date` IS NULL
+                    AND b.`deleted_date` IS NULL
+                    AND b.`visibility_status` = 'visible'
+                    AND b.`assessment_type` = '$task_type'
+                    AND b.`course_id` IN ({$COURSE_ID_LIST})
+                    $AND_ASSESSOR
+
+                    $AND_TITLE_LIKE
+                    $AND_date_greater
+                    $AND_date_less
+                    
+                    ORDER BY a.`delivery_date` ASC
+                    
+                    $LIMIT $OFFSET
+                    ";
+
+            $tasks = $db->GetAll($query);
+        }
+        return $tasks ? $tasks : array();
     }
 
     public static function truncate() {

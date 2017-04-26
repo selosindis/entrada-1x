@@ -36,6 +36,8 @@ if (isset($_GET["term"]) || isset($_POST["term"])) {
 	$terminology = "Poll";
 }
 
+Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
 echo "<h1>Add ".$terminology."</h1>\n";
 
 $BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-poll&term=".$terminology, "title" => "Add ".$terminology);
@@ -313,25 +315,26 @@ switch($STEP) {
 							$SUCCESS++;
 							if (isset($_POST["poll_action"])) {
 								if ($_POST["poll_action"] == "add-poll") {
-									$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-poll&term=".$terminology;
-									$SUCCESSSTR[]	= "You have successfully added a new ".$terminology." to the community.<br /><br />You will now be redirected to add another ".$terminology."; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+									$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=add-poll&term=" . $terminology;
 								} elseif ($_POST["poll_action"] == "add-question") {
-									$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-question&id=".$POLL_ID;
-									$SUCCESSSTR[]	= "You have successfully added a new ".$terminology." to the community.<br /><br />You will now be redirected to add another question to this poll; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+									$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=add-question&id=" . $POLL_ID;
 								} elseif ($_POST["poll_action"] == "edit-poll") {
-									$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-poll&id=".$POLL_ID;
-									$SUCCESSSTR[]	= "You have successfully added a new ".$terminology." to the community.<br /><br />You will now be redirected to edit this poll; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+									$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=edit-poll&id=" . $POLL_ID;
 								} else {
-									$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-									$SUCCESSSTR[]	= "You have successfully added a new ".$terminology." to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+									$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?term=" . $terminology;
 								}
+								Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added a new <strong>%s</strong> to the community."), $terminology), "success", $MODULE);
 							} else {
-								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-								$SUCCESSSTR[]	= "You have successfully added a new ".$terminology." to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?term=" . $terminology;
+								Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added a new <strong>%s</strong> to the community."), $terminology), "success", $MODULE);
 							}
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 							add_statistic("community_polling", "poll_add", "cpolls_id", $POLL_ID);
 							communities_log_history($COMMUNITY_ID, $PAGE_ID, $POLL_ID, "community_history_add_poll", 1);
+							if (COMMUNITY_NOTIFICATIONS_ACTIVE && isset($_POST["notify_members"]) && $_POST["notify_members"]) {
+								community_notify($COMMUNITY_ID, $POLL_ID, "poll", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=vote-poll&id=".$POLL_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
+							}
+							header("Location: " . $url);
+							exit;
 						}
 					}
 				}
@@ -357,17 +360,6 @@ switch($STEP) {
 
 // Page Display
 switch($STEP) {
-	case 2 :
-		if ($NOTICE) {
-			echo display_notice();
-		}
-		if ($SUCCESS) {
-			if (COMMUNITY_NOTIFICATIONS_ACTIVE && isset($_POST["notify_members"]) && $_POST["notify_members"]) {
-				community_notify($COMMUNITY_ID, $POLL_ID, "poll", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=vote-poll&id=".$POLL_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
-			}
-			echo display_success();
-		}
-	break;
 	case 1 :
 	default :
 		if ($ERROR) {

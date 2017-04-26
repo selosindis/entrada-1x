@@ -31,35 +31,39 @@ class Entrada_Utilities_Flashmessenger extends Entrada_Base {
         return true;
     }
 
-    public static function getMessages($module = "global", $message_type = NULL)
-    {
+    public static function getMessages($module = "global", $message_type = NULL, $unset = true) {
         global $_SESSION;
-        if (isset($_SESSION["flashmessager"]) && isset($_SESSION["flashmessager"][$module])) {
-            $messages = is_null($message_type) ? $_SESSION["flashmessager"][$module] : $_SESSION["flashmessager"][$module][$message_type];
-        } else {
-            $messages = false;
-        }
-        if (isset($_SESSION["flashmessager"][$module])) {
-            unset($_SESSION["flashmessager"][$module]);
+        $messages = array();
+        if (isset($_SESSION["flashmessager"])) {
+            if (array_key_exists($module, $_SESSION["flashmessager"])) {
+                if ($message_type && array_key_exists($message_type, $_SESSION["flashmessager"][$module])) {
+                    $messages = $_SESSION["flashmessager"][$module][$message_type];
+                } else {
+                    $messages = $_SESSION["flashmessager"][$module];
+                }
+            }
+            if (array_key_exists($module, $_SESSION["flashmessager"]) && $unset === true) {
+                unset($_SESSION["flashmessager"][$module]);
+            }
         }
         return $messages;
     }
 
     public static function displayMessages($module = "global") {
-        $flash_messages = (isset($_SESSION["flashmessager"][$module]) ? $_SESSION["flashmessager"][$module] : false);
+        $flash_messages = $_SESSION["flashmessager"][$module];
         if (isset($flash_messages) && $flash_messages) {
             foreach ($flash_messages as $message_type => $messages) {
                 switch ($message_type) {
                     case "error" :
                         echo display_error($messages);
-                    break;
+                        break;
                     case "success" :
                         echo display_success($messages);
-                    break;
+                        break;
                     case "notice" :
                     default :
                         echo display_notice($messages);
-                    break;
+                        break;
                 }
             }
         }

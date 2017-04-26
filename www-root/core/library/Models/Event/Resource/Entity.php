@@ -33,6 +33,9 @@ class Models_Event_Resource_Entity extends Models_Base {
             $updated_date,
             $updated_by,
             $active;
+            
+    protected $resource,
+            $hidden;
     
     protected static $table_name = "event_resource_entities";
     protected static $default_sort_column = "event_resource_entity_id";
@@ -76,6 +79,30 @@ class Models_Event_Resource_Entity extends Models_Base {
     
     public function getActive() {
         return $this->active;
+    }
+    
+    public function getHidden() {
+        return $this->hidden;
+    }
+
+    public function setEventId($id) {
+        $this->event_id = $id;
+    }
+
+    public function setReleaseDate($release_date) {
+        $this->release_date = $release_date;
+    }
+
+    public function setReleaseUntil($release_until) {
+        $this->release_until = $release_until;
+    }
+
+    public function setUpdatedDate($updated_date) {
+        $this->updated_date = $updated_date;
+    }
+
+    public function setUpdatedBy($updated_by) {
+        $this->updated_by = $updated_by;
     }
     
     /* @return bool|Models_Event_Resource_Entity */
@@ -134,7 +161,35 @@ class Models_Event_Resource_Entity extends Models_Base {
         
         return $self->fetchAll($constraints);
     }
+
+
+    /* @return ArrayObject|Models_Event_Resource_Entity[] */
+    public static function fetchAllByEntityType($entity_type = null, $active = 1) {
+        $self = new self();
+
+        $constraints = array(
+            array(
+                "key" => "entity_type",
+                "value" => $entity_type,
+                "method" => "="
+            )
+        );
+
+        return $self->fetchAll($constraints);
+    }
     
+    /* @return bool|Models_Event_Resource_Entity */
+    public static function fetchRowByEntityTypeEntityValue ($entity_type = null, $entity_value = null, $active = 1) {
+        $self = new self();
+
+        $constraints = array(
+            array("key" => "entity_type", "value" => $entity_type, "method" => "="),
+            array("mode" => "AND", "key" => "entity_value", "value" => $entity_value, "method" => "="),
+            array("mode" => "AND", "key" => "active", "value" => $active, "method" => "=")
+        );
+
+        return $self->fetchRow($constraints);
+    }
 
     /* @return bool|Models_Event_Resource_Entity */
     public static function fetchRowByEventIdEntityTypeEntityValue ($event_id = null, $entity_type = null, $entity_value = null, $active = 1) {
@@ -194,35 +249,40 @@ class Models_Event_Resource_Entity extends Models_Base {
     }
     
     public function getResource() {
-        $resource = false;
-        switch ($this->entity_type) {
-            case 1 :
-            case 5 :
-            case 6 :
-            case 11 :
-                $resource = Models_Event_Resource_File::fetchRowByID($this->entity_value);
-            break;
-            case 2 :
-                $resource = Models_Event_Resource_Classwork::fetchRowByID($this->entity_value);
-            break;
-            case 3 :
-            case 7 :
-                $resource = Models_Event_Resource_Link::fetchRowByID($this->entity_value);
-            break;
-            case 4 :
-                $resource = Models_Event_Resource_Homework::fetchRowByID($this->entity_value);
-            break;      
-            case 8 :
-                $resource = Models_Quiz_Attached::fetchRowByID($this->entity_value);
-            break;
-            case 9 :
-                $resource = Models_Event_Resource_TextbookReading::fetchRowByID($this->entity_value);
-            break;  
-            case 10 :
-                $resource = Models_Event_Resource_LtiProvider::fetchRowByID($this->entity_value);
-            break;
+        if (NULL === $this->resource) {
+            $resource = false;
+            switch ($this->entity_type) {
+                case 1 :
+                case 5 :
+                case 6 :
+                case 11 :
+                    $resource = Models_Event_Resource_File::fetchRowByID($this->entity_value);
+                    break;
+                case 2 :
+                    $resource = Models_Event_Resource_Classwork::fetchRowByID($this->entity_value);
+                    break;
+                case 3 :
+                case 7 :
+                    $resource = Models_Event_Resource_Link::fetchRowByID($this->entity_value);
+                    break;
+                case 4 :
+                    $resource = Models_Event_Resource_Homework::fetchRowByID($this->entity_value);
+                    break;
+                case 8 :
+                    $resource = Models_Quiz_Attached::fetchRowByID($this->entity_value);
+                    break;
+                case 9 :
+                    $resource = Models_Event_Resource_TextbookReading::fetchRowByID($this->entity_value);
+                    break;
+                case 10 :
+                    $resource = Models_Event_Resource_LtiProvider::fetchRowByID($this->entity_value);
+                    break;
+                case 12 :
+                    $resource = Models_Exam_Post::fetchRowByID($this->entity_value);
+                    break;
+            }
         }
-        
+        $this->resource = $resource;
         return $resource;
     }
     

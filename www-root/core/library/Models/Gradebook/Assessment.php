@@ -280,6 +280,8 @@ class Models_Gradebook_Assessment extends Models_Base {
     }
 
     /**
+     * DEPRECATED. The Views information is no longer used in Entrada. use fetchAssessmentsByCurriculumPeriodIDWithAssignments() instead
+     * @TODO REMOVE in release 1.10
      * Returns a list of assessments, with any attached assignments and number of views that assessment received
      * @param  int    $course_id
      * @param  int    $cperiod_id
@@ -334,6 +336,50 @@ class Models_Gradebook_Assessment extends Models_Base {
             return $result;
         }
         
+        return false;
+    }
+
+    /**
+     * Returns a list of assessments, with any attached assignments
+     * @param  int    $course_id
+     * @param  int    $cperiod_id
+     * @param  string $search
+     * @return array|false
+     */
+    public function fetchAssessmentsByCurriculumPeriodIDWithAssignments($course_id, $cperiod_id, $search = "") {
+        global $db;
+
+        $query = "SELECT a.*, b.`assignment_id`, b.`assignment_title`, d.`title`, d.`description` AS `desc` 
+                FROM `".DATABASE_NAME."`.`".static::$table_name."` a
+                LEFT JOIN `".DATABASE_NAME."`.`assignments` b 
+                ON a.`".static::$primary_key."` = b.`".static::$primary_key."`
+                AND b.`assignment_active` = 1
+                LEFT JOIN `".DATABASE_NAME."`.`assessment_collections` d
+                ON a.`collection_id` = d.`collection_id` 
+                WHERE a.course_id = ?
+                AND a.cperiod_id = ?
+                AND a.active = 1
+                GROUP BY a.`".static::$primary_key."`";
+
+        if (!empty($search)) {
+
+            $terms = explode(" ", $search);
+            $clauses = array();
+
+            foreach ($terms as $term) {
+                $clauses[] = "a.`name` LIKE '%" . $term . "%'";
+            }
+
+            $query .= " HAVING (" . implode(" OR ",$clauses) . ")";
+        }
+
+        $query .= " ORDER BY a.`".static::$default_sort_column."` ASC";
+
+        $result = $db->GetAll($query, array($course_id, $cperiod_id));
+        if ($result) {
+            return $result;
+        }
+
         return false;
     }
 

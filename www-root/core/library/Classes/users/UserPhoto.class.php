@@ -64,6 +64,10 @@
  	public function getFilename() {
  		return webservice_url("photo", array($this->getUserID(), $this->getPhotoType()));
  	}
+
+     public function getThumbnail() {
+         return webservice_url("photo", array($this->getUserID(), $this->getPhotoType(), "thumbnail"));
+     }
  	
  	public static function get($user_id, $type = self::OFFICIAL) {
  		if (in_array($type, self::$types)) { //validate type

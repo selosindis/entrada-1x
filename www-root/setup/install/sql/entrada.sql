@@ -1457,6 +1457,34 @@ CREATE TABLE `attached_quizzes` (
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `bookmarks` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `uri` varchar(255) NOT NULL DEFAULT '',
+  `bookmark_title` varchar(255) DEFAULT NULL,
+  `proxy_id` int(11) DEFAULT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `order` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `bookmarks_default` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `entity_type` varchar(64) DEFAULT NULL,
+  `entity_value` varchar(64) DEFAULT NULL,
+  `uri` varchar(255) NOT NULL DEFAULT '',
+  `bookmark_title` varchar(255) DEFAULT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cbl_assessment_additional_tasks` (
   `additional_task_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `adistribution_id` int(11) unsigned NOT NULL,
@@ -1470,6 +1498,8 @@ CREATE TABLE `cbl_assessment_additional_tasks` (
   `deleted_date` bigint(64) DEFAULT NULL,
   PRIMARY KEY (`additional_task_id`),
   KEY `cbl_assessment_additional_tasks_ibfk_1` (`adistribution_id`),
+  KEY `target_id` (`target_id`),
+  KEY `assessor_type` (`assessor_type`,`assessor_value`),
   CONSTRAINT `cbl_assessment_additional_tasks_ibfk_1` FOREIGN KEY (`adistribution_id`) REFERENCES `cbl_assessment_distributions` (`adistribution_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1486,6 +1516,7 @@ CREATE TABLE `cbl_assessment_deleted_tasks` (
   `delivery_date` bigint(64) NOT NULL,
   `deleted_reason_id` int(11) unsigned NOT NULL,
   `deleted_reason_notes` varchar(255) DEFAULT NULL,
+  `visible` tinyint(1) NOT NULL DEFAULT '1',
   `created_by` int(11) NOT NULL,
   `created_date` bigint(64) NOT NULL,
   `deleted_by` int(11) DEFAULT NULL,
@@ -1493,8 +1524,25 @@ CREATE TABLE `cbl_assessment_deleted_tasks` (
   PRIMARY KEY (`deleted_task_id`),
   KEY `cbl_assessment_deleted_tasks_ibfk_1` (`adistribution_id`),
   KEY `cbl_assessment_deleted_tasks_ibfk_2` (`deleted_reason_id`),
+  KEY `target_id` (`target_id`),
+  KEY `assessor_type` (`assessor_type`,`assessor_value`),
   CONSTRAINT `cbl_assessment_deleted_tasks_ibfk_1` FOREIGN KEY (`adistribution_id`) REFERENCES `cbl_assessment_distributions` (`adistribution_id`),
   CONSTRAINT `cbl_assessment_deleted_tasks_ibfk_2` FOREIGN KEY (`deleted_reason_id`) REFERENCES `cbl_assessment_lu_task_deleted_reasons` (`reason_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cbl_assessment_distribution_approvers` (
+  `adapprover_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `adistribution_id` int(11) unsigned NOT NULL,
+  `proxy_id` int(11) NOT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  PRIMARY KEY (`adapprover_id`),
+  KEY `adistribution_id` (`adistribution_id`),
+  CONSTRAINT `cbl_assessment_distribution_approvers_ibfk_1` FOREIGN KEY (`adistribution_id`) REFERENCES `cbl_assessment_distributions` (`adistribution_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1635,21 +1683,6 @@ INSERT INTO `cbl_assessment_distribution_methods` VALUES (1,'Rotation Schedule',
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `cbl_assessment_distribution_releasors` (
-  `adreleasor_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `adistribution_id` int(11) unsigned NOT NULL,
-  `proxy_id` int(11) NOT NULL,
-  `created_date` bigint(64) NOT NULL,
-  `created_by` int(11) NOT NULL,
-  PRIMARY KEY (`adreleasor_id`),
-  KEY `adistribution_id` (`adistribution_id`),
-  CONSTRAINT `cbl_assessment_distribution_releasors_ibfk_1` FOREIGN KEY (`adistribution_id`) REFERENCES `cbl_assessment_distributions` (`adistribution_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
-
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cbl_assessment_distribution_reviewers` (
   `adreviewer_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `adistribution_id` int(11) unsigned NOT NULL,
@@ -1716,6 +1749,7 @@ CREATE TABLE `cbl_assessment_distributions` (
   `description` text,
   `cperiod_id` int(11) NOT NULL,
   `course_id` int(11) DEFAULT NULL,
+  `assessment_type` enum('assessment','evaluation') NOT NULL,
   `assessor_option` enum('faculty','learner','individual_users') NOT NULL DEFAULT 'individual_users',
   `min_submittable` tinyint(3) NOT NULL DEFAULT '0',
   `max_submittable` tinyint(3) NOT NULL DEFAULT '0',
@@ -1864,12 +1898,12 @@ CREATE TABLE `cbl_assessment_notifications` (
   `anotification_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `adistribution_id` int(11) unsigned NOT NULL,
   `assessment_value` int(11) unsigned NOT NULL,
-  `assessment_type` enum('assessment','delegation') CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT 'assessment',
+  `assessment_type` enum('assessment','delegation','approver') CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT 'assessment',
   `notified_value` int(11) unsigned NOT NULL,
   `notified_type` enum('proxy_id','external_assessor_id') NOT NULL DEFAULT 'proxy_id',
   `notification_id` int(11) unsigned NOT NULL,
   `nuser_id` int(11) unsigned NOT NULL,
-  `notification_type` enum('delegator_start','delegator_late','assessor_start','assessor_reminder','assessor_late','flagged_response','assessment_removal','assessment_task_deleted','assessment_submitted','assessment_delegation_assignment_removed','assessment_submitted_notify_releasor','assessment_submitted_notify_learner') NOT NULL DEFAULT 'assessor_start',
+  `notification_type` enum('delegator_start','delegator_late','assessor_start','assessor_reminder','assessment_approver','assessor_late','flagged_response','assessment_removal','assessment_task_deleted','delegation_task_deleted','assessment_submitted','assessment_delegation_assignment_removed','assessment_submitted_notify_approver','assessment_submitted_notify_learner') NOT NULL DEFAULT 'assessor_start',
   `schedule_id` int(11) unsigned DEFAULT NULL,
   `sent_date` bigint(64) NOT NULL,
   PRIMARY KEY (`anotification_id`),
@@ -1905,6 +1939,7 @@ CREATE TABLE `cbl_assessment_progress` (
   PRIMARY KEY (`aprogress_id`),
   KEY `adistribution_id` (`adistribution_id`),
   KEY `adtarget_id` (`adtarget_id`),
+  KEY `dassessment_id` (`dassessment_id`),
   CONSTRAINT `cbl_assessment_progress_ibfk_1` FOREIGN KEY (`adistribution_id`) REFERENCES `cbl_assessment_distributions` (`adistribution_id`),
   CONSTRAINT `cbl_assessment_progress_ibfk_2` FOREIGN KEY (`adtarget_id`) REFERENCES `cbl_assessment_distribution_targets` (`adtarget_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -1913,20 +1948,20 @@ CREATE TABLE `cbl_assessment_progress` (
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `cbl_assessment_progress_releases` (
-  `adreleasor_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+CREATE TABLE `cbl_assessment_progress_approvals` (
+  `adapprover_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `aprogress_id` int(11) unsigned NOT NULL,
   `adistribution_id` int(11) unsigned NOT NULL,
-  `releasor_id` int(11) NOT NULL,
+  `approver_id` int(11) NOT NULL,
   `release_status` tinyint(1) NOT NULL DEFAULT '0',
   `comments` text,
   `created_date` bigint(64) NOT NULL,
   `created_by` int(11) NOT NULL,
-  PRIMARY KEY (`adreleasor_id`),
+  PRIMARY KEY (`adapprover_id`),
   KEY `aprogress_id` (`aprogress_id`),
   KEY `adistribution_id` (`adistribution_id`),
-  CONSTRAINT `cbl_assessment_progress_releases_ibfk_1` FOREIGN KEY (`adistribution_id`) REFERENCES `cbl_assessment_distributions` (`adistribution_id`),
-  CONSTRAINT `cbl_assessment_progress_releases_ibfk_2` FOREIGN KEY (`aprogress_id`) REFERENCES `cbl_assessment_progress` (`aprogress_id`)
+  CONSTRAINT `cbl_assessment_progress_approvals_ibfk_1` FOREIGN KEY (`adistribution_id`) REFERENCES `cbl_assessment_distributions` (`adistribution_id`),
+  CONSTRAINT `cbl_assessment_progress_approvals_ibfk_2` FOREIGN KEY (`aprogress_id`) REFERENCES `cbl_assessment_progress` (`aprogress_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -2246,6 +2281,7 @@ CREATE TABLE `cbl_assessments_lu_items` (
   `item_code` varchar(128) DEFAULT '',
   `item_text` text NOT NULL,
   `item_description` longtext,
+  `mandatory` tinyint(1) DEFAULT '1',
   `comment_type` enum('disabled','optional','mandatory','flagged') NOT NULL DEFAULT 'disabled',
   `created_date` bigint(64) NOT NULL,
   `created_by` int(11) NOT NULL,
@@ -2425,6 +2461,8 @@ CREATE TABLE `cbl_distribution_assessment_targets` (
   `deleted_date` int(11) DEFAULT NULL,
   PRIMARY KEY (`atarget_id`),
   KEY `cbl_distribution_assessment_targets_ibfk_1` (`adistribution_id`),
+  KEY `target_type` (`target_type`,`target_value`),
+  KEY `dassessment_id` (`dassessment_id`),
   CONSTRAINT `cbl_distribution_assessment_targets_ibfk_1` FOREIGN KEY (`adistribution_id`) REFERENCES `cbl_assessment_distributions` (`adistribution_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -2579,6 +2617,8 @@ CREATE TABLE `cbl_schedule_audience` (
   `one45_rotation_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`saudience_id`),
   KEY `schedule_od` (`schedule_id`),
+  KEY `audience_type` (`audience_type`,`audience_value`),
+  KEY `schedule_id` (`schedule_id`),
   CONSTRAINT `cbl_schedule_audience_ibfk_1` FOREIGN KEY (`schedule_id`) REFERENCES `cbl_schedule` (`schedule_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -2604,6 +2644,7 @@ CREATE TABLE `cbl_schedule_drafts` (
   `draft_title` varchar(64) NOT NULL DEFAULT '',
   `status` enum('draft','live') NOT NULL DEFAULT 'draft',
   `course_id` int(11) DEFAULT NULL,
+  `cperiod_id` int(11) DEFAULT '0',
   `created_date` int(11) NOT NULL,
   `created_by` int(11) NOT NULL,
   `deleted_date` int(11) DEFAULT NULL,
@@ -2622,9 +2663,10 @@ CREATE TABLE `cbl_schedule_lu_block_types` (
   `number_of_blocks` tinyint(3) NOT NULL,
   `deleted_date` bigint(64) DEFAULT NULL,
   PRIMARY KEY (`block_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+INSERT INTO `cbl_schedule_lu_block_types` VALUES (1,'1 Week',52,NULL),(2,'2 Week',26,NULL),(3,'4 Week',13,NULL);
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -2698,7 +2740,7 @@ CREATE TABLE `communities` (
   `community_notifications` int(1) NOT NULL DEFAULT '0',
   `sub_communities` int(1) NOT NULL DEFAULT '0',
   `storage_usage` int(32) NOT NULL DEFAULT '0',
-  `storage_max` int(32) NOT NULL DEFAULT '104857600',
+  `storage_max` bigint(64) NOT NULL DEFAULT '1073741824',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
   `community_twitter_handle` varchar(16) DEFAULT NULL,
@@ -4182,6 +4224,7 @@ CREATE TABLE `draft_events` (
   `event_message` text,
   `include_parent_message` tinyint(1) NOT NULL DEFAULT '1',
   `event_location` varchar(64) DEFAULT NULL,
+  `room_id` int(11) unsigned DEFAULT NULL,
   `event_start` bigint(64) NOT NULL,
   `event_finish` bigint(64) NOT NULL,
   `event_duration` int(64) NOT NULL,
@@ -4838,10 +4881,10 @@ CREATE TABLE `event_lu_resource_types` (
   `updated_by` int(12) NOT NULL,
   `active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`event_resource_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `event_lu_resource_types` VALUES (1,'Podcast','Attach a podcast to this learning event.',1449685604,1,1),(2,'Bring to Class','Attach a description of materials students should bring to class.',1449685604,1,0),(3,'Link','Attach links to external websites that relate to the learning event.',1449685604,1,1),(4,'Homework','Attach a description to indicate homework tasks assigned to students.',1449685604,1,0),(5,'Lecture Notes','Attach files such as documents, pdfs or images.',1449685604,1,1),(6,'Lecture Slides','Attach files such as documents, powerpoint files, pdfs or images.',1449685604,1,1),(7,'Online Learning Module','Attach links to external learning modules.',1449685604,1,1),(8,'Quiz','Attach an existing quiz to this learning event.',1449685604,1,1),(9,'Textbook Reading','Attach a reading list related to this learning event.',1449685604,1,0),(10,'LTI Provider','',1449685604,1,0),(11,'Other Files','Attach miscellaneous media files to this learning event.',1449685604,1,1);
+INSERT INTO `event_lu_resource_types` VALUES (1,'Podcast','Attach a podcast to this learning event.',1449685604,1,1),(2,'Bring to Class','Attach a description of materials students should bring to class.',1449685604,1,0),(3,'Link','Attach links to external websites that relate to the learning event.',1449685604,1,1),(4,'Homework','Attach a description to indicate homework tasks assigned to students.',1449685604,1,0),(5,'Lecture Notes','Attach files such as documents, pdfs or images.',1449685604,1,1),(6,'Lecture Slides','Attach files such as documents, powerpoint files, pdfs or images.',1449685604,1,1),(7,'Online Learning Module','Attach links to external learning modules.',1449685604,1,1),(8,'Quiz','Attach an existing quiz to this learning event.',1449685604,1,1),(9,'Textbook Reading','Attach a reading list related to this learning event.',1449685604,1,0),(10,'LTI Provider','',1449685604,1,0),(11,'Other Files','Attach miscellaneous media files to this learning event.',1449685604,1,1),(12,'Exam','Attach an exam to this learning event.',1492431737,1,1);
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -5006,6 +5049,7 @@ CREATE TABLE `events` (
   `event_message` text,
   `include_parent_message` tinyint(1) NOT NULL DEFAULT '1',
   `event_location` varchar(64) DEFAULT NULL,
+  `room_id` int(11) unsigned DEFAULT NULL,
   `event_start` bigint(64) NOT NULL,
   `event_finish` bigint(64) NOT NULL,
   `event_duration` int(64) NOT NULL,
@@ -5121,6 +5165,763 @@ INSERT INTO `eventtype_organisation` VALUES (1,1),(2,1),(3,1),(4,1),(5,1),(6,1),
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_adjustments` (
+  `ep_adjustment_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `exam_element_id` int(11) unsigned NOT NULL,
+  `exam_id` int(11) unsigned DEFAULT NULL,
+  `type` enum('update_points','throw_out','full_credit','correct','incorrect','make_bonus') NOT NULL,
+  `value` varchar(255) DEFAULT NULL,
+  `created_date` bigint(20) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `deleted_date` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`ep_adjustment_id`),
+  KEY `exam_element_id` (`exam_element_id`),
+  KEY `post_id` (`exam_id`),
+  CONSTRAINT `exam_adjustments_ibfk_1` FOREIGN KEY (`exam_element_id`) REFERENCES `exam_elements` (`exam_element_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `exam_adjustments_ibfk_2` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_attached_files` (
+  `file_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `exam_id` int(11) unsigned NOT NULL,
+  `file_name` varchar(255) DEFAULT NULL,
+  `file_type` varchar(255) DEFAULT NULL,
+  `file_title` varchar(128) DEFAULT NULL,
+  `file_size` varchar(32) DEFAULT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(12) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`file_id`),
+  KEY `exam_attached_files_fk_1` (`exam_id`),
+  CONSTRAINT `exam_attached_files_fk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_authors` (
+  `aeauthor_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `exam_id` int(11) unsigned NOT NULL,
+  `author_type` enum('proxy_id','organisation_id','course_id') NOT NULL DEFAULT 'proxy_id',
+  `author_id` int(11) unsigned DEFAULT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`aeauthor_id`),
+  KEY `exam_id` (`exam_id`),
+  CONSTRAINT `exam_authors_ibfk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_category` (
+  `category_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `post_id` int(11) unsigned NOT NULL,
+  `exam_id` int(11) unsigned NOT NULL,
+  `use_release_start_date` int(1) DEFAULT NULL,
+  `use_release_end_date` int(1) DEFAULT NULL,
+  `release_start_date` bigint(20) DEFAULT NULL,
+  `release_end_date` bigint(20) DEFAULT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(12) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`category_id`),
+  KEY `exam_cat_fk_3` (`exam_id`),
+  KEY `exam_cat_fk_4` (`post_id`),
+  CONSTRAINT `exam_cat_fk_3` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`),
+  CONSTRAINT `exam_cat_fk_4` FOREIGN KEY (`post_id`) REFERENCES `exam_posts` (`post_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_category_audience` (
+  `audience_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `category_id` int(11) unsigned NOT NULL,
+  `proxy_id` int(11) unsigned NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(12) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`audience_id`),
+  KEY `exam_cat_fk_6` (`category_id`),
+  CONSTRAINT `exam_cat_fk_6` FOREIGN KEY (`category_id`) REFERENCES `exam_category` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_category_result` (
+  `result_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `post_id` int(11) unsigned NOT NULL,
+  `exam_id` int(11) unsigned NOT NULL,
+  `objective_id` int(12) NOT NULL,
+  `set_id` int(12) NOT NULL,
+  `average` decimal(10,2) DEFAULT NULL,
+  `min` decimal(10,2) DEFAULT NULL,
+  `max` decimal(10,2) DEFAULT NULL,
+  `possible_value` decimal(10,2) DEFAULT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`result_id`),
+  KEY `exam_cat_fk_1` (`exam_id`),
+  KEY `exam_cat_fk_2` (`post_id`),
+  CONSTRAINT `exam_cat_fk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`),
+  CONSTRAINT `exam_cat_fk_2` FOREIGN KEY (`post_id`) REFERENCES `exam_posts` (`post_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_category_result_detail` (
+  `detail_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `proxy_id` int(11) NOT NULL,
+  `exam_progress_id` int(12) unsigned NOT NULL,
+  `post_id` int(11) unsigned NOT NULL,
+  `exam_id` int(11) unsigned NOT NULL,
+  `objective_id` int(12) NOT NULL,
+  `set_id` int(12) NOT NULL,
+  `score` decimal(10,2) DEFAULT NULL,
+  `value` decimal(10,2) DEFAULT NULL,
+  `possible_value` decimal(10,2) DEFAULT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(12) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`detail_id`),
+  KEY `exam_cat_detail_fk_1` (`exam_id`),
+  KEY `exam_cat_detail_fk_2` (`post_id`),
+  KEY `exam_cat_detail_fk_3` (`exam_progress_id`),
+  CONSTRAINT `exam_cat_detail_fk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`),
+  CONSTRAINT `exam_cat_detail_fk_2` FOREIGN KEY (`post_id`) REFERENCES `exam_posts` (`post_id`),
+  CONSTRAINT `exam_cat_detail_fk_3` FOREIGN KEY (`exam_progress_id`) REFERENCES `exam_progress` (`exam_progress_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_category_set` (
+  `set_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `objective_set_id` int(11) unsigned NOT NULL,
+  `category_id` int(11) unsigned NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(12) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`set_id`),
+  KEY `exam_cat_fk_5` (`category_id`),
+  CONSTRAINT `exam_cat_fk_5` FOREIGN KEY (`category_id`) REFERENCES `exam_category` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_element_highlight` (
+  `highlight_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `exam_element_id` int(11) unsigned NOT NULL,
+  `element_text` text,
+  `exam_progress_id` int(12) unsigned NOT NULL,
+  `proxy_id` int(12) unsigned NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`highlight_id`),
+  KEY `exam_element_id` (`exam_element_id`),
+  CONSTRAINT `exam_e_highlights_fk_1` FOREIGN KEY (`exam_element_id`) REFERENCES `exam_elements` (`exam_element_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_elements` (
+  `exam_element_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `exam_id` int(11) unsigned NOT NULL,
+  `element_type` enum('question','data_source','text','objective','page_break') DEFAULT NULL,
+  `element_id` int(11) unsigned DEFAULT NULL,
+  `element_id_version` int(11) NOT NULL DEFAULT '0',
+  `element_text` text,
+  `group_id` int(11) unsigned DEFAULT NULL,
+  `order` tinyint(3) NOT NULL DEFAULT '0',
+  `points` decimal(10,2) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  `updated_date` int(11) NOT NULL DEFAULT '0',
+  `updated_by` int(11) NOT NULL DEFAULT '0',
+  `not_scored` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`exam_element_id`),
+  KEY `exam_id` (`exam_id`),
+  KEY `exam_elements_ibfk_2` (`group_id`),
+  CONSTRAINT `exam_elements_fk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`),
+  CONSTRAINT `exam_elements_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `exam_groups` (`group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_graders` (
+  `exam_grader_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `post_id` int(11) unsigned NOT NULL,
+  `cgroup_id` int(11) NOT NULL,
+  `proxy_id` int(12) unsigned NOT NULL,
+  PRIMARY KEY (`exam_grader_id`),
+  UNIQUE KEY `exam_graders_unique_key_1` (`post_id`,`cgroup_id`,`proxy_id`),
+  KEY `cgroup_id` (`cgroup_id`),
+  KEY `proxy_id` (`proxy_id`),
+  KEY `post_id` (`post_id`),
+  CONSTRAINT `exam_graders_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `exam_posts` (`post_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_group_authors` (
+  `egauthor_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) unsigned NOT NULL,
+  `author_type` enum('proxy_id','organisation_id','course_id') NOT NULL DEFAULT 'proxy_id',
+  `author_id` int(11) unsigned DEFAULT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`egauthor_id`),
+  KEY `group_id` (`group_id`),
+  CONSTRAINT `exam_group_authors_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `exam_groups` (`group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_group_questions` (
+  `egquestion_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) unsigned NOT NULL,
+  `question_id` int(11) unsigned NOT NULL,
+  `version_id` int(12) unsigned NOT NULL,
+  `order` tinyint(3) NOT NULL DEFAULT '0',
+  `updated_by` int(11) DEFAULT NULL,
+  `updated_date` int(11) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`egquestion_id`),
+  KEY `question_id` (`question_id`),
+  KEY `exam_group_questions_ibfk_1` (`group_id`),
+  KEY `exam_group_questions_ibfk_3` (`version_id`),
+  CONSTRAINT `exam_group_questions_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `exam_groups` (`group_id`),
+  CONSTRAINT `exam_group_questions_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `exam_questions` (`question_id`),
+  CONSTRAINT `exam_group_questions_ibfk_3` FOREIGN KEY (`version_id`) REFERENCES `exam_question_versions` (`version_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_groups` (
+  `group_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(11) NOT NULL,
+  `group_title` varchar(2048) DEFAULT NULL,
+  `group_description` text,
+  `is_scale` tinyint(1) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_lu_question_bank_folder_images` (
+  `image_id` int(12) NOT NULL AUTO_INCREMENT,
+  `file_name` varchar(64) NOT NULL DEFAULT '0',
+  `color` varchar(64) NOT NULL,
+  `order` int(12) NOT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`image_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+INSERT INTO `exam_lu_question_bank_folder_images` VALUES (1,'list-folder-1.png','light blue',1,NULL),(2,'list-folder-2.png','medium blue',2,NULL),(3,'list-folder-3.png','teal',3,NULL),(4,'list-folder-4.png','yellow green',4,NULL),(5,'list-folder-5.png','medium green',5,NULL),(6,'list-folder-6.png','dark green',6,NULL),(7,'list-folder-7.png','light yellow',7,NULL),(8,'list-folder-8.png','yellow',8,NULL),(9,'list-folder-9.png','orange',9,NULL),(10,'list-folder-10.png','dark orange',10,NULL),(11,'list-folder-11.png','red',11,NULL),(12,'list-folder-12.png','magenta',12,NULL),(13,'list-folder-13.png','light pink',13,NULL),(14,'list-folder-14.png','pink',14,NULL),(15,'list-folder-15.png','light purple',15,NULL),(16,'list-folder-16.png','purple',16,NULL),(17,'list-folder-17.png','cream',17,NULL),(18,'list-folder-18.png','light brown',18,NULL),(19,'list-folder-19.png','medium brown',19,NULL),(20,'list-folder-20.png','dark blue',20,NULL);
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_lu_questiontypes` (
+  `questiontype_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `shortname` varchar(128) NOT NULL DEFAULT '',
+  `name` varchar(256) NOT NULL DEFAULT '',
+  `description` text NOT NULL,
+  `order` int(11) DEFAULT '0',
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`questiontype_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+INSERT INTO `exam_lu_questiontypes` VALUES (1,'mc_h','Multiple Choice Horizontal','A Multiple Choice Question layed out horizontaly',3,NULL),(2,'mc_v','Multiple Choice Vertical','A Multiple Choice Question layed out verticaly',1,NULL),(3,'short','Short Answer','A Short Answer or Fill in the bank question, correct answers can be added to the system.',5,NULL),(4,'essay','Essay','A long form essay question, graded manually',6,NULL),(5,'match','Matching','A question type where you identify from a list of options',7,NULL),(6,'text','Text','Instructional or Information text to display to the student, no answer.',10,NULL),(7,'mc_h_m','Multiple Choice Horizontal (multiple responses)','A Multiple Choice Question layed out horizontaly, with checkboxes for multipule anwsers.',4,NULL),(8,'mc_v_m','Multiple Choice Vertical (multiple responses)','A Multiple Choice Question layed out verticaly, with checkboxes for multipule anwsers.',2,NULL),(9,'drop_s','Drop Down','The dropdown allows students to answer each question by choosing one of up to 100 options which have been provided to populate a select box.',8,1441323576),(10,'drop_m','Drop Down (multiple responses)','The dropdown allows students to answer each question by choosing multiple options which have been provided to populate a select box.',9,1441323576),(11,'fnb','Fill in the Blank','A question type composed of short answers in a paragraph form with predefined correct options for the short answers.',11,NULL);
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_post_exceptions` (
+  `ep_exception_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `post_id` int(11) unsigned NOT NULL,
+  `proxy_id` int(12) unsigned NOT NULL,
+  `use_exception_max_attempts` int(1) DEFAULT '0',
+  `max_attempts` int(11) DEFAULT NULL,
+  `exception_start_date` bigint(20) DEFAULT NULL,
+  `exception_end_date` bigint(20) DEFAULT NULL,
+  `exception_submission_date` bigint(20) DEFAULT NULL,
+  `use_exception_start_date` int(1) DEFAULT '0',
+  `use_exception_end_date` int(1) DEFAULT '0',
+  `use_exception_submission_date` int(1) DEFAULT '0',
+  `use_exception_time_factor` int(1) DEFAULT '0',
+  `exception_time_factor` int(5) DEFAULT '0',
+  `excluded` int(1) DEFAULT '0',
+  `created_date` bigint(20) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `updated_date` bigint(20) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`ep_exception_id`),
+  KEY `exam_post_exceptions_fk_1` (`post_id`),
+  CONSTRAINT `exam_post_exceptions_fk_1` FOREIGN KEY (`post_id`) REFERENCES `exam_posts` (`post_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_posts` (
+  `post_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `exam_id` int(11) unsigned NOT NULL,
+  `target_type` enum('event','community','preview') DEFAULT NULL,
+  `target_id` int(11) unsigned DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `description` text,
+  `instructions` text,
+  `max_attempts` int(11) DEFAULT NULL,
+  `mandatory` smallint(6) DEFAULT NULL,
+  `backtrack` int(1) DEFAULT '1',
+  `secure` tinyint(1) DEFAULT '0',
+  `use_resume_password` int(1) DEFAULT '0',
+  `resume_password` varchar(20) DEFAULT '0',
+  `secure_mode` varchar(32) DEFAULT NULL,
+  `mark_faculty_review` tinyint(1) DEFAULT '0',
+  `use_calculator` int(1) DEFAULT '0',
+  `hide_exam` int(1) DEFAULT '0',
+  `auto_save` int(5) DEFAULT '30',
+  `auto_submit` int(1) DEFAULT '0',
+  `use_time_limit` int(1) DEFAULT '0',
+  `time_limit` int(20) DEFAULT NULL,
+  `use_self_timer` int(1) DEFAULT '0',
+  `use_exam_start_date` int(1) DEFAULT '0',
+  `use_exam_end_date` int(1) DEFAULT '0',
+  `start_date` bigint(20) DEFAULT NULL,
+  `end_date` bigint(20) DEFAULT NULL,
+  `use_exam_submission_date` int(1) DEFAULT '0',
+  `exam_submission_date` bigint(20) DEFAULT NULL,
+  `timeframe` enum('none','pre','during','post') NOT NULL DEFAULT 'none',
+  `grade_book` int(11) DEFAULT NULL,
+  `release_score` int(1) DEFAULT NULL,
+  `use_release_start_date` int(1) DEFAULT NULL,
+  `use_release_end_date` int(1) DEFAULT NULL,
+  `release_start_date` bigint(20) DEFAULT NULL,
+  `release_end_date` bigint(20) DEFAULT NULL,
+  `release_feedback` int(1) DEFAULT NULL,
+  `release_incorrect_responses` int(1) DEFAULT '0',
+  `use_re_attempt_threshold` int(1) DEFAULT '0',
+  `re_attempt_threshold` decimal(10,2) DEFAULT NULL,
+  `re_attempt_threshold_attempts` int(5) DEFAULT '0',
+  `created_date` bigint(20) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `updated_date` bigint(20) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`post_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_progress` (
+  `exam_progress_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `post_id` int(12) unsigned NOT NULL,
+  `exam_id` int(12) unsigned NOT NULL,
+  `proxy_id` int(12) unsigned NOT NULL,
+  `progress_value` varchar(20) DEFAULT 'inprogress',
+  `submission_date` int(11) DEFAULT NULL,
+  `late` int(5) DEFAULT '0',
+  `exam_value` int(11) DEFAULT NULL,
+  `exam_points` decimal(10,2) DEFAULT NULL,
+  `menu_open` int(1) NOT NULL DEFAULT '1',
+  `use_self_timer` int(1) DEFAULT '0',
+  `self_timer_start` bigint(64) DEFAULT NULL,
+  `self_timer_length` bigint(64) DEFAULT NULL,
+  `created_date` bigint(64) NOT NULL DEFAULT '0',
+  `created_by` int(11) NOT NULL DEFAULT '0',
+  `started_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) unsigned NOT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`exam_progress_id`),
+  KEY `content_id` (`post_id`,`proxy_id`),
+  KEY `exam_id` (`exam_id`),
+  KEY `post_id` (`post_id`),
+  CONSTRAINT `exam_progresss_fk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`),
+  CONSTRAINT `exam_progresss_fk_2` FOREIGN KEY (`post_id`) REFERENCES `exam_posts` (`post_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_progress_response_answers` (
+  `epr_answer_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `epr_id` int(11) unsigned NOT NULL,
+  `eqa_id` int(11) unsigned DEFAULT NULL,
+  `eqm_id` int(11) unsigned DEFAULT NULL,
+  `response_element_order` int(11) DEFAULT NULL,
+  `response_element_letter` varchar(10) DEFAULT NULL,
+  `response_value` text,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`epr_answer_id`),
+  KEY `epr_id` (`epr_id`),
+  CONSTRAINT `epr_fk_1` FOREIGN KEY (`epr_id`) REFERENCES `exam_progress_responses` (`exam_progress_response_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_progress_responses` (
+  `exam_progress_response_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `exam_progress_id` int(11) unsigned NOT NULL,
+  `exam_id` int(11) unsigned NOT NULL,
+  `post_id` int(11) unsigned NOT NULL,
+  `proxy_id` int(11) NOT NULL,
+  `exam_element_id` int(11) unsigned NOT NULL,
+  `epr_order` int(11) NOT NULL,
+  `question_count` int(11) unsigned DEFAULT NULL,
+  `question_type` varchar(20) DEFAULT NULL,
+  `flag_question` int(5) DEFAULT NULL,
+  `strike_out_answers` varchar(100) DEFAULT NULL,
+  `grader_comments` text,
+  `learner_comments` text,
+  `mark_faculty_review` tinyint(1) DEFAULT '0',
+  `score` decimal(10,2) DEFAULT NULL,
+  `regrade` int(11) DEFAULT NULL,
+  `graded_by` bigint(64) DEFAULT NULL,
+  `graded_date` int(11) DEFAULT NULL,
+  `view_date` int(11) DEFAULT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`exam_progress_response_id`),
+  KEY `exam_progress_id` (`exam_progress_id`),
+  KEY `exam_id` (`exam_id`),
+  KEY `post_id` (`post_id`),
+  KEY `aeelement_id` (`exam_element_id`),
+  CONSTRAINT `exam_progresss_responses_fk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`),
+  CONSTRAINT `exam_progresss_responses_fk_2` FOREIGN KEY (`post_id`) REFERENCES `exam_posts` (`post_id`),
+  CONSTRAINT `exam_progresss_responses_fk_3` FOREIGN KEY (`exam_progress_id`) REFERENCES `exam_progress` (`exam_progress_id`),
+  CONSTRAINT `exam_progresss_responses_fk_4` FOREIGN KEY (`exam_element_id`) REFERENCES `exam_elements` (`exam_element_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_answers` (
+  `qanswer_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `question_id` int(11) unsigned NOT NULL,
+  `version_id` int(12) unsigned NOT NULL,
+  `answer_text` text,
+  `answer_rationale` text,
+  `correct` int(1) DEFAULT '0',
+  `weight` varchar(10) DEFAULT '0',
+  `order` int(4) DEFAULT '0',
+  `deleted_date` bigint(64) DEFAULT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`qanswer_id`),
+  KEY `question_id` (`qanswer_id`),
+  KEY `exam_questions_answers_fk_1` (`question_id`),
+  KEY `exam_questions_answers_fk_2` (`version_id`),
+  CONSTRAINT `exam_questions_answers_fk_1` FOREIGN KEY (`question_id`) REFERENCES `exam_questions` (`question_id`),
+  CONSTRAINT `exam_questions_answers_fk_2` FOREIGN KEY (`version_id`) REFERENCES `exam_question_versions` (`version_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_authors` (
+  `eqauthor_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `question_id` int(11) unsigned NOT NULL,
+  `version_id` int(12) unsigned NOT NULL,
+  `author_type` enum('proxy_id','organisation_id','course_id') NOT NULL DEFAULT 'proxy_id',
+  `author_id` int(11) NOT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`eqauthor_id`),
+  KEY `question_id` (`question_id`),
+  KEY `exam_questions_authors_fk_2` (`version_id`),
+  CONSTRAINT `exam_questions_authors_fk_1` FOREIGN KEY (`question_id`) REFERENCES `exam_questions` (`question_id`),
+  CONSTRAINT `exam_questions_authors_fk_2` FOREIGN KEY (`version_id`) REFERENCES `exam_question_versions` (`version_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_bank_folder_authors` (
+  `efauthor_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `folder_id` int(11) unsigned NOT NULL,
+  `author_type` enum('proxy_id','organisation_id','course_id') NOT NULL DEFAULT 'proxy_id',
+  `author_id` int(11) NOT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`efauthor_id`),
+  KEY `folder_id` (`folder_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_bank_folder_organisations` (
+  `folder_org_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `folder_id` int(12) NOT NULL,
+  `organisation_id` int(12) NOT NULL DEFAULT '1',
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`folder_org_id`),
+  KEY `folder_id` (`folder_id`),
+  CONSTRAINT `exam_qbf_org_fk_1` FOREIGN KEY (`folder_id`) REFERENCES `exam_question_bank_folders` (`folder_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_bank_folders` (
+  `folder_id` int(12) NOT NULL AUTO_INCREMENT,
+  `parent_folder_id` int(12) NOT NULL DEFAULT '0',
+  `folder_title` varchar(64) NOT NULL,
+  `folder_description` text,
+  `folder_order` int(10) NOT NULL DEFAULT '0',
+  `image_id` int(10) DEFAULT '1',
+  `organisation_id` int(12) NOT NULL DEFAULT '1',
+  `created_date` bigint(64) NOT NULL DEFAULT '0',
+  `created_by` int(12) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`folder_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_fnb_text` (
+  `fnb_text_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `qanswer_id` int(11) unsigned NOT NULL,
+  `text` text,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`fnb_text_id`),
+  KEY `qanswer_id` (`qanswer_id`),
+  KEY `exam_questions_fnb_text_fk_1` (`qanswer_id`),
+  CONSTRAINT `exam_questions_fnb_text_fk_1` FOREIGN KEY (`qanswer_id`) REFERENCES `exam_question_answers` (`qanswer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_match` (
+  `match_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `version_id` int(12) unsigned NOT NULL,
+  `match_text` text,
+  `order` int(4) DEFAULT '0',
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`match_id`),
+  KEY `exam_questions_match_fk_1` (`version_id`),
+  CONSTRAINT `exam_questions_match_fk_1` FOREIGN KEY (`version_id`) REFERENCES `exam_question_versions` (`version_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_match_correct` (
+  `eqm_correct_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `match_id` int(11) unsigned NOT NULL,
+  `qanswer_id` int(11) unsigned NOT NULL,
+  `correct` int(1) DEFAULT '0',
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`eqm_correct_id`),
+  KEY `exam_questions_match_correct_fk_1` (`match_id`),
+  KEY `exam_questions_match_correct_fk_2` (`qanswer_id`),
+  CONSTRAINT `exam_questions_match_correct_fk_1` FOREIGN KEY (`match_id`) REFERENCES `exam_question_match` (`match_id`),
+  CONSTRAINT `exam_questions_match_correct_fk_2` FOREIGN KEY (`qanswer_id`) REFERENCES `exam_question_answers` (`qanswer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_objectives` (
+  `qobjective_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `question_id` int(11) unsigned NOT NULL,
+  `objective_id` int(11) unsigned NOT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`qobjective_id`),
+  KEY `question_id` (`question_id`),
+  CONSTRAINT `exam_questions_objectives_fk_1` FOREIGN KEY (`question_id`) REFERENCES `exam_questions` (`question_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_version_highlight` (
+  `highlight_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `version_id` int(12) unsigned NOT NULL,
+  `q_order` int(11) DEFAULT NULL,
+  `type` varchar(64) NOT NULL,
+  `question_text` text NOT NULL,
+  `exam_progress_id` int(12) unsigned NOT NULL,
+  `proxy_id` int(12) unsigned NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`highlight_id`),
+  KEY `version_id` (`version_id`),
+  CONSTRAINT `exam_q_v_highlights_fk_1` FOREIGN KEY (`version_id`) REFERENCES `exam_question_versions` (`version_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_question_versions` (
+  `version_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `question_id` int(12) unsigned NOT NULL,
+  `version_count` int(11) NOT NULL DEFAULT '1',
+  `questiontype_id` int(11) unsigned NOT NULL,
+  `question_text` text NOT NULL,
+  `question_description` longtext,
+  `question_rationale` text,
+  `question_correct_text` varchar(2000) DEFAULT NULL,
+  `question_code` varchar(128) DEFAULT '',
+  `grading_scheme` enum('full','partial','penalty') NOT NULL DEFAULT 'partial',
+  `organisation_id` int(11) NOT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  `examsoft_id` varchar(30) DEFAULT NULL,
+  `examsoft_images_added` int(1) DEFAULT '0',
+  `examsoft_flagged` int(1) DEFAULT '0',
+  PRIMARY KEY (`version_id`),
+  KEY `question_id` (`question_id`),
+  KEY `exam_questions_versions_fk_1` (`questiontype_id`),
+  KEY `examsoft_id` (`examsoft_id`),
+  CONSTRAINT `exam_questions_versions_fk_1` FOREIGN KEY (`questiontype_id`) REFERENCES `exam_lu_questiontypes` (`questiontype_id`),
+  CONSTRAINT `exam_questions_versions_fk_2` FOREIGN KEY (`question_id`) REFERENCES `exam_questions` (`question_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_questions` (
+  `question_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `folder_id` int(12) DEFAULT '0',
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`question_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exam_versions` (
+  `exam_version_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `exam_id` int(11) unsigned DEFAULT NULL,
+  `title` varchar(1024) NOT NULL DEFAULT '',
+  `description` text,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`exam_version_id`),
+  KEY `exam_versions_fk_1` (`exam_id`),
+  CONSTRAINT `exam_versions_fk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exams` (
+  `exam_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(11) NOT NULL,
+  `title` varchar(1024) NOT NULL DEFAULT '',
+  `description` text,
+  `display_questions` enum('all','one','page_breaks') DEFAULT 'all',
+  `random` int(1) DEFAULT NULL,
+  `examsoft_exam_id` int(11) DEFAULT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`exam_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `filetypes` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `ext` varchar(8) NOT NULL,
@@ -5135,6 +5936,24 @@ CREATE TABLE `filetypes` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `filetypes` VALUES (1,'pdf','application/pdf','GoogleDocsViewer','PDF Document',0x47494638396110001000E60000660000C0C0C58E8E92828282EB060A666666E07E80D58E93DEDEDFFF6666BF4446D7C9CEFF4B4EB4B4B4E77171A10406C7ADB289898BEFEFF0D5D5D6D80406EB9E9FD28C8FF4292BFE7679A3A3A7FDA9A9990000CCCCCCC28386FEC2C3E6E6E8CFA8ADEEB0B09999998C0002F7F7F7FA7274A51819FF2125E9ADAFE28282EDC1C2ECA7A9707074E9D4D6FF7E80EAA7A8BCBCBFEA9394E8C6C8C2C1C7A50E0FFDBCBEE1E0E3E9E9ECEB8787F40E11ABABACCFCFD4E4060AFF2B2EFFFFFF9C9CA1FF4F51FF9999E98D8EB6B6BAD6D6DCE67778FFCCCCEBB5B59F0607FF8182DFC3C6EAB5B6E9CCCD86868BECE6E7E3E0E2C4C4C5D79396FF7072FF7A7CA40608BDC5C5E6DEE6FF292CA5A5ADE78787EBC2C4E6D6DEFF0F12FF333300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F9040514003E002C00000000100010000007D1803E823E0D038687880D833E4424123750433F933F11438B135A2D1F1105029D052C8A833B28595B2219053F03194D97A43732421308501F300B10338B1C1F372B1547472F450620508B3BBF37381231474C4A3BC9831C361F1221152A121F44D4BD0836374E0E373708131C018B01B53636291F36441C33300A26FB343454541B460058176048830457929C703105480902144648FAD10041822E498260E08241C3051E1B74F820B1C307060609A40049D2C305831C48B09014E4A1668D2807721EB0D041C78445A43870D841B4D6A240003B,'0'),(2,'gif','image/gif','Image','GIF Image',0x47494638396110001000E600000E2345CBD6DCB87F659999998282829B705DF0F0F0B1B8DC8098CFB9B9BF4F484C5D85B7C3B9AD4E71C11D325F94B7FC8C8B8B435789B5A48AFFFFFF423637666B7A909AB3DEDEDECCCCCC7A9CF26F8EDCA48868706663B5B5B5B19C83AEAEAEF7F7F7779CE863749CAEBEE1C0C2C4291D207C7678C6C7D477829DA8A8A8B5ADAD8AACF7E8E8E8AFA28C334268A0A5B1BDBDBDC5C9E59999CC644E506073ACD6D6D6C1BBB4CFBDA799BBF6A5A5ADB8BFC94C3E3CDBDDE9C5C5C5BDBDC57D7D7DC5D1E3A7A1B400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F90405140013002C00000000100010000007AD8013131D048586871D828235822C1F189082208C8A9403171D293F1720938A13943D293D1D10189D948B9D061D2C9DAFA9A09D303C1D3006B806B135201735070A101F3D2C2C189F35AC0B15251C26272991953D230D2E053B15323109898A1824192B33022816001124309F904038144121340E2F1F09EC352D12010F191A22033E5C60878181870D3774209800E2D8A71E357A48EC61E343C34F8220D6A80109C687588A2E881C596320C640003B,'0'),(3,'jpg','image/jpeg','Image','JPEG Image',0x47494638396110001000D500000E2345CCCCCCAEAEAE8C8C8C435789DEDEDE7066636F8EDCB8BFC9F7F7F7828282AEBEE1334268909AB3B19C839B705D8AACF763749CC1BCB41D325FF0F0F0C5D1E34F484C5D85B74236379999994E71C14C3E3CA48868779CE8C3B9ADFFFFFF666B7A291D20B5B5B5C6C7D49999CCD6D6D677829D8098CF7C7678C5C5C5B87F6599BBF6E7E7E7A0A5B1A3A3A3644E50AFA28C6073ACC5C9E594B7FCCBD6DCCFBDA77A9CF2C0C1C5B1B8DCDBDDE9BDBDBDB5B5BDB5ADADA7A1B4B5A48AC0C2C421F9040514001F002C00000000100010000006A3C0CF47A4281A8F22A1B044F9293F8968A2F4A46606898C2EE5CA4CABD981382508B0BECAD23435F8E928BA00859A8EEA72A237654F5F260A2538160302292C2C01551422172021062823658969290B1A0C0F1B2024323A494A013F36102F2A260D0004373A4F0101152B183D1D31132D02A0420125303E3433360711190205AE011E0E1C35082750944A292529D529120209D1D225DDAF3A027D4F05E4E525C74F1F41003B,'0'),(4,'zip','application/x-zip-compressed',NULL,'Zip File',0x47494638396110001000C400001C1C1CE6E6E6CCCCCCB5B6B58D8D8D7B7B7B666666F7F7F73F3F3FD6D6D6ADADADFFFFFFEFEFEF5D5D5DC5C5C5DDDDDD999999333333757575BDBDBD85858599999900000000000000000000000000000000000000000000000000000000000021F9040514000B002C0000000010001000000583E0B20853699E8E2826ABE24C8FCACAE2434C94F41CC7BC2E87470142904C78BE058BC76C2613CCC4C4C188AA943CC6D111600AAED003C3711074198CAF4A901510B8E8805A2440A713E6803EB5B6530E0D7A0F090357750C011405080F130A8F867A898B09109601575C7A8A080203010C570B9A89040D8EA1A202AB020611009FA221003B,'0'),(5,'exe','application/octet-stream',NULL,'Windows Executable',0x47494638396110001000B30000999999EFEFEFDEDEDECCCCCCB5B5B5FFFFFFF7F7F7E6E6E6D5D5D5BDBDBD99999900000000000000000000000000000021F90405140005002C0000000010001000000453B09404AABD494AA1BBE69FA71906B879646A1660EA1A4827BC6FFCD169606F6FE007871D8BF4FB1D0E830EA2681420929A2533F8CC4481C7E3A0425821B24701A100F37CB34E42D91C760E08420D58403F8822003B,'0'),(6,'html','text/html',NULL,'HTML Document',0x47494638396110001000E60000052E49E6E6E6BBC3AD7D7D7D80BF35669933D6D6D6FFFFFF45834280A256CCCCCCA2A2A2BDBDBDBDEE744882578FE32EEFEFEF21564E6FBB3A9999998DDE2C9999991F4D617676768DB756DEDEDEB5B5B571A82E9EE438F7F7F797CF4039724A7CA08BC4C4C4184D54D3DBCA87B16A29614484D6317BB834518845ABABAB5EA338ABE74C5B886194BD5907385888AD5A225A5725576CB5C5AD99E333C2CBB588C739487F3991E12F7DB83DC6CEBE64AA3874AB317FBE35BFC8B25F9C3C82A55894E6318EB8588CAD5A00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F904041400FF002C00000000100010000007A98007070C138586870C828219821D190A0A191D93068A078C10022D1E1E2D02101D958A9234381F252A37353DA196191041083036003A0F1810A28B10043E310E22110F3C01BA9710271C24202C2E2627C5AE1D2F142B0D0D16122F012196061D233B14333328053906898A061010233F1B1B09E82129DEEDF8B9290BFCF701FFFF180CB830C1980180011ED983A0C0D28183FF1E3158D0CA2144892952185B074941888F011C1E0804003B,'0'),(7,'mpg','video/mpeg',NULL,'MPEG Movie',0x47494638396110001000D50000737373C7D3DCAEB7C13E86C4E6E6E69999995792C5C1CCD4F7F7F74A99D899B9D0778EA7D8DADC7494B1298BE0B5C2CBADADAD8585854DADEDBEBEBE85A7C0FFFFFF8C8C8C3292E3AEC5D5D6D6D6A4A4A43D93D8CCCCCCBEC6CDC3C3C34295DEA7BFD24B9BE472A0C22C94ED579BCEE0E2E4469DDF8CADC9D1D4D8B6B6B6C5C9CD3E8BCF4593CBA9BDCDD2D7DBDEDEDEEAEAEB4A9CDEB5C5D64AADF7A9C6DCBDC9D36699CCD0D6DB00000000000000000000000000000000000000000000000021F90405140015002C00000000100010000006A1C04A4513291A8F1AA19091617038150E24038165941506240228400A298BE775555221DD8845C32E95851902624E9FBBB199179D202FC198782A08253617172426341E28782508061B201809210C4E7819280E357C2E120F4F781E1D232807142F262D29504A280C04262204010D1F2A2A13584F3018332C032B0B101A8C4A1C137C370A27021508C6C7710425254ED058424FD52F4C136F582FE2E24C2FD91541003B,'0'),(8,'pps','application/vnd.ms-powerpoint','GoogleDocsViewer','Microsoft PowerPoint',0x47494638396110001000D50000C35D0478AFE084A4CC9FA1A5838484F4F3EFBF8B5DDE8A8CE8EBEED4C9C0F3B076E4E2E0E5A971CCCCCCDEDEDED2D590FF7A04BFBFBFD5D5D5FCA151ADB2B5D5C0ADB5BDBDA2DDF5FF9933FFFFFFF67908BB7F92F7D1A9E6E0C9FE860EF1BF92DDCFC3F5B67DDB95A4C6C4C1DCE889F6F6F6CC8A52B9C3CFFFCC99DCCDBFF2B27AFFB655EDEBEAFF7C08E7E7E7A7AAAEFFB66AEBE3BFFF8C10EFEFEFB5B5B5FF8207C5BDBDE1D3C5F9BE7EECAE76F7F7EFD7CBC0A6E1FCC7C5C300000000000021F90405140019002C0000000010001000000699C08C70482C661C92A472996C3490C4128B55721493999236237115AC5A2D56DB884446E888233C2ECD662781A05178CF4AC9F08C15E05D366E335E0D1281770F240722192C2E0B2C84522C331905311D25192E4A910808161414032FA1140404143309381F0A21AF0C392A39060B8F1915181C13102DBEBE1A000E2C42152B2830351ECBCB1A26944233292937D520D3293B0546DCDDDE4641003B,'0'),(9,'ppt','application/vnd.ms-powerpoint','GoogleDocsViewer','Microsoft PowerPoint',0x47494638396110001000E60000C35D048EBCE294AAC5ADADAD858585EBE9E6E4E1DFBADDF3BE8A5CD0D4D8EFAF77B1CDD6DFCEBDA1BDDEFF7A04EAAD75FFFFFFDEDEDEFCA151A2B5CBF2BF92A1D6F5FF9933D5C0ADF67908B7D5DDF7F7F7C9F5FFCCCCCC8DACD6FE860EF9BE7EB3C5CEF7D1A9E6E6E6D6D8DFD7C8BBA0BDDF98BAD2D6D6D6CED6DEB5CEDEA4C2D491BFE4EFEFEFDEE0E3EFB078FFB66AE9EAEBCC8A52D2F1FCFFCC99FFB655ADBFD0FF7C08FF8C1094B5DD9CB4C9E4E3E1EFB57BDED6D6FF8207EFB573DEE6E6BDDEF7BFCCD394ADD6BBC3CF9CBDD795C6E8E9EBEFAAC0D9FFFFFF00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F90405140048002C00000000100010000007AA804882838485481109898A091C8D8E1C11271093101A1197981A1A1027929A1A2C8B892C2C1A9D95229D20290B193241A41A89953A09233944262A0735B1899A11071B1D2B0102471330301A1C27A011451522D3053AD63A301C09CF1D0DDE384322919DDA1A462D22CA3022E81C0404032C241F140A2EF7F80F0806063048171642487060A360410C0022F8FB4763C68B1E1E2246C41083C520790C326624C19184454320438A2C1408003B,'0'),(10,'pptx','application/vnd.openxmlformats-officedocument.presentationml.presentation','GoogleDocsViewer','Microsoft PowerPoint',0x47494638396110001000E60000C35D048EBCE294AAC5ADADAD858585EBE9E6E4E1DFBADDF3BE8A5CD0D4D8EFAF77B1CDD6DFCEBDA1BDDEFF7A04EAAD75FFFFFFDEDEDEFCA151A2B5CBF2BF92A1D6F5FF9933D5C0ADF67908B7D5DDF7F7F7C9F5FFCCCCCC8DACD6FE860EF9BE7EB3C5CEF7D1A9E6E6E6D6D8DFD7C8BBA0BDDF98BAD2D6D6D6CED6DEB5CEDEA4C2D491BFE4EFEFEFDEE0E3EFB078FFB66AE9EAEBCC8A52D2F1FCFFCC99FFB655ADBFD0FF7C08FF8C1094B5DD9CB4C9E4E3E1EFB57BDED6D6FF8207EFB573DEE6E6BDDEF7BFCCD394ADD6BBC3CF9CBDD795C6E8E9EBEFAAC0D9FFFFFF00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F90405140048002C00000000100010000007AA804882838485481109898A091C8D8E1C11271093101A1197981A1A1027929A1A2C8B892C2C1A9D95229D20290B193241A41A89953A09233944262A0735B1899A11071B1D2B0102471330301A1C27A011451522D3053AD63A301C09CF1D0DDE384322919DDA1A462D22CA3022E81C0404032C241F140A2EF7F80F0806063048171642487060A360410C0022F8FB4763C68B1E1E2246C41083C520790C326624C19184454320438A2C1408003B,'0'),(11,'png','image/png','Image','PNG Image',0x47494638396110001000E600000E2345CCCCCCAEAEAEA48868435789DEDEDE6666666F8EDCB9B9BF848484F7F7F78AACF7334268909AB39B705DA2A2A263749CB8BFC91D325FEFEFEFC5D1E38C8B8BAEBEE14F484C5D85B7C3B9AD4236374E71C14C3E3C779CE8B5B5B5666B7AAFA28CFFFFFF291D20C6C7D49999CCD6D6D6999999B19C8377829DE8E9E98098CF7C7678B87F65C0C2C499BBF6A0A5B1644E506073ACC5C9E5C1BBB4BDBDBD70666394B7FCCBD6DCCFBDA77A9CF2B1B8DCDBDDE9B5ADADC5C5C4A5A5ADBDBDC5B5A48AA7A1B400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F90405140021002C00000000100010000007AD8021211E098586871E828225210A8C253D131E3D8E8A218C2915010935022508958A250A99020908250F01A18B0A0A9229AEB28CA2AE343B1E3413BB13B4AD05253A1715023D292901962592181F22352B233E01C9A23D161B0C0E1C1F243208898A012D390B302C280D00042D3496D4142E1A411D31122F0208EF2520403736390E403021A0C0BB00194E0CC0114145A36A8A7A40EA4171860005102396D8488D86274B8A0A881C59C220C840003B,'0'),(12,'doc','application/msword','GoogleDocsViewer','Microsoft Word',0x47494638396110001000D500004476CADEDEDECCCCCCAFB8C784A6DAEAECEE92B8F5BDCBDFA5A5A56095EEF6F4F2D1D8E0A2B2CFE2E5E9548CEAADC2E6D6D6D6FFFFFFCFD7E37A9FD98BAFEFC1C1C1ADC5DEBCCFEAE8F1FD7698D4D6DEE9EBEAE7ABC3EFC2D0E4EBEBE9DFE0E3B5B5B5E8EAEC8FA5CD548DEDD5DAE1AAAAAABAC9DACAD7EBE6E5E2F0EFEFC5CEDEC2C2C293B0E3B3C7EBB3C7E4457AD29DBDF4E7E6E5E6DEDEF7EFEFF6F6F6D7D8DBC8D4E67B9CDEC0D1EE598FEE588CE8B5C5DEAEC8F4CFDBEDC8D3E100000021F90405140011002C00000000100010000006AAC048C42380188F479450B8593A9710A7875628A4141E4F2A458B2E3D9154AF852BE02E85AE73430B3D4E05DFC3A6517899B4C6A3B1D93C34282977111B0A31361D31312E24280583858A1F1D0B2E0B1F1B83313431241F311F07240128024E9B1F360B2828070B1001A64B81281F1224123E35462B4E1F0501C101BB20082515BE05317D1B28100808204F2C061C1423D82F0C1F4F112C18303C09393A0003DD112E260413ED1922DD41003B,'0'),(13,'docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document','GoogleDocsViewer','Microsoft Word',0x47494638396110001000D500004476CADEDEDECCCCCCAFB8C784A6DAEAECEE92B8F5BDCBDFA5A5A56095EEF6F4F2D1D8E0A2B2CFE2E5E9548CEAADC2E6D6D6D6FFFFFFCFD7E37A9FD98BAFEFC1C1C1ADC5DEBCCFEAE8F1FD7698D4D6DEE9EBEAE7ABC3EFC2D0E4EBEBE9DFE0E3B5B5B5E8EAEC8FA5CD548DEDD5DAE1AAAAAABAC9DACAD7EBE6E5E2F0EFEFC5CEDEC2C2C293B0E3B3C7EBB3C7E4457AD29DBDF4E7E6E5E6DEDEF7EFEFF6F6F6D7D8DBC8D4E67B9CDEC0D1EE598FEE588CE8B5C5DEAEC8F4CFDBEDC8D3E100000021F90405140011002C00000000100010000006AAC048C42380188F479450B8593A9710A7875628A4141E4F2A458B2E3D9154AF852BE02E85AE73430B3D4E05DFC3A6517899B4C6A3B1D93C34282977111B0A31361D31312E24280583858A1F1D0B2E0B1F1B83313431241F311F07240128024E9B1F360B2828070B1001A64B81281F1224123E35462B4E1F0501C101BB20082515BE05317D1B28100808204F2C061C1423D82F0C1F4F112C18303C09393A0003DD112E260413ED1922DD41003B,'0'),(14,'xls','application/vnd.ms-excel','GoogleDocsViewer','Microsoft Excel',0x47494638396110001000D50000079F04C0F2BFD6D6D6B5B5B574D8714FC14D49B645F6F6F6A7A7A7EEE9EE2DC52ACCCCCCE5E5E566CC66DEDDDEFFFFFF9AD799A4C0A40ABD048CC18B60D55CBABABA4ACE4771BA6FA8D4A7EFEFEFE6DEE610BE0AC5C5C5AFAFAFF4F4FF4BBF4853C24F66CC66EFEFF70BBB0606A60232C52C00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F9040514000F002C000000001000100000067AC0C783B110188F478650A85C3A850267E2E0701C32D7EB23BA641C8C592C96CBFC0AAE99F4D8E9058BB3E4A1390C6767DCE1BBDDF838F8FD090B760B1C071E1E62447B461C480E1C76559202151D1D904B0E19099C091A020808034F0D140A0A12A924134D4E0D0104161BB300114F42101805051F1F0617B741003B,'0'),(15,'xls','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','GoogleDocsViewer','Microsoft Excel',0x47494638396110001000D50000079F04C0F2BFD6D6D6B5B5B574D8714FC14D49B645F6F6F6A7A7A7EEE9EE2DC52ACCCCCCE5E5E566CC66DEDDDEFFFFFF9AD799A4C0A40ABD048CC18B60D55CBABABA4ACE4771BA6FA8D4A7EFEFEFE6DEE610BE0AC5C5C5AFAFAFF4F4FF4BBF4853C24F66CC66EFEFF70BBB0606A60232C52C00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F9040514000F002C000000001000100000067AC0C783B110188F478650A85C3A850267E2E0701C32D7EB23BA641C8C592C96CBFC0AAE99F4D8E9058BB3E4A1390C6767DCE1BBDDF838F8FD090B760B1C071E1E62447B461C480E1C76559202151D1D904B0E19099C091A020808034F0D140A0A12A924134D4E0D0104161BB300114F42101805051F1F0617B741003B,'0'),(16,'swf','application/x-shockwave-flash',NULL,'Macromedia Flash',0x47494638396110001000D50000032F51D4D6DEB5B8BC8C99A5808E9C6E8397EAEDEF557790C4CAD09CA9B7F7F7F7DFE3E67A8B9B33536D949FAED0D4D7999999C1C5C97676760B4568FFFFFFABABABA2A2A2B5BDC4DEDEDE1C44615B87A3AEB2B59999999AA5B1E4E7EB8A96A3BDBDBDD7DCE2CBD1D9D6D6D659788F7D7D7DC4C4C410486C9BA6B2DFE0E6E6E6E6CCCCCCEFEFEF8493A0B3BFCAB5B5B5B8BCC0949CA596A1AED8DCE3C4C8CB00000000000000000000000000000000000000000000000000000000000000000021F90405140014002C00000000100010000006A0400A0504291A8F20A110235460562B8C62CA5432151BD9E522DBB09C4A8A1446282042AA81006C65C52E8DCC6CFE618DC218162A6500905C33322A776D1D0614052709330E2A0F780A2D210A0B131A01040B34900F2D221E09070434230261232C2C9D0C0C04110F2615A7A9B4761B16B8A706BB062A2A2025121084420FBEBE4FB20A2B6114C6C82B20160A8FCD0F0B0B4F201515C4610F502B26E32ACD1441003B,'0'),(17,'txt','text/plain','GoogleDocsViewer','Plain Text File',0x47494638396110001000D50000513D32D8D1CDC5C5C5AFAEA86C7879DEDEDEF0F0F0694E468799BBAFB6C0888173AAA8A5F7F7F99DB4DECCCCCC474837828282945147E6E6E6999999D0A183B2B2B2E2D7D08D423A575349989685FFFFFFBDBDBDD6D6D6504C2EA5B5D15E443BB4B0A07B7B7B5E39308F8578D4D7DCDAE1E4474A424F4231D6D6CEADADADE3D6CE00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F9040514001A002C0000000010001000000691408DA6E010188F488650C3590A194A0DC36058720C28C9C620585C22A04255C82998CD8391E860428D99857219A3F89C3A8E3747E2E0EC1F190026046E56447D051E09080D0D247A7C051B657D1C026286667E1B95027986971C95A20E5BA0A205461B1B15157A1C1B4802132110154E1C01010EA5AB137C4E4C16142571BC0B4DC1572A121271021BC14206717ED6D241003B,'0'),(18,'rtf','text/richtext','GoogleDocsViewer','Rich Text File',0x47494638396110001000D50000513D32D8D1CDC5C5C5AFAEA86C7879DEDEDEF0F0F0694E468799BBAFB6C0888173AAA8A5F7F7F99DB4DECCCCCC474837828282945147E6E6E6999999D0A183B2B2B2E2D7D08D423A575349989685FFFFFFBDBDBDD6D6D6504C2EA5B5D15E443BB4B0A07B7B7B5E39308F8578D4D7DCDAE1E4474A424F4231D6D6CEADADADE3D6CE00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F9040514001A002C0000000010001000000691408DA6E010188F488650C3590A194A0DC36058720C28C9C620585C22A04255C82998CD8391E860428D99857219A3F89C3A8E3747E2E0EC1F190026046E56447D051E09080D0D247A7C051B657D1C026286667E1B95027986971C95A20E5BA0A205461B1B15157A1C1B4802132110154E1C01010EA5AB137C4E4C16142571BC0B4DC1572A121271021BC14206717ED6D241003B,'0'),(19,'mp3','audio/x-mp3',NULL,'MP3 Audio',0x47494638396110001000D500004B914FD5CFC8A5B1B59999998C8C8CE1E1E3B1CCD07E7E7EEFEFEF6DB36B87B3889FB397CCCCCCDEDDDEF7F7F7BDBDBDB4CDF3A8B8AFEBE4B383DE738AA98B66996680A381BCBFD7A5A5A5C6DDB6FFFFFFB5B6B591BA959CC0A1D6D6D6B6C5B9C4C4C44FA752E6E6E67AB769B4DBCAD1D2D8E9E1D6E7E8ECADADAD8BB68B61A15C93AF91B5B6BD8CB4919CB2A096C8929EC4A355A15A00000000000000000000000000000000000000000000000000000000000000000000000000000000000021F9040514001A002C00000000100010000006A3408DE681291A8F0FA1D0C3F4141A1B28A2C1506A3C070C6AA0C5340884A4D213DE0E508F8D8800B27A340E84071460201C8E92DBD1508D4C122F02777A630E2C2D212B0B13092508556327250E1F140C2E1505905625270D2711160F0E29222291427617102429770A22056D4A760D0619310909000D0D62AA27C20D1D301C150C0F28560CA7CE051E03D205CCCF4F0C6A08561A20A74F0D1ECADADB0CE5E66927DB41003B,'0'),(20,'mov','video/mpeg',NULL,'MPEG Movie',0x47494638396110001000D50000666666C7D3DCAEB7C13E86C4E6E6E69999995792C5C1CCD4F7F7F74A99D899B9D0778EA77494B1D8DADC298BE0A7A7A7B5C2CB828282C3C3C34DADED85A7C08B8B8BFFFFFF3292E3AEC5D5D6D6D6BEBEBE3D93D8ADADADCCCCCCBEC6CDEEEEEE4295DEA7BFD24B9BE472A0C22C94ED579BCEE0E2E4469DDF8CADC9D1D4D8B5B5B5C5C9CD3E8BCF4593CBA9BDCDD2D7DBDEDEDEEAEAEB4A9CDEB5C5D64AADF7A9C6DCBDC9D36699CCD0D6DB00000000000000000000000000000000000000000021F90405140016002C00000000100010000006A3408BE511291A8F0FA1B0618A3554A94F27D3E148949646A5D8A970228F422183CD00C4E24A2722EE940988B83C6E222B33303901DE6CD885192B08263717172527351229652608061B211809220D0D6E7719290E367B2F13101D9880121E2429071430272E2AA316290D04272304010C202B2B1A58A23118342D032C0B0F0F8C4A1D1A7B380A28021608C8C9197B262697D25842A2D7307E1A7F5830E4E47E30DB1641003B,'0'),(21,'pdf','application/pdf','GoogleDocsViewer','PDF Document',0x47494638396110001000E60000000000FFFFFFFFA9AAFBA8A9F8A6A7F5A6A7FFAFB0FFB2B3FFB3B4FBB2B3FFBEBFDFA8A9D6A3A4FFCBCCFDCCCDFFCFD0FECECFFFD1D2F1A4A6FFBFC1F7D8D9F1D8D9EFD6D7F8DFE0F7DFE0FEE7E8F8E9EAF0D6D8F7ECEDEBE2E3F7EFF0EEE0E2F4E9EBF1ECEEF6F0F3F8F6F7DFDFE2F0F0F2E9E9EBE8E8EAD6D6D8D3D3D5CBCBCDF9F9FAF7F7F8F6F6F7F4F4F5F3F3F4EEEEEFE7E7E8E5E5E6DEDEDFDCDCDDD4D4D5FFB6B6DEA6A6DAA3A3DCA6A6DFACACFFC8C8E8BCBCC8A3A3FFD1D1F7CCCCF6CECEFFDADAF8D4D4F7D4D4F5D2D2F4D1D1F7D6D6FEE0E0F8DCDCE9D3D3F9E3E3FEE9E9F7E2E2F8E5E5F8E9E9F7EBEBFCFCFCF0F0F0ECECECEAEAEAE4E4E4E1E1E1DADADAD2D2D2C8C8C8FFFFFF00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F90401000059002C00000000100010000007D180018201545786878854830125502B2C533234933435328B511A1E2D3558289D582A8A83304C43225633583457332997A42C4F46512F532D31211D268B522D2C17484D4D1840451F538B30BF2C422B144D1C2030C983522E2D2B4A484E2B2D25D4BD2F2E2C233F2C2C2F5152278B27B52E2E442D2E255226313C3AFB0B0B37373818F458774206951D072218F0F160820302121848A241E5C50E1B1182401000E148820238AA048002230004053B1A4C8880C087820139489014B4A466860A1B726EB090A44A9445A4A4488141B4D6A240003B,'1'),(22,'gif','image/gif','Image','image/gif',0x47494638396110001000E60000000000FFFFFFC7BFC0BBB6B7B2ADAFBFBDBFDFDDE4DADAECEBEBEFE6E6E8E3E5F2EAECF5F2F3F7C6CDE1D7DAE3CBD6F2BBC2D4C7CDDCB6BBC8CED2DCC8CACFBFCCE9CFDCFAD5E1FCD1DAEECEDCF7D9E5FEADB5C5E2E8F4DDDFE3DAE6FCEAEEF5A8B0BCE5E8ECC5D3E5E8E9EAECF0F2E2DDD6E9E6E2DED4C8E3DCD3E5DED5EEE7DFE9E6E4E5D1C8DBCBC5CBC8C7BFB9B9D0CECED6D5D5FCFCFCFAFAFAF7F7F7F3F3F3F0F0F0ECECECEAEAEAE7E7E7E5E5E5E2E2E2E0E0E0DADADAD2D2D2D0D0D0FFFFFF00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F90401000040002C00000000100010000007AD8001013A3E8586873A82823682343B379082328C8A943D353A3C3F3532938A0194383C383A31379D948B9D333A349DAFA9A09D390C3A3933B833B1363235360A05313B383434379F36AC2214042E30083C9195381C15122D2F14070B09898A37231617022C130E201023399F901F1E0306190D1B1D3B09EC362529241A160F113D76D46077C3048A132A42600820E3D8271C367048C4B16247C34F8220DAB00129C78E588A6A881C696320C640003B,'1'),(23,'ppt','application/vnd.ms-powerpoint','GoogleDocsViewer','Microsoft PowerPoint',0x47494638396110001000D50000000000FFFFFFF3D5D6F2D9DEE6D1D8E2E3E5DFE0E2DCDDDFE6E9EED3DEECF7F8F9CEE2F4DFF4FEDDF3FBE5E7E7F2F7D4EFF0D7FBFBF9F8F8F7F5F5F4F8F5E8F6F4ECFFE5C2EFECE8FDE8D1FFD2A6FED3A8FFDAB6FFE5CAFCEEE0F4EFEAF3EEE9F2EDE8EBEAE9FFCFA4FFD0A6FCCFA6E9C5A4FBE5D0F8E2CEF5E0CCFFECDAFAE8D8FEDDC1ECD5C1FBE3CEFAE3CFE8D5C5F0E8E2F1ECE8FCFCFCF9F9F9F7F7F7F3F3F3F0F0F0ECECECE8E8E8D3D3D3FFFFFF00000000000000000000000000000021F9040100003A002C0000000010001000000699C08070482C066AB6A47299BCDD9044994422AB159301993660A345AC5A2D567BC3E142685C2D3C96CD668844E21679CF64C9F04CB26034086E335E37368177100F0203011234131284521233011114153201344A910A0A0E05050706A1053939053317182A2D26AF28272E272F138F01301B1D2B2223BEBE24253512423016291C191ACBCB242C94423320201ED51FD320311146DCDDDE4641003B,'1'),(24,'jpg','image/jpeg','Image','JPEG Image',0x47494638396110001000D50000000000FFFFFFC7BFC0BBB6B7B2ADAFBFBDBFDFDDE4DADAECEBEBEFE3E5F2EAECF5F2F3F7C6CDE1D7DAE3CBD6F2BBC2D4C7CDDCB6BBC8CED2DCC8CACFBFCCE9CFDCFAD5E1FCD1DAEECEDCF7D9E5FEADB5C5E2E8F4DDDFE3DAE6FCEAEEF5A8B0BCE5E8ECC5D3E5E8E9EAECF0F2E9E7E4E2DDD6E9E6E2DED4C8E3DCD3E5DED5EEE7DFE5D1C8DBCBC5CBC8C7BFB9B9D0CECEFCFCFCFAFAFAF7F7F7F3F3F3F0F0F0ECECECEAEAEAE7E7E7E5E5E5E2E2E2DEDEDEDADADAD6D6D6D2D2D2FFFFFF00000021F9040100003E002C00000000100010000006A2C04000D72B1A8F38A19016132903B0288CF6A4EE78B0DDCDA6DB4DAB599ED896ABC9BE4ADAD4C613DD62B75A8C9A8EDE16B8776C4F5FC2663409053C39363232355531382113042D2F08658969361B14112C2E13070A37494A35221516022B120D1F0F6E4F35351E1D0306180C1A1C39A042353425292319150E103B3933AD352628272A201750944A363436D436243930D0D134DCAE37397D4F33E3E434C64F0141003B,'1'),(25,'zip','application/x-zip-compressed',NULL,'Zip File',0x47494638396110001000C40000000000FFFFFFFCFCFCF9F9F9F6F6F6F3F3F3F0F0F0ECECECEAEAEAE7E7E7E5E5E5E2E2E2DADADAD6D6D6D3D3D3D0D0D0CDCDCDC8C8C8C5C5C5BABABAB6B6B6ADADADFFFFFF00000000000000000000000000000000000000000000000000000021F90401000016002C000000001000100000058360101C49699E88281AEB822485CACA62D1240E5408C2BC0682C283D1802478BE008BC76C260D4C43023188AA94BCC11141601EAE50C1002138740783AFEA903D34B868825A7440A70D66823EB5B63B04127A05060A577503040E0F1305090B8F867A898B060C9604575C7A8A13070A040357019A890D128EA1A207AB071114159FA221003B,'1'),(26,'zip','application/zip',NULL,'Zip File',0x47494638396110001000C400001C1C1CE6E6E6CCCCCCB5B6B58D8D8D7B7B7B666666F7F7F73F3F3FD6D6D6ADADADFFFFFFEFEFEF5D5D5DC5C5C5DDDDDD999999333333757575BDBDBD85858599999900000000000000000000000000000000000000000000000000000000000021F9040514000B002C0000000010001000000583E0B20853699E8E2826ABE24C8FCACAE2434C94F41CC7BC2E87470142904C78BE058BC76C2613CCC4C4C188AA943CC6D111600AAED003C3711074198CAF4A901510B8E8805A2440A713E6803EB5B6530E0D7A0F090357750C011405080F130A8F867A898B09109601575C7A8A080203010C570B9A89040D8EA1A202AB020611009FA221003B,'0'),(27,'exe','application/octet-stream',NULL,'Windows Executable',0x47494638396110001000B30000000000FFFFFFFCFCFCF9F9F9F6F6F6F3F3F3F0F0F0ECECECE7E7E7E5E5E5DADADAFFFFFF00000000000000000000000021F9040100000B002C00000000100010000004533004A4AABD48CAA2BBE69FA70902B879646A0660EA0A4657BC6FFCD1E9606FEFE00F841D8BF4FB1108878EA1682C18929A2533F8CC4481C7E3A1925819B2C7422200F37CB3CE44D91C761E12420DB840278822003B,'1'),(28,'html','text/html',NULL,'HTML Document',0x47494638396110001000D50000000000FFFFFFA5B4BEA6B8C3B0C2CAAFBFC6ACBFC1AFC4C2AFC2BFB2C6BCD0DDD5B8CCBEBDD2C2C4D4C6BCD3BBBDD1B8C1D4BCC5DEB8C5DCB9C7E0B8D4E3CACBE6B8D3F0B5D0E5B9C8DAB6EFF2ECEBEEE8D7F5B4D1E8B6CDE1B5CCE0B4D4E2C4D2DFC3D7F4B4D6F3B3D4EBB8D0E5B6D6E5C3D1DDC2DAF5B6DCF5B8E7F9CDD6E5C2E9ECE5E6E9E2E1F7BFDAEEBAD9E7C3E8EBE3FCFCFCF9F9F9F6F6F6F3F3F3F0F0F0ECECECEAEAEAE7E7E7E1E1E1DDDDDDDADADAD0D0D0CECECEFFFFFF00000021F9040100003E002C000000001000100000069CC04000B72B1A8F38A190268CD16C365A6C5A53069832D6CBE57AB164B1AA52BABA2C1291D00816B6D26425C7E121986C5432F152C691101806081B1C337A57322428140A0D031624856E311F222D292905151F3337563531191D22272710181A35494A35323219201E1E26A837399EADB879393ABCB733BFBF383C3D3B8635C0334FB632365601C7BF4F383A6DCED0D2393986AB503637DF33CE0141003B,'1'),(29,'mpg','video/mpeg',NULL,'MPEG Movie',0x47494638396110001000D50000000000FFFFFFF7F7F8EEEFF1E2E5E9CED6DFC8DAECE9ECEFEEF0F2B2D5F4BEDBF5B9D5EEB9D3EAB3D9F8B5D8F5B9D8F1BBD9F3BEDAF1C2D8EACDD9E3D6E2ECE0E7EDBCDCF4C2DBEED3DFE8DFE8EFE2EAF0EBEFF2E5E9ECBEE2FCBCD8ECCCDDE9DAE6EEE8EBEDBFE2F8E0EBF2E7ECEFEFF1F2EAECEDF4F5F5F1F2F2FCFCFCF9F9F9F6F6F6F3F3F3F0F0F0ECECECE9E9E9E8E8E8E5E5E5E2E2E2DFDFDFDADADAD5D5D5D2D2D2C8C8C8FFFFFF00000000000000000000000000000000000000000021F90401000038002C00000000100010000006A3C04060662B1A8F33A1107512A0620395ABE592BD940154ADE8AAC96C331AAD856DDDC4E29ACB26769557A9B83C7E222B5B2CF90ADE44D9852D262927060E0E1716232F03652729120F191A110A28286E772D0309247B25221C2E98802F210D0307182C161531A30103282B161F2B1B131026263058A2021A1D1E0C0B0533338C4A2E307B082014040129C8C92D7B272797D25842A2D72C7E307F582CE4E47E2CDB0141003B,'1'),(30,'pps','application/vnd.ms-powerpoint','GoogleDocsViewer','Microsoft PowerPoint',0x47494638396110001000D50000000000FFFFFFF3D5D6F2D9DEE6D1D8E2E3E5DFE0E2DCDDDFE6E9EED3DEECF7F8F9CEE2F4DFF4FEDDF3FBE5E7E7F2F7D4EFF0D7FBFBF9F8F8F7F5F5F4F8F5E8F6F4ECFFE5C2EFECE8FDE8D1FFD2A6FED3A8FFDAB6FFE5CAFCEEE0F4EFEAF3EEE9F2EDE8EBEAE9FFCFA4FFD0A6FCCFA6E9C5A4FBE5D0F8E2CEF5E0CCFFECDAFAE8D8FEDDC1ECD5C1FBE3CEFAE3CFE8D5C5F0E8E2F1ECE8FCFCFCF9F9F9F7F7F7F3F3F3F0F0F0ECECECE8E8E8D3D3D3FFFFFF00000000000000000000000000000021F9040100003A002C0000000010001000000699C08070482C066AB6A47299BCDD9044994422AB159301993660A345AC5A2D567BC3E142685C2D3C96CD668844E21679CF64C9F04CB26034086E335E37368177100F0203011234131284521233011114153201344A910A0A0E05050706A1053939053317182A2D26AF28272E272F138F01301B1D2B2223BEBE24253512423016291C191ACBCB242C94423320201ED51FD320311146DCDDDE4641003B,'1'),(31,'ppt','application/vnd.ms-powerpoint','GoogleDocsViewer','Microsoft PowerPoint',0x47494638396110001000D50000000000FFFFFFF3D5D6F2D9DEE6D1D8E2E3E5DFE0E2DCDDDFE6E9EED3DEECF7F8F9CEE2F4DFF4FEDDF3FBE5E7E7F2F7D4EFF0D7FBFBF9F8F8F7F5F5F4F8F5E8F6F4ECFFE5C2EFECE8FDE8D1FFD2A6FED3A8FFDAB6FFE5CAFCEEE0F4EFEAF3EEE9F2EDE8EBEAE9FFCFA4FFD0A6FCCFA6E9C5A4FBE5D0F8E2CEF5E0CCFFECDAFAE8D8FEDDC1ECD5C1FBE3CEFAE3CFE8D5C5F0E8E2F1ECE8FCFCFCF9F9F9F7F7F7F3F3F3F0F0F0ECECECE8E8E8D3D3D3FFFFFF00000000000000000000000000000021F9040100003A002C0000000010001000000699C08070482C066AB6A47299BCDD9044994422AB159301993660A345AC5A2D567BC3E142685C2D3C96CD668844E21679CF64C9F04CB26034086E335E37368177100F0203011234131284521233011114153201344A910A0A0E05050706A1053939053317182A2D26AF28272E272F138F01301B1D2B2223BEBE24253512423016291C191ACBCB242C94423320201ED51FD320311146DCDDDE4641003B,'1'),(32,'pptx','application/vnd.openxmlformats-officedocument.presentationml.presentation','GoogleDocsViewer','Microsoft PowerPoint',0x47494638396110001000D50000000000FFFFFFF3D5D6F2D9DEE6D1D8E2E3E5DFE0E2DCDDDFE6E9EED3DEECF7F8F9CEE2F4DFF4FEDDF3FBE5E7E7F2F7D4EFF0D7FBFBF9F8F8F7F5F5F4F8F5E8F6F4ECFFE5C2EFECE8FDE8D1FFD2A6FED3A8FFDAB6FFE5CAFCEEE0F4EFEAF3EEE9F2EDE8EBEAE9FFCFA4FFD0A6FCCFA6E9C5A4FBE5D0F8E2CEF5E0CCFFECDAFAE8D8FEDDC1ECD5C1FBE3CEFAE3CFE8D5C5F0E8E2F1ECE8FCFCFCF9F9F9F7F7F7F3F3F3F0F0F0ECECECE8E8E8D3D3D3FFFFFF00000000000000000000000000000021F9040100003A002C0000000010001000000699C08070482C066AB6A47299BCDD9044994422AB159301993660A345AC5A2D567BC3E142685C2D3C96CD668844E21679CF64C9F04CB26034086E335E37368177100F0203011234131284521233011114153201344A910A0A0E05050706A1053939053317182A2D26AF28272E272F138F01301B1D2B2223BEBE24253512423016291C191ACBCB242C94423320201ED51FD320311146DCDDDE4641003B,'1'),(33,'png','image/png','Image','PNG Image',0x47494638396110001000E60000000000FFFFFFC7BFC0BBB6B7B2ADAFBFBDBFDFDDE4DADAECEBEBEFDFDFE2E6E6E8E3E5F2EAECF5F2F3F7C6CDE1D7DAE3CBD6F2BBC2D4C7CDDCB6BBC8CED2DCC8CACFBFCCE9CFDCFAD5E1FCD1DAEECEDCF7D9E5FEADB5C5E2E8F4DDDFE3DAE6FCEAEEF5A8B0BCE5E8ECC5D3E5E8E9EAECF0F2E2DDD6E9E6E2DED4C8E3DCD3E5DED5EEE7DFE9E6E4E5D1C8DBCBC5CBC8C7BFB9B9D0CECED6D5D5FCFCFCF9F9F9F7F7F7F3F3F3F0F0F0ECECECEAEAEAE7E7E7E5E5E5E2E2E2DDDDDDDADADAD3D3D3FFFFFF00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F90401000040002C00000000100010000007AD8001013B3F8586873B82823701338C3739343B398E8A018C3532383F2F3C370A958A3733993C3F0A373D38A18B33339235AEB28CA2AE3A0D3B3A34BB34B4AD36370B05323C393535389637922315042F31080938C9A2391D16132E3015070C0A898A38241718022D140F2111243A96D4201F03061A0E1C1E3C0AEF37262A251B172048F0C1C3C63B1C2752A058212243A36A8A7240CA4191058F191023DED8484D87274B8A6C881C79C320C840003B,'1'),(34,'doc','application/msword','GoogleDocsViewer','Microsoft Word',0x47494638396110001000D50000000000FFFFFFF5F5F7F7F7F8F4F4F5F1F1F2E1E9F9E2E5EBC3D6F7D5E2F9CEDAEFDCE7FBE2EBFBD7DFEDE2E9F6DDE3EEE8EEF9EBEFF6C1D6F8C3D7F9BCCFEFC6D9F9BCCEECCFDCF1D8E5FBD3DFF2D8E3F5E3EBF8E7ECF4EEF2F8ECF1F8E9EEF5F7FAFEF0F3F7EEF1F5E3EBF5E7EEF7EBEFF4E6ECF2EEF1F4F0F2F4F7F8F9F8F8F7FCFBFAF7F6F5FAF9F9F8F7F7F6F5F5FCFCFCF3F3F3F0F0F0ECECECE9E9E9E5E5E5E0E0E0DFDFDFFFFFFF00000000000000000000000000000000000000000021F90401000038002C00000000100010000006AAC040403593198FC79750E85A3A9732A70A964AB5562A55AB058B2E5581566703494148A9AED3051B383CA99223125A7999308143E07239422F2D77012E2B2C111F2C2C23282F2983858A041F272327042E832C302C28042C041C28312F334E9B0411272F2F1C273231A64B812F04222822250546344E042931C131BB353736BD4BBF2C7D2E2F323737354F1A18060912D8140F044F011A200B0C1513081607DD0123261917ED0A0DDD41003B,'1'),(35,'docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document','GoogleDocsViewer','Microsoft Word',0x47494638396110001000D50000000000FFFFFFF5F5F7F7F7F8F4F4F5F1F1F2E1E9F9E2E5EBC3D6F7D5E2F9CEDAEFDCE7FBE2EBFBD7DFEDE2E9F6DDE3EEE8EEF9EBEFF6C1D6F8C3D7F9BCCFEFC6D9F9BCCEECCFDCF1D8E5FBD3DFF2D8E3F5E3EBF8E7ECF4EEF2F8ECF1F8E9EEF5F7FAFEF0F3F7EEF1F5E3EBF5E7EEF7EBEFF4E6ECF2EEF1F4F0F2F4F7F8F9F8F8F7FCFBFAF7F6F5FAF9F9F8F7F7F6F5F5FCFCFCF3F3F3F0F0F0ECECECE9E9E9E5E5E5E0E0E0DFDFDFFFFFFF00000000000000000000000000000000000000000021F90401000038002C00000000100010000006AAC040403593198FC79750E85A3A9732A70A964AB5562A55AB058B2E5581566703494148A9AED3051B383CA99223125A7999308143E07239422F2D77012E2B2C111F2C2C23282F2983858A041F272327042E832C302C28042C041C28312F334E9B0411272F2F1C273231A64B812F04222822250546344E042931C131BB353736BD4BBF2C7D2E2F323737354F1A18060912D8140F044F011A200B0C1513081607DD0123261917ED0A0DDD41003B,'1'),(36,'mov','video/mpeg',NULL,'MPEG Movie',0x47494638396110001000D50000000000FFFFFFF7F7F8EEEFF1E2E5E9CED6DFC8DAECE9ECEFEEF0F2B2D5F4BEDBF5B9D5EEB9D3EAB3D9F8B5D8F5B9D8F1BBD9F3BEDAF1C2D8EACDD9E3D6E2ECE0E7EDBCDCF4C2DBEED3DFE8DFE8EFE2EAF0EBEFF2E5E9ECBEE2FCBCD8ECCCDDE9DAE6EEE8EBEDBFE2F8E0EBF2E7ECEFEFF1F2EAECEDF4F5F5F1F2F2FCFCFCF9F9F9F6F6F6F3F3F3F0F0F0ECECECE9E9E9E8E8E8E5E5E5E2E2E2DFDFDFDADADAD5D5D5D2D2D2C8C8C8FFFFFF00000000000000000000000000000000000000000021F90401000038002C00000000100010000006A3C04060662B1A8F33A1107512A0620395ABE592BD940154ADE8AAC96C331AAD856DDDC4E29ACB26769557A9B83C7E222B5B2CF90ADE44D9852D262927060E0E1716232F03652729120F191A110A28286E772D0309247B25221C2E98802F210D0307182C161531A30103282B161F2B1B131026263058A2021A1D1E0C0B0533338C4A2E307B082014040129C8C92D7B272797D25842A2D72C7E307F582CE4E47E2CDB0141003B,'1'),(37,'xls','application/vnd.ms-excel','GoogleDocsViewer','Microsoft Excel',0x47494638396110001000D50000000000FFFFFFF6F3F6F9F7F9FBFBFFBFE9BFC8ECC8DAF1DAE8FAE8DEE8DEA9E8A7B3EAB2BEEEBDBEE8BDCDF1CCA7E7A4A6DFA4A6DCA4C6F0C4BEE5BCCCE6CBD6E9D5E0EFDFFCFCFCF9F9F9F5F5F5F3F3F3F0F0F0ECECECEAEAEAE6E6E6E5E5E5E2E2E2DFDFDFFFFFFF00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F90401000022002C000000001000100000067AC04020C3D9188FC78C50A85C3A851BE7E0A2D15C30D76B20BACC5C8C592C96CBFC6EAE98F4D8E9058BB3E4A1390C6763DCE1BBDD18B8F8FD031C761C1D17040462447B461D481A1D7655921B1E2020904B1A18039C03021B21211F4F06120B0B0FA910154D4E06080E0C0AB311094F42071605050D0D1314B741003B,'1'),(38,'xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','GoogleDocsViewer','Microsoft Excel',0x47494638396110001000D50000000000FFFFFFF6F3F6F9F7F9FBFBFFBFE9BFC8ECC8DAF1DAE8FAE8DEE8DEA9E8A7B3EAB2BEEEBDBEE8BDCDF1CCA7E7A4A6DFA4A6DCA4C6F0C4BEE5BCCCE6CBD6E9D5E0EFDFFCFCFCF9F9F9F5F5F5F3F3F3F0F0F0ECECECEAEAEAE6E6E6E5E5E5E2E2E2DFDFDFFFFFFF00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F90401000022002C000000001000100000067AC04020C3D9188FC78C50A85C3A851BE7E0A2D15C30D76B20BACC5C8C592C96CBFC6EAE98F4D8E9058BB3E4A1390C6763DCE1BBDD18B8F8FD031C761C1D17040462447B461D481A1D7655921B1E2020904B1A18039C03021B21211F4F06120B0B0FA910154D4E06080E0C0AB311094F42071605050D0D1314B741003B,'1'),(39,'mp3','audio/x-mp3',NULL,'MP3 Audio',0x47494638396110001000D50000000000FFFFFFE5E5E7F7F7F8F4F4F5E7E8F1EEEFF1E4EDFBDFE3E5E3ECEEE4F2ECE0E5E2E5EAE6D7E6D9DCEADEDCE3DDC2DDC4D6E4D7DCE8DDBFDFC1BED7BFCAE3CAC8DAC8D5E5D5D4E3D4D1DED1D5E0D5D9EBD8C6DDC4D8E2D7D3F3CDCFE5C9DCE3DAEBF3E5F8F5E3F0EEEBF7F4F0FCFCFCF9F9F9F6F6F6F3F3F3F0F0F0ECECECEAEAEAE7E7E7E5E5E5E2E2E2DFDFDFDADADAD6D6D6D1D1D1FFFFFF00000000000000000000000000000000000000000000000000000000000000000000000021F90401000033002C00000000100010000006A3C04080F52A1A8F2CA130C54C11502DA809A5520652B2970BA67DA162B1A43215DEC25CACD629B6B2A60225536A3552994A2583BB84E27C48221B08777A63250211131D201E15062655630306250C1A2A0F16049056060328030B192C2517272791427605070A17771827046D4A7628092110151514282862AA03C228120E0D162A2C2E562AA7CE042930D204CCCF4F2A6A2656012BA74F2829CADADB2AE5E66903DB41003B,'1'),(40,'swf','application/x-shockwave-flash',NULL,'Macromedia Flash',0x47494638396110001000D50000000000FFFFFFF4F4F6E5E5E7F1F2F5EFF0F3D9DCE2EEEFF1E9EAECE2E3E5ECEEF1E5E7EAD1D6DCDCE0E5D9DDE2D6DADFD5D9DECFD5DBD3D8DDDBDFE3D9DCDFEAECEEF7F8F9F4F5F6EAEBECA4B4C1B6C1CAC3CED7CBD3DAC2CED7DADFE3E3E8ECADBCC6A9BDCAC4D4DEA7BCC8F5F7F8E5E7E8FCFCFCF9F9F9F6F6F6F3F3F3F0F0F0ECECECEAEAEAE7E7E7E1E1E1DDDDDDDADADAD0D0D0CECECEFFFFFF00000000000000000000000000000000000000000000000000000000000000000000000021F90401000033002C00000000100010000006A0C040A0052B1A8F2DA1302534A556AB9469CA54324D09C762E1489C9CCA80B4C4E05408A8C7006C3D51161A10610E39A9C2A9D34460C96C3E040E28776D1E16011C210D040628077826120426172322050C17189007120A240D1D0C182A03612A27279D11110C08072C2EA7A9B476092FB8A716BB1628282D313230844207BEBE4FB2262B6101C6C82B2D2F268FCD0717174F2D2E2EC46107502B2CE328CD0141003B,'1'),(41,'txt','text/plain','GoogleDocsViewer','Plain Text File',0x47494638396110001000D50000000000FFFFFFFCFCFDD4DAE6DCE4F3DFE5EEE2E5E8F2F4F5EFF1F2CACECFBDBEBBBDBDB7F0F0EEE2E2E0E0E0DFC0BFB4DAD9D3E4E3DDC2C1BEBFBBB5D4D1CDD7D3CEF5F1EEEEDDD3C1B9B5C5BCB8F5F0EEF1EEEDC9BFBCC5B8B5D9C1BDD6BBB8FAFAFAF6F6F6F3F3F3F0F0F0ECECECEAEAEAE7E7E7E3E3E3DADADAD2D2D2D0D0D0FFFFFF00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F9040100002B002C0000000010001000000691C04040442A198F488130305A0A05CA8000045A8E408C900954727C3C115155381299CD8D4A87A3608C99A2725942C94C1EA4F728441AED1710180A096E56447D220506030404087A7C2226657D23256286667E2695257986972395A2245BA0A22246262627277A23264825282A29274E231B1B24A5AB287C4E4C16170771BC0E4DC1571A2121712526C14220717ED6D241003B,'1'),(42,'rtf','text/richtext','GoogleDocsViewer','Rich Text File',0x47494638396110001000D50000000000FFFFFFFCFCFDD4DAE6DCE4F3DFE5EEE2E5E8F2F4F5EFF1F2CACECFBDBEBBBDBDB7F0F0EEE2E2E0E0E0DFC0BFB4DAD9D3E4E3DDC2C1BEBFBBB5D4D1CDD7D3CEF5F1EEEEDDD3C1B9B5C5BCB8F5F0EEF1EEEDC9BFBCC5B8B5D9C1BDD6BBB8FAFAFAF6F6F6F3F3F3F0F0F0ECECECEAEAEAE7E7E7E3E3E3DADADAD2D2D2D0D0D0FFFFFF00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F9040100002B002C0000000010001000000691C04040442A198F488130305A0A05CA8000045A8E408C900954727C3C115155381299CD8D4A87A3608C99A2725942C94C1EA4F728441AED1710180A096E56447D220506030404087A7C2226657D23256286667E2695257986972395A2245BA0A22246262627277A23264825282A29274E231B1B24A5AB287C4E4C16170771BC0E4DC1571A2121712526C14220717ED6D241003B,'1'),(43,'zip','application/zip',NULL,'Zip File',0x47494638396110001000C40000000000FFFFFFFCFCFCF9F9F9F6F6F6F3F3F3F0F0F0ECECECEAEAEAE7E7E7E5E5E5E2E2E2DADADAD6D6D6D3D3D3D0D0D0CDCDCDC8C8C8C5C5C5BABABAB6B6B6ADADADFFFFFF00000000000000000000000000000000000000000000000000000021F90401000016002C000000001000100000058360101C49699E88281AEB822485CACA62D1240E5408C2BC0682C283D1802478BE008BC76C260D4C43023188AA94BCC11141601EAE50C1002138740783AFEA903D34B868825A7440A70D66823EB5B63B04127A05060A577503040E0F1305090B8F867A898B060C9604575C7A8A13070A040357019A890D128EA1A207AB071114159FA221003B,'1'),(44,'ppsx','application/vnd.openxmlformats-officedocument.presentationml.slideshow',NULL,'Microsoft PowerPoint',0x47494638396110001000D50000C35D0478AFE084A4CC9FA1A5838484F4F3EFBF8B5DDE8A8CE8EBEED4C9C0F3B076E4E2E0E5A971CCCCCCDEDEDED2D590FF7A04BFBFBFD5D5D5FCA151ADB2B5D5C0ADB5BDBDA2DDF5FF9933FFFFFFF67908BB7F92F7D1A9E6E0C9FE860EF1BF92DDCFC3F5B67DDB95A4C6C4C1DCE889F6F6F6CC8A52B9C3CFFFCC99DCCDBFF2B27AFFB655EDEBEAFF7C08E7E7E7A7AAAEFFB66AEBE3BFFF8C10EFEFEFB5B5B5FF8207C5BDBDE1D3C5F9BE7EECAE76F7F7EFD7CBC0A6E1FCC7C5C300000000000021F90405140019002C0000000010001000000699C08C70482C661C92A472996C3490C4128B55721493999236237115AC5A2D56DB884446E888233C2ECD662781A05178CF4AC9F08C15E05D366E335E0D1281770F240722192C2E0B2C84522C331905311D25192E4A910808161414032FA1140404143309381F0A21AF0C392A39060B8F1915181C13102DBEBE1A000E2C42152B2830351ECBCB1A26944233292937D520D3293B0546DCDDDE4641003B,'1'),(45,'ppsx','application/vnd.openxmlformats-officedocument.presentationml.slideshow',NULL,'Microsoft PowerPoint',0x47494638396110001000D50000000000FFFFFFF3D5D6F2D9DEE6D1D8E2E3E5DFE0E2DCDDDFE6E9EED3DEECF7F8F9CEE2F4DFF4FEDDF3FBE5E7E7F2F7D4EFF0D7FBFBF9F8F8F7F5F5F4F8F5E8F6F4ECFFE5C2EFECE8FDE8D1FFD2A6FED3A8FFDAB6FFE5CAFCEEE0F4EFEAF3EEE9F2EDE8EBEAE9FFCFA4FFD0A6FCCFA6E9C5A4FBE5D0F8E2CEF5E0CCFFECDAFAE8D8FEDDC1ECD5C1FBE3CEFAE3CFE8D5C5F0E8E2F1ECE8FCFCFCF9F9F9F7F7F7F3F3F3F0F0F0ECECECE8E8E8D3D3D3FFFFFF00000000000000000000000000000021F9040100003A002C0000000010001000000699C08070482C066AB6A47299BCDD9044994422AB159301993660A345AC5A2D567BC3E142685C2D3C96CD668844E21679CF64C9F04CB26034086E335E37368177100F0203011234131284521233011114153201344A910A0A0E05050706A1053939053317182A2D26AF28272E272F138F01301B1D2B2223BEBE24253512423016291C191ACBCB242C94423320201ED51FD320311146DCDDDE4641003B,'0'),(46,'mp4','video/mpg4',NULL,'MPG4 Movie',0x47494638396110001000D50000000000FFFFFFF7F7F8EEEFF1E2E5E9CED6DFC8DAECE9ECEFEEF0F2B2D5F4BEDBF5B9D5EEB9D3EAB3D9F8B5D8F5B9D8F1BBD9F3BEDAF1C2D8EACDD9E3D6E2ECE0E7EDBCDCF4C2DBEED3DFE8DFE8EFE2EAF0EBEFF2E5E9ECBEE2FCBCD8ECCCDDE9DAE6EEE8EBEDBFE2F8E0EBF2E7ECEFEFF1F2EAECEDF4F5F5F1F2F2FCFCFCF9F9F9F6F6F6F3F3F3F0F0F0ECECECE9E9E9E8E8E8E5E5E5E2E2E2DFDFDFDADADAD5D5D5D2D2D2C8C8C8FFFFFF00000000000000000000000000000000000000000021F90401000038002C00000000100010000006A3C04060662B1A8F33A1107512A0620395ABE592BD940154ADE8AAC96C331AAD856DDDC4E29ACB26769557A9B83C7E222B5B2CF90ADE44D9852D262927060E0E1716232F03652729120F191A110A28286E772D0309247B25221C2E98802F210D0307182C161531A30103282B161F2B1B131026263058A2021A1D1E0C0B0533338C4A2E307B082014040129C8C92D7B272797D25842A2D72C7E307F582CE4E47E2CDB0141003B,'1'),(47,'mp4','video/mpg4',NULL,'MPG4 Movie',0x47494638396110001000D50000666666C7D3DCAEB7C13E86C4E6E6E69999995792C5C1CCD4F7F7F74A99D899B9D0778EA77494B1D8DADC298BE0A7A7A7B5C2CB828282C3C3C34DADED85A7C08B8B8BFFFFFF3292E3AEC5D5D6D6D6BEBEBE3D93D8ADADADCCCCCCBEC6CDEEEEEE4295DEA7BFD24B9BE472A0C22C94ED579BCEE0E2E4469DDF8CADC9D1D4D8B5B5B5C5C9CD3E8BCF4593CBA9BDCDD2D7DBDEDEDEEAEAEB4A9CDEB5C5D64AADF7A9C6DCBDC9D36699CCD0D6DB00000000000000000000000000000000000000000021F90405140016002C00000000100010000006A3408BE511291A8F0FA1B0618A3554A94F27D3E148949646A5D8A970228F422183CD00C4E24A2722EE940988B83C6E222B33303901DE6CD885192B08263717172527351229652608061B211809220D0D6E7719290E367B2F13101D9880121E2429071430272E2AA316290D04272304010C202B2B1A58A23118342D032C0B0F0F8C4A1D1A7B380A28021608C8C9197B262697D25842A2D7307E1A7F5830E4E47E30DB1641003B,'0'),(48,'hmtl5','text/html5',NULL,'HTML Document',0x47494638396110001000E60000000000FFFFFFE5E6E5D7DBD3D5D9D1DEE1DBE3E4E2E6E6E5E6DDD9E2906FE55928E55D2DE56C41E57F5BE58664E58867E59B81E6A48DE6CAC0E5CBC1E8D0C7E6CEC5D8C4BDE56235E68868E59174E6A690E6B7A7E6BFB2E6C0B3D9C4BDE6D3CDE6DAD6E6DCD9FEFEFEF7F7F7F6F6F6F1F1F1EFEFEFEEEEEEEDEDEDECECECEBEBEBEAEAEAE9E9E9E8E8E8E7E7E7E6E6E6E4E4E4E3E3E3E1E1E1E0E0E0DFDFDFDEDEDEDBDBDBDADADAD9D9D9D8D8D8D7D7D7D6D6D6CCCCCCC4C4C4BDBDBDAFAFAFABABABA2A2A2A1A1A1A0A0A09F9F9F9D9D9D9B9B9B9999997D7D7D767676FFFFFF00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021F9040100004A002C00000000100010000007B98001013E4644424446454388473E82823523272C313836302925243B8F0133292FA10202A12E259C8222322E2F100C1F120B2113283A9D320F0A191D2F111A1C1914B68F3318BABC0F1020190E1E9D342DADAF0C1B08CC16CF2907A1080A080D09153D9D3A26A42F1B172F06043B8E8F3B282C02DB020503393D409D3B26282A2B56A8B8F12388417E264229F48124C911548276287C5183C73E133C3A059018AAA28F202320C2EBC8C307102022E1F158D9A3E50B8D010201003B,'0'),(49,'hmtl5','text/html5',NULL,'HTML Document',0x47494638396110001000D50000000000FFFFFFEEF0EDEBEDE9EAECE8F1F1F0F2EEECF2AC93F2AE96F2BFADF2C2B1F2C8B9F0C7B7F2CDC0F2DBD3F2DFD8F2E4DFF2E5E0F2B09AF2B5A0F2C3B3F2D1C6F2D2C7F2DFD9F3E7E3F2E6E2F2E9E6F2ECEAECE1DEEBE1DEF2EDECFEFEFEFBFBFBFAFAFAF8F8F8F7F7F7F6F6F6F5F5F5F4F4F4F3F3F3F2F2F2F1F1F1F0F0F0EFEFEFEEEEEEEDEDEDECECECEBEBEBEAEAEAE5E5E5E1E1E1DEDEDED7D7D7D5D5D5D0D0D0CFCFCFCECECECDCDCDCCCCCCBEBEBEBABABAFFFFFF00000000000021F9040100003D002C00000000100010000006A2C0406096BBD96E39DC0DA99B09852C10C99472B552255108F60CAC4AA8B018751271851FD509D5986820084F84F4EAAA2887C50555B13C1618754F2B787A28140D1B0B0A1C5D2B6B6D1A130E068B1D8E6061060706090C19325D2F23620E12280504304E4F30536302032F32355D302324252626252E3436C0B6A463333B3C3A674230632C31B523315D01CB61CD333620C9ADD531333535DAAD31E332E528D20141003B,'1');
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `global_lu_buildings` (
+  `building_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(11) unsigned NOT NULL,
+  `building_code` varchar(16) NOT NULL DEFAULT '',
+  `building_name` varchar(128) NOT NULL DEFAULT '',
+  `building_address1` varchar(128) NOT NULL DEFAULT '',
+  `building_address2` varchar(128) NOT NULL DEFAULT '',
+  `building_city` varchar(64) NOT NULL DEFAULT '',
+  `building_province` varchar(64) NOT NULL DEFAULT '',
+  `building_country` varchar(64) NOT NULL DEFAULT '',
+  `building_postcode` varchar(16) NOT NULL DEFAULT '',
+  PRIMARY KEY (`building_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -5245,7 +6064,7 @@ INSERT INTO `global_lu_objective_sets` VALUES (1,'Entrusbable Professional Activ
 CREATE TABLE `global_lu_objectives` (
   `objective_id` int(12) NOT NULL AUTO_INCREMENT,
   `objective_code` varchar(24) DEFAULT NULL,
-  `objective_name` varchar(60) NOT NULL,
+  `objective_name` varchar(240) NOT NULL DEFAULT '',
   `objective_description` text,
   `objective_secondary_description` text,
   `objective_parent` int(12) NOT NULL DEFAULT '0',
@@ -5258,6 +6077,7 @@ CREATE TABLE `global_lu_objectives` (
   PRIMARY KEY (`objective_id`),
   KEY `objective_order` (`objective_order`),
   KEY `objective_code` (`objective_code`),
+  KEY `idx_parent` (`objective_parent`,`objective_active`),
   FULLTEXT KEY `ft_objective_search` (`objective_code`,`objective_name`,`objective_description`)
 ) ENGINE=MyISAM AUTO_INCREMENT=2403 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -5300,6 +6120,20 @@ CREATE TABLE `global_lu_roles` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 INSERT INTO `global_lu_roles` VALUES (1,'Lead Author'),(2,'Contributing Author'),(3,'Editor'),(4,'Co-Editor'),(5,'Senior Author'),(6,'Co-Lead');
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `global_lu_rooms` (
+  `room_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `building_id` int(11) unsigned NOT NULL,
+  `room_number` varchar(20) NOT NULL DEFAULT '',
+  `room_name` varchar(100) DEFAULT NULL,
+  `room_description` varchar(255) DEFAULT NULL,
+  `room_max_occupancy` int(4) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`room_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -5629,10 +6463,10 @@ CREATE TABLE `medbiq_resources` (
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(11) NOT NULL,
   PRIMARY KEY (`resource_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `medbiq_resources` VALUES (1,'Audience Response System','An electronic communication system that allows groups of people to vote on a topic or answer a question. Each person has a remote control (\"clicker\") with which selections can be made; Typically, the results are\rinstantly made available to the participants via a graph displayed on the projector. (Group on Information Resources, 2011; Stoddard & Piquette, 2010)',1,0,0),(2,'Audio','Devices or applications used to acquire or transfer knowledge, attitudes, or skills through study, instruction, or experience using auditory delivery (see \"Electronic Learning,\" Education Resources Information Center, 2008b)',1,0,0),(3,'Cadaver','A human body preserved post-mortem and \"used...to study anatomy, identify disease sites, determine causes of death, and provide tissue to repair a defect in a living human being\" (MedicineNet.com, 2004)',1,0,0),(4,'Clinical Correlation','The application and elaboration of concepts introduced in lecture, reading assignments, independent study, and other learning activities to real patient or case scenarios in order to promote knowledge retrieval in similar clinical situations at a later time (Euliano, 2001)',1,0,0),(5,'Distance Learning - Asynchronous','Education facilitated through communications media (often electronic), with little or no classroom or other face-to-face contact between learners and teachers, and which \"does not occur in real time or involve simultaneous interaction on the part of participants. It is intermittent and generally characterized by a significant time delay or interval between sending and receiving or responding to messages\" (Education Resources Information Center, 1983; 2008a)',1,0,0),(6,'Distance Learning - Synchronous','Education facilitated through communications media (often electronic), with little or no classroom or other face-to-face contact between learners and teachers, \"in real time, characterized by concurrent exchanges between participants. Interaction is simultaneous without a meaningful time delay between sending a message and receiving or responding to it. Occurs in electronic (e.g., interactive videoconferencing) and non-electronic environments (e.g., telephone conversations)\" (Education Resources Information Center, 1983; 2008c)',1,0,0),(7,'Educational Technology','Mobile or desktop technology (hardware or software) used for instruction/learning through audiovisual (A/V), multimedia, web-based, or online modalities (Group on Information Resources, 2011); Sometimes includes dedicated space (see Virtual/Computerized Lab)',1,0,0),(8,'Electronic Health/Medical Record (EHR/EMR)','An individual patient\'s medical record in digital format...usually accessed on a computer, often over a network...[M]ay be made up of electronic medical records (EMRs) from many locations and/or sources. An Electronic Medical Record (EMR) may be an inpatient or outpatient medical record in digital format that may or may not be linked to or part of a larger EHR (Group on Information Resources, 2011)',1,0,0),(9,'Film/Video','Devices or applications used to acquire or transfer knowledge, attitudes, or skills through study, instruction, or experience using visual recordings (see \"Electronic Learning,\" Education Resources Information Center, 2008b)',1,0,0),(10,'Key Feature','An element specific to a clinical case or problem that demands the use of particular clinical skills in order to achieve the problem\'s successful resolution; Typically presented as written exam questions, as in the Canadian Qualifying Examination in Medicine (Page & Bordage, 1995; Page, Bordage, & Allen, 1995)',1,0,0),(11,'Mannequin','A life-size model of the human body that mimics various anatomical functions to teach skills and procedures in health education; may be low-fidelity (having limited or no electronic inputs) or high-fidelity\r(connected to a computer that allows the robot to respond dynamically to user input) (Group on Information Resources, 2011; Passiment, Sacks, & Huang, 2011)',1,0,0),(12,'Plastinated Specimens','Organic material preserved by replacing water and fat in tissue with silicone, resulting in \"anatomical specimens [that] are safer to use, more pleasant to use, and are much more durable and have a much longer shelf life\" (University of Michigan Plastination Lab, n.d.); See also: Wet Lab',1,0,0),(13,'Printed Materials (or Digital Equivalent)','Reference materials produced or selected by faculty to augment course teaching and learning',1,0,0),(14,'Real Patient','An actual clinical patient',1,0,0),(15,'Searchable Electronic Database','A collection of information organized in such a way that a computer program can quickly select desired pieces of data (Webopedia, n.d.)',1,0,0),(16,'Standardized/Simulated Patient (SP)','Individual trained to portray a patient with a specific condition in a realistic, standardized and repeatable way (where portrayal/presentation varies based only on learner performance) (ASPE, 2011)',1,0,0),(17,'Task Trainer','A physical model that simulates a subset of physiologic function to include normal and abnormal anatomy (Passiment, Sacks, & Huang, 2011); Such models which provide just the key elements of the task or skill being learned (CISL, 2011)',1,0,0),(18,'Virtual Patient','An interactive computer simulation of real-life clinical scenarios for the purpose of medical training, education, or assessment (Smothers, Azan, & Ellaway, 2010)',1,0,0),(19,'Virtual/Computerized Laboratory','A practical learning environment in which technology- and computer-based simulations allow learners to engage in computer-assisted instruction while being able to ask and answer questions and also engage in discussion of content (Cooke, Irby, & O\'Brien, 2010a); also, to learn through experience by performing medical tasks, especially high-risk ones, in a safe environment (Uniformed Services University, 2011)',1,0,0),(20,'Wet Laboratory','Facilities outfitted with specialized equipment* and bench space or adjustable, flexible desktop space for working with solutions or biological materials (\"C.1 Wet Laboratories,\" 2006; Stanford University School of Medicine, 2007;\rWBDG Staff, 2010) *Often includes sinks, chemical fume hoods, biosafety cabinets, and piped services such as deionized or RO water, lab cold and hot water, lab waste/vents, carbon dioxide, vacuum, compressed air, eyewash, safety showers, natural gas, telephone, LAN, and power (\"C.1 Wet Laboratories,\" 2006)',1,0,0);
+INSERT INTO `medbiq_resources` VALUES (1,'Audience Response System','An electronic communication system that allows groups of people to vote on a topic or answer a question. Each person has a remote control (\"clicker\") with which selections can be made; Typically, the results are\rinstantly made available to the participants via a graph displayed on the projector. (Group on Information Resources, 2011; Stoddard & Piquette, 2010)',1,0,0),(2,'Audio','Devices or applications used to acquire or transfer knowledge, attitudes, or skills through study, instruction, or experience using auditory delivery (see \"Electronic Learning,\" Education Resources Information Center, 2008b)',1,0,0),(3,'Cadaver','A human body preserved post-mortem and \"used...to study anatomy, identify disease sites, determine causes of death, and provide tissue to repair a defect in a living human being\" (MedicineNet.com, 2004)',1,0,0),(4,'Clinical Correlation','The application and elaboration of concepts introduced in lecture, reading assignments, independent study, and other learning activities to real patient or case scenarios in order to promote knowledge retrieval in similar clinical situations at a later time (Euliano, 2001)',1,0,0),(5,'Distance Learning - Asynchronous','Education facilitated through communications media (often electronic), with little or no classroom or other face-to-face contact between learners and teachers, and which \"does not occur in real time or involve simultaneous interaction on the part of participants. It is intermittent and generally characterized by a significant time delay or interval between sending and receiving or responding to messages\" (Education Resources Information Center, 1983; 2008a)',1,0,0),(6,'Distance Learning - Synchronous','Education facilitated through communications media (often electronic), with little or no classroom or other face-to-face contact between learners and teachers, \"in real time, characterized by concurrent exchanges between participants. Interaction is simultaneous without a meaningful time delay between sending a message and receiving or responding to it. Occurs in electronic (e.g., interactive videoconferencing) and non-electronic environments (e.g., telephone conversations)\" (Education Resources Information Center, 1983; 2008c)',1,0,0),(7,'Educational Technology','Mobile or desktop technology (hardware or software) used for instruction/learning through audiovisual (A/V), multimedia, web-based, or online modalities (Group on Information Resources, 2011); Sometimes includes dedicated space (see Virtual/Computerized Lab)',1,0,0),(8,'Electronic Health/Medical Record (EHR/EMR)','An individual patient\'s medical record in digital format...usually accessed on a computer, often over a network...[M]ay be made up of electronic medical records (EMRs) from many locations and/or sources. An Electronic Medical Record (EMR) may be an inpatient or outpatient medical record in digital format that may or may not be linked to or part of a larger EHR (Group on Information Resources, 2011)',1,0,0),(9,'Film/Video','Devices or applications used to acquire or transfer knowledge, attitudes, or skills through study, instruction, or experience using visual recordings (see \"Electronic Learning,\" Education Resources Information Center, 2008b)',1,0,0),(10,'Key Feature','An element specific to a clinical case or problem that demands the use of particular clinical skills in order to achieve the problem\'s successful resolution; Typically presented as written exam questions, as in the Canadian Qualifying Examination in Medicine (Page & Bordage, 1995; Page, Bordage, & Allen, 1995)',1,0,0),(11,'Mannequin','A life-size model of the human body that mimics various anatomical functions to teach skills and procedures in health education; may be low-fidelity (having limited or no electronic inputs) or high-fidelity\r(connected to a computer that allows the robot to respond dynamically to user input) (Group on Information Resources, 2011; Passiment, Sacks, & Huang, 2011)',1,0,0),(12,'Plastinated Specimens','Organic material preserved by replacing water and fat in tissue with silicone, resulting in \"anatomical specimens [that] are safer to use, more pleasant to use, and are much more durable and have a much longer shelf life\" (University of Michigan Plastination Lab, n.d.); See also: Wet Lab',1,0,0),(13,'Printed Materials (or Digital Equivalent)','Reference materials produced or selected by faculty to augment course teaching and learning',1,0,0),(14,'Real Patient','An actual clinical patient',1,0,0),(15,'Searchable Electronic Database','A collection of information organized in such a way that a computer program can quickly select desired pieces of data (Webopedia, n.d.)',1,0,0),(16,'Standardized/Simulated Patient (SP)','Individual trained to portray a patient with a specific condition in a realistic, standardized and repeatable way (where portrayal/presentation varies based only on learner performance) (ASPE, 2011)',1,0,0),(17,'Task Trainer','A physical model that simulates a subset of physiologic function to include normal and abnormal anatomy (Passiment, Sacks, & Huang, 2011); Such models which provide just the key elements of the task or skill being learned (CISL, 2011)',1,0,0),(18,'Virtual Patient','An interactive computer simulation of real-life clinical scenarios for the purpose of medical training, education, or assessment (Smothers, Azan, & Ellaway, 2010)',1,0,0),(19,'Virtual/Computerized Laboratory','A practical learning environment in which technology- and computer-based simulations allow learners to engage in computer-assisted instruction while being able to ask and answer questions and also engage in discussion of content (Cooke, Irby, & O\'Brien, 2010a); also, to learn through experience by performing medical tasks, especially high-risk ones, in a safe environment (Uniformed Services University, 2011)',1,0,0),(20,'Wet Laboratory','Facilities outfitted with specialized equipment* and bench space or adjustable, flexible desktop space for working with solutions or biological materials (\"C.1 Wet Laboratories,\" 2006; Stanford University School of Medicine, 2007;\rWBDG Staff, 2010) *Often includes sinks, chemical fume hoods, biosafety cabinets, and piped services such as deionized or RO water, lab cold and hot water, lab waste/vents, carbon dioxide, vacuum, compressed air, eyewash, safety showers, natural gas, telephone, LAN, and power (\"C.1 Wet Laboratories,\" 2006)',1,0,0),(21,'Animation','',1,0,0),(22,'Medical Images','',1,0,0),(23,'Mobile Application','',1,0,0),(24,'Scenario','',1,0,0),(25,'Ultrasound','',1,0,0),(26,'Virtual Reality','',1,0,0);
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -5687,7 +6521,7 @@ CREATE TABLE `migrations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `migrations` VALUES ('2015_01_28_143720_556',1,0,0,1450108251),('2015_10_05_115238_571',1,1,0,1450108251),('2015_10_07_140708_607',1,1,0,1450108251),('2015_11_09_114101_211',1,3,0,1450108251),('2015_11_19_141523_555',1,1,0,1450108251),('2015_12_14_100257_655',1,0,0,1450108251),('2015_02_06_141230_501',1,14,0,1464582935),('2015_02_10_162530_501',1,4,0,1464582935),('2015_04_23_213148_701',1,2,0,1464582935),('2015_11_02_143612_445',1,3,0,1464582935),('2015_12_23_000231_648',1,2,0,1464582935),('2016_01_14_163721_658',1,250,0,1464582935),('2016_01_29_151435_666',1,3,0,1464582936),('2016_03_10_124616_686',1,1,0,1464582936),('2016_03_23_225930_706',1,1,0,1464582936),('2016_03_28_202227_707',1,1,0,1464582936),('2016_03_28_211819_726',1,3,0,1464582936),('2016_03_29_113528_696',1,3,0,1464582936),('2016_04_05_105040_745',1,3,0,1464582936),('2016_04_05_145610_747',1,3,0,1464582936),('2016_05_29_235550_857',1,2,0,1464582936),('2015_01_28_154313_558',1,48,0,1483495901),('2015_02_13_100237_558',1,1,0,1483495901),('2015_02_20_103041_560',1,2,0,1483495901),('2015_02_20_130446_558',1,4,0,1483495901),('2015_02_24_083616_558',1,0,0,1483495902),('2015_02_24_124946_558',1,1,0,1483495902),('2015_02_24_142830_558',1,3,0,1483495902),('2015_02_24_160446_558',1,6,0,1483495902),('2015_02_25_160706_558',1,1,0,1483495902),('2015_02_25_161433_558',1,2,0,1483495902),('2015_02_25_194020_558',1,1,0,1483495902),('2015_02_25_200000_558',1,1,0,1483495902),('2015_02_26_094149_558',1,3,0,1483495902),('2015_02_26_143839_558',1,9,0,1483495902),('2015_02_26_173341_558',1,1,0,1483495902),('2015_02_26_191105_558',1,1,0,1483495902),('2015_03_03_131415_558',1,1,0,1483495902),('2015_03_03_141256_558',1,2,0,1483495902),('2015_04_10_145114_558',1,1,0,1483495902),('2015_05_15_130638_558',1,3,0,1483495902),('2015_05_20_125455_558',1,1,0,1483495902),('2015_05_22_093608_558',1,1,0,1483495902),('2015_05_22_105753_558',1,1,0,1483495902),('2015_05_27_141448_558',1,1,0,1483495902),('2015_06_25_162521_558',1,1,0,1483495902),('2015_06_26_103137_558',1,2,0,1483495902),('2015_06_30_132039_558',1,1,0,1483495902),('2015_07_07_112833_558',1,3,0,1483495902),('2015_07_15_134443_558',1,1,0,1483495902),('2015_07_27_085651_558',1,4,0,1483495902),('2015_07_27_110335_558',1,4,0,1483495902),('2015_07_27_123307_558',1,1,0,1483495902),('2015_08_07_134306_558',1,8,0,1483495902),('2015_08_12_120043_558',1,3,0,1483495902),('2015_08_12_145426_558',1,2,0,1483495902),('2015_08_25_100105_558',1,1,0,1483495902),('2015_08_27_131116_558',1,1,0,1483495902),('2015_09_01_134859_558',1,1,0,1483495902),('2015_09_03_094219_558',1,1,0,1483495902),('2015_09_08_105058_558',1,2,0,1483495902),('2015_09_10_090232_573',1,2,0,1483495902),('2015_09_11_104429_558',1,1,0,1483495902),('2015_09_16_142818_558',1,3,0,1483495902),('2015_09_29_101115_558',1,2,0,1483495902),('2015_10_02_144459_558',1,2,0,1483495902),('2015_10_08_114141_558',1,1,0,1483495902),('2015_10_15_105816_558',1,3,0,1483495902),('2015_11_18_091429_558',1,9,0,1483495903),('2015_11_18_133543_558',1,1,0,1483495903),('2015_11_30_105832_558',1,1,0,1483495903),('2015_12_03_100956_558',1,1,0,1483495903),('2015_12_10_104135_558',1,1,0,1483495903),('2016_01_14_104922_558',1,1,0,1483495903),('2016_01_20_121723_558',1,3,0,1483495903),('2016_01_21_143258_558',1,1,0,1483495903),('2016_01_22_091315_558',1,1,0,1483495903),('2016_01_28_111745_558',1,0,0,1483495903),('2016_02_03_145049_558',1,1,0,1483495903),('2016_03_01_093559_558',1,2,0,1483495903),('2016_03_07_104809_558',1,1,0,1483495903),('2016_04_05_094031_558',1,2,0,1483495903),('2016_04_07_164823_695',1,1,0,1483495903),('2016_04_08_093542_762',1,3,0,1483495903),('2016_04_08_163323_744',1,5,0,1483495903),('2016_04_22_113127_780',1,2,0,1483495903),('2016_04_28_111323_29',1,5,0,1483495903),('2016_05_02_152214_695',1,14,0,1483495903),('2016_05_05_145709_695',1,2,0,1483495903),('2016_05_06_094958_695',1,1,0,1483495903),('2016_05_06_100718_695',1,1,0,1483495903),('2016_05_06_133104_695',1,1,0,1483495903),('2016_05_09_095058_806',1,1,0,1483495903),('2016_05_09_145312_793',1,1,0,1483495903),('2016_05_10_085657_558',1,3,0,1483495903),('2016_05_13_145916_695',1,3,0,1483495903),('2016_05_20_084021_841',1,1,0,1483495903),('2016_05_24_102734_558',1,1,0,1483495903),('2016_05_24_105810_695',1,1,0,1483495903),('2016_05_26_132210_558',1,2,0,1483495903),('2016_05_30_095337_695',1,1,0,1483495903),('2016_05_31_133812_558',1,1,0,1483495903),('2016_06_06_114233_885',1,3,0,1483495903),('2016_06_09_150429_889',1,2,0,1483495903),('2016_06_09_152346_901',1,4,0,1483495904),('2016_06_13_083546_883',1,1,0,1483495904),('2016_06_13_114418_810',1,1,0,1483495904),('2016_06_14_100522_914',1,1,0,1483495904),('2016_06_14_102557_923',1,1,0,1483495904),('2016_06_16_115300_932',1,1,0,1483495904),('2016_06_17_131437_558',1,3,0,1483495904),('2016_06_21_162705_957',1,1,0,1483495904),('2016_06_27_090833_949',1,1,0,1483495904),('2016_06_30_100114_971',1,1,0,1483495904),('2016_07_04_141351_695',1,1,0,1483495904),('2016_07_04_163356_695',1,1,0,1483495904),('2016_07_04_164821_695',1,1,0,1483495904),('2016_07_06_125605_994',1,1,0,1483495904),('2016_07_11_085528_942',1,4,0,1483495904),('2016_07_11_141024_558',1,3,0,1483495904),('2016_07_25_092223_1040',1,1,0,1483495904),('2016_07_25_093116_1028',1,1,0,1483495904),('2016_08_12_132048_558',1,3,0,1483495904),('2016_08_16_171553_1098',1,1,0,1483495904),('2016_08_25_083636_1087',1,3,0,1483495904),('2016_08_25_093740_558',1,1,0,1483495904),('2016_08_25_111933_1081',1,1,0,1483495904),('2016_08_26_143049_1090',1,1,0,1483495904),('2016_09_01_091420_1110',1,1,0,1483495904),('2016_09_06_143101_1101',1,2,0,1483495904),('2016_09_13_121207_358',1,1,0,1483495904),('2016_09_13_122218_1118',1,1,0,1483495904),('2016_09_16_083715_1004',1,2,0,1483495904),('2016_10_05_085608_1184',1,2,0,1483495904),('2016_10_05_100952_558',1,5,0,1483495904),('2016_10_14_152629_558',1,1,0,1483495904),('2016_10_14_153051_558',1,1,0,1483495904),('2016_10_20_145751_1126',1,1,0,1483495904),('2016_11_03_123219_1031',1,2,0,1483495904),('2016_11_04_095730_1306',1,3,0,1483495904),('2016_11_11_085655_1354',1,1,0,1483495904),('2016_11_15_172222_532',1,2,0,1483495904),('2016_11_23_121842_1342',1,2,0,1483495905),('2016_11_28_102729_1426',1,1,0,1483495905),('2016_12_07_115513_558',1,1,0,1483495905),('2017_01_03_201034_1508',1,2,0,1483495905);
+INSERT INTO `migrations` VALUES ('2015_01_28_143720_556',1,0,0,1450108251),('2015_10_05_115238_571',1,1,0,1450108251),('2015_10_07_140708_607',1,1,0,1450108251),('2015_11_09_114101_211',1,3,0,1450108251),('2015_11_19_141523_555',1,1,0,1450108251),('2015_12_14_100257_655',1,0,0,1450108251),('2015_02_06_141230_501',1,14,0,1464582935),('2015_02_10_162530_501',1,4,0,1464582935),('2015_04_23_213148_701',1,2,0,1464582935),('2015_11_02_143612_445',1,3,0,1464582935),('2015_12_23_000231_648',1,2,0,1464582935),('2016_01_14_163721_658',1,250,0,1464582935),('2016_01_29_151435_666',1,3,0,1464582936),('2016_03_10_124616_686',1,1,0,1464582936),('2016_03_23_225930_706',1,1,0,1464582936),('2016_03_28_202227_707',1,1,0,1464582936),('2016_03_28_211819_726',1,3,0,1464582936),('2016_03_29_113528_696',1,3,0,1464582936),('2016_04_05_105040_745',1,3,0,1464582936),('2016_04_05_145610_747',1,3,0,1464582936),('2016_05_29_235550_857',1,2,0,1464582936),('2015_01_28_154313_558',1,48,0,1483495901),('2015_02_13_100237_558',1,1,0,1483495901),('2015_02_20_103041_560',1,2,0,1483495901),('2015_02_20_130446_558',1,4,0,1483495901),('2015_02_24_083616_558',1,0,0,1483495902),('2015_02_24_124946_558',1,1,0,1483495902),('2015_02_24_142830_558',1,3,0,1483495902),('2015_02_24_160446_558',1,6,0,1483495902),('2015_02_25_160706_558',1,1,0,1483495902),('2015_02_25_161433_558',1,2,0,1483495902),('2015_02_25_194020_558',1,1,0,1483495902),('2015_02_25_200000_558',1,1,0,1483495902),('2015_02_26_094149_558',1,3,0,1483495902),('2015_02_26_143839_558',1,9,0,1483495902),('2015_02_26_173341_558',1,1,0,1483495902),('2015_02_26_191105_558',1,1,0,1483495902),('2015_03_03_131415_558',1,1,0,1483495902),('2015_03_03_141256_558',1,2,0,1483495902),('2015_04_10_145114_558',1,1,0,1483495902),('2015_05_15_130638_558',1,3,0,1483495902),('2015_05_20_125455_558',1,1,0,1483495902),('2015_05_22_093608_558',1,1,0,1483495902),('2015_05_22_105753_558',1,1,0,1483495902),('2015_05_27_141448_558',1,1,0,1483495902),('2015_06_25_162521_558',1,1,0,1483495902),('2015_06_26_103137_558',1,2,0,1483495902),('2015_06_30_132039_558',1,1,0,1483495902),('2015_07_07_112833_558',1,3,0,1483495902),('2015_07_15_134443_558',1,1,0,1483495902),('2015_07_27_085651_558',1,4,0,1483495902),('2015_07_27_110335_558',1,4,0,1483495902),('2015_07_27_123307_558',1,1,0,1483495902),('2015_08_07_134306_558',1,8,0,1483495902),('2015_08_12_120043_558',1,3,0,1483495902),('2015_08_12_145426_558',1,2,0,1483495902),('2015_08_25_100105_558',1,1,0,1483495902),('2015_08_27_131116_558',1,1,0,1483495902),('2015_09_01_134859_558',1,1,0,1483495902),('2015_09_03_094219_558',1,1,0,1483495902),('2015_09_08_105058_558',1,2,0,1483495902),('2015_09_10_090232_573',1,2,0,1483495902),('2015_09_11_104429_558',1,1,0,1483495902),('2015_09_16_142818_558',1,3,0,1483495902),('2015_09_29_101115_558',1,2,0,1483495902),('2015_10_02_144459_558',1,2,0,1483495902),('2015_10_08_114141_558',1,1,0,1483495902),('2015_10_15_105816_558',1,3,0,1483495902),('2015_11_18_091429_558',1,9,0,1483495903),('2015_11_18_133543_558',1,1,0,1483495903),('2015_11_30_105832_558',1,1,0,1483495903),('2015_12_03_100956_558',1,1,0,1483495903),('2015_12_10_104135_558',1,1,0,1483495903),('2016_01_14_104922_558',1,1,0,1483495903),('2016_01_20_121723_558',1,3,0,1483495903),('2016_01_21_143258_558',1,1,0,1483495903),('2016_01_22_091315_558',1,1,0,1483495903),('2016_01_28_111745_558',1,0,0,1483495903),('2016_02_03_145049_558',1,1,0,1483495903),('2016_03_01_093559_558',1,2,0,1483495903),('2016_03_07_104809_558',1,1,0,1483495903),('2016_04_05_094031_558',1,2,0,1483495903),('2016_04_07_164823_695',1,1,0,1483495903),('2016_04_08_093542_762',1,3,0,1483495903),('2016_04_08_163323_744',1,5,0,1483495903),('2016_04_22_113127_780',1,2,0,1483495903),('2016_04_28_111323_29',1,5,0,1483495903),('2016_05_02_152214_695',1,14,0,1483495903),('2016_05_05_145709_695',1,2,0,1483495903),('2016_05_06_094958_695',1,1,0,1483495903),('2016_05_06_100718_695',1,1,0,1483495903),('2016_05_06_133104_695',1,1,0,1483495903),('2016_05_09_095058_806',1,1,0,1483495903),('2016_05_09_145312_793',1,1,0,1483495903),('2016_05_10_085657_558',1,3,0,1483495903),('2016_05_13_145916_695',1,3,0,1483495903),('2016_05_20_084021_841',1,1,0,1483495903),('2016_05_24_102734_558',1,1,0,1483495903),('2016_05_24_105810_695',1,1,0,1483495903),('2016_05_26_132210_558',1,2,0,1483495903),('2016_05_30_095337_695',1,1,0,1483495903),('2016_05_31_133812_558',1,1,0,1483495903),('2016_06_06_114233_885',1,3,0,1483495903),('2016_06_09_150429_889',1,2,0,1483495903),('2016_06_09_152346_901',1,4,0,1483495904),('2016_06_13_083546_883',1,1,0,1483495904),('2016_06_13_114418_810',1,1,0,1483495904),('2016_06_14_100522_914',1,1,0,1483495904),('2016_06_14_102557_923',1,1,0,1483495904),('2016_06_16_115300_932',1,1,0,1483495904),('2016_06_17_131437_558',1,3,0,1483495904),('2016_06_21_162705_957',1,1,0,1483495904),('2016_06_27_090833_949',1,1,0,1483495904),('2016_06_30_100114_971',1,1,0,1483495904),('2016_07_04_141351_695',1,1,0,1483495904),('2016_07_04_163356_695',1,1,0,1483495904),('2016_07_04_164821_695',1,1,0,1483495904),('2016_07_06_125605_994',1,1,0,1483495904),('2016_07_11_085528_942',1,4,0,1483495904),('2016_07_11_141024_558',1,3,0,1483495904),('2016_07_25_092223_1040',1,1,0,1483495904),('2016_07_25_093116_1028',1,1,0,1483495904),('2016_08_12_132048_558',1,3,0,1483495904),('2016_08_16_171553_1098',1,1,0,1483495904),('2016_08_25_083636_1087',1,3,0,1483495904),('2016_08_25_093740_558',1,1,0,1483495904),('2016_08_25_111933_1081',1,1,0,1483495904),('2016_08_26_143049_1090',1,1,0,1483495904),('2016_09_01_091420_1110',1,1,0,1483495904),('2016_09_06_143101_1101',1,2,0,1483495904),('2016_09_13_121207_358',1,1,0,1483495904),('2016_09_13_122218_1118',1,1,0,1483495904),('2016_09_16_083715_1004',1,2,0,1483495904),('2016_10_05_085608_1184',1,2,0,1483495904),('2016_10_05_100952_558',1,5,0,1483495904),('2016_10_14_152629_558',1,1,0,1483495904),('2016_10_14_153051_558',1,1,0,1483495904),('2016_10_20_145751_1126',1,1,0,1483495904),('2016_11_03_123219_1031',1,2,0,1483495904),('2016_11_04_095730_1306',1,3,0,1483495904),('2016_11_11_085655_1354',1,1,0,1483495904),('2016_11_15_172222_532',1,2,0,1483495904),('2016_11_23_121842_1342',1,2,0,1483495905),('2016_11_28_102729_1426',1,1,0,1483495905),('2016_12_07_115513_558',1,1,0,1483495905),('2017_01_03_201034_1508',1,2,0,1483495905),('2016_01_30_124831_502',1,4,0,1492431737),('2016_06_10_182935_900',1,29,0,1492431737),('2016_06_10_201813_900',1,2,0,1492431737),('2016_06_10_203558_900',1,1,0,1492431737),('2016_07_12_182633_900',1,2,0,1492431737),('2016_07_13_162523_900',1,0,0,1492431737),('2016_07_18_161953_175',1,1,0,1492431737),('2016_07_18_163204_175',1,0,0,1492431737),('2016_07_18_185148_175',1,1,0,1492431737),('2016_07_21_102058_1443',1,1,0,1492431737),('2016_08_07_002215_1060',1,1,0,1492431737),('2016_08_07_002634_1060',1,1,0,1492431737),('2016_08_22_153916_1529',1,1,0,1492431737),('2016_08_25_101403_1541',1,0,0,1492431738),('2016_09_01_214358_1547',1,1,0,1492431738),('2016_09_07_192943_1548',1,1,0,1492431738),('2016_09_18_124637_1573',1,2,0,1492431738),('2016_09_19_155932_1330',1,2,0,1492431738),('2016_09_19_183432_1573',1,3,0,1492431738),('2016_10_14_102857_1583',1,1,0,1492431738),('2016_10_14_104207_1583',1,0,0,1492431738),('2016_10_15_111346_1605',1,3,0,1492431738),('2016_10_17_185451_1605',1,1,0,1492431738),('2016_10_19_100101_502',1,1,0,1492431738),('2016_10_28_150043_558',1,1,0,1492431738),('2016_11_16_215252_1633',1,1,0,1492431738),('2017_01_03_124412_1506',1,1,0,1492431738),('2017_01_04_095257_1292',1,9,0,1492431738),('2017_01_25_103134_1700',1,0,0,1492431738),('2017_01_31_081059_558',1,1,0,1492431738),('2017_02_03_133221_558',1,1,0,1492431738),('2017_02_09_102028_558',1,0,0,1492431738),('2017_02_09_145025_558',1,1,0,1492431738),('2017_02_10_135318_558',1,1,0,1492431738),('2017_02_14_021253_1618',1,1,0,1492431738),('2017_02_15_133254_1594',1,1,0,1492431738),('2017_02_17_095629_1622',1,1,0,1492431738),('2017_02_23_100009_558',1,8,0,1492431738),('2017_03_01_161920_900',1,3,0,1492431738),('2017_03_09_124107_1679',1,1,0,1492431738),('2017_03_13_132425_1692',1,1,0,1492431738),('2017_03_14_143617_900',1,1,0,1492431739),('2017_03_14_151620_1695',1,1,0,1492431739),('2017_03_27_212435_1155',1,2,0,1492431739),('2017_03_28_162020_1693',1,1,0,1492431739),('2017_03_28_162825_1693',1,1,0,1492431739),('2017_03_31_094258_900',1,3,0,1492431739),('2017_04_05_123631_1764',1,1,0,1492431739),('2017_04_07_112731_1807',1,1,0,1492431739),('2017_04_17_081350_1805',1,2,0,1492431739);
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -6209,8 +7043,7 @@ CREATE TABLE `portfolios` (
   `updated_by` int(11) unsigned NOT NULL COMMENT 'proxy_id of users from entrada_auth.user_data.id',
   `organisation_id` int(11) NOT NULL,
   `allow_student_export` tinyint(1) unsigned DEFAULT '1',
-  PRIMARY KEY (`portfolio_id`),
-  UNIQUE KEY `grad_year_unique` (`group_id`)
+  PRIMARY KEY (`portfolio_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='The portfolio container for each class of learners.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -6228,9 +7061,10 @@ CREATE TABLE `portfolios_lu_artifacts` (
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updated_by` int(11) unsigned NOT NULL COMMENT 'proxy_id of users from entrada_auth.user_data.id',
   PRIMARY KEY (`artifact_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Lookup table that stores all available types of artifacts.';
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='Lookup table that stores all available types of artifacts.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+INSERT INTO `portfolios_lu_artifacts` VALUES (1,'Personal Reflection','','Portfolio_Model_Artifact_Handler_PersonalReflection',1,1,1,'2017-04-17 08:22:19',0),(2,'Document Attachment','','Portfolio_Model_Artifact_Handler_DocumentAttachment',1,2,1,'2017-04-17 08:22:19',0);
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -6447,16 +7281,90 @@ CREATE TABLE `resource_images` (
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `rp_now_config` (
+  `rpnow_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `exam_url` varchar(128) DEFAULT NULL,
+  `exam_sponsor` int(11) unsigned DEFAULT NULL,
+  `rpnow_reviewed_exam` int(1) DEFAULT '0',
+  `rpnow_reviewer_notes` text,
+  `exam_post_id` int(11) unsigned NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  PRIMARY KEY (`rpnow_id`),
+  KEY `rp_now_config_fk_1` (`exam_post_id`),
+  CONSTRAINT `rp_now_config_fk_1` FOREIGN KEY (`exam_post_id`) REFERENCES `exam_posts` (`post_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `rp_now_users` (
+  `rpnow_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `proxy_id` int(11) unsigned NOT NULL,
+  `exam_code` varchar(20) NOT NULL,
+  `ssi_record_locator` varchar(50) DEFAULT NULL,
+  `rpnow_config_id` int(11) unsigned NOT NULL,
+  `created_date` bigint(64) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_date` bigint(64) DEFAULT NULL,
+  `deleted_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`rpnow_id`),
+  KEY `rp_now_user_fk_1` (`rpnow_config_id`),
+  CONSTRAINT `rp_now_user_fk_1` FOREIGN KEY (`rpnow_config_id`) REFERENCES `rp_now_config` (`rpnow_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `secure_access_files` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `resource_type` enum('exam_post','attached_quiz') DEFAULT 'exam_post',
+  `resource_id` int(11) DEFAULT NULL,
+  `file_name` varchar(255) DEFAULT NULL,
+  `file_type` varchar(255) DEFAULT NULL,
+  `file_title` varchar(128) DEFAULT NULL,
+  `file_size` varchar(32) DEFAULT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(12) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `secure_access_keys` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `resource_type` enum('exam_post','attached_quiz') DEFAULT 'exam_post',
+  `resource_id` int(11) DEFAULT NULL,
+  `key` text,
+  `version` varchar(64) DEFAULT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(12) DEFAULT NULL,
+  `deleted_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `settings` (
   `setting_id` int(12) NOT NULL AUTO_INCREMENT,
   `shortname` varchar(64) NOT NULL,
   `organisation_id` int(12) DEFAULT NULL,
   `value` text NOT NULL,
   PRIMARY KEY (`setting_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=23 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=25 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `settings` VALUES (1,'version_db',NULL,'18000'),(2,'version_entrada',NULL,'1.8.0'),(3,'export_weighted_grade',NULL,'1'),(4,'export_calculated_grade',NULL,'{\"enabled\":0}'),(5,'course_webpage_assessment_cohorts_count',NULL,'4'),(6,'valid_mimetypes',NULL,'{\"default\":[\"image\\/jpeg\",\"image\\/gif\",\"image\\/png\",\"text\\/csv\",\"text\\/richtext\",\"application\\/rtf\",\"application\\/pdf\",\"application\\/zip\",\"application\\/msword\",\"application\\/vnd.ms-office\",\"application\\/vnd.ms-powerpoint\",\"application\\/vnd.ms-write\",\"application\\/vnd.ms-excel\",\"application\\/vnd.ms-access\",\"application\\/vnd.ms-project\",\"application\\/vnd.openxmlformats-officedocument.wordprocessingml.document\",\"application\\/vnd.openxmlformats-officedocument.wordprocessingml.template\",\"application\\/vnd.openxmlformats-officedocument.spreadsheetml.sheet\",\"application\\/vnd.openxmlformats-officedocument.spreadsheetml.template\",\"application\\/vnd.openxmlformats-officedocument.presentationml.presentation\",\"application\\/vnd.openxmlformats-officedocument.presentationml.slideshow\",\"application\\/vnd.openxmlformats-officedocument.presentationml.template\",\"application\\/vnd.openxmlformats-officedocument.presentationml.slide\",\"application\\/onenote\",\"application\\/vnd.apple.keynote\",\"application\\/vnd.apple.numbers\",\"application\\/vnd.apple.pages\"],\"lor\":[\"image\\/jpeg\",\"image\\/gif\",\"image\\/png\",\"text\\/csv\",\"text\\/richtext\",\"application\\/rtf\",\"application\\/pdf\",\"application\\/zip\",\"application\\/msword\",\"application\\/vnd.ms-office\",\"application\\/vnd.ms-powerpoint\",\"application\\/vnd.ms-write\",\"application\\/vnd.ms-excel\",\"application\\/vnd.ms-access\",\"application\\/vnd.ms-project\",\"application\\/vnd.openxmlformats-officedocument.wordprocessingml.document\",\"application\\/vnd.openxmlformats-officedocument.wordprocessingml.template\",\"application\\/vnd.openxmlformats-officedocument.spreadsheetml.sheet\",\"application\\/vnd.openxmlformats-officedocument.spreadsheetml.template\",\"application\\/vnd.openxmlformats-officedocument.presentationml.presentation\",\"application\\/vnd.openxmlformats-officedocument.presentationml.slideshow\",\"application\\/vnd.openxmlformats-officedocument.presentationml.template\",\"application\\/vnd.openxmlformats-officedocument.presentationml.slide\",\"application\\/onenote\",\"application\\/vnd.apple.keynote\",\"application\\/vnd.apple.numbers\",\"application\\/vnd.apple.pages\"]}'),(7,'lrs_endpoint',NULL,''),(8,'lrs_version',NULL,''),(9,'lrs_username',NULL,''),(10,'lrs_password',NULL,''),(11,'version_js',NULL,'1600'),(12,'flagging_notifications',1,'1'),(13,'twitter_consumer_key',NULL,''),(14,'twitter_consumer_secret',NULL,''),(15,'twitter_language',NULL,'en'),(16,'twitter_sort_order',NULL,'recent'),(17,'twitter_update_interval',NULL,'5'),(18,'caliper_endpoint',NULL,''),(19,'caliper_sensor_id',NULL,''),(20,'caliper_api_key',NULL,''),(21,'caliper_debug',NULL,'0'),(22,'prizm_doc_settings',NULL,'{\"url\" : \"\\/\\/api.accusoft.com\\/v1\\/viewer\\/\",\"key\" : \"b2GVmI5r7iL2zAKFZDww4HqCCmac5NRnFzgfDzco_xEIdZz3rbwrsX4o4-7lOF7L\",\"viewertype\" : \"html5\",\"viewerheight\" : \"600\",\"viewerwidth\" : \"100%\",\"upperToolbarColor\" : \"000000\",\"lowerToolbarColor\" : \"88909e\",\"bottomToolbarColor\" : \"000000\",\"backgroundColor\" : \"e4eaee\",\"fontColor\" : \"ffffff\",\"buttonColor\" : \"white\",\"hidden\" : \"esign,redact\"}');
+INSERT INTO `settings` VALUES (1,'version_db',NULL,'19000'),(2,'version_entrada',NULL,'1.9.0'),(3,'export_weighted_grade',NULL,'1'),(4,'export_calculated_grade',NULL,'{\"enabled\":0}'),(5,'course_webpage_assessment_cohorts_count',NULL,'4'),(6,'valid_mimetypes',NULL,'{\"default\":[\"image\\/jpeg\",\"image\\/gif\",\"image\\/png\",\"text\\/csv\",\"text\\/richtext\",\"application\\/rtf\",\"application\\/pdf\",\"application\\/zip\",\"application\\/msword\",\"application\\/vnd.ms-office\",\"application\\/vnd.ms-powerpoint\",\"application\\/vnd.ms-write\",\"application\\/vnd.ms-excel\",\"application\\/vnd.ms-access\",\"application\\/vnd.ms-project\",\"application\\/vnd.openxmlformats-officedocument.wordprocessingml.document\",\"application\\/vnd.openxmlformats-officedocument.wordprocessingml.template\",\"application\\/vnd.openxmlformats-officedocument.spreadsheetml.sheet\",\"application\\/vnd.openxmlformats-officedocument.spreadsheetml.template\",\"application\\/vnd.openxmlformats-officedocument.presentationml.presentation\",\"application\\/vnd.openxmlformats-officedocument.presentationml.slideshow\",\"application\\/vnd.openxmlformats-officedocument.presentationml.template\",\"application\\/vnd.openxmlformats-officedocument.presentationml.slide\",\"application\\/onenote\",\"application\\/vnd.apple.keynote\",\"application\\/vnd.apple.numbers\",\"application\\/vnd.apple.pages\"],\"lor\":[\"image\\/jpeg\",\"image\\/gif\",\"image\\/png\",\"text\\/csv\",\"text\\/richtext\",\"application\\/rtf\",\"application\\/pdf\",\"application\\/zip\",\"application\\/msword\",\"application\\/vnd.ms-office\",\"application\\/vnd.ms-powerpoint\",\"application\\/vnd.ms-write\",\"application\\/vnd.ms-excel\",\"application\\/vnd.ms-access\",\"application\\/vnd.ms-project\",\"application\\/vnd.openxmlformats-officedocument.wordprocessingml.document\",\"application\\/vnd.openxmlformats-officedocument.wordprocessingml.template\",\"application\\/vnd.openxmlformats-officedocument.spreadsheetml.sheet\",\"application\\/vnd.openxmlformats-officedocument.spreadsheetml.template\",\"application\\/vnd.openxmlformats-officedocument.presentationml.presentation\",\"application\\/vnd.openxmlformats-officedocument.presentationml.slideshow\",\"application\\/vnd.openxmlformats-officedocument.presentationml.template\",\"application\\/vnd.openxmlformats-officedocument.presentationml.slide\",\"application\\/onenote\",\"application\\/vnd.apple.keynote\",\"application\\/vnd.apple.numbers\",\"application\\/vnd.apple.pages\"]}'),(7,'lrs_endpoint',NULL,''),(8,'lrs_version',NULL,''),(9,'lrs_username',NULL,''),(10,'lrs_password',NULL,''),(24,'bookmarks_display_sidebar',NULL,'1'),(12,'flagging_notifications',1,'1'),(13,'twitter_consumer_key',NULL,''),(14,'twitter_consumer_secret',NULL,''),(15,'twitter_language',NULL,'en'),(16,'twitter_sort_order',NULL,'recent'),(17,'twitter_update_interval',NULL,'5'),(18,'caliper_endpoint',NULL,''),(19,'caliper_sensor_id',NULL,''),(20,'caliper_api_key',NULL,''),(21,'caliper_debug',NULL,'0'),(22,'prizm_doc_settings',NULL,'{\"url\" : \"\\/\\/api.accusoft.com\\/v1\\/viewer\\/\",\"key\" : \"b2GVmI5r7iL2zAKFZDww4HqCCmac5NRnFzgfDzco_xEIdZz3rbwrsX4o4-7lOF7L\",\"viewertype\" : \"html5\",\"viewerheight\" : \"600\",\"viewerwidth\" : \"100%\",\"upperToolbarColor\" : \"000000\",\"lowerToolbarColor\" : \"88909e\",\"bottomToolbarColor\" : \"000000\",\"backgroundColor\" : \"e4eaee\",\"fontColor\" : \"ffffff\",\"buttonColor\" : \"white\",\"hidden\" : \"esign,redact\"}'),(23,'podcast_display_sidebar',NULL,'1');
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;

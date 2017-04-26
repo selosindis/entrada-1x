@@ -193,7 +193,7 @@ switch ($STEP) {
 			$STEP = 3;
 		}
 	case 3 :
-		if (isset($_POST["entrada_url"]) && ($url_parts = parse_url($_POST["entrada_url"])) && ($url_scheme = $url_parts["scheme"]) && ($tmp_url = str_replace($url_scheme."://", "", $_POST["entrada_url"])) && ($url = (isset($scheme) && $scheme ? $scheme : "http")."://".clean_input($tmp_url, "url"))) {
+		if (isset($_POST["entrada_url"]) && ($url_parts = parse_url($_POST["entrada_url"])) && ($url_scheme = $url_parts["scheme"]) && ($tmp_url = str_replace($url_scheme . "://", "", $_POST["entrada_url"])) && ($url = ($url_scheme ? $url_scheme : "http") . "://" . clean_input($tmp_url, "url"))) {
 			$PROCESSED["entrada_url"] = $url;
 		} else {
 			$ERROR++;
@@ -223,10 +223,12 @@ switch ($STEP) {
 				!@is_writable($entrada_storage."/community-shares") ||
                 !@is_writable($entrada_storage."/eportfolio") ||
 				!@is_writable($entrada_storage."/event-files") ||
+				!@is_writable($entrada_storage."/exam-files") ||
 				!@is_writable($entrada_storage."/logs") ||
 				!@is_writable($entrada_storage."/lor") ||
 				!@is_writable($entrada_storage."/msprs") ||
 				!@is_writable($entrada_storage."/resource-images") ||
+				!@is_writable($entrada_storage."/secure-access") ||
 				!@is_writable($entrada_storage."/syllabi") ||
 				!@is_writable($entrada_storage."/user-photos")) {
 
@@ -242,10 +244,12 @@ switch ($STEP) {
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/community-shares<br />\n";
                 $ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/eportfolio<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/event-files<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/exam-files<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/logs<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/lor<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/msprs<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/resource-images<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/secure-access<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/syllabi<br />\n";
 				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/user-photos<br />\n";
 				$ERRORSTR[$i] .= "</div>\n";

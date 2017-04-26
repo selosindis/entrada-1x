@@ -66,7 +66,7 @@ class Entrada_Sync_Course_Ldap {
                     FROM `courses` AS a
                     JOIN `curriculum_periods` AS b
                     ON a.`curriculum_type_id` = b.`curriculum_type_id`
-                    LEFT JOIN `course_audience` AS c
+                    JOIN `course_audience` AS c
                     ON b.`cperiod_id` = c.`cperiod_id`
                     AND c.`course_id` = a.`course_id`
                     LEFT JOIN `groups` AS d

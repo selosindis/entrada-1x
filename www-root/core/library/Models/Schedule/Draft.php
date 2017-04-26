@@ -166,6 +166,7 @@ class Models_Schedule_Draft extends Models_Base {
                     $u = User::fetchRowByID($proxy_id);
                     if ($u) {
                         $member["name"] = $u->getFullname();
+                        $member["user_data"] = $u->toArray();
                     }
 
                     if (!isset($member["slots"]) || empty($member["slots"])) {
@@ -184,6 +185,7 @@ class Models_Schedule_Draft extends Models_Base {
                                 $schedule_data["off_service_audience"][$member["audience_value"]]["proxy_id"] = $member["audience_value"];
                                 $schedule_data["off_service_audience"][$member["audience_value"]]["name"] = $u->getFullname();
                                 $schedule_data["off_service_audience"][$member["audience_value"]]["slots"][$slot["schedule_order"]] = $slot;
+                                $schedule_data["off_service_audience"][$member["audience_value"]]["user_data"] = $u->toArray();
                             }
                         }
                     }
@@ -214,7 +216,7 @@ class Models_Schedule_Draft extends Models_Base {
 
         $drafts = false;
 
-        $query = "SELECT a.*
+        $query = "  SELECT a.*
                     FROM `cbl_schedule_drafts` AS a
                     JOIN `cbl_schedule_draft_authors` AS b
                     ON a.`cbl_schedule_draft_id` = b.`cbl_schedule_draft_id`

@@ -66,6 +66,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_TRACKS"))) {
                 $url = ENTRADA_URL . "/admin/settings/manage/curriculumtracks?section=edit&id=".$curriculum_track->getID()."&org=".$ORGANISATION_ID;
                 if ($count >= $start && $count < ($start + $limit)) {
                     $row = array();
+                    $row["id"] = $curriculum_track->getID();
                     $row["checkbox"] = "<input class=\"delete\" type=\"checkbox\" name=\"delete[".html_encode($curriculum_track->getID())."]\" value=\"".html_encode($curriculum_track->getID())."\" />";
                     $row["curriculum_track_name"] = "<a href=\"".$url."\">".html_encode(($curriculum_track->getCurriculumTrackName()))."</a>";
                     $output["aaData"][] = $row;

@@ -218,6 +218,30 @@ class Models_Course extends Models_Base {
         parent::__construct($arr);
     }
     
+    /* @return bool|Models_Community */
+    public function getCommunity() {
+        if ($this->community != null) {
+            return $this->community;
+        } else {
+            $course_community = Models_Community_Course::fetchRowByCourseID($this->course_id);
+            if (isset($course_community) && is_object($course_community)) {
+                return $this->community = Models_Community::fetchRowByID($course_community->getCourseID());
+            } else {
+                return null;
+            }
+        }
+    }
+
+    /* @return bool|Models_Course */
+    public static function fetchRowByID($course_id = NULL, $course_active = 1) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "course_id", "value" => $course_id, "method" => "="),
+            array("key" => "course_active", "value" => $course_active, "method" => "=")
+        ));
+    }
+    
+    /* @return bool|Models_Course */
     public static function get($course_id) {
         $self = new self();
         return $self->fetchRow(array("course_id" => $course_id, "course_active" => 1));
@@ -228,6 +252,7 @@ class Models_Course extends Models_Base {
         return $self->fetchAll(array("organisation_id" => $org_id, "course_active" => "1"));
     }
 
+    /* @return ArrayObject|Models_Course_Audience */
     public function getAudience ($cperiod_id = null) {
         $audience = new Models_Course_Audience();
         return $audience->fetchAllByCourseIDCperiodID($this->getID(), $cperiod_id);
@@ -399,12 +424,13 @@ class Models_Course extends Models_Base {
 
         return false;
     }
-    
+
     public static function getUserCourses ($proxy_id, $organisation_id, $search_value = null, $active = 1) {
-        global $db, $ENTRADA_USER;
+        global $db, $ENTRADA_USER, $ENTRADA_ACL;
         $courses = false;
 
-        if ($ENTRADA_USER->getActiveRole() == "admin") {
+        $admin = $ENTRADA_ACL->amIAllowed("assessmentreportadmin", "read", true);
+        if ($ENTRADA_USER->getActiveRole() == "admin" || $admin) {
             $query = "      SELECT * FROM `courses`
                             WHERE `organisation_id` = ?
                             AND `course_active` = ? ";
@@ -454,17 +480,27 @@ class Models_Course extends Models_Base {
     }
 
     public static function getActiveUserCoursesIDList() {
-        global $db, $ENTRADA_USER;
+        global $db, $ENTRADA_USER, $ENTRADA_ACL;
+
         $course_list = array();
+        $admin = $ENTRADA_ACL->amIAllowed("assessmentreportadmin", "read", true);
+        $AND_PROXY_ID = $JOIN_COURSE_CONTACTS = "";
 
-        $query = "  SELECT a.* FROM `courses` AS a
-                    JOIN `course_contacts` AS b
-                    ON a.`course_id` = b.`course_id`
-                    WHERE b.`proxy_id` = ?                      
-                    AND a.`organisation_id` = ?
-                    AND a.`course_active` = 1 ";
+        if (!$admin) {
+            $JOIN_COURSE_CONTACTS = "   JOIN `course_contacts` AS b
+                                        ON a.`course_id` = b.`course_id` ";
+            $proxy_id = $ENTRADA_USER->getActiveId();
+            $AND_PROXY_ID = " AND b.`proxy_id` = $proxy_id ";
+        }
 
-        $results = $db->GetAll($query, array($ENTRADA_USER->getActiveId(), $ENTRADA_USER->getActiveOrganisation()));
+        $query = "  
+                SELECT a.* FROM `courses` AS a
+                $JOIN_COURSE_CONTACTS
+                WHERE a.`organisation_id` = ?
+                AND a.`course_active` = 1 
+                $AND_PROXY_ID ";
+
+        $results = $db->GetAll($query, array($ENTRADA_USER->getActiveOrganisation()));
 
         if ($results) {
             foreach ($results as $result) {
@@ -475,49 +511,46 @@ class Models_Course extends Models_Base {
         return $course_list;
     }
 
-    public static function fetchAllByIDs ($course_ids = array()) {
+    public static function fetchAllByIDs($course_ids = array(), $active = 1) {
         global $db;
 
-        $courses = false;
+        $courses = array();
 
-        $course_ids_string = "";
-        if (!empty($course_ids)) {
-            foreach ($course_ids as $course_id) {
-                $course_ids_string .= ($course_ids_string ? ", " : "").$db->qstr($course_id);
+        $active = (int) $active;
+
+        if (is_array($course_ids)) {
+            foreach ($course_ids as &$id) {
+                $id = (int) $id;
             }
+        } else {
+            $course_ids = array((int) $course_ids);
         }
 
-        $query = "SELECT `course_id`, `course_name`, `course_code` FROM courses`
-                  WHERE `course_id` IN (".$course_ids_string.")
-                  ORDER BY `course_code`, `course_name`";
-        $results = $db->getAll($query);
-
-        if ($results) {
-            foreach ($results as $result) {
-                $courses[] = new self($result);
+        if ($course_ids) {
+            $query = "SELECT * FROM `courses`
+                      WHERE `course_id` IN (" . implode(", ", $course_ids) . ")
+                      AND `course_active` = ?
+                      ORDER BY `course_code`, `course_name`";
+            $results = $db->GetAll($query, array($active));
+            if ($results) {
+                foreach ($results as $result) {
+                    $courses[] = new self($result);
+                }
             }
         }
 
         return $courses;
     }
 
-    public static function fetchRowByID ($course_id, $active = 1) {
-        $self = new self();
-        return $self->fetchRow(array(
-            array("key" => "course_id", "value" => $course_id, "method" => "="),
-            array("key" => "course_active", "value" => $active, "method" => "=")
-        ));
-    }
-
-    public function getRowByID ($course_id, $active = 1) {
+    public function getRowByID($course_id, $active = 1) {
         global $db;
 
         $query = "SELECT *
                     FROM `courses` 
-                    WHERE `course_id` = ? AND `course_active` = ? ";
+                    WHERE `course_id` = ?
+                    AND `course_active` = ?";
         
-        $results = $db->getAll($query, array($course_id, $active));
-
+        $results = $db->GetAll($query, array($course_id, $active));
         if ($results) {
             return $results;
         }
@@ -541,7 +574,7 @@ class Models_Course extends Models_Base {
         return json_encode($data);
     }
 
-    public static function fetchCourseContactUsersByGroup ($course_id, $search_value = "", $group = null) {
+    public static function fetchCourseContactUsersByGroup ($course_id, $search_value = "", $group = null, $limit = null, $offset = null) {
         global $db;
 
         $query = "	SELECT a.`id` AS `proxy_id`, a.`firstname`, a.`lastname`, b.`group`, b.`role`, a.`email`
@@ -598,6 +631,14 @@ class Models_Course extends Models_Base {
                     AND CONCAT_WS(' ', a.`firstname`, a.`lastname`) LIKE ?
                     GROUP BY a.`id`
                     ORDER BY `firstname` ASC, `lastname` ASC";
+
+        if (!empty($limit)) {
+            $query .= " LIMIT " . $limit;
+        }
+
+        if (!empty($offset)) {
+            $query .= " OFFSET " . $offset;
+        }
         $results = $db->GetAll($query, array($course_id, time(), time(), $group, "%".$search_value."%", $course_id, time(), time(), $group, "%".$search_value."%", $course_id, time(), time(), $group, "%".$search_value."%"));
 
         return $results;
@@ -640,13 +681,11 @@ class Models_Course extends Models_Base {
                             }
                         }
                     }
-                    $course_contact_model = new Models_Assessments_Distribution_CourseContact();
-                    $cbl_contacts = $course_contact_model->getFaculty($proxy_id, $organisation_id, ENTRADA_URL);
-                    if ($cbl_contacts) {
-                        foreach ($cbl_contacts as $cbl_contact) {
-                            $user_id = ($cbl_contact instanceof Entrada_Utilities_AssessmentUser) ? $cbl_contact->getProxyID() : $cbl_contact->getID();
-                            $user_type = ($cbl_contact instanceof Entrada_Utilities_AssessmentUser) ? "internal" : "external";
-                            if ($user_id == $faculty_id && $user_type == $assessor_type) {
+                    $assessment_user = new Entrada_Utilities_AssessmentUser();
+                    $faculty = $assessment_user->getAssessorFacultyList($proxy_id, $organisation_id);
+                    if ($faculty) {
+                        foreach ($faculty as $faculty) {
+                            if ($faculty["id"] == $faculty_id && $faculty["type"] == $assessor_type) {
                                 return true;
                             }
                         }

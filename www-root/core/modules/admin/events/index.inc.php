@@ -53,6 +53,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			"event_title" => "Event Title",
 			"event_description" => "Event Description",
 			"event_location" => "Location",
+            "event_location_room" => "Location Room",
 			"audience_cohorts" => "Audience (Cohorts)",
 			"audience_groups" => "Audience (Groups)",
 			"audience_students" => "Audience (Students)",
@@ -273,7 +274,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 if ($url) {
                     echo "  <div class=\"btn-group\">\n";
                     echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">\n";
-                    echo "          <i class=\"icon-cog\"></i>\n";
+                    echo "          <i class=\"fa fa-cog\" aria-hidden=\"true\"></i>\n";
                     echo "      </button>";
                     echo "      <ul class=\"dropdown-menu toggle-left\">\n";
 					if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update')) {

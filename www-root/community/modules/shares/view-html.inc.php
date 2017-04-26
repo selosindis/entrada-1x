@@ -179,5 +179,3 @@ if ($RECORD_ID) {
 	header("Location: ".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL);
 	exit;
 }
-
-?>

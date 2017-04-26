@@ -25,12 +25,14 @@ class Entrada_ACL extends ACL_Factory {
 				),
 				"communityfolder",
 				"communityfile",
-				"communitylink"
+                "communitylink",
+                "communityhtml"
 			),
 			"communityadmin",
 			"configuration",
 			"course" => array (
 				"coursecontent",
+                "coursegroup",
 				"event" => array (
 					"eventcontent"
 				)
@@ -102,13 +104,25 @@ class Entrada_ACL extends ACL_Factory {
 			"eportfolio",
 			"eportfolio-artifact",
 			"masquerade",
+			"exam",
+            "examdashboard",
+            "examquestion",
+			"examquestiongroup",
+			"examquestiongroupindex",
+            "examfolder",
+            "examgradefnb",
+			"secure" => array(
+				"secureaccesskey",
+				"secureaccessfile"
+			),
             "assessments",
             "assessmentcomponent",
             "rotationschedule",
             "assessor",
             "assessmentresult",
             "assessmentprogress",
-            "academicadvisor"
+            "academicadvisor",
+            "assessmentreportadmin"
 		)
 	);
 	/**
@@ -202,20 +216,30 @@ class Entrada_ACL extends ACL_Factory {
 			$acl->addRole(new Zend_Acl_Role($entity_type));
 		}
 
-		// Initialize variables for use throughout creation
+        // Add Organisations
 		foreach ($permissions as $access_id => $permission_mask) {
-			$cur_access_id = $access_id;
-			$cur_role = $permission_mask["role"];
-			$cur_group = $permission_mask["group"];
-			$cur_organisation = (array_key_exists("organisation_title", $permission_mask) ? $permission_mask["organisation_title"] : NULL);
 			$cur_organisation_id = $permission_mask["organisation_id"];
 
 			if (!$acl->hasRole("organisation".$cur_organisation_id)) {
 				$acl->addRole(new Zend_Acl_Role("organisation".$cur_organisation_id), "organisation");
 			}
+        }
+
+        // Prepare an array containing all the organisations that a group belongs to
+        // This is needed because you have to add all the organisations at the time you create the group
+        $group_organisations = array();
+        foreach ($permissions as $access_id => $permission_mask) {
+            $group_organisations[$permission_mask["group"]][] = "organisation".$permission_mask["organisation_id"];
+        }
+
+        // Now add Groups, Roles and Users
+		foreach ($permissions as $access_id => $permission_mask) {
+			$cur_access_id = $access_id;
+			$cur_role = $permission_mask["role"];
+			$cur_group = $permission_mask["group"];
 
 			if (!$acl->hasRole("group".$cur_group)) {
-				$acl->addRole(new Zend_Acl_Role("group".$cur_group), array("group", "organisation".$cur_organisation_id));
+				$acl->addRole(new Zend_Acl_Role("group".$cur_group), array_merge(array("group"), $group_organisations[$cur_group]));
 			}
 
 			if (!$acl->hasRole("role".$cur_role)) {
@@ -579,7 +603,7 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 			$resource_id = $resource->getResourceId();
 			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
 
-			if ($resource_type !== "course" && $resource_type !== "coursecontent") {
+			if ($resource_type !== "course" && $resource_type !== "coursecontent" && $resource_type !== "coursegroup") {
 				//This only asserts for users on courses.
 				return false;
 			}
@@ -627,7 +651,8 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 					AND d.`member_acl` = '1'
 					LEFT JOIN `".DATABASE_NAME."`.`course_contacts` AS e
 					ON e.`course_id` = a.`course_id`
-					AND e.`contact_type` = 'pcoordinator'
+					AND (e.`contact_type` = 'pcoordinator'
+                        OR e.`contact_type` = 'ccoordinator')
 					WHERE a.`course_id` = ".$db->qstr($course_id)."
 					AND (a.`pcoord_id` = ".$db->qstr($user_id)."
 						OR b.`proxy_id` = ".$db->qstr($user_id)."
@@ -733,7 +758,8 @@ class NotCourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 					AND d.`member_acl` = '1'
 					LEFT JOIN `".DATABASE_NAME."`.`course_contacts` AS e
 					ON e.`course_id` = a.`course_id`
-					AND e.`contact_type` = 'pcoordinator'
+					AND (e.`contact_type` = 'pcoordinator'
+                        OR e.`contact_type` = 'ccoordinator')
 					WHERE a.`course_id` = ".$db->qstr($course_id)."
 					AND (a.`pcoord_id` = ".$db->qstr($user_id)."
 						OR b.`proxy_id` = ".$db->qstr($user_id)."
@@ -1742,7 +1768,8 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 						AND d.`contact_type` = 'director'
 						LEFT JOIN `course_contacts` AS e
 						ON e.`course_id` = c.`course_id`
-						AND e.`contact_type` = 'pcoordinator'
+						AND (e.`contact_type` = 'pcoordinator'
+                            OR e.`contact_type` = 'ccoordinator')
 						WHERE a.`event_id` = ".$db->qstr($event_id)."
 						AND c.`course_active` = '1'";
 		$results	= $db->GetAll($query);
@@ -1979,7 +2006,7 @@ class CommunityMemberAssertion extends CommunityAssertion {
 	public function _checkCommunity($user_id, $community_id) {
 		global $db, $ENTRADA_USER;
 		$query	= "SELECT `proxy_id` FROM `community_members`
-				WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
+				WHERE `community_id` = ".$db->qstr($community_id)."
 				AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if ($result) {
@@ -2040,6 +2067,13 @@ class CourseCommunityEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 						  ON a.`community_id` = b.`community_id`
 						  WHERE b.`cslink_id` = ".$db->qstr($communityresource_id);
 			break;
+			case 'communityhtml' :
+				$query = "SELECT `course_id`
+						  FROM `community_courses` AS a
+						  JOIN `community_share_html` AS b
+						  ON a.`community_id` = b.`community_id`
+						  WHERE b.`cshtml_id` = ".$db->qstr($communityresource_id);
+			break;
 		}
         $course_id = $db->GetOne($query);
         if ($course_id) {
@@ -2076,33 +2110,34 @@ class CourseCommunityEnrollmentAssertion implements Zend_Acl_Assert_Interface {
     static function _checkCourseCommunityEnrollment($user_id, $course_id) {
         global $db;
 
-        $query = "
-        SELECT *
-        FROM `courses`
-        WHERE `course_id` = " . $db->qstr($course_id);
-        $result = $db->GetRow($query);
+        $query = "SELECT *
+                    FROM `courses`
+                    WHERE `course_id` = " . $db->qstr($course_id);
+        $result = $db->CacheGetRow(CACHE_TIMEOUT, $query);
 
-        if ($result["permission"] == "open") {
-            return true;
-        } else {
-            $query = "
-            SELECT *
-            FROM `community_courses`
-            WHERE `course_id` = " . $db->qstr($course_id);
-            $result = $db->GetRow($query);
-            if ($result) {
-                $query = "
-                SELECT *
-                FROM `community_members`
-                WHERE `community_id` = " . $db->qstr($result["community_id"]) . "
-                AND `proxy_id` = " . $db->qstr($user_id) . "
-                AND `member_active` = 1";
-                $result = $db->GetRow($query);
+        if ($result) {
+            if ($result["permission"] == "open") {
+                return true;
+            } else {
+                $query = "SELECT *
+                            FROM `community_courses`
+                            WHERE `course_id` = " . $db->qstr($course_id);
+                $result = $db->CacheGetRow(CACHE_TIMEOUT, $query);
                 if ($result) {
-                    return true;
+                    $query = "SELECT *
+                                FROM `community_members`
+                                WHERE `community_id` = " . $db->qstr($result["community_id"]) . "
+                                AND `proxy_id` = " . $db->qstr($user_id) . "
+                                AND `member_active` = 1";
+                    $result = $db->CacheGetRow(CACHE_TIMEOUT, $query);
+                    if ($result) {
+                        return true;
+                    }
                 }
             }
         }
+
+        return false;
     }
 }
 
@@ -2180,6 +2215,10 @@ class CourseGroupMemberAssertion implements Zend_Acl_Assert_Interface {
 				case 'communitylink' :
 					$query = "SELECT `community_id` FROM `community_share_links`
 							  WHERE `cslink_id` = ".$db->qstr($communityresource_id);
+				break;
+				case 'communityhtml' :
+					$query = "SELECT `community_id` FROM `community_share_html`
+							  WHERE `cshtml_id` = ".$db->qstr($communityresource_id);
 				break;
 			}
             $result	= $db->GetRow($query);
@@ -2276,7 +2315,7 @@ class CommunityDiscussionTopicOwnerAssertion implements Zend_Acl_Assert_Interfac
 			$communityresource_type = preg_replace('/[0-9]+/', "", $resource_id);
             $communityresource_id = preg_replace('/[^0-9]+/', "", $resource_id);
             
-            if ($resource_type !== "communitydiscussiontopic") {
+            if ($communityresource_type !== "communitydiscussiontopic") {
             //This only asserts for communitydiscussiontopics.
                 return false;
             }
@@ -2966,6 +3005,28 @@ class CommunityDiscussionTopicResource extends EntradaAclResource{
         return "communitydiscussiontopic". ($this->specific ? $this->communitydiscussiontopic_id : "");
     }
 }
+
+/**
+ * Creates a group (cohort) resource
+ * 
+ * @author Organisation: David Geffen School of Medicine at UCLA
+ * @author Unit: Instructional Design and Technology Unit
+ * @author Developer: Robert Fotino <robert.fotino@gmail.com>
+ */
+class GroupResource extends EntradaAclResource {
+    var $organisation_id;
+    var $group_id;
+    
+    function __construct($organisation_id, $group_id = null, $assert = true) {
+        $this->organisation_id = $organisation_id;
+        $this->group_id = $group_id;
+        $this->assert = $assert;
+    }
+    public function getResourceId() {
+        return "group".($this->specific ? $this->group_id : "");
+    }
+}
+
 /**
  * Smart gradebook resource object for the EntradaACL.
  *
@@ -3228,6 +3289,43 @@ class ObjectiveResource extends EntradaAclResource {
 }
 
 /**
+ * Community resource object for the EntradaACL.
+ */
+class CommunityAdminResource extends EntradaAclResource {
+	/**
+	 * This community target organisation's ID, used for ResourceOrganisationAssertion.
+	 * @see ResourceOrganisationAssertion()
+	 * @var integer
+	 */
+	public $organisation_id = 0;
+
+	/**
+	 * Constructs this course resource with the supplied values
+	 * @param integer $community_id The community id for this resource.
+	 * @param boolean $assert Whether or not to make an assertion
+	 */
+	function __construct($community_id, $assert = true) {
+        $community_course = Models_Community_Course::fetchRowByCommunityID($community_id);
+        if ($community_course) {
+            $course = Models_Course::get($community_course->getCourseID());
+            if ($course) {
+                $this->organisation_id = $course->getOrganisationID();
+            }
+        }
+        $this->assert = (bool)$assert;
+	}
+
+	/**
+	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+	 * Will return based on specifc property of this resource instance.
+	 * @return string
+	 */
+	public function getResourceId() {
+		return "communityadmin";
+	}
+}
+
+/**
  * Smart course content resource object for the EntradaACL.
  *
  * @author Organisation: Queen's University
@@ -3243,6 +3341,24 @@ class CourseContentResource extends CourseResource {
 	 */
 	public function getResourceId() {
 		return "coursecontent".($this->specific ? $this->course_id : "");
+	}
+}
+
+/**
+ * Smart course group resource object for the EntradaACL.
+ *
+ * @author Organisation: David Geffen School of Medicine at UCLA
+ * @author Unit: IDTU
+ * @author Developer: Samuel Payne <spayne@mednet.ucla.edu>
+ */
+class CourseGroupResource extends CourseResource {
+	/**
+	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+	 * Will return based on specifc property of this resource instance.
+	 * @return string
+	 */
+	public function getResourceId() {
+		return "coursegroup".($this->specific ? $this->course_id : "");
 	}
 }
 
@@ -3565,6 +3681,423 @@ class EportfolioOwnerAssertion implements Zend_Acl_Assert_Interface {
 		return true;
 	}
 }
+
+class ExamResource extends EntradaAclResource {
+
+    /**
+     * The exam resource ID ie. question_id, exam_id or group_id
+     * @var integer
+     */
+    var $exam_resource_id;
+
+    /**
+     * Constructs this exams resource with the supplied values
+     * @param integer $exam_resource_id The exams resource ID to represent
+     * @param boolean $assert Wheather or not to make an assertion
+     */
+    function __construct($exam_resource_id = null, $assert = null) {
+
+        $this->exam_resource_id = $exam_resource_id;
+
+        if (isset($assert)) {
+
+            $this->assert = $assert;
+        }
+    }
+
+    /**
+     * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+     * Will return based on specifc property of this resource instance.
+     * @return string
+     */
+    public function getResourceId() {
+        return "exam".($this->specific ? $this->exam_resource_id : "");
+    }
+}
+
+class ExamOwnerAssertion implements Zend_Acl_Assert_Interface {
+    public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+        global $db, $ENTRADA_USER;
+
+        if (isset($resource->exam_resource_id)) {
+            $exam_resource_id = $resource->exam_resource_id;
+        } else if (isset($acl->_entrada_last_query->exam_resource_id)) {
+            $exam_resource_id = $acl->_entrada_last_query->exam_resource_id;
+        } else {
+            //Parse out the resource ID
+            $resource_id = $resource->getResourceId();
+            $exam_resource_id = preg_replace('/[^0-9]+/', "", $resource_id);
+        }
+
+		$exam_authors = Models_Exam_Exam_Author::fetchAllByExamID($exam_resource_id);
+        $resource_authors = (is_array($exam_authors) && !empty($exam_authors)) ? $exam_authors : false;
+        $is_owner = false;
+
+        if ($resource_authors) {
+            foreach ($resource_authors as $author) {
+                switch ($author->getAuthorType()) {
+                    case "course_id" :
+
+                        $is_course_owner = Models_Course::checkCourseOwner($author->getAuthorID(), $ENTRADA_USER->getActiveID());
+
+                        if ($is_course_owner) {
+                            $is_owner = true;
+                        }
+
+                        break;
+                    case "proxy_id" :
+
+                        if ((int) $author->getAuthorID() === (int) $ENTRADA_USER->getActiveID()) {
+                            $is_owner = true;
+                        }
+
+                        break;
+                    case "organisation_id" :
+
+                        if ((int) $author->getAuthorID() === (int) $ENTRADA_USER->getActiveOrganisation()) {
+                            $is_owner = true;
+                        }
+
+                        break;
+                }
+            }
+        }
+
+        return $is_owner;
+    }
+}
+
+class ExamQuestionResource extends EntradaAclResource {
+
+    /**
+     * The exam resource ID ie. question_id, exam_id or group_id
+     * @var integer
+     */
+    var $exam_resource_id;
+
+    /**
+     * The exam resource type ie. question, exam, or group
+     * @var integer
+     */
+    var $exam_resource_type;
+
+    /**
+     * Constructs this exams resource with the supplied values
+     * @param integer $exam_resource_id The exams resource ID to represent
+     * @param boolean $assert Wheather or not to make an assertion
+     */
+    function __construct($exam_resource_id = null, $assert = null) {
+
+        $this->exam_resource_id = $exam_resource_id;
+
+        if (isset($assert)) {
+
+            $this->assert = $assert;
+        }
+    }
+
+    /**
+     * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+     * Will return based on specifc property of this resource instance.
+     * @return string
+     */
+    public function getResourceId() {
+        return "examquestion".($this->specific ? $this->exam_resource_id : "");
+    }
+}
+
+class ExamQuestionOwnerAssertion implements Zend_Acl_Assert_Interface {
+    public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+        global $db, $ENTRADA_USER, $ENTRADA_ACL;
+
+        if (isset($resource->exam_resource_id)) {
+            $exam_resource_id = $resource->exam_resource_id;
+        } else if (isset($acl->_entrada_last_query->exam_resource_id)) {
+            $exam_resource_id = $acl->_entrada_last_query->exam_resource_id;
+        } else {
+            //Parse out the resource ID
+            $resource_id = $resource->getResourceId();
+            $exam_resource_id = preg_replace('/[^0-9]+/', "", $resource_id);
+        }
+
+        $resource_authors = false;
+        $resource_authors = Models_Exam_Question_Authors::fetchAllByVersionID($exam_resource_id, $ENTRADA_USER->getActiveOrganisation());
+
+        $is_owner = false;
+
+        if ($resource_authors) {
+            foreach ($resource_authors as $author) {
+                switch ($author->getAuthorType()) {
+                    case "course_id" :
+
+                        $is_course_owner = Models_Course::checkCourseOwner($author->getAuthorID(), $ENTRADA_USER->getActiveID());
+
+                        if ($is_course_owner) {
+                            $is_owner = true;
+                        }
+
+                        break;
+                    case "proxy_id" :
+
+                        if ((int) $author->getAuthorID() === (int) $ENTRADA_USER->getActiveID()) {
+                            $is_owner = true;
+                        }
+
+                        break;
+                    case "organisation_id" :
+
+                        if ((int) $author->getAuthorID() === (int) $ENTRADA_USER->getActiveOrganisation()) {
+                            $is_owner = true;
+                        }
+
+                        break;
+                }
+            }
+        }
+
+        if ($is_owner === false) {
+            //check permission to the folder the question is in
+            $question = Models_Exam_Question_Versions::fetchRowByVersionID($exam_resource_id);
+			if (isset($question) && is_object($question)) {
+				$folder = $question->getParentFolder();
+				if (isset($folder) && is_object($folder)) {
+					$update_folder = $ENTRADA_ACL->amIAllowed(new ExamFolderResource($folder->getID(), true), "update");
+					if ($update_folder) {
+						$is_owner = true;
+					}
+				}
+            }
+        }
+
+        return $is_owner;
+    }
+}
+
+
+class ExamQuestionGroupResource extends EntradaAclResource {
+
+	/**
+	 * The exam resource ID ie. question_id, exam_id, group_id, etc.
+	 * @var integer
+	 */
+	var $exam_resource_id;
+
+	/**
+	 * The exam resource type ie. question, exam, or group
+	 * @var integer
+	 */
+	var $exam_resource_type;
+
+	/**
+	 * Constructs this exams resource with the supplied values
+	 * @param integer $exam_resource_id The exams resource ID to represent
+	 * @param boolean $assert Wheather or not to make an assertion
+	 */
+	function __construct($exam_resource_id = null, $assert = null) {
+
+		$this->exam_resource_id = $exam_resource_id;
+		if (isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+
+	/**
+	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+	 * Will return based on specifc property of this resource instance.
+	 * @return string
+	 */
+	public function getResourceId() {
+		return "examquestiongroup".($this->specific ? $this->exam_resource_id : "");
+	}
+}
+
+class ExamQuestionGroupOwnerAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db, $ENTRADA_USER, $ENTRADA_ACL;
+
+		if (isset($resource->exam_resource_id)) {
+			$exam_resource_id = $resource->exam_resource_id;
+		} else if (isset($acl->_entrada_last_query->exam_resource_id)) {
+			$exam_resource_id = $acl->_entrada_last_query->exam_resource_id;
+		} else {
+			//Parse out the resource ID
+			$resource_id = $resource->getResourceId();
+			$exam_resource_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+		$resource_authors = false;
+		$resource_authors = Models_Exam_Group_Author::fetchAllByGroupID($exam_resource_id);
+
+		$is_owner = false;
+		if ($resource_authors && is_array($resource_authors)) {
+			foreach ($resource_authors as $author) {
+				if ($author && is_object($author)) {
+					switch ($author->getAuthorType()) {
+						case "course_id" :
+							$is_course_owner = Models_Course::checkCourseOwner($author->getAuthorID(), $ENTRADA_USER->getActiveID());
+							if ($is_course_owner) {
+								return true;
+							}
+							break;
+						case "proxy_id" :
+							if ((int) $author->getAuthorID() === (int) $ENTRADA_USER->getActiveID()) {
+								return true;
+							}
+							break;
+						case "organisation_id" :
+							if ((int) $author->getAuthorID() === (int) $ENTRADA_USER->getActiveOrganisation()) {
+								return true;
+							}
+							break;
+					}
+				}
+			}
+		}
+
+		$resource_questions = Models_Exam_Group_Question::fetchAllByGroupID($exam_resource_id);
+		if ($resource_questions && is_array($resource_questions)) {
+			foreach ($resource_questions as $question) {
+				if ($question && is_object($question)) {
+					if ($ENTRADA_ACL->amIAllowed(new ExamQuestionResource($question->getVersionID(), true), "update")) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return $is_owner;
+	}
+}
+
+class ExamFolderResource extends EntradaAclResource {
+
+    /**
+     * The exam resource ID ie. question_id, exam_id or group_id
+     * @var integer
+     */
+    var $exam_resource_id;
+
+    /**
+     * The exam resource type ie. question, exam, or group
+     * @var integer
+     */
+    var $exam_resource_type;
+
+    /**
+     * Constructs this exams resource with the supplied values
+     * @param integer $exam_resource_id The exams resource ID to represent
+     * @param string $exam_resource_type The exams resource type to represent
+     * @param boolean $assert Wheather or not to make an assertion
+     */
+    function __construct($exam_resource_id = null, $assert = null) {
+
+        $this->exam_resource_id = $exam_resource_id;
+
+        if (isset($assert)) {
+
+            $this->assert = $assert;
+        }
+    }
+
+    /**
+     * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+     * Will return based on specifc property of this resource instance.
+     * @return string
+     */
+    public function getResourceId() {
+        return "examfolder".($this->specific ? $this->exam_resource_id : "");
+    }
+}
+
+class ExamFolderOwnerAssertion implements Zend_Acl_Assert_Interface {
+    public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+        global $db, $ENTRADA_USER;
+
+        if (isset($resource->exam_resource_id)) {
+            $exam_resource_id = $resource->exam_resource_id;
+        } else if (isset($acl->_entrada_last_query->exam_resource_id)) {
+            $exam_resource_id = $acl->_entrada_last_query->exam_resource_id;
+        } else {
+            //Parse out the resource ID
+            $resource_id = $resource->getResourceId();
+            $exam_resource_id = preg_replace('/[^0-9]+/', "", $resource_id);
+        }
+
+        $resource_authors 	= false;
+        $resource_authors 	= Models_Exam_Question_Bank_Folder_Authors::fetchAllInheritedByFolderID($exam_resource_id, false);
+		$resource_orgs 		= Models_Exam_Question_Bank_Folder_Organisations::fetchAllByFolderID($exam_resource_id, false);
+
+        $is_owner 			= false;
+		$org_valid 			= false;
+		$orgs 				= array();
+
+		if ($resource_orgs && is_array($resource_orgs) && !empty($resource_orgs)) {
+			foreach ($resource_orgs as $org) {
+				$orgs[] = $org->getOrganisationId();
+			}
+
+			if ($orgs && is_array($orgs)) {
+				if (in_array($ENTRADA_USER->getActiveOrganisation(), $orgs)) {
+					$org_valid = true;
+				}
+			}
+		}
+
+        if ($resource_authors && $org_valid) {
+            foreach ($resource_authors as $type => $authors) {
+                switch ($type) {
+                    case "course_id" :
+                        if (isset($authors) && is_array($authors) && !empty($authors)) {
+                            foreach ($authors as $item) {
+                                $author = $item["object"];
+                                if (isset($author) && is_object($author)) {
+                                    $is_course_owner = Models_Course::checkCourseOwner($author->getAuthorID(), $ENTRADA_USER->getActiveID());
+
+                                    if ($is_course_owner) {
+                                        $is_owner = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        break;
+                    case "proxy_id" :
+                        if (isset($authors) && is_array($authors) && !empty($authors)) {
+                            foreach ($authors as $item) {
+                                $author = $item["object"];
+                                if (isset($author) && is_object($author)) {
+                                    if ((int) $author->getAuthorID() === (int) $ENTRADA_USER->getActiveID()) {
+                                        $is_owner = true;
+                                        break;
+                                    }
+
+                                }
+                            }
+                        }
+
+                        break;
+                    case "organisation_id" :
+                        if (isset($authors) && is_array($authors) && !empty($authors)) {
+                            foreach ($authors as $item) {
+                                $author = $item["object"];
+                                if (isset($author) && is_object($author)) {
+                                    if ((int) $author->getAuthorID() === (int) $ENTRADA_USER->getActiveOrganisation()) {
+                                        $is_owner = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        break;
+                }
+            }
+        }
+
+        return $is_owner;
+    }
+}
+
 class AssessmentComponentResource extends EntradaAclResource {
     
     /**
@@ -3673,18 +4206,6 @@ class AssessmentComponentAssertion implements Zend_Acl_Assert_Interface {
 	}
 }
 
-class CourseGroupResource extends EntradaAclResource {
-	var $cgroup_id;
-
-	function __construct($cgroup_id, $assert = null) {
-		$this->cgroup_id = $cgroup_id;
-	}
-
-	public function getResourceId() {
-		return "coursegroup".($this->specific ? $this->cgroup_id : "");
-	}
-}
-
 class CourseGroupContact implements Zend_Acl_Assert_Interface {
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
 
@@ -3772,5 +4293,62 @@ class AcademicAdvisorAssertion implements Zend_Acl_Assert_Interface {
         }
 
 		return false;
+	}
+}
+
+class SecureAccessKeyResource extends EntradaAclResource {
+	/**
+	 * This Access Key ID
+	 * @var integer
+	 */
+	var $key_id;
+
+	/**
+	 * Constructs this secure access key  resource with the supplied values
+	 * @param integer $key_id The ID of the secure access key this resource is representing
+	 * @param boolean $assert Whether or not to make an assertion
+	 */
+	function __construct($key_id, $assert = null) {
+		$this->key_id = $key_id;
+		if (isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+
+	/**
+	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+	 * Will return based on specifc property of this resource instance.
+	 * @return string
+	 */
+	public function getResourceId() {
+		return "secureaccesskey".($this->specific ? $this->key_id : "");
+	}
+}
+class SecureAccessFileResource extends EntradaAclResource {
+	/**
+	 * This Access File ID
+	 * @var integer
+	 */
+	var $file_id;
+
+	/**
+	 * Constructs this secure access file  resource with the supplied values
+	 * @param integer $file_id The ID of the secure access file this resource is representing
+	 * @param boolean $assert Whether or not to make an assertion
+	 */
+	function __construct($file_id, $assert = null) {
+		$this->file_id = $file_id;
+		if (isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+
+	/**
+	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+	 * Will return based on specifc property of this resource instance.
+	 * @return string
+	 */
+	public function getResourceId() {
+		return "secureaccessfile".($this->specific ? $this->file_id : "");
 	}
 }

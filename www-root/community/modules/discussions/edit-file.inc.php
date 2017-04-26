@@ -315,27 +315,31 @@ if ($RECORD_ID) {
                         }
 
                         if (!$ERROR) {
-                                $PROCESSED["cdiscussion_id"]    = $topic_record["cdiscussion_id"];
-                                $PROCESSED["cdtopic_id"]        = $topic_record["cdtopic_id"];
-                                $PROCESSED["community_id"]      = $COMMUNITY_ID;
-                                $PROCESSED["proxy_id"]          = $ENTRADA_USER->getActiveId();
-                                $PROCESSED["file_active"]       = 1;
-                                $PROCESSED["updated_date"]      = time();
-                                $PROCESSED["updated_by"]        = $ENTRADA_USER->getID();
+                            $PROCESSED["cdiscussion_id"]    = $topic_record["cdiscussion_id"];
+                            $PROCESSED["cdtopic_id"]        = $topic_record["cdtopic_id"];
+                            $PROCESSED["community_id"]      = $COMMUNITY_ID;
+                            $PROCESSED["proxy_id"]          = $ENTRADA_USER->getActiveId();
+                            $PROCESSED["file_active"]       = 1;
+                            $PROCESSED["updated_date"]      = time();
+                            $PROCESSED["updated_by"]        = $ENTRADA_USER->getID();
 
-                                $query    = "   UPDATE `community_discussions_files`
-                                                SET `file_title` = '" . $PROCESSED["file_title"] . "', `file_description` = '" . $PROCESSED["file_description"] . "', `access_method` = '" . $PROCESSED["access_method"] . "'
-                                                WHERE `cdfile_id` = ".$PROCESSED["cdfile_id"]."
-                                                AND `cdiscussion_id` = ".$db->qstr($PROCESSED["cdiscussion_id"])."
-                                                AND `community_id` = ".$db->qstr($PROCESSED["community_id"]);
-                                @$db->Execute($query);
+                            if ($db->AutoExecute("community_discussions_files", $PROCESSED, "UPDATE", "`cdfile_id` = ".$db->qstr($PROCESSED["cdfile_id"])." AND `cdiscussion_id` = ".$db->qstr($PROCESSED["cdiscussion_id"]). "AND `community_id` = ".$db->qstr($PROCESSED["community_id"]))) {
+                                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong> to the community."), $PROCESSED["file_title"]), "success", $MODULE);
 
-                                $url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID;                                 
-                                $ONLOAD[]        = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-                                $SUCCESS++;
-                                $SUCCESSSTR[]    = "You have successfully uploaded ".html_encode($PROCESSED["file_title"]).".<br /><br />You will now be redirected to this files page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-                                add_statistic("community:".$COMMUNITY_ID.":discussions", "file-edit", "cdfile_id", $PROCESSED["cdfile_id"]);
-                                communities_log_history($COMMUNITY_ID, $PAGE_ID, $FILE_ID, "community_history_add_file", 1, $TOPIC_ID);                                    
+                                add_statistic("community:" . $COMMUNITY_ID . ":discussions", "file-edit", "cdfile_id", $PROCESSED["cdfile_id"]);
+                                communities_log_history($COMMUNITY_ID, $PAGE_ID, $FILE_ID, "community_history_add_file", 1, $TOPIC_ID);
+                                if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
+                                    community_notify($COMMUNITY_ID, $FILE_ID, "file-db", COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-file&id=" . $FILE_ID, $RECORD_ID, $PROCESSES["release_date"]);
+                                }
+
+                                $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-post&id=" . $RECORD_ID;
+                                header("Location: " . $url);
+                                exit;
+                            } else {
+                                add_error($translate->_("There was a problem updating this forum into the system. The MEdTech Unit was informed of this error; please try again later."));
+                                application_log("error", "There was an error updating an forum. Database said: ".$db->ErrorMsg());
+                                $STEP = 1;
+                            }
                         }
                     break;
                      case 1 :
@@ -356,21 +360,8 @@ if ($RECORD_ID) {
                                 community_notify($COMMUNITY_ID, $FILE_ID, "file-db", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$FILE_ID, $RECORD_ID, $PROCESSES["release_date"]);
                             }
                         }
-                    break;
-                    case 3 :
-                        if ($NOTICE) {
-                            echo display_notice();
-                        }
-                        if ($SUCCESS) {
-                            echo display_success();
-                            if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-                                community_notify($COMMUNITY_ID, $FILE_ID, "file-db", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$FILE_ID, $RECORD_ID, $PROCESSES["release_date"]);
-                            }
-                        }
                         if ($ERROR) {
                             echo display_error();
-                            $NOTICE++;
-                            $NOTICESTR[] = "There was an error while trying to upload your file(s). You will need to reselect the file(s) you wish to upload.";
                         }
                     break;
                     case 1 :
@@ -380,8 +371,6 @@ if ($RECORD_ID) {
                         }
                         if ($ERROR) {
                             echo display_error();
-                            $NOTICE++;
-                            $NOTICESTR[] = "There was an error while trying to upload your file(s). You will need to reselect the file(s) you wish to upload.";
                         }
                         if ($NOTICE) {
                             echo display_notice();

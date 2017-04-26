@@ -40,7 +40,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.iris.min.js?release=". html_encode(APPLICATION_VERSION) ."\"></script>";
    	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/color-picker.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$HEAD[] = "<script type=\"text/javascript\">var COURSE_COLOR_PALETTE = ".json_encode($translate->_("course_color_palette")).";</script>\n";
+    $HEAD[] = "<script type=\"text/javascript\">var EVENT_COLOR_PALETTE = ".json_encode($translate->_("event_color_palette")).";</script>\n";
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 
 	$PROCESSED["associated_faculty"] = array();
@@ -155,14 +155,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$PROCESSED["event_start"] = (int) $start_date["start"];
 			}
 
-			/**
-			 * Non-required field "event_location" / Event Location
-			 */
-			if ((isset($_POST["event_location"])) && ($event_location = clean_input($_POST["event_location"], array("notags", "trim")))) {
-				$PROCESSED["event_location"] = $event_location;
-			} else {
-				$PROCESSED["event_location"] = "";
-			}
+            /**
+             * Non-required field "room_id" / Event Location
+             */
+
+            if ((isset($_POST["event_location"])) && ($event_location = clean_input($_POST["event_location"], array("notags", "trim")))) {
+                $PROCESSED["event_location"] = $event_location;
+            } else {
+                $PROCESSED["event_location"] = "";
+            }
+
+            if ((isset($_POST["room_id"])) && ($room_id = clean_input($_POST["room_id"], array("notags", "trim"))) && $room_id != "-1") {
+                $PROCESSED["room_id"] = $room_id;
+                $PROCESSED["event_location"] = "";
+            } else {
+                $PROCESSED["room_id"] = null;
+            }
+
 
 			/**
 			 * Required fields "eventtype_id" / Event Type
@@ -233,6 +242,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     }
                     $PROCESSED["recurring_events"][] = $tmp_recurring_event;
                 }
+            }
+
+            if (isset($_POST["parent_event"]) && $tmp_input = clean_input($_POST["parent_event"], "int")) {
+                $PROCESSED["parent_event"] = "1";
+            } else {
+                $PROCESSED["parent_event"] = "0";
             }
 
 			/**
@@ -782,6 +797,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $PROCESSED_RECURRING["recurring_id"] = ($is_draft ? $devent_id : $EVENT_ID);
                                 $recurring_event_start = $PROCESSED_RECURRING["event_start"];
                                 $recurring_event_finish = $PROCESSED_RECURRING["event_finish"];
+                                if (isset($PROCESSED["parent_event"]) && $PROCESSED["parent_event"] == 1) {
+                                    $PROCESSED_RECURRING["parent_id"] = ($is_draft ? $devent_id : $EVENT_ID);
+                                }
                                 if ($db->AutoExecute($tables["events"], $PROCESSED_RECURRING, "INSERT")) {
                                     if ($RECURRING_EVENT_ID = $db->Insert_Id()) {
                                         if ($is_draft) {
@@ -1190,7 +1208,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             <option value="weekly">Weekly</option>
                             <option value="monthly">Monthly</option>
                         </select>
-                        <button class="btn pull-right" type="button" id="rebuild_button" style="display: none;" onclick="jQuery("#repeat_frequency").trigger("change")">Rebuild Recurring Events List</button>
+                        <button class="btn pull-right" type="button" id="rebuild_button" style="display: none;" onclick="jQuery('#repeat_frequency').trigger('change')">Rebuild Recurring Events List</button>
                     </div>
                 </div>
                 <div class="space-below pad-left large"<?php echo (isset($PROCESSED["recurring_events"]) && @count($PROCESSED["recurring_events"]) ? "" : "style=\"display: none;\""); ?> id="recurring-events-list">
@@ -1198,6 +1216,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     if (isset($PROCESSED["recurring_events"]) && @count($PROCESSED["recurring_events"])) {
                         ?>
                         <h3 class="space-below">Recurring Events</h3>
+
+                        <label for="parent_event" class="checkbox"> 
+                            <input type="checkbox" name="parent_event" id="parent_event" value="1"<?php echo ((isset($PROCESSED["parent_event"]) && $PROCESSED["parent_event"] == "1") ? " checked=\"checked\"" : ""); ?> /> 
+                            <?php echo $translate->_("Recurring events should be created as child events."); ?>
+                        </label>
+
                         <?php
                         $ONLOAD[] = "jQuery('.inpage-datepicker').datepicker({
                                         dateFormat: 'yy-mm-dd',
@@ -1294,12 +1318,117 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     }
                     ?>
                 </div>
-                <div class="control-group">
+
+                <?php
+                $event_buildings = events_fetch_all_buildings();
+
+                if ($event_buildings) {
+                    ?>
+                    <div class="control-group">
+                        <label for="building_id" class="control-label form-nrequired"><? echo $translate->_("Event Location Building"); ?></label>
+                        <div class="controls">
+                            <select onchange="loadRooms()" id="building_id" name="building_id">
+
+                                <?php
+                                foreach ($event_buildings as $building) {
+                                    echo "<option value=\"" . $building['building_id'] . "\">(" . $building['building_code'] . ") " . $building['building_name'] . "</option>\n";
+                                }
+                                ?>
+
+                                <option value=""><?php echo $translate->_("Other location"); ?></option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div id="roomlocation" style="<?php echo (isset($PROCESSED["room_id"]) && $PROCESSED["room_id"] != "" ? "" : "display:none;") ?>" class="control-group">
+                        <?php
+
+                        $event_rooms = events_fetch_all_locations();
+
+                        if ($event_rooms) {
+                            ?>
+                            <label for="room_id" class="control-label form-nrequired"><?php echo $translate->_("Event Location Room"); ?>:</label>
+                            <div class="controls">
+                                <select id="room_id" name="room_id">
+                                    <option value="-1"><?php echo $translate->_("Select room"); ?></option>
+                                </select>
+                            </div>
+                            <?php
+                        }
+                        ?>
+                    </div>
+                    <?php
+                }
+                ?>
+
+                <div class="control-group" id="otherlocation">
                     <label for="event_location" class="control-label form-nrequired"><?php echo $translate->_("Event Location"); ?>:</label>
+
                     <div class="controls">
-                        <input type="text" id="event_location" name="event_location" value="<?php echo (isset($PROCESSED["event_location"]) && $PROCESSED["event_location"] ? html_encode($PROCESSED["event_location"]) : ""); ?>" maxlength="255"/>
+                        <input value="<?php echo (isset($PROCESSED["event_location"]) && $PROCESSED["event_location"] != "" ? $PROCESSED["event_location"] : "") ?>" type="text" id="event_location" name="event_location"/>
                     </div>
                 </div>
+
+                <script>
+                    jQuery(document).ready(function(){
+                        <?php
+                        if(isset($PROCESSED["room_id"])) {
+                            echo "room_id = ".$PROCESSED["room_id"].";";
+                        } else {
+                            echo "room_id = 0;";
+                        }
+                        ?>
+                        jQuery.post('<?php echo ENTRADA_URL."/api/api-location-management.inc.php"; ?>',
+                            {
+                                method: "get-room-building-id",
+                                room_id: room_id
+                            }, function(data) {
+                                jsonResponse = jQuery.parseJSON(data);
+                                if (jsonResponse.status == "success") {
+                                    jQuery("#building_id").find("option[value=\""+jsonResponse.data[0]+"\"]").attr("selected","selected");
+                                    loadRooms(room_id);
+                                } else {
+                                    jQuery("#building_id").find("option[value=\"\"]").attr("selected","selected");
+                                }
+                            });
+                    });
+
+                    function loadRooms (room_id) {
+                        var building = jQuery("#building_id").val();
+                        switch (building) {
+                            case "":
+                                jQuery("#room_id").html('<option value="-1"><?php echo $translate->_("Select room"); ?></option>');
+                                jQuery("#otherlocation").show();
+                                jQuery("#roomlocation").hide();
+                                break;
+                            default:
+                                jQuery.post('<?php echo ENTRADA_URL."/api/api-location-management.inc.php"; ?>',
+                                    {
+                                        method: "get-rooms-by-building",
+                                        building_id: building
+                                    }, function(data) {
+                                        jsonResponse = jQuery.parseJSON(data);
+                                        if (jsonResponse.status == "success") {
+                                            jQuery("#otherlocation").hide();
+                                            jQuery("#roomlocation").show();
+                                            jQuery("#event_location").val("");
+                                            jQuery("#room_id").html('<option value="-1"><?php echo $translate->_("Select room"); ?></option>');
+                                            jQuery.each(jsonResponse.data, function(key, value) {
+                                                jQuery("#room_id").append("<option value=\""+value.room_id+"\">"+value.room_name+"</option>");
+                                            });
+                                            jQuery("#room_id").find("option[value=\""+room_id+"\"]").attr("selected","selected");
+                                        } else {
+                                            jQuery("#room_id").html('<option value="-1"><?php echo $translate->_("Select room"); ?></option>');
+                                            jQuery("#otherlocation").show();
+                                            jQuery("#roomlocation").hide();
+                                        }
+                                    });
+                                break;
+                        }
+                    }
+                </script>
+
                 <div class="control-group">
                     <label for="eventtype_ids" class="control-label form-required"><?php echo $translate->_("Event Types"); ?>:</label>
                     <div class="controls">
@@ -1610,13 +1739,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         Event %event_num%:
                     </span>
                     <span class="span8">
-                        <div class="row-fluid">
+                        <div class="row-fluid space-below">
                             <label for="recurring_event_title_%event_num%" class="span2 form-required">Title:</label>
                             <span class="span7">
                                 <input type="text" id="recurring_event_title_%event_num%" name="recurring_event_title[]" value="%event_title%" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
                             </span>
                         </div>
-                        <div class="row-fluid">
+                        <div class="row-fluid space-below">
                             <label class="span2" for="recurring_event_start_%event_num%">Event Start:</label>
                             <span class="span7">
                                 <div class="input-append">
@@ -2043,6 +2172,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         $(".timepicker").timepicker("destroy");
                                     }
                                     jQuery("#recurring-events-list").html("<h3 class=\"space-below\">Recurring Events</h3>");
+                                    jQuery("#recurring-events-list").append("<label for=\"parent_event\" class=\"checkbox\"><input type=\"checkbox\" name=\"parent_event\" id=\"parent_event\" value=\"1\" /> <?php echo $translate->_("Recurring events should be created as child events."); ?></label>");
                                     var events_string = "";
                                     for (var i = 1; i <= result.events.length; i++) {
                                         if (result.events[(i - 1)].restricted && !show_restricted_message) {

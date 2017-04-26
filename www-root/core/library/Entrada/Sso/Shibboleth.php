@@ -77,7 +77,10 @@ class Entrada_Sso_Shibboleth implements Entrada_Sso_Provider
             if (!empty($user_id) && !empty($user_details)) {
                 $result["username"] = $user_details->getUserName();
                 $result["password"] = $user_details->getPassword();
-                $result["id"]       = $user_details->getId();
+                $result["access_id"] = $user_details->getAccessId();
+            } else {
+                // the user record was not found. Log the details
+                application_log("error", "SSO login: Unable to find user with identifier: [".$_SERVER[AUTH_SHIB_ID]."] in the database column: [".AUTH_SSO_LOCAL_USER_QUERY_FIELD."].");
             }
         }
         return $result;

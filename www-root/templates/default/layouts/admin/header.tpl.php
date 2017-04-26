@@ -1,9 +1,7 @@
 <!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<html class="no-js" lang="en">
     <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta charset="<?php echo DEFAULT_CHARSET; ?>" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <title>%TITLE%</title>
@@ -22,19 +20,27 @@
         <link href="<?php echo ENTRADA_RELATIVE; ?>/javascript/calendar/css/xc2_default.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" media="all" />
 
         <link href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        <link rel="apple-touch-icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/touch-icon-iphone.png"/>
+        <link rel="apple-touch-icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/touch-icon-ipad.png" sizes="76x76"/>
+        <link rel="apple-touch-icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/touch-icon-iphone-retina.png" sizes="120x120"/>
+        <link rel="apple-touch-icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/touch-icon-ipad-retina.png" sizes="152x152"/>
+
+        <link href="<?php echo ENTRADA_RELATIVE; ?>/w3c/p3p.xml" rel="P3Pv1" type="text/xml" />
         <script>
             if (self !== top) {
                 top.location = self.location;
             }
         </script>
-        <link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery-ui.css" rel="stylesheet" />
+        <link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery-ui.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" />
 
         <script type="text/javascript">
             %JAVASCRIPT_TRANSLATIONS%
         </script>
         <script src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         <script src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery-ui.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
+        <script type="text/javascript">var ENTRADA_URL = '<?php echo ENTRADA_URL; ?>'; var ENTRADA_RELATIVE = '<?php echo ENTRADA_RELATIVE; ?>'; var TEMPLATE_URL = '<?php echo $ENTRADA_TEMPLATE->url(); ?>'; var TEMPLATE_RELATIVE = '<?php echo $ENTRADA_TEMPLATE->relative(); ?>';</script>
         <script>jQuery.noConflict();</script>
+        <script>var ENTRADA_URL = '<?php echo ENTRADA_URL; ?>'; var ENTRADA_RELATIVE = '<?php echo ENTRADA_RELATIVE; ?>'; var TEMPLATE_URL = '<?php echo $ENTRADA_TEMPLATE->url(); ?>'; var TEMPLATE_RELATIVE = '<?php echo $ENTRADA_TEMPLATE->relative(); ?>';</script>
         %JQUERY%
 
         <script src="<?php echo ENTRADA_RELATIVE; ?>/javascript/scriptaculous/prototype.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
@@ -49,6 +55,8 @@
 
         <script src="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/js/libs/bootstrap.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         <script src="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/js/libs/modernizr-2.5.3.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
+        <script src="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/js/libs/jquery.matchHeight.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
+        <script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/bookmark.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         %HEAD%
     </head>
     <body>

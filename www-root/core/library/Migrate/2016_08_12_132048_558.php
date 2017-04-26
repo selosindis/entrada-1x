@@ -9,34 +9,7 @@ class Migrate_2016_08_12_132048_558 extends Entrada_Cli_Migrate {
         ?>
         ALTER TABLE `cbl_assessment_notifications`
         MODIFY COLUMN `notification_type`
-        ENUM('delegator_start','delegator_late','assessor_start','assessor_reminder','assessor_late','flagged_response','assessment_removal','assessment_task_deleted','assessment_submitted','assessment_delegation_assignment_removed','assessment_submitted_notify_releasor','assessment_submitted_notify_learner') NOT NULL DEFAULT 'assessor_start';
-
-        CREATE TABLE `cbl_assessment_progress_releases` (
-        `adreleasor_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-        `aprogress_id` int(11) unsigned NOT NULL,
-        `adistribution_id` int(11) unsigned NOT NULL,
-        `releasor_id` int(11) NOT NULL,
-        `release_status` tinyint(1) NOT NULL DEFAULT '0',
-        `comments` text,
-        `created_date` bigint(64) NOT NULL,
-        `created_by` int(11) NOT NULL,
-        PRIMARY KEY (`adreleasor_id`),
-        KEY `aprogress_id` (`aprogress_id`),
-        KEY `adistribution_id` (`adistribution_id`),
-        CONSTRAINT `cbl_assessment_progress_releases_ibfk_1` FOREIGN KEY (`adistribution_id`) REFERENCES `cbl_assessment_distributions` (`adistribution_id`),
-        CONSTRAINT `cbl_assessment_progress_releases_ibfk_2` FOREIGN KEY (`aprogress_id`) REFERENCES `cbl_assessment_progress` (`aprogress_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-        CREATE TABLE `cbl_assessment_distribution_releasors` (
-        `adreleasor_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-        `adistribution_id` int(11) unsigned NOT NULL,
-        `proxy_id` int(11) NOT NULL,
-        `created_date` bigint(64) NOT NULL,
-        `created_by` int(11) NOT NULL,
-        PRIMARY KEY (`adreleasor_id`),
-        KEY `adistribution_id` (`adistribution_id`),
-        CONSTRAINT `cbl_assessment_distribution_releasors_ibfk_1` FOREIGN KEY (`adistribution_id`) REFERENCES `cbl_assessment_distributions` (`adistribution_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+        ENUM('delegator_start','delegator_late','assessor_start','assessor_reminder','assessor_late','flagged_response','assessment_removal','assessment_task_deleted','assessment_submitted','assessment_delegation_assignment_removed','assessment_submitted_notify_approver','assessment_submitted_notify_learner') NOT NULL DEFAULT 'assessor_start';
         <?php
         $this->stop();
 
@@ -52,10 +25,6 @@ class Migrate_2016_08_12_132048_558 extends Entrada_Cli_Migrate {
         ALTER TABLE `cbl_assessment_notifications`
         MODIFY COLUMN `notification_type`
         ENUM('delegator_start','delegator_late','assessor_start','assessor_reminder','assessor_late','flagged_response','assessment_removal','assessment_task_deleted','assessment_submitted','assessment_delegation_assignment_removed') NOT NULL DEFAULT 'assessor_start';
-
-        DROP TABLE `cbl_assessment_progress_releases`;
-
-        DROP TABLE `cbl_assessment_distribution_releasors`;
         <?php
         $this->stop();
 
@@ -71,11 +40,14 @@ class Migrate_2016_08_12_132048_558 extends Entrada_Cli_Migrate {
      * @return int
      */
     public function audit() {
-        $migration = new Models_Migration();
-
-        if ($migration->tableExists(DATABASE_NAME, "cbl_assessment_progress_releases") && $migration->tableExists(DATABASE_NAME, "cbl_assessment_distribution_releasors")) {
+        global $db;
+        $query = "SELECT `column_type` FROM `information_schema`.`columns`
+                  WHERE `table_name` = 'cbl_assessment_notifications' AND `column_name` = 'notification_type'";
+        $column_info = $db->GetOne($query);
+        if ($column_info && $column_info == "ENUM('delegator_start','delegator_late','assessor_start','assessor_reminder','assessor_late','flagged_response','assessment_removal','assessment_task_deleted','assessment_submitted','assessment_delegation_assignment_removed','assessment_submitted_notify_approver','assessment_submitted_notify_learner')") {
             return 1;
+        } else {
+            return 0;
         }
-        return 0;
     }
 }

@@ -135,13 +135,13 @@ if (!defined("IN_EVENTS")) {
 				?>
                 <label for="related_events_select" class="control-label form-nrequired">Child Events:</label>
                 <div class="controls">
-                    <input type="text" id="related_event_id" name="related_event_id" class="input-large" autocomplete="off" placeholder="Enter the event id of the child event." />
-					<input class="btn" type="button" value="Add" onclick="addRelatedEvent($('related_event_id').value)" />
+                    <input type="text" id="related_event_title" name="related_event_title" class="span5" autocomplete="off" placeholder="<?php echo $translate->_("Search by title or ID"); ?>" />
+					<input class="btn" type="button" value="Add" onclick="addRelatedEvent($('related_event_title').value)" />
 					<script type="text/javascript">
-						$('related_event_id').observe('keypress', function(event){
+						$("related_event_title").observe("keypress", function(event){
 							if(event.keyCode == Event.KEY_RETURN) {
 								Event.stop(event);
-								addRelatedEvent($('related_event_id').value);
+								addRelatedEvent($("related_event_title").value);
 							}
 						});
 					</script>
@@ -153,7 +153,7 @@ if (!defined("IN_EVENTS")) {
                     }
 					$ONLOAD[] = "generateEventAutocomplete()";
 					?>
-					<div class="autocomplete" id="events_autocomplete"></div>
+					<div class="autocomplete" id="events_autocomplete" style="max-height: 280px; overflow: auto;"></div>
                     <div id="related_events_list">
                         <ul class="unstyled" style="margin-top: 15px">
                             <?php

@@ -52,7 +52,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$output[$i]["start"]	= date("Y-m-d", $event->getEventStart())."T".date("H:iP", $event->getEventStart());
 				$output[$i]["end"]		= date("Y-m-d", $event->getEventFinish())."T".date("H:iP", $event->getEventFinish());
 				$output[$i]["title"]	= $event->getEventTitle();
-				$output[$i]["loc"]		= $event->getEventLocation();
+				$output[$i]["loc"]		= events_fetch_location_by_room_id($event->getRoomId());
 				$output[$i]["type"]		= '1';
 				$output[$i]["updated"]	= $event->getUpdatedDate();
 				$i++;

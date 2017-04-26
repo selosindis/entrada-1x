@@ -142,6 +142,22 @@ class Models_Assessments_Distribution_Delegation extends Models_Base {
         }
     }
 
+    public function setUpdatedBy($id) {
+        $this->updated_by = $id;
+    }
+
+    public function setUpdatedDate($updated = null) {
+        $this->updated_date = ($updated) ? $updated : time();
+    }
+
+    public function setDeletedBy($id) {
+        $this->deleted_by = $id;
+    }
+
+    public function setDeletedDate($deleted_date = null) {
+        $this->deleted_date = ($deleted_date === null) ? time() : $deleted_date;
+    }
+
     public static function fetchRowByID($addelegation_id) {
         $self = new self();
         return $self->fetchRow(array(

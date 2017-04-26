@@ -701,6 +701,28 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 	return true;
 }
 
+/**
+ * Adds a non-standard sidebar item with no header. Used for exam and assessment
+ * modules.
+ * 
+ * @param type $html
+ * @param type $id
+ * @param type $state
+ * @param type $position
+ * @return boolean
+ */
+function new_sidebar_item_no_header($html = "", $id = "", $priority = 0) {
+    global $SIDEBAR;
+
+    $output  = "<div".($id ? " id=\"".html_encode($id)."\"" : "").">\n";
+    $output .= "    <div class=\"clearfix\">".$html."</div>\n";
+    $output .= "</div>\n";
+
+    // $SIDEBAR[$priority][] = $output;
+    array_push($SIDEBAR, $output);
+    return true;
+}
+
 function assessment_sidebar_item($html = "", $id = "", $state = "open", $position = SIDEBAR_APPEND) {
     global $SIDEBAR, $NOTICE, $NOTICESTR;
 
@@ -1415,7 +1437,8 @@ function fetch_template($template_file = "", $fetch_style = "filesystem") {
     global $ENTRADA_TEMPLATE;
 
 	if ($template_file && ($template_file = clean_input($template_file, "dir"))) {
-		$template_file = $ENTRADA_TEMPLATE->absolute()."/".$template_file.".tpl.php";
+		$template_file = $ENTRADA_TEMPLATE->absolute()."/layouts/".$template_file.".tpl.php";
+        
 		if (@file_exists($template_file)) {
 			switch ($fetch_style) {
 				case "url" :
@@ -2309,6 +2332,44 @@ function clerkship_fetch_schedule($user_id) {
 	}
 }
 
+/**
+ * This function sets a session variable for the module it's run from
+ *
+ * @global type $MODULE
+ * @param string $name              This is the session variable name
+ * @param string $setting           This is the value of the variable, should be a $_POST
+ * @param string $default_setting   This is the default value if one is not set
+ * $param string $user_defined_module       This allows you to specify a module
+ * @return string $setting_return   THis is the setting either from the selection or the session
+ *
+ *
+ */
+function preference_module_set($name, $setting, $default_setting, $user_defined_module = "", $clear_setting = false) {
+	global $MODULE, $ENTRADA_USER;
+	if ($user_defined_module) {
+		$module_preference = $user_defined_module;
+	} else {
+		$module_preference = $MODULE;
+	}
+
+	$setting_return = "";
+	if ($clear_setting === true) {
+		$setting_return = "";
+		$_SESSION[APPLICATION_IDENTIFIER][$module_preference][$name] = $setting_return;
+	} else {
+		if (isset($setting) && $setting != "") {
+			$setting_return = $setting;
+			$_SESSION[APPLICATION_IDENTIFIER][$module_preference][$name] = $setting_return;
+		} else {
+			if (isset($_SESSION[APPLICATION_IDENTIFIER][$module_preference][$name])) {
+				$setting_return = $_SESSION[APPLICATION_IDENTIFIER][$module_preference][$name];
+			} else {
+				$setting_return = $default_setting;
+			}
+		}
+	}
+	return $setting_return;
+}
 
 /**
  * This function will load users module preferences into a session from the database table.
@@ -2993,6 +3054,8 @@ function clean_input($string, $rules = array()) {
 
 					$html = new HTMLPurifier();
 
+				    $embed_regex = defined("VIDEO_EMBED_REGEX") ? VIDEO_EMBED_REGEX : "www.youtube.com/embed/|player.vimeo.com/video/";
+
 					$config = HTMLPurifier_Config::createDefault();
 					$config->set("Cache.SerializerPath", CACHE_DIRECTORY);
 					$config->set("Core.Encoding", DEFAULT_CHARSET);
@@ -3000,7 +3063,7 @@ function clean_input($string, $rules = array()) {
                     $config->set("HTML.TidyLevel", "medium");
 					$config->set("HTML.SafeIframe", true);
 					$config->set("HTML.FlashAllowFullScreen", true);
-                    $config->set("URI.SafeIframeRegexp", "%^(http://|https://|//)(www.youtube.com/embed/|player.vimeo.com/video/)%");
+                    $config->set("URI.SafeIframeRegexp", "%^(http://|https://|//)(" . $embed_regex . ")%");
 					$config->set("HTML.SafeObject", true);
 					$config->set("Output.FlashCompat", true);
 					$config->set("Test.ForceNoIconv", true);
@@ -3009,6 +3072,19 @@ function clean_input($string, $rules = array()) {
 					$config->set("Attr.IDPrefix", "user_");
 
                     $def = $config->getHTMLDefinition(true);
+                    $def->addElement('video', 'Block', 'Optional: (source, Flow) | (Flow, source) | Flow', 'Common', array(
+                        'src' => 'URI',
+                        'type' => 'Text',
+                        'width' => 'Length',
+                        'height' => 'Length',
+                        'poster' => 'URI',
+                        'preload' => 'Enum#auto,metadata,none',
+                        'controls' => 'Bool',
+                    ));
+                    $def->addElement('source', 'Block', 'Flow', 'Common', array(
+                        'src' => 'URI',
+                        'type' => 'Text'
+                    ));
                     $def->addAttribute("iframe", "allowfullscreen", "Text");
                     $def->addAttribute("iframe", "webkitallowfullscreen", "Text");
                     $def->addAttribute("iframe", "mozallowfullscreen", "Text");
@@ -4296,9 +4372,24 @@ function help_create_button($help_title = "", $help_content = "") {
 function load_rte($toolbar_groups = array(), $plugins = array(), $other_options = array()) {
 	global $HEAD;
 
-    $custom_toolbar = false;
+    if (is_array($plugins) && !empty($plugins) && $plugins["autogrow"] === true) {
+        $autogrow = true;
+    } else {
+        $autogrow = false;
+    }
     
     if (!$toolbar_groups || (is_scalar($toolbar_groups) && ($toolbar_groups = clean_input($toolbar_groups, "alpha")))) {
+        //Check whether we should allow access to file uploads
+        switch ($toolbar_groups) {
+            case "notices" :
+                $allow_uploads = false;
+            break;
+            default:
+                $allow_uploads = true;
+            break;
+        }
+        
+        //Assign the right set of toolbar groups
         switch ($toolbar_groups) {
             case "full" :
             case "communityadvanced" :
@@ -4314,6 +4405,9 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
                     array("name" => "paragraph", "groups" => array("colors", "align")),
                 );
             break;
+	    case "courses":
+	    case "events":
+	    case "notices":
             case "community" :
                 $toolbar_groups = array (
                     array("name" => "clipboard", "groups" => array("mode", "clipboard", "spellchecker")),
@@ -4322,6 +4416,16 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
                     array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
                 );
 			break;
+	    case "examadvanced" :
+                $toolbar_groups = array (
+                    array("name" => "clipboard"),
+                    array("name" => "basicstyles"),
+                    array("name" => "paragraph", "groups" => array("colors", "list", "indent", "blocks", "align")),
+                    array("name" => "insert"),
+                    array("name" => "document", "groups" => array('mode', 'Maximize', 'doctools')),
+                    array("name" => "tools", "groups" => array('Maximize'))
+                );
+                break;
             case "list" :
                 $custom_toolbar = true;
             break;
@@ -4329,40 +4433,39 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
             case "minimal" :
             case "basic" :
             default :
-                $custom_toolbar = true;
+                $toolbar_groups = array (
+                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
+                    array("name" => "links"),
+                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
+                    array("name" => "insert")
+                );
             break;
         }
     }
     
-    $custom_toolbar_items = array(
-        array("name" => "document", "items" => array('Source', '-', 'Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord')),
-        array("name" => "embed", "items" => array('MediaEmbed', '-', 'Image')),
-        array("name" => "links", "items" => array('Link', 'Unlink', 'Anchor')),
-        array("name" => "text", "items" => array('Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent')),
-    );
+	$output  = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/ckeditor/ckeditor.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+    ($autogrow ? $output .= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/ckeditor/plugins/autogrow/plugin.js\"></script>" : "");
     
-    if (isset($toolbar_groups) && (is_scalar($toolbar_groups) && ($toolbar_groups = clean_input($toolbar_groups, "alpha")) && ($toolbar_groups === "list"))) {
-        $custom_toolbar_items = array(
-            array("name" => "text", "items" => array('Bold', 'Italic', 'Underline', 'Strike', 'BulletedList')),
-        );
-    }
-
-	$output  = "<script src=\"".ENTRADA_RELATIVE."/javascript/ckeditor/ckeditor.js\"></script>\n";
-	$output .= "<script defer=\"defer\">\n";
+	$output .= "<script type=\"text/javascript\" defer=\"defer\">\n";
     $output .= "CKEDITOR.editorConfig = function( config ) {\n";
     $output .= "    config.customConfig = '';\n";
     $output .= "    config.allowedContent = true;\n";
     $output .= "    config.baseHref = '".ENTRADA_URL."';\n";
     $output .= "    config.forcePasteAsPlainText = true;\n";
     $output .= "    config.autoParagraph = false;\n";
-    
-    if ($custom_toolbar == true) {
-        $output .= "    config.toolbar = ".json_encode($custom_toolbar_items).";\n";
-    } else {
-        $output .= "    config.toolbarGroups = ".json_encode($toolbar_groups).";\n";
-    }
-    
+    $output .= "    config.toolbarGroups = ".json_encode($toolbar_groups).";\n";
     $output .= "    config.removeDialogTabs = 'link:upload;image:Upload';\n";
+    if ($allow_uploads) {
+        $output .= "    config.filebrowserBrowseUrl = '".ENTRADA_URL."/api/filebrowser.api.php?type=Files',\n";
+        $output .= "    config.filebrowserImageBrowseUrl = '".ENTRADA_URL."/api/filebrowser.api.php?type=Images',\n";
+        $output .= "    config.filebrowserUploadUrl = '".ENTRADA_URL."/api/filebrowser.api.php?type=Files&step=2&method=upload'\n";
+        $output .= "    config.filebrowserImageUploadUrl = '".ENTRADA_URL."/api/filebrowser.api.php?type=Files&step=2&method=upload'\n";
+        $output .= "    config.filebrowserWindowWidth = '800'\n";
+        $output .= "    config.filebrowserWindowHeight = '600'\n";
+    }
+    ($autogrow ? $output .= "   config.extraPlugins = 'autogrow';\n": "");
+    ($autogrow ? $output .= "   config.autoGrow_onStartup = true;\n": "");
+    ($autogrow ? $output .= "   config.autoGrow_minHeight = 75;\n": "");
     $output .= "}\n";
 
 	$output .= "window.onload = function() {\n";
@@ -4370,12 +4473,6 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
     $output .= "        if (jQuery(textarea).hasClass('expandable')) {\n";
     $output .= "            return false;\n";
     $output .= "        }\n";
-    $output .= "        config.filebrowserBrowseUrl = '".ENTRADA_URL."/api/filebrowser.api.php?type=Files',\n";
-    $output .= "        config.filebrowserImageBrowseUrl = '".ENTRADA_URL."/api/filebrowser.api.php?type=Images',\n";
-    $output .= "        config.filebrowserUploadUrl = '".ENTRADA_URL."/api/filebrowser.api.php?type=Files&step=2&method=upload'\n";
-    $output .= "        config.filebrowserImageUploadUrl = '".ENTRADA_URL."/api/filebrowser.api.php?type=Files&step=2&method=upload'\n";
-    $output .= "        config.filebrowserWindowWidth = '800'\n";
-    $output .= "        config.filebrowserWindowHeight = '600'\n";
     $output .= "    });\n";
     $output .= "}\n";
     $output .= "function toggleEditor(id) {\n";
@@ -10507,6 +10604,9 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 	}
 
 	if (!$full_objective_list) {
+	    if (!isset($objectives["used_ids"])) {
+            $objectives["used_ids"] = [];
+        }
 		$full_objective_list = events_fetch_objectives_structure($parent_id, $objectives["used_ids"], $org_id);
 	}
 	$flat_objective_list = events_flatten_objectives($full_objective_list);
@@ -10532,33 +10632,39 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 				}
 
 				foreach ($flat_objective_list as $objective_id => $objective_active) {
-					$objective = $objectives[$objective_id];
-					if (($objective["parent"] == $parent_id) && (((($objective["objective_".$display_importance."_children"]) || ((isset($objective[$display_importance]) && $objective[$display_importance]) || $parent_active)) && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) {
-						$importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
-                        $output .= "<li".((($parent_active) || (isset($objective[$display_importance]) && $objective[$display_importance])) && (count($objective["parent_ids"]) > 2) ? " class=\"\"" : "")." id=\"objective_".$objective_id."_row\">\n";
-                        if (($edit_importance) && (isset($objective[$display_importance]) && $objective[$display_importance])) {
-                            $output .= "<select onchange=\"javascript: moveObjective('".$objective_id."', this.value);\" style=\"float: right; margin: 5px\">\n";
-                            $output .= "	<option value=\"primary\"".(($objective["primary"]) ? " selected=\"selected\"" : "").">Primary</option>\n";
-                            $output .= "	<option value=\"secondary\"".(($objective["secondary"]) ? " selected=\"selected\"" : "").">Secondary</option>\n";
-                            $output .= "	<option value=\"tertiary\"".(($objective["tertiary"]) ? " selected=\"selected\"" : "").">Tertiary</option>\n";
-                            $output .= "</select>";
+				    if (isset($objectives[$objective_id])) {
+                        $objective = $objectives[$objective_id];
+                        if (($objective["parent"] == $parent_id) && (((($objective["objective_" . $display_importance . "_children"]) || ((isset($objective[$display_importance]) && $objective[$display_importance]) || $parent_active)) && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) {
+                            $importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
+                            $output .= "<li" . ((($parent_active) || (isset($objective[$display_importance]) && $objective[$display_importance])) && (count($objective["parent_ids"]) > 2) ? " class=\"\"" : "") . " id=\"objective_" . $objective_id . "_row\">\n";
+                            if (($edit_importance) && (isset($objective[$display_importance]) && $objective[$display_importance])) {
+                                $output .= "<select onchange=\"javascript: moveObjective('" . $objective_id . "', this.value);\" style=\"float: right; margin: 5px\">\n";
+                                $output .= "	<option value=\"primary\"" . (($objective["primary"]) ? " selected=\"selected\"" : "") . ">Primary</option>\n";
+                                $output .= "	<option value=\"secondary\"" . (($objective["secondary"]) ? " selected=\"selected\"" : "") . ">Secondary</option>\n";
+                                $output .= "	<option value=\"tertiary\"" . (($objective["tertiary"]) ? " selected=\"selected\"" : "") . ">Tertiary</option>\n";
+                                $output .= "</select>";
+                            }
+                            if (count($objective["parent_ids"]) == 3) {
+                                $output .= "	<div><div class=\"objective-title\">" . $objective["name"] . "</div>";
+                                $output .= "	<div class=\"objective-description content-small\">" . (isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]) . "</div>";
+                            } else {
+                                $output .= "	<div class=\"objective-title\" id=\"objective_" . $objective_id . "\">" . $objective["name"] . "</div>\n";
+                                $output .= "	<div class=\"objective-description content-small\">" . (isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
+                            }
+                            if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
+                                $output .= "	<div class=\"objective-description content-small\"><em>" . $objective["event_objective_details"] . "</em></div>";
+                            }
+                            $output .= "	</div>";
+                            $output .= "</li>";
                         }
-                        if (count($objective["parent_ids"]) == 3) {
-                            $output .= "	<div><div class=\"objective-title\">".$objective["name"]."</div>";
-                            $output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>";
-                        } else {
-                            $output .= "	<div class=\"objective-title\" id=\"objective_".$objective_id."\">".$objective["name"]."</div>\n";
-                            $output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
+                        if ($objective["parent"] == $parent_id) {
+                            $output .= course_objectives_in_list($objectives, $objective_id, $top_level_id,
+                                $edit_importance,
+                                ((isset($objective[$display_importance]) && $objective[$display_importance]) || $parent_active ? true : false),
+                                $importance, $selected_only, false, $display_importance, $hierarchical,
+                                $full_objective_list);
                         }
-                        if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
-                            $output .= "	<div class=\"objective-description content-small\"><em>".$objective["event_objective_details"]."</em></div>";
-                        }
-                        $output .= "	</div>";
-                        $output .= "</li>";
-					}
-					if ($objective["parent"] == $parent_id) {
-						$output .= course_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) || $parent_active ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical, $full_objective_list);
-					}
+                    }
 				}
 
 				if ($top) {
@@ -12122,7 +12228,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
                             `events`.`event_description`,
                             `events`.`event_duration`,
                             `events`.`event_message`,
-                            `events`.`event_location`,
+                            `events`.`room_id`,
+                            IF(`events`.`room_id` IS NULL, `events`.`event_location`, CONCAT(`global_lu_buildings`.`building_code`, '-', `global_lu_rooms`.`room_number`)) AS `event_location`,
                             `events`.`event_start`,
                             `events`.`event_finish`,
                             `events`.`release_date`,
@@ -12139,7 +12246,11 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
                             `curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
                             `curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
                             CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
-                            FROM `events`";
+                            FROM `events`
+                            LEFT JOIN `global_lu_rooms`
+                            ON `global_lu_rooms`.`room_id` = `events`.`room_id`
+                            LEFT JOIN `global_lu_buildings`
+                            ON `global_lu_rooms`.`building_id` = `global_lu_buildings`.`building_id`";
 
     $query_events_count = "SELECT COUNT(DISTINCT `events`.`event_id`) AS `event_count` FROM `events`";
 
@@ -12511,7 +12622,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							`events`.`event_description`,
 							`events`.`event_duration`,
 							`events`.`event_message`,
-							`events`.`event_location`,
+							IF(`events`.`room_id` IS NULL, `events`.`event_location`, CONCAT(`global_lu_buildings`.`building_code`, '-', `global_lu_rooms`.`room_number`)) AS `event_location`,
 							`events`.`event_start`,
 							`events`.`event_finish`,
 							`events`.`release_date`,
@@ -12528,6 +12639,10 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							`curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
 							CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
 							FROM `events`
+                            LEFT JOIN `global_lu_rooms`
+                            ON `global_lu_rooms`.`room_id` = `events`.`room_id`
+                            LEFT JOIN `global_lu_buildings`
+                            ON `global_lu_rooms`.`building_id` = `global_lu_buildings`.`building_id`
 							LEFT JOIN `event_contacts`
 							ON `event_contacts`.`event_id` = `events`.`event_id`
 							AND `event_contacts`.`contact_order` = '0'
@@ -12792,7 +12907,7 @@ function draft_events_fetch_filtered_draft_events($proxy_id = 0, $user_group = "
                             `draft_events`.`event_description`,
                             `draft_events`.`event_duration`,
                             `draft_events`.`event_message`,
-                            `draft_events`.`event_location`,
+                            IF(`draft_events`.`room_id` IS NULL, `draft_events`.`event_location`, CONCAT(`global_lu_buildings`.`building_code`, '-', `global_lu_rooms`.`room_number`)) AS `event_location`,
                             `draft_events`.`event_start`,
                             `draft_events`.`event_finish`,
                             `draft_events`.`release_date`,
@@ -12809,7 +12924,11 @@ function draft_events_fetch_filtered_draft_events($proxy_id = 0, $user_group = "
                             `curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
                             `curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
                             CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
-                            FROM `draft_events`";
+                            FROM `draft_events`
+                            LEFT JOIN `global_lu_rooms`
+                            ON `global_lu_rooms`.`room_id` = `draft_events`.`room_id`
+                            LEFT JOIN `global_lu_buildings`
+                            ON `global_lu_rooms`.`building_id` = `global_lu_buildings`.`building_id`";
 
         $query_events_count = "SELECT COUNT(DISTINCT `draft_events`.`event_id`) AS `event_count` FROM `draft_events`";
 
@@ -13146,7 +13265,7 @@ function draft_events_fetch_filtered_draft_events($proxy_id = 0, $user_group = "
                             `draft_events`.`event_description`,
                             `draft_events`.`event_duration`,
                             `draft_events`.`event_message`,
-                            `draft_events`.`event_location`,
+                            IF(`draft_events`.`room_id` IS NULL, `draft_events`.`event_location`, CONCAT(`global_lu_buildings`.`building_code`, '-', `global_lu_rooms`.`room_number`)) AS `event_location`,
                             `draft_events`.`event_start`,
                             `draft_events`.`event_finish`,
                             `draft_events`.`release_date`,
@@ -13163,6 +13282,10 @@ function draft_events_fetch_filtered_draft_events($proxy_id = 0, $user_group = "
                             `curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
                             CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
                             FROM `draft_events`
+                            LEFT JOIN `global_lu_rooms`
+                            ON `global_lu_rooms`.`room_id` = `draft_events`.`room_id`
+                            LEFT JOIN `global_lu_buildings`
+                            ON `global_lu_rooms`.`building_id` = `global_lu_buildings`.`building_id`
                             LEFT JOIN `draft_contacts`
                             ON `draft_contacts`.`devent_id` = `draft_events`.`devent_id`
                             AND `draft_contacts`.`contact_order` = '0'
@@ -13889,6 +14012,60 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 	}
 
 	return $output;
+}
+
+function events_fetch_all_locations() {
+	global $db, $ENTRADA_USER;
+
+	$query = "SELECT a.`room_id`, b.`building_id`, b.`building_code`, b.`building_name`, CONCAT(b.`building_code`, ' ', a.`room_number`) AS `room_name`
+			  FROM `global_lu_rooms` as a, `global_lu_buildings` as b
+			  WHERE a.`building_id` = b.`building_id`
+			  AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+			  ORDER BY CONCAT(b.`building_code`, ' ', a.`room_number`)";
+	$results = $db->GetAll($query);
+	return $results;
+}
+
+function events_fetch_all_buildings() {
+	global $db, $ENTRADA_USER;
+
+	$query = "SELECT b.`building_id`,b.`building_code`,b.`building_name` FROM `global_lu_buildings` as b
+			  WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+			  ORDER BY b.`building_code` ASC";
+	$results = $db->GetAll($query);
+	return $results;
+}
+function events_fetch_all_rooms_by_building_id($building_id) {
+	global $db, $ENTRADA_USER;
+
+	$query = "SELECT CONCAT(b.`building_code`, ' ', a.`room_number`) AS `room_name`
+			  FROM `global_lu_rooms` AS a, `global_lu_buildings` AS b
+			  WHERE a.`building_id` = b.`building_id`
+			  AND b.`building_id` = ".$db->qstr($building_id);
+	$results = $db->GetAll($query);
+	return $results;
+}
+function events_fetch_location_by_room_id($room_id) {
+	global $db;
+	
+	$query = "SELECT CONCAT(b.`building_code`, ' ', a.`room_number`) AS `room_name`
+			  FROM `global_lu_rooms` AS a, `global_lu_buildings` AS b
+			  WHERE a.`building_id` = b.`building_id`
+			  AND a.`room_id` = ".$db->qstr($room_id);
+	$result = $db->GetRow($query);
+	return ($result && $result['room_name'] ? $result['room_name'] : "");
+}
+
+function events_fetch_location_by_event_id($event_id) {
+	global $db;
+	
+	$query = "SELECT CONCAT(b.`building_code`, ' ', a.`room_number`) AS `room_name`
+			  FROM `global_lu_rooms` AS a, `global_lu_buildings` AS b, `events` AS c
+			  WHERE a.`building_id` = b.`building_id`
+			  AND a.`room_id` = c.`room_id`
+			  AND c.`event_id` = ".$db->qstr($event_id);
+	$result = $db->GetRow($query);
+	return ($result && $result['room_name'] ? $result['room_name'] : "");
 }
 
 /**
@@ -18187,8 +18364,8 @@ function event_text_change($event, $field, $table = 'events') {
 function md5_change_value($id, $id_field_name, $field, $value, $table) {
     global $db;
     $changed = false;
-    $pattern = array('/\\r\n/', '/\\r/', '/\\n/', '/\\r\n\n/', '/\r/', '/\\&nbsp;/', '~\x{00a0}~siu');
-    $replacement = array('', '', '', '', '', ' ', ' ');
+    $pattern = array('/\\r\n/', '/\\r/', '/\\n/', '/\\r\n\n/', '/\r/', '/\\&nbsp;/', '/\\&#160;/', '~\x{00a0}~siu', '/\t/');
+    $replacement = array('', '', '', '', '', ' ', ' ', ' ', '');
     if (isset($value)) {
         $value = preg_replace($pattern,$replacement,$value);
         $result = $db->GetOne("SELECT `$field` FROM `$table` WHERE `$id_field_name` = " . $db->qstr($id));
@@ -18903,4 +19080,57 @@ function fetchUserPhoto($proxy_id) {
     $image .= "</div>";
 
     return $image;
+}
+
+/**
+ * Validate the supplied date
+ *
+ * @param type $date
+ * @param type $format
+ */
+function validateDate($date, $format = 'Y-m-d')
+{
+    $d = DateTime::createFromFormat($format, $date);
+    return $d && $d->format($format) == $date;
+}
+
+/*
+ * Return the URL of the current page
+*/
+
+function getCurrentUrl() {
+    $url  = isset( $_SERVER['HTTPS'] ) && 'on' === $_SERVER['HTTPS'] ? 'https' : 'http';
+    $url .= '://' . $_SERVER['SERVER_NAME'];
+    $url .= in_array( $_SERVER['SERVER_PORT'], array('80', '443') ) ? '' : ':' . $_SERVER['SERVER_PORT'];
+    $url .= $_SERVER['REQUEST_URI'];
+    return $url;
+}
+
+/**
+ * Removes all DOM elements of type $tagname from $document.
+ * 
+ * @param string $tagName
+ * @param DOMDocument $document
+ */
+function removeElementsByTagName($tagName, $document) {
+    if (is_array($tagName)) {
+        $tags = $tagName;
+    } else {
+        $tags = array($tagName);
+    }
+    foreach ($tags as $tag) {
+        $nodeList = $document->getElementsByTagName($tag);
+        for ($nodeIdx = $nodeList->length; --$nodeIdx >= 0; ) {
+            $node = $nodeList->item($nodeIdx);
+            $node->parentNode->removeChild($node);
+        }
+    }
+}
+
+function isUsingSecureBrowser(){
+	if(strpos($_SERVER['HTTP_USER_AGENT'], 'SEB') !== false && array_key_exists('HTTP_X_SAFEEXAMBROWSER_REQUESTHASH', $_SERVER)){
+		return true;
+	} else {
+		return false;
+	}
 }

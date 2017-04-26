@@ -202,85 +202,86 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_TRACKS"))) {
             <form action="<?php echo ENTRADA_URL . "/admin/settings/manage/curriculumtracks?org=".$ORGANISATION_ID; ?>&section=<?php echo defined("EDIT_TRACK") ? "edit&id=".$RECORD_ID : "add"; ?>&step=2" method="POST" class="form-horizontal"  enctype="multipart/form-data">
                 <h2 title="Track Details Section"><?php echo $translate->_("Track Details"); ?></h2>
                 <div id="track-details-section">
-                    <div id="upload-image-mod" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="label" aria-hidden="true">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h3 id="label">Upload Image</h3>
-                    </div>
-                    <div class="modal-body">
-                        <div class="preview-img"></div>
-                        <div class="description alert" style="height:264px;width:483px;padding:20px;">
-                            To upload a new course image you can drag and drop it on this area, or use the Browse button to select an image from your computer.
+                    <?php if (defined("EDIT_TRACK")) { ?>
+                        <div id="upload-image-mod" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="label" aria-hidden="true">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                <h3 id="label">Upload Image</h3>
+                            </div>
+                            <div class="modal-body">
+                                <div class="preview-img"></div>
+                                <div class="description alert" style="height:264px;width:483px;padding:20px;">
+                                    To upload a new curriculum track image you can drag and drop it on this area or use the Browse button to select an image from your computer.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <input type="hidden" name="coordinates" id="coordinates" value="" />
+                                <input type="hidden" name="resource_type" id="resource_type" value="track" />
+                                <input type="hidden" name="dimensions" id="dimensions" value="" />
+                                <input type="file" name="image" id="image" />
+                                <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                                <button class="btn"  data-dismiss="modal" class="btn btn-primary" id="upload-image-button">Upload</button>
+                            </div>
+                        </div>
+                        <div id="image-container" class="pull-right">
+                            <a href="#upload-image-mod" id="upload-image-modal-btn" data-toggle="modal" class="btn btn-primary" id="upload-image">Upload Image</a>
+                            <span>
+                                <img src="<?php echo ENTRADA_URL; ?>/admin/courses?section=api-image&method=get-image&resource_type=track&resource_id=<?php echo $RECORD_ID;?>" width="150" height="250" class="img-polaroid" />
+                            </span>
+                        </div>
+                    <?php } ?>
+                    <div class="control-group">
+                        <label class="control-label form-required" for="curriculum_track_name">Track Name</label>
+                        <div class="controls">
+                            <input name="curriculum_track_name" id="curriculum_track_name" type="text" class="span6" value="<?php echo (isset($curriculum_track) && $curriculum_track && $curriculum_track->getCurriculumTrackName() ? $curriculum_track->getCurriculumTrackName() : ""); ?>" />
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <input type="hidden" name="coordinates" id="coordinates" value="" />
-                        <input type="hidden" name="resource_type" id="resource_type" value="track" />
-                        <input type="hidden" name="dimensions" id="dimensions" value="" />
-                        <input type="file" name="image" id="image" />
-                        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-                        <button class="btn"  data-dismiss="modal" class="btn btn-primary" id="upload-image-button">Upload</button>
+                    <div class="control-group">
+                        <label class="control-label" for="curriculum_track_description">Track Description</label>
+                        <div class="controls">
+                            <textarea id="curriculum_track_description" name="curriculum_track_description" class="span6 expandable"><?php echo (isset($curriculum_track) && $curriculum_track && $curriculum_track->getCurriculumTrackDescription() ? $curriculum_track->getCurriculumTrackDescription() : ""); ?></textarea>
+                        </div>
                     </div>
-                </div>
-                <div id="image-container" class="pull-right">
-                    <a href="#upload-image-mod" id="upload-image-modal-btn" data-toggle="modal" class="btn btn-primary" id="upload-image">Upload Image</a>
-                    <span>
-                        <img src="<?php echo ENTRADA_URL; ?>/admin/courses?section=api-image&method=get-image&resource_type=track&resource_id=<?php echo $RECORD_ID;?>" width="150" height="250" class="img-polaroid" />
-                    </span>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label form-required" for="curriculum_track_name">Track Name</label>
-                    <div class="controls">
-                        <input name="curriculum_track_name" id="curriculum_track_name" type="text" class="span6" value="<?php echo (isset($curriculum_track) && $curriculum_track && $curriculum_track->getCurriculumTrackName() ? $curriculum_track->getCurriculumTrackName() : ""); ?>" />
+                    <div class="control-group">
+                        <label class="control-label" for="curriculum_track_url">Track Public URL</label>
+                        <div class="controls">
+                            <input name="curriculum_track_url" id="curriculum_track_url" type="text" class="span6" value="<?php echo (isset($curriculum_track) && $curriculum_track && $curriculum_track->getCurriculumTrackURL() ? $curriculum_track->getCurriculumTrackURL() : ""); ?>" />
+                        </div>
                     </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label" for="curriculum_track_description">Track Description</label>
-                    <div class="controls">
-                        <textarea id="curriculum_track_description" name="curriculum_track_description" class="span6 expandable"><?php echo (isset($curriculum_track) && $curriculum_track && $curriculum_track->getCurriculumTrackDescription() ? $curriculum_track->getCurriculumTrackDescription() : ""); ?></textarea>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label" for="curriculum_track_url">Track Public URL</label>
-                    <div class="controls">
-                        <input name="curriculum_track_url" id="curriculum_track_url" type="text" class="span6" value="<?php echo (isset($curriculum_track) && $curriculum_track && $curriculum_track->getCurriculumTrackURL() ? $curriculum_track->getCurriculumTrackURL() : ""); ?>" />
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label form-required" for="curriculum_track_order">Order</label>
-                    <div class="controls">
-                        <select name="curriculum_track_order" id="curriculum_track_order" class="span6">
-                            <option value="">-- Please select the display order --</option>
-                            <?php
-                            $curriculum_tracks = Models_Curriculum_Track::fetchAllByOrg($ORGANISATION_ID);
-                            if ($curriculum_tracks && @count($curriculum_tracks)) {
-                                $max_count = count($curriculum_tracks);
-                                $count = 0;
-                                foreach ($curriculum_tracks as $curriculum_track) {
-                                    $count++;
-                                    if (!$RECORD_ID || $RECORD_ID != $curriculum_track->getID()) {
-                                        if ($count < $max_count) {
-                                            echo "<option value=\"".$curriculum_track->getCurriculumTrackOrder()."\">Before ".$curriculum_track->getCurriculumTrackName()."</option>";
+                    <div class="control-group">
+                        <label class="control-label form-required" for="curriculum_track_order">Order</label>
+                        <div class="controls">
+                            <select name="curriculum_track_order" id="curriculum_track_order" class="span6">
+                                <option value="">-- Please select the display order --</option>
+                                <?php
+                                $curriculum_tracks = Models_Curriculum_Track::fetchAllByOrg($ORGANISATION_ID);
+                                if ($curriculum_tracks && @count($curriculum_tracks)) {
+                                    $max_count = count($curriculum_tracks);
+                                    $count = 0;
+                                    foreach ($curriculum_tracks as $curriculum_track) {
+                                        $count++;
+                                        if (!$RECORD_ID || $RECORD_ID != $curriculum_track->getID()) {
+                                            if ($count < $max_count) {
+                                                echo "<option value=\"".$curriculum_track->getCurriculumTrackOrder()."\">Before ".$curriculum_track->getCurriculumTrackName()."</option>";
+                                            } else {
+                                                echo "<option value=\"".$curriculum_track->getCurriculumTrackOrder()."\">Before ".$curriculum_track->getCurriculumTrackName()."</option>";
+                                                echo "<option value=\"".($curriculum_track->getCurriculumTrackOrder() + 1)."\">After ".$curriculum_track->getCurriculumTrackName()."</option>";
+                                            }
                                         } else {
-                                            echo "<option value=\"".$curriculum_track->getCurriculumTrackOrder()."\">Before ".$curriculum_track->getCurriculumTrackName()."</option>";
-                                            echo "<option value=\"".($curriculum_track->getCurriculumTrackOrder() + 1)."\">After ".$curriculum_track->getCurriculumTrackName()."</option>";
+                                            echo "<option value=\"".$curriculum_track->getCurriculumTrackOrder()."\" selected=\"selected\">Do not change</option>";
                                         }
-                                    } else {
-                                        echo "<option value=\"".$curriculum_track->getCurriculumTrackOrder()."\" selected=\"selected\">Do not change</option>";
                                     }
+                                } else {
+                                    echo "<option value=\"1\">First</option>\n";
                                 }
-                            } else {
-                                echo "<option value=\"1\">First</option>\n";
-                            }
-                            ?>
-                        </select>
+                                ?>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="row-fluid">
-                    <a href="<?php echo ENTRADA_URL."/admin/settings/manage/curriculumtracks?org=".$ORGANISATION_ID; ?>" class="btn">Cancel</a>
-                    <input type="submit" class="btn btn-primary pull-right" value="Save" />
-                </div>
+                    <div class="row-fluid">
+                        <a href="<?php echo ENTRADA_URL."/admin/settings/manage/curriculumtracks?org=".$ORGANISATION_ID; ?>" class="btn">Cancel</a>
+                        <input type="submit" class="btn btn-primary pull-right" value="Save" />
+                    </div>
                 </div>
             </form>
             <?php

@@ -74,6 +74,8 @@ if ($COMMUNITY_ID) {
                 <i class="icon-chevron-left" style="margin: 0"></i> Back To Community
             </a>
             <?php
+            Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
             echo "<h1>".html_encode($community_details["community_title"])."</h1>\n";
 
 			// Error Checking
@@ -316,17 +318,14 @@ if ($COMMUNITY_ID) {
 
 
 										if ($member_add_success) {
-											$url = ENTRADA_URL."/communities?section=members&community=".$COMMUNITY_ID;
+											$url = ENTRADA_URL . "/communities?section=members&community=" . $COMMUNITY_ID;
 
 											if ($GUEST_NEW_ACCESS) {
-												add_success("You have successfully created a new guest user in system, and have given them access to this community.<br /><br />You will now be redirected back to the user manager; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+                                                Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully created a new guest user in system, and have given them access to this community."), "success", $MODULE);
 											} else {
-												add_success("You have successfully given a guest access to this community.<br /><br />You will now be redirected back to the user manager; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+                                                Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully given a guest access to this community."), "success", $MODULE);
 											}
-
-											$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 											communities_log_history($COMMUNITY_ID, 0, $member_add_success, "community_history_add_members", 1);
-											application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."] as a guest for community $COMMUNITY_ID.");
 										} else {
 											add_error("The guest user has been added to the system however they have not joined your community. An administrator has been informed of this issue, please try again later.");
 
@@ -428,16 +427,17 @@ if ($COMMUNITY_ID) {
                                 $STEP = 1;
                             }
 
-							if ($member_add_success) {
-								add_success("You have successfully added ".$member_add_success." new member".(($member_add_success != 1) ? "s" : "")." to this community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.");
 
-								communities_log_history($COMMUNITY_ID, 0, $member_add_success, "community_history_add_members", 1);
-							}
+							if ($member_add_success) {
+							    Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong> new member%s to this community."), $member_add_success,($member_add_success != 1) ? "s" : ""), "success", $MODULE);
+                                communities_log_history($COMMUNITY_ID, 0, $member_add_success, "community_history_add_members", 1);
+                            }
 							if ($member_add_failure) {
-								add_notice("Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.");
+								add_error("Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.");
 							}
                         break;
 						case "admins" :
+							$url = ENTRADA_URL."/communities?section=members&community=".$COMMUNITY_ID;
 							if ((isset($_POST["admin_action"])) && (@in_array(strtolower($_POST["admin_action"]), array("delete", "deactivate", "demote")))) {
 								if ((isset($_POST["admin_proxy_ids"])) && (is_array($_POST["admin_proxy_ids"])) && (count($_POST["admin_proxy_ids"]))) {
 									foreach ($_POST["admin_proxy_ids"] as $proxy_id) {
@@ -457,7 +457,7 @@ if ($COMMUNITY_ID) {
 									}
 								}
 
-								if ((is_array($PROXY_IDS)) && (count($PROXY_IDS))) {
+								if ((is_array($PROXY_IDS)) && (count($PROXY_IDS))) {									
 									switch (strtolower($_POST["admin_action"])) {
 										case "delete" :
 											$query	= "DELETE FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_acl` = '1'";
@@ -473,7 +473,7 @@ if ($COMMUNITY_ID) {
 														$mail_list->deactivate_member($proxy_id);
 													}
 												}
-												add_success("You have successfully removed <strong>".$total_deleted." administrator".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($community_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.");
+                                                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully removed <strong>%s</strong> administrator%s from the <strong>%s</strong> community."), $total_deleted ,($total_deleted != 1) ? "s" : "", $community_details["community_title"]), "success", $MODULE);
 											} else {
 												add_error("There was a problem removing these community administrators from the system; the MEdTech Unit has been informed of this error, please try again later.");
 
@@ -493,7 +493,7 @@ if ($COMMUNITY_ID) {
 														$mail_list->deactivate_member($proxy_id);
 													}
 												}
-												add_success("You have successfully deactivated <strong>".$total_updated." administrator".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($community_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.");
+                                                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully deactivated <strong>%s</strong> administrator%s in the <strong>%s</strong> community."), $total_updated ,($total_updated != 1) ? "s" : "", $community_details["community_title"]), "success", $MODULE);
 											} else {
 												add_error("There was a problem deactivating these community administrators in the system; the MEdTech Unit has been informed of this error, please try again later.");
 
@@ -513,7 +513,7 @@ if ($COMMUNITY_ID) {
 														$mail_list->demote_administrator($proxy_id);
 													}
 												}
-												add_success("You have successfully demoted <strong>".$total_updated." administrator".(($total_updated != 1) ? "s" : "")."</strong> to regular member status in the  <strong>".html_encode($community_details["community_title"])."</strong> community. They will no longer be able to perform administrative functions.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.");
+                                                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully demoted <strong>%s</strong> administrator%s to regular member status in the <strong>%s</strong> community."), $total_updated ,($total_updated != 1) ? "s" : "", $community_details["community_title"]), "success", $MODULE);
 											} else {
 												add_error("There was a problem demoting these community administrators; the MEdTech Unit has been informed of this error, please try again later.");
 
@@ -537,6 +537,7 @@ if ($COMMUNITY_ID) {
 							}
                         break;
 						case "members" :
+							$url = ENTRADA_URL . "/communities?section=members&community=" . $COMMUNITY_ID;
 							if ((isset($_POST["member_action"])) && (@in_array(strtolower($_POST["member_action"]), array("delete", "deactivate", "promote")))) {
 								if ((isset($_POST["member_proxy_ids"])) && (is_array($_POST["member_proxy_ids"])) && (count($_POST["member_proxy_ids"]))) {
 									foreach ($_POST["member_proxy_ids"] as $proxy_id) {
@@ -573,7 +574,7 @@ if ($COMMUNITY_ID) {
 														$mail_list->deactivate_member($proxy_id);
 													}
 												}
-												add_success("You have successfully removed <strong>".$total_deleted." member".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($community_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.");
+                                                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully removed <strong>%s</strong> member%s from the <strong>%s</strong> community."), $total_updated ,($total_deleted != 1) ? "s" : "", $community_details["community_title"]), "success", $MODULE);
 											} else {
 												add_error("There was a problem removing these community members from the system; the MEdTech Unit has been informed of this error, please try again later.");
 
@@ -593,7 +594,7 @@ if ($COMMUNITY_ID) {
 														$mail_list->deactivate_member($proxy_id);
 													}
 												}
-												add_success("You have successfully deactivated <strong>".$total_updated." member".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($community_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.");
+                                                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully deactivated <strong>%s</strong> member%s in the <strong>%s</strong> community."), $total_updated ,($total_deleted != 1) ? "s" : "", $community_details["community_title"]), "success", $MODULE);
 											} else {
 												add_error("There was a problem deactivating these community members in the system; the MEdTech Unit has been informed of this error, please try again later.");
 
@@ -616,8 +617,8 @@ if ($COMMUNITY_ID) {
 													}
 												}
                                                 $total_updated = ($db->Affected_Rows() ? $db->Affected_Rows() : 1);
-												add_success("You have successfully promoted <strong>".$total_updated." member".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($community_details["community_title"])."</strong> community to community administrators. They will now be able to perform all of the same actions as you in this community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.");
-											} else {
+                                                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully promoted <strong>%s</strong> member%s in the <strong>%s</strong> community."), $total_updated ,($total_deleted != 1) ? "s" : "", $community_details["community_title"]), "success", $MODULE);
+                                            } else {
 												add_error("There was a problem promoting these community members; the MEdTech Unit has been informed of this error, please try again later.");
 
 												application_log("error", "Unable to promote members from community_id [".$COMMUNITY_ID."]. Database said: ".$db->ErrorMsg());
@@ -661,14 +662,11 @@ if ($COMMUNITY_ID) {
 				case 3 :
                 break;
 				case 2 :
-					$ONLOAD[]		= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\\'', 5000)";
-
-					if ($SUCCESS) {
-						echo display_success();
-					}
-					if ($NOTICE) {
-						echo display_notice();
-					}
+				    $url = ENTRADA_URL . "/" . $MODULE . "?section=members&community=" . $COMMUNITY_ID;
+                    if (!$ERROR) {
+                        header("Location: " . $url);
+                        exit;
+                    }
                 break;
 				case 1 :
 				default :
@@ -975,7 +973,7 @@ if ($COMMUNITY_ID) {
                                     </div>
                                     <script>
                                         var filters = {};
-                                        var excluded_target_ids = <?php echo $current_members_ids ?  json_encode(array_unique($current_members_ids)) : 0; ?>;
+                                        var excluded_target_ids = <?php echo isset($current_members_ids) && $current_members_ids ?  json_encode(array_values(array_unique($current_members_ids))) : 0; ?>;
                                     </script>
                                     <?php
                                     /**

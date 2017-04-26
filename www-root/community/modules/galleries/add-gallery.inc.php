@@ -149,13 +149,15 @@ switch($STEP) {
 
 			if ($db->AutoExecute("community_galleries", $PROCESSED, "INSERT")) {
 				if ($GALLERY_ID = $db->Insert_Id()) {
-					$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-					$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
 					$SUCCESS++;
-					$SUCCESSSTR[]	= "You have successfully added a new photo gallery to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+					Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong>."), $PROCESSED["gallery_title"]), "success", $MODULE);
+
 					add_statistic("community:".$COMMUNITY_ID.":galleries", "gallery_add", "cgallery_id", $GALLERY_ID);
 					communities_log_history($COMMUNITY_ID, $PAGE_ID, $GALLERY_ID, "community_history_add_gallery", 1);
+
+					$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+					header("Location: " . $url);
+					exit;
 				}
 			}
 
@@ -179,14 +181,6 @@ switch($STEP) {
 
 // Page Display
 switch($STEP) {
-	case 2 :
-		if ($NOTICE) {
-			echo display_notice();
-		}
-		if ($SUCCESS) {
-			echo display_success();
-		}
-	break;
 	case 1 :
 	default :
 		if ($ERROR) {

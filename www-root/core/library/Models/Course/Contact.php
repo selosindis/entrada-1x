@@ -67,6 +67,44 @@ class Models_Course_Contact extends Models_Base {
             array("key" => "contact_id", "value" => $contact_id, "method" => "=")
         ));
     }
+    
+    public static function fetchRowByContactID($contact_id = 0) {
+        $self = new self();
+        return $self->fetchRow(array(
+                array("key" => "contact_id", "value" => $contact_id, "method" => "=", "mode" => "AND")
+            )
+        );
+    }
+    
+    /* @return bool|Models_Course_Contact */
+    public static function fetchAllByCourseID($course_id = 0, $deleted_date = NULL) {
+        $self = new self();
+
+        $constraints = array(
+            array(
+                "mode"      => "AND",
+                "key"       => "course_id",
+                "value"     => $course_id,
+                "method"    => "="
+            ),
+            array("key" => "deleted_date",
+                "value" => ($deleted_date ? $deleted_date : NULL),
+                "method" => ($deleted_date ? "<=" : "IS")
+            )
+        );
+
+        $objs = $self->fetchAll($constraints, "=", "AND");
+        $output = array();
+
+        if (!empty($objs)) {
+            foreach ($objs as $o) {
+                $output[] = $o;
+            }
+        }
+
+        return $output;
+    }
+
 
     public static function fetchAllRecords() {
         $self = new self();
@@ -95,7 +133,7 @@ class Models_Course_Contact extends Models_Base {
         return $self->fetchRow($constraints);
     }
 
-    public function getReleasorName($proxy_id = "") {
+    public function getApproverName($proxy_id = "") {
         $name = false;
         $user = Models_User::fetchRowByID($proxy_id == "" ? $this->proxy_id : $proxy_id);
 
@@ -105,7 +143,7 @@ class Models_Course_Contact extends Models_Base {
         return $name;
     }
 
-    public static function fetchReleasorsByCourseIDSearchTermContactType($course_id, $search_value = NULL, $contact_type = NULL) {
+    public static function fetchApproversByCourseIDSearchTermContactType($course_id, $search_value = NULL, $contact_type = NULL) {
         global $db;
 
         $constraints = array($course_id);

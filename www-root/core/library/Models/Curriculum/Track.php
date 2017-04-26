@@ -130,4 +130,18 @@ class Models_Curriculum_Track extends Models_Base {
         }
         return false;
     }
+
+    public static function setCurriculumTrackerOrderByIDArray($curriculum_track_id_array, $page, $pagelength) {
+        global $db;
+        foreach ($curriculum_track_id_array as $key => $curriculum_track_id) {
+            $query = "UPDATE `curriculum_lu_tracks` SET 
+                  curriculum_track_order = ?
+                  WHERE `curriculum_track_id` = ?";
+            $result = $db->Execute($query, array((($key + 1) + ($page * $pagelength)), $curriculum_track_id));
+            if (!$result) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

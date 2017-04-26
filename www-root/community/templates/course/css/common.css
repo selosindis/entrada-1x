@@ -360,6 +360,116 @@ hr {
     height: 200px;
 }
 
+/*  Start bookmarks */
+#bookmarks-widget {
+    background:#fff;
+    position:relative;
+}
+#bookmarks-widget #bookmark-list {
+    max-height: 320px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+#bookmark-controls {
+}
+.bookmark-title {
+    margin:-5px;
+    border-radius:0px;
+}
+.bookmark-form {
+    padding: 20px;
+    margin: 0;
+}
+.bookmark-form.form-horizontal .control-label {
+    width: 100px;
+}
+.bookmark-form.form-horizontal .controls {
+    margin-left: 120px;
+}
+#bookmark-form-container .loading {
+    background-image:url("../images/loading.gif");
+    background-repeat:no-repeat;
+    background-position: center center;
+    font-size:3em;
+    line-height:110px;
+    height:200px;
+}
+#bookmark-form-container {
+    border-radius:3px;
+    -moz-box-shadow:0 5px 10px rgba(0,0,0,0.2);
+    -webkit-box-shadow:0 5px 10px rgba(0,0,0,0.2);
+    box-shadow:0 5px 10px rgba(0,0,0,0.2);
+    position:absolute;
+    left:0;
+    top:0;
+    padding:5px;
+    /*border:1px solid #999999;*/
+    background:#fff;
+    width: 489px;
+    top:-61px;
+    z-index: 9999;
+}
+#bookmark-form-container .panel-head {
+    border-radius: 3px 3px 0px 0px;
+}
+#bookmark-form-container .loading {
+    background-image:url("../images/loading.gif");
+    background-repeat:no-repeat;
+    background-position: center center;
+    font-size:3em;
+    line-height:110px;
+    height:200px;
+}
+#bookmark-form-container .form-control-static {
+    padding-top: 5px;
+}
+#bookmarks-empty {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+#btn-show-more-collapsible.btn-link.btn-block {
+    border-top: solid 1px #CCCCCC;
+}
+#bookmarks-widget ul#bookmark-list.editing li.bookmark-item .bookmark-text {
+    border-bottom-style: dashed;
+    border-bottom-width: 1px;
+}
+
+#bookmarks-widget .bookmark-item.row-fluid {
+    cursor: pointer;
+    min-height: 0;
+    padding: 3px 0;
+}
+
+#bookmarks-widget .bookmark-column, #bookmarks-widget .delete-column, #bookmarks-widget .move-column {
+    min-height: 0;
+}
+a.bookmark-link:hover {
+    text-decoration: none;
+}
+.bookmark-link .popover {
+    max-width: 350px;
+    width: 330px;
+}
+.bookmark-text.editable {
+    text-decoration: none;
+    border-bottom: 1px dashed #006699;
+    color: #006699;
+    cursor: text;
+}
+.input-bookmark-title {
+    width: 120px;
+}
+
+i.bookmark-icon {
+    color: #EEE;
+    margin-right: 2px;
+    font-size: 1.4em;
+}
+
+/*  End bookmarks */
+
 .cornerarrow {
     width: 8px;
     height: 16px;

@@ -49,7 +49,7 @@ if ($org_id) {
 	$cohorts = groups_get_active_cohorts($org_id);
     if ($cohorts) {
         foreach ($cohorts as $cohort) {
-            $query = "SELECT a.*, c.`proxy_id`, CONCAT_WS(' ', d.`firstname`, d.`lastname`) AS `fullname`, d.`email`
+            $query = "SELECT a.*,IF(a.`room_id` IS NULL, a.`event_location`, CONCAT(e.`building_code`, '-', d.`room_number`)) AS `event_location`, c.`proxy_id`, CONCAT_WS(' ', d.`firstname`, d.`lastname`) AS `fullname`, d.`email`
                         FROM `events` AS a
                         LEFT JOIN `event_audience` AS b
                         ON b.`event_id` = a.`event_id`
@@ -57,6 +57,10 @@ if ($org_id) {
                         ON c.`event_id` = a.`event_id`
                         LEFT JOIN `" . AUTH_DATABASE . "`.`user_data` AS d
                         ON d.`id` = c.`proxy_id`
+                        LEFT JOIN `global_lu_rooms` AS d
+                        ON d.`room_id` = a.`room_id`
+                        LEFT JOIN `global_lu_buildings` AS e
+                        ON e.`building_id` = d.`building_id`
                         WHERE b.`audience_type` = 'cohort'
                         AND b.`audience_value` = " . $db->qstr($cohort["group_id"]) . "
                         AND (c.`contact_order` IS NULL OR c.`contact_order` = '0')

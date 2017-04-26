@@ -26,10 +26,10 @@ require_once("init.inc.php");
 
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$countries_id = ((isset($_GET["countries_id"])) ? clean_input($_GET["countries_id"], "int") : 0);
-	$tmp_input = ((isset($_GET["prov_state"])) ? clean_input(rawurldecode($_GET["prov_state"]), array("notags", "trim")) : "");
+	$tmp_input = ((isset($_GET["prov_state"]) && $_GET["prov_state"] != "undefined") ? clean_input(rawurldecode($_GET["prov_state"]), array("notags", "trim")) : "");
 
 	$province_id = 0;
-	$province ="";
+	$province = "";
 
 
 	$out = "html";

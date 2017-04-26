@@ -204,6 +204,8 @@ if ($RECORD_ID) {
         $PAGE_PREVIOUS = (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
         $PAGE_NEXT = (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
 
+        Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
         /**
          * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
          */

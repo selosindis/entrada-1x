@@ -81,6 +81,16 @@ class Models_Assessments_Distribution_Target extends Models_Base {
         ));
     }
 
+    public static function fetchAllByTargetTypeTargetScopeTargetRoleTargetID($target_type, $target_scope, $target_role, $target_id) {
+        $self = new self();
+        return $self->fetchAll(array(
+            array("key" => "target_type", "value" => $target_type, "method" => "="),
+            array("key" => "target_scope", "value" => $target_scope, "method" => "="),
+            array("key" => "target_role", "value" => $target_role, "method" => "="),
+            array("key" => "target_id", "value" => $target_id, "method" => "=")
+        ));
+    }
+
     public static function fetchAllByTargetID($target_id) {
         $self = new self();
         return $self->fetchAll(array(
@@ -529,7 +539,7 @@ class Models_Assessments_Distribution_Target extends Models_Base {
                                         break;
                                     case "internal_learners" :
                                         if ($course) {
-                                            $curriculum_periods = Models_CurriculumPeriod::fetchAllByCurriculumTypeID($course->getCurriculumTypeID());
+                                            $curriculum_periods = Models_Curriculum_Period::fetchAllByCurriculumType($course->getCurriculumTypeID());
                                             if ($curriculum_periods) {
                                                 $cperiod_id = false;
                                                 $date = strtotime("now");
@@ -541,7 +551,7 @@ class Models_Assessments_Distribution_Target extends Models_Base {
                                                 }
 
                                                 if (!$cperiod_id) {
-                                                    $curriculum_period = Models_CurriculumPeriod::fetchLastActiveByCurriculumTypeID($course->getCurriculumTypeID(), $date);
+                                                    $curriculum_period = Models_Curriculum_Period::fetchLastActiveByCurriculumTypeID($course->getCurriculumTypeID(), $date);
                                                     if ($curriculum_period) {
                                                         $cperiod_id = $curriculum_period->getID();
                                                     }
@@ -590,7 +600,7 @@ class Models_Assessments_Distribution_Target extends Models_Base {
                                         break;
                                     case "all_learners" :
                                         if ($course) {
-                                            $curriculum_periods = Models_CurriculumPeriod::fetchAllByCurriculumTypeID($course->getCurriculumTypeID());
+                                            $curriculum_periods = Models_Curriculum_Period::fetchAllByCurriculumType($course->getCurriculumTypeID());
                                             if ($curriculum_periods) {
                                                 $cperiod_id = false;
                                                 $date = strtotime("now");
@@ -602,7 +612,7 @@ class Models_Assessments_Distribution_Target extends Models_Base {
                                                 }
 
                                                 if (!$cperiod_id) {
-                                                    $curriculum_period = Models_CurriculumPeriod::fetchLastActiveByCurriculumTypeID($course->getCurriculumTypeID(), $date);
+                                                    $curriculum_period = Models_Curriculum_Period::fetchLastActiveByCurriculumTypeID($course->getCurriculumTypeID(), $date);
                                                     if ($curriculum_period) {
                                                         $cperiod_id = $curriculum_period->getID();
                                                     }
@@ -741,7 +751,7 @@ class Models_Assessments_Distribution_Target extends Models_Base {
                             case "eventtype_id":
                                 // Instantiate the helper object to find the learning event assessment targets.
                                 $learning_event_helper = new Entrada_Utilities_Assessments_DistributionLearningEvent(array("adistribution_id" => $distribution_id));
-                                $assessment_targets = $learning_event_helper->getLearningEventAssessmentTargets($target_record, $assessment);
+                                $assessment_targets = $learning_event_helper->getLearningEventAssessmentTargets($distribution_id, $internal_external, $user_id, $assessment, $target_record);
                                 break;
                         }
                     }

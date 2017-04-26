@@ -39,21 +39,19 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, $SECTION)) {
 	if ((@file_exists($section_to_load = COMMUNITY_ABSOLUTE.DIRECTORY_SEPARATOR."modules".DIRECTORY_SEPARATOR.$COMMUNITY_MODULE.DIRECTORY_SEPARATOR.$SECTION.".inc.php")) && (@is_readable($section_to_load))) {
 		require_once($section_to_load);
 	} else {
-		$ONLOAD[]	= "setTimeout('window.location=\\'".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."\\'', 5000)";
+        Entrada_Utilities_Flashmessenger::addMessage($translate->_("The action you are looking for does not exist for this module."), "error", $MODULE);
 
-		$ERROR++;
-		$ERRORSTR[] = "The action you are looking for does not exist for this module.";
+        application_log("error", "Communities system tried to load ".$section_to_load." which does not exist or is not readable by PHP.");
 
-		echo display_error();
-
-		application_log("error", "Communities system tried to load ".$section_to_load." which does not exist or is not readable by PHP.");
+        $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+        header("Location: " . $url);
+        exit;
 	}
 } else {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."\\'', 5000)";
+    Entrada_Utilities_Flashmessenger::addMessage($translate->_("You do not have access to this section of this module. Please contact a community administrator for assistance."), "error", $MODULE);
 
-	$ERROR++;
-	$ERRORSTR[] = "You do not have access to this section of this module. Please contact a community administrator for assistance.";
-
-	echo display_error();
+    $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+    header("Location: " . $url);
+    exit;
 }
 ?>

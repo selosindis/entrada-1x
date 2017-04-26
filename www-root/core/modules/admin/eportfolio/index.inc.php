@@ -55,6 +55,22 @@ if (!defined("PARENT_INCLUDED")) {
 	}
 	$eportfolios = Models_Eportfolio::fetchAll($ENTRADA_USER->getActiveOrganisation(), $is_advisor ? $ENTRADA_USER->GetID() : NULL);
 	?>
+    <style rel="stylesheet">
+        #artifacts .well:not(.no-folders){
+            padding: 0px;
+        }
+        .artifacts li strong {
+            margin-top: 5px;
+            display: block;
+        }
+        .artifacts li {
+            padding: 20px;
+            border-bottom: 1px solid #ccc;
+        }
+        .artifacts li:last-child {
+            border-bottom: none;
+        }
+    </style>
 	<script type="text/javascript">
 		<?php if ($is_advisor == true) { ?>
 		ADVISOR = true;
@@ -109,7 +125,10 @@ if (!defined("PARENT_INCLUDED")) {
 							jQuery(folder_list).append(folder_row);
 						});
 						jQuery("#user-portfolio").append(folder_list);
-					}
+					} else {
+                        $("#artifacts").html("<div class=\"no-folders well\"><strong>No folders in this portfolio</strong></div>");
+                    }
+
 				}
 			});
 		}
@@ -214,7 +233,7 @@ if (!defined("PARENT_INCLUDED")) {
 				$("#breadcrumb").append(span);
 
 				jQuery("#user-portfolio").html("<div class=\"title-container row-fluid\"><h1 class=\"pull-left\">"+$(breadcrumb_link).html()+"</h1></div>");
-				
+
 				getFolders(portfolio_id);
 				
 				e.preventDefault();
@@ -469,10 +488,10 @@ if (!defined("PARENT_INCLUDED")) {
 			});
 			
 			$("#manage").on("click", ".portfolio-item", function(e) {
-				
-				$("#portfolio-actions").show().attr("data-portfolio-id", $(this).data("portfolio-id"));
-				var btn = $(this);
-				$("#manage .add-folder").attr("data-id", btn.data("portfolio-id"));
+
+                var btn = $(this);
+				$("#portfolio-actions").show().data("portfolio-id", btn.data("portfolio-id"));
+				$("#manage .add-folder").data("id", btn.data("portfolio-id"));
 				$("#manage-eportfolio-title").html(btn.html())
 				$("#artifacts").empty();
 				$.ajax({
@@ -488,7 +507,7 @@ if (!defined("PARENT_INCLUDED")) {
 								var folder_title = document.createElement("h3");
 								var folder_desc = document.createElement("p");
 								$(folder_title).html(v.title);
-								$(folder_title).append(" <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"add-artifact\" data-pfolder-id=\""+v.pfolder_id+"\"><i class=\"icon-plus-sign\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"edit-folder\" data-id=\""+v.pfolder_id+"\"><i class=\"icon-edit\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"delete-folder\" data-pfolder-id=\""+v.pfolder_id+"\"><i class=\"icon-trash\"></i></a>");
+								$(folder_title).append(" <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"add-artifact\" data-pfolder-id=\""+v.pfolder_id+"\"><i class=\"icon-plus-sign\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"edit-folder\" data-pfolder-id=\""+v.pfolder_id+"\"><i class=\"icon-edit\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"delete-folder\" data-pfolder-id=\""+v.pfolder_id+"\"><i class=\"icon-trash\"></i></a>");
 								$(folder_desc).html(v.description);
 								
 								var artifacts_container = document.createElement("div");
@@ -504,10 +523,10 @@ if (!defined("PARENT_INCLUDED")) {
 											var artifactJsonResponse = JSON.parse(data);
 											if (artifactJsonResponse.status == "success") {
 												$.each(artifactJsonResponse.data, function(a_i, a_v) {
-													$(artifacts).append("<li data-id=\""+a_v.pfartifact_id+"\"><strong>" + a_v.title + "</strong> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"edit-artifact\" data-id=\""+a_v.pfartifact_id+"\"><i class=\"icon-edit\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"delete-artifact\" data-id=\""+a_v.pfartifact_id+"\"><i class=\"icon-trash\"></i></a><div>" + a_v.description + "</div></li>")
+													$(artifacts).append("<li data-id=\""+a_v.pfartifact_id+"\"><div class=\"row-fluid space-below\"><div class=\"span9\"><strong>" + a_v.title + "</strong></div><div class=\"span3\"><div class=\"btn-group pull-right\"><a href=\"#manage-modal\" data-toggle=\"modal\" class=\"btn btn-small edit-artifact\" data-id=\""+a_v.pfartifact_id+"\"><i class=\"icon-edit\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"btn btn-small delete-artifact\" data-id=\""+a_v.pfartifact_id+"\"><i class=\"icon-trash\"></i></a></div></div></div><div class=\"row-fluid\">" + a_v.description + "</div></li>")
 												});
 											} else {
-												$(artifacts).append("<li><strong>No artifacts in this folder</strong></li>");
+												$(artifacts).append("<li class=\"no-artifacts\"><strong>No artifacts in this folder</strong></li>");
 											}
 										}
 								});
@@ -515,19 +534,20 @@ if (!defined("PARENT_INCLUDED")) {
 								$(folder_container).addClass("folder-container").attr("data-pfolder-id", v.pfolder_id).append(folder_title).append(folder_desc).append(artifacts_container);
 								$("#artifacts").append(folder_container);
 							});
-						}
+						} else {
+                            $("#artifacts").html("<div class=\"no-folders well\"><strong>No folders in this portfolio</strong></div>");
+                        }
 					}
 				});
 				e.preventDefault();
 			});
 			$("#manage").on("click", ".add-folder, .edit-folder", function(e) {
-		
+
 				var cloned_form = $("#portfolio-form").clone();
 				$("#manage-modal .modal-body").empty().append(cloned_form);
 				
-				$("#manage-modal .modal-footer .save-btn").addClass("btn-primary add-folder-modal").removeClass("btn-danger").html("Add Folder");
+				$("#manage-modal .modal-footer .save-btn").removeAttr("data-pfartifact-id").removeAttr("data-pfolder-id").addClass("btn-primary add-folder-modal").removeClass("btn-danger add-new-portfolio").html("Save");
 				var btn = $(this);
-				
 				var folder_title = document.createElement("input");
 				var folder_desc = document.createElement("textarea");
 				var folder_allow_artifact = document.createElement("input");
@@ -568,9 +588,10 @@ if (!defined("PARENT_INCLUDED")) {
 				$(allow_artifact_input_container).append(folder_allow_artifact);
 				$(allow_artifact_row).append(allow_artifact_input_container);
 				$("#portfolio-form").append(allow_artifact_row);
-				$("#portfolio-form").append("<input type=\"hidden\" name=\"" + (btn.hasClass("add-folder") ? "portfolio_id" : "pfolder_id") + "\" value=\""+btn.data("id")+"\" />");
+				$("#portfolio-form").append("<input type=\"hidden\" name=\"" + (btn.hasClass("add-folder") ? "portfolio_id" : "pfolder_id") + "\" value=\""+(btn.hasClass("add-folder") ? btn.data("id") : btn.data("pfolder-id"))+"\" />");
 				
 				if (btn.hasClass("edit-folder")) {
+                    $("#manage-modal .modal-header h3").html("Edit Folder");
 					$("#portfolio-form").append("<input type=\"hidden\" name=\"method\" value=\"edit-folder\" />");
 					$.ajax({
 						url : api_url,
@@ -588,10 +609,13 @@ if (!defined("PARENT_INCLUDED")) {
 						}
 					});
 				} else {
+                    $("#manage-modal .modal-header h3").removeData("pfolder-id").html("Add Folder");
 					$("#portfolio-form").append("<input type=\"hidden\" name=\"method\" value=\"create-folder\" />");
 				}
 			});
 			$("#manage").on("click", ".add-artifact", function(e) {
+                $("#manage-modal .modal-header h3").html("Add Artifact");
+                $("#manage-modal .modal-footer .save-btn").removeClass("add-new-portfolio");
 				$("#manage-modal .modal-footer .save-btn").addClass("btn-primary add-artifact-modal").removeClass("btn-danger").html("Save");
 				var btn = $(this);
 				$("#portfolio-form").empty()
@@ -602,7 +626,7 @@ if (!defined("PARENT_INCLUDED")) {
 				e.preventDefault();
 			});
 			$("#manage").on("click", ".edit-artifact", function(e) {
-				$("#manage-modal .modal-footer .save-btn").addClass("btn-primary edit-artifact-modal").removeClass("btn-danger add-artifact-modal").html("Save").attr({"data-artifact": ""});
+				$("#manage-modal .modal-footer .save-btn").addClass("btn-primary edit-artifact-modal").removeClass("btn-danger add-artifact-modal").html("Save");
 				var btn = $(this);
 				$("#portfolio-form").empty()
 				$("#display-error-box-modal").remove();
@@ -640,23 +664,23 @@ if (!defined("PARENT_INCLUDED")) {
 				if (btn.hasClass("delete-artifact")) {
 					$("#manage-modal .modal-header h3").html("Delete Artifact");
 					var modal_btn = $("#manage-modal .modal-footer .save-btn");
-					modal_btn.removeClass("btn-primary").addClass("btn-danger delete-artifact-modal").html("Delete").attr("data-pfartifact-id", btn.data("id"));
+                    modal_btn.removeAttr("data-pfartifact-id").removeAttr("data-pfolder-id");
+					modal_btn.removeClass("btn-primary delete-folder").addClass("btn-danger delete-artifact-modal").html("Delete").attr("data-pfartifact-id", btn.data("id"));
 					display_error(["<strong>Warning</strong>, you have clicked the delete artifact button. <br/><br /> Please confirm you wish to delete the artifact by clicking on the button below."], "#manage-modal .modal-body", "append");
 				} else if (btn.hasClass("delete-folder")) {
 					$("#manage-modal .modal-header h3").html("Delete Folder");
 					var modal_btn = $("#manage-modal .modal-footer .save-btn");
-					modal_btn.removeClass("btn-primary").addClass("btn-danger delete-artifact-modal").html("Delete").attr("data-pfolder-id", btn.data("pfolder-id"));
+					modal_btn.removeClass("btn-primary delete-portfolio-modal").addClass("btn-danger delete-folder").html("Delete").attr("data-pfolder-id", btn.data("pfolder-id"));
 					display_error(["<strong>Warning</strong>, you have clicked the delete folder button. <br/><br /> Please confirm you wish to delete the folder by clicking on the button below. All artifacts will also be deleted."], "#manage-modal .modal-body", "append");
 				}
-				e.preventDefault();
 			});
-			$("#manage-modal .modal-footer").on("click", ".delete-artifact-modal", function(e) {
+			$("#manage-modal .modal-footer").on("click", ".delete-artifact-modal, .delete-folder", function(e) {
 				var btn = $(this);
 				var method = "delete-artifact";
 				var datatype = "pfartifact_id";
 				var data = btn.data("pfartifact-id");
 				if (typeof btn.data("pfolder-id") != "undefined") {
-					method = "delete-folder"
+					method = "delete-folder";
 					datatype = "pfolder_id";
 					data = btn.data("pfolder-id");
 					$(".folder-container[data-pfolder-id='"+data+"']").remove();
@@ -670,10 +694,17 @@ if (!defined("PARENT_INCLUDED")) {
 						var jsonResponse = JSON.parse(data);
 						if (jsonResponse.status == "success") {
 							$("ul.artifacts li[data-id='" + btn.data("pfartifact-id") + "']").remove();
+							if($("div[data-pfolder-id='"+jsonResponse.data.pfolder_id+"'] ul.artifacts").html() == ""){
+                                $("div[data-pfolder-id='"+jsonResponse.data.pfolder_id+"'] ul.artifacts").append("<li class=\"no-artifacts\"><strong>No artifacts in this folder</strong></li>");
+                            }
+                            if($("#artifacts").html() == ""){
+                                $("#artifacts").append("<div class=\"no-folders well\"><strong>No folders in this portfolio</strong></div>");
+                            }
 							$("#manage-modal").modal("hide");
 						}
 					}
 				});
+                e.preventDefault();
 			});
 			
 			$("#manage-modal .modal-footer").on("click", ".add-folder-modal", function(e) {
@@ -685,16 +716,30 @@ if (!defined("PARENT_INCLUDED")) {
 					success: function(data) {
 						var jsonResponse = JSON.parse(data);
 						if (jsonResponse.status == "success") {
-							var folder_row = document.createElement("div");
-							var folder_title = document.createElement("h3");
-							$(folder_title).append(jsonResponse.data.title + " <a class=\"add-artifact\" data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\" data-toggle=\"modal\" href=\"#manage-modal\"><i class=\"icon-plus-sign\"></i></a> <a class=\"edit-folder\" data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\" data-toggle=\"modal\" href=\"#manage-modal\"><i class=\"icon-edit\"></i></a> <a class=\"delete-folder\" data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\" data-toggle=\"modal\" href=\"#manage-modal\"><i class=\"icon-trash\"></i></a>");
-							var folder_desc = document.createElement("p");
-							$(folder_desc).html(jsonResponse.data.description);
-							var artifact_container = document.createElement("div");
-							$(artifact_container).addClass("well").append("<ul class=\"artifacts\"><li><strong>No artifacts in this folder</strong></li></ul>");
-							$(folder_row).append(folder_title).append(folder_desc).append(artifact_container);
-							$("#artifacts").append(folder_row);
+                            if($(".admin-portfolio-form input[name='pfolder_id']").val() == jsonResponse.data.pfolder_id) {
+                                $(".folder-container[data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\"] h3").html(jsonResponse.data.title).append(" <a class=\"add-artifact\" data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\" data-toggle=\"modal\" href=\"#manage-modal\"><i class=\"icon-plus-sign\"></i></a> <a class=\"edit-folder\" data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\" data-toggle=\"modal\" href=\"#manage-modal\"><i class=\"icon-edit\"></i></a> <a class=\"delete-folder\" data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\" data-toggle=\"modal\" href=\"#manage-modal\"><i class=\"icon-trash\"></i></a>");;
+                                $(".folder-container[data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\"] p").html(jsonResponse.data.description);
+                            } else {
+                                var folder_row = document.createElement("div");
+                                $(folder_row).data("pfolder-id",jsonResponse.data.pfolder_id);
+                                var folder_title = document.createElement("h3");
+                                $(folder_title).append(jsonResponse.data.title + " <a class=\"add-artifact\" data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\" data-toggle=\"modal\" href=\"#manage-modal\"><i class=\"icon-plus-sign\"></i></a> <a class=\"edit-folder\" data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\" data-toggle=\"modal\" href=\"#manage-modal\"><i class=\"icon-edit\"></i></a> <a class=\"delete-folder\" data-pfolder-id=\""+jsonResponse.data.pfolder_id+"\" data-toggle=\"modal\" href=\"#manage-modal\"><i class=\"icon-trash\"></i></a>");
+                                var folder_desc = document.createElement("p");
+                                $(folder_desc).html(jsonResponse.data.description);
+                                var artifact_container = document.createElement("div");
+                                $(artifact_container).attr("data-pfolder-id",jsonResponse.data.pfolder_id);
+                                $(artifact_container).addClass("well").append("<ul class=\"artifacts\"><li class=\"no-artifacts\"><strong>No artifacts in this folder</strong></li></ul>");
+                                $(folder_row).addClass("folder-container").attr("data-pfolder-id", jsonResponse.data.pfolder_id).append(folder_title).append(folder_desc).append(artifact_container);
+                                $("#artifacts").append(folder_row);
+                            }
 						}
+
+                        if($("#artifacts").html() == ""){
+                            $("#artifacts").append("<div class=\"no-folders well\"><strong>No folders in this portfolio</strong></div>");
+                        } else {
+                            $("#artifacts .no-folders").remove();
+                        }
+
 						$("#manage-modal").modal("hide");
 					}
 				});
@@ -708,10 +753,11 @@ if (!defined("PARENT_INCLUDED")) {
 					success: function(data) {
 						var jsonResponse = JSON.parse(data);
 						if (jsonResponse.status == "success") {
+                            $("div[data-pfolder-id='" + jsonResponse.data.pfolder_id + "'] ul li.no-artifacts").remove();
 							if ($("div[data-pfolder-id='" + jsonResponse.data.pfolder_id + "'] ul li[data-id='"+jsonResponse.data.pfartifact_id+"']").length > 0) {
-								$("div[data-pfolder-id='" + jsonResponse.data.pfolder_id + "'] ul li[data-id='"+jsonResponse.data.pfartifact_id+"']").html("<strong>" + jsonResponse.data.title + "</strong> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"edit-artifact\" data-id=\""+jsonResponse.data.pfartifact_id+"\"><i class=\"icon-edit\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"delete-artifact\" data-id=\""+jsonResponse.data.pfartifact_id+"\"><i class=\"icon-trash\"></i></a><div>" + jsonResponse.data.description + "</div>");
+								$("div[data-pfolder-id='" + jsonResponse.data.pfolder_id + "'] ul li[data-id='"+jsonResponse.data.pfartifact_id+"']").html("<div class=\"row-fluid space-below\"><div class=\"span9\"><strong>" + jsonResponse.data.title + "</strong></div><div class=\"span3\"><div class=\"btn-group pull-right\"><a href=\"#manage-modal\" data-toggle=\"modal\" class=\"btn btn-small edit-artifact\" data-id=\""+jsonResponse.data.pfartifact_id+"\"><i class=\"icon-edit\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"btn btn-small delete-artifact\" data-id=\""+jsonResponse.data.pfartifact_id+"\"><i class=\"icon-trash\"></i></a></div></div></div><div class=\"row-fluid\">" + jsonResponse.data.description + "</div>");
 							} else {
-								$("div[data-pfolder-id='" + jsonResponse.data.pfolder_id + "'] ul").append("<li data-id=\""+jsonResponse.data.pfartifact_id+"\"><strong>" + jsonResponse.data.title + "</strong> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"edit-artifact\" data-id=\""+jsonResponse.data.pfartifact_id+"\"><i class=\"icon-edit\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"delete-artifact\" data-id=\""+jsonResponse.data.pfartifact_id+"\"><i class=\"icon-trash\"></i></a><div>" + jsonResponse.data.description + "</div></li>");
+								$("div[data-pfolder-id='" + jsonResponse.data.pfolder_id + "'] ul").append("<li data-id=\""+jsonResponse.data.pfartifact_id+"\"><div class=\"row-fluid space-below\"><div class=\"span9\"><strong>" + jsonResponse.data.title + "</strong></div><div class=\"span3\"><div class=\"btn-group pull-right\"><a href=\"#manage-modal\" data-toggle=\"modal\" class=\"btn btn-small edit-artifact\" data-id=\""+jsonResponse.data.pfartifact_id+"\"><i class=\"icon-edit\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"btn btn-small delete-artifact\" data-id=\""+jsonResponse.data.pfartifact_id+"\"><i class=\"icon-trash\"></i></a></div></div></div><div class=\"row-fluid\">" + jsonResponse.data.description + "</div></li>");
 							}
 							$("#manage-modal").modal("hide");
 						}
@@ -726,8 +772,7 @@ if (!defined("PARENT_INCLUDED")) {
 					success: function(data) {
 						var jsonResponse = JSON.parse(data);
 						if (jsonResponse.status == "success") {
-							$("li[data-id="+ jsonResponse.data.pfartifact_id +"] strong").html(jsonResponse.data.title);
-							$("li[data-id="+ jsonResponse.data.pfartifact_id +"] div").html(jsonResponse.data.description);
+                            $("div[data-pfolder-id='" + jsonResponse.data.pfolder_id + "'] ul li[data-id='"+jsonResponse.data.pfartifact_id+"']").html("<div class=\"row-fluid space-below\"><div class=\"span9\"><strong>" + jsonResponse.data.title + "</strong></div><div class=\"span3\"><div class=\"btn-group pull-right\"><a href=\"#manage-modal\" data-toggle=\"modal\" class=\"btn btn-small edit-artifact\" data-id=\""+jsonResponse.data.pfartifact_id+"\"><i class=\"icon-edit\"></i></a> <a href=\"#manage-modal\" data-toggle=\"modal\" class=\"btn btn-small delete-artifact\" data-id=\""+jsonResponse.data.pfartifact_id+"\"><i class=\"icon-trash\"></i></a></div></div></div><div class=\"row-fluid\">" + jsonResponse.data.description + "</div>");
 							$("#manage-modal").modal("hide");
 						}
 					}
@@ -737,7 +782,8 @@ if (!defined("PARENT_INCLUDED")) {
 				$("#portfolio-form").empty();
 				var cloned_form = $("#portfolio-form").clone();
 				$("#manage-modal .modal-body").empty().append(cloned_form);
-				$(".save-btn").removeClass("edit-artifact-modal").removeClass("add-artifact-modal").removeClass("add-folder-modal").removeClass("delete-artifact-modal");
+				$(".save-btn").removeClass("edit-artifact-modal add-artifact-modal add-folder-modal delete-artifact-modal delete-folder delete-portfolio-modal add-new-portfolio update-portfolio copy-new-portfolio btn-danger").addClass("btn-primary");
+				$(".save-btn").removeData("pfartifact-id").removeData("pfolder-id");
 			});
 			$("#advisors").on("click", ".advisor", function(e) {
 				var btn = $(this);
@@ -745,9 +791,9 @@ if (!defined("PARENT_INCLUDED")) {
 				
 				var title = document.createElement("h1");
 				$(title).html("Students assigned to " + btn.html());
-				$("#advisors .right-pane").append(title).append("<div class=\"row-fluid\"><a href=\"#advisor-modal\" data-advisor-id=\""+btn.data("id")+"\" data-toggle=\"modal\" class=\"btn btn-success pull-right add-student-btn\"><i class=\"icon-plus-sign icon-white\"></i> Add Student</a></div>");
-				var user_list = document.createElement("ul");
-				$(user_list).attr({"class" : "padvisor-students", "data-padvisor-id" : btn.data("id")});
+				$("#advisors .right-pane").append(title).append("<div class=\"row-fluid space-below\"><a href=\"#advisor-modal\" data-advisor-id=\""+btn.data("id")+"\" data-toggle=\"modal\" class=\"btn btn-success pull-right add-student-btn\"><i class=\"icon-plus-sign icon-white\"></i> Add Student</a></div>");
+				var user_list = document.createElement("table");
+				$(user_list).attr({"class" : "padvisor-students table table-bordered table-striped", "data-padvisor-id" : btn.data("id")});
 				$("#advisors .right-pane").append(user_list);
 				
 				$.ajax({
@@ -758,14 +804,16 @@ if (!defined("PARENT_INCLUDED")) {
 						var jsonResponse = JSON.parse(data);
 						if (jsonResponse.status == "success") {
 							$.each(jsonResponse.data, function(i, v) {
-								var user_line = document.createElement("li");
+								var user_line = document.createElement("tr");
 								var user_link = document.createElement("a");
-								$(user_link).attr({"href" : "#", "data-student-id" : v.proxy_id, "data-advisor-id" : btn.data("id")}).html("<i class=\"icon-trash\"></i>").addClass("remove-relation");
-								$(user_line).html(v.fullname).append(user_link);
-								$("ul.padvisor-students").append(user_line);
+								var user_link_td = document.createElement("td");
+								$(user_link).attr({"href" : "#", "data-student-id" : v.proxy_id, "data-advisor-id" : btn.data("id")}).html("<i class=\"icon-trash\"></i>").addClass("remove-relation btn btn-small pull-right");
+								$(user_link_td).addClass("span1").append(user_link);
+								$(user_line).html("<td class=\"span11\">" + v.fullname + "</td>").append(user_link_td);
+								$("table.padvisor-students").append(user_line);
 							});
 						} else {
-							$("ul.padvisor-students").append("<li class=\"no-students\">There are no students assigned to this advisor.</li>");
+							$("table.padvisor-students").append("<tr class=\"no-students\"><td colspan=\"2\"> There are no students assigned to this advisor.</td></tr>");
 						}
 					}
 				});
@@ -780,9 +828,9 @@ if (!defined("PARENT_INCLUDED")) {
 					success: function(data) {
 						var jsonResponse = JSON.parse(data);
 						if (jsonResponse.status == "success") {
-							btn.parent().remove();
-							if ($(".padvisor-students li").length <= 0) {
-								$(".padvisor-students").append("<li class=\"no-students\">There are no students assigned to this advisor.</li>")
+							btn.closest("tr").remove();
+							if ($(".padvisor-students tr").length <= 0) {
+                                $("table.padvisor-students").append("<tr class=\"no-students\"><td colspan=\"2\"> There are no students assigned to this advisor.</td></tr>");
 							}
 						}
 					}
@@ -806,9 +854,13 @@ if (!defined("PARENT_INCLUDED")) {
 								$(".no-students").remove();
 							}
 							$.each(jsonResponse.data, function(i, v) {
-								var user_row = document.createElement("li");
-								$(user_row).html(v.firstname + " " + v.lastname + "<a class=\"remove-relation\" data-student-id=\"" + v.id + "\" data-advisor-id=\"" + v.advisor + "\" href=\"#\"><i class=\"icon-trash\"></i></a>");
-								$(".padvisor-students[data-padvisor-id='" + v.advisor + "']").append(user_row);;
+                                var user_line = document.createElement("tr");
+                                var user_link = document.createElement("a");
+                                var user_link_td = document.createElement("td");
+                                $(user_link).attr({"href" : "#", "data-student-id" : v.proxy_id, "data-advisor-id" : v.advisor}).html("<i class=\"icon-trash\"></i>").addClass("remove-relation btn btn-small pull-right");
+                                $(user_link_td).addClass("span1").append(user_link);
+                                $(user_line).html("<td class=\"span11\">" + v.firstname + " " + v.lastname + "</td>").append(user_link_td);
+                                $("table.padvisor-students[data-padvisor-id='" + v.advisor + "']").append(user_line);
 							});
 							$("#advisor-modal").modal("hide");
 						}
@@ -842,9 +894,10 @@ if (!defined("PARENT_INCLUDED")) {
 			});
 			$("#manage").on("click", ".delete-portfolio", function(e) {
 				display_error(["<strong>WARNING</strong> You are about to delete a portfolio. Please use the button below to confirm you wish to delete it."], "#manage-modal .modal-body", "append");
-				$("#manage-modal .modal-footer .btn-primary").addClass("btn-danger").addClass("delete-portfolio").removeClass("btn-primary").html("Delete");
+                $("#manage-modal .modal-header h3").html("Delete Portfolio");
+				$("#manage-modal .modal-footer .save-btn").addClass("btn-danger").addClass("delete-portfolio-modal").removeClass("btn-primary").html("Delete");
 			});
-			$("#manage-modal .modal-footer").on("click", ".delete-portfolio", function(e) {
+			$("#manage-modal .modal-footer").on("click", ".delete-portfolio-modal", function(e) {
 				$.ajax({
 					url : api_url,
 					type : "POST",
@@ -869,7 +922,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$("#display-error-box-modal").remove();
 				}
 				$("#manage-modal .modal-header h3").html("New Portfolio");
-				$("#manage-modal .modal-footer .save-btn").html("Add").addClass("add-new-portfolio").removeClass("btn-danger");
+				$("#manage-modal .modal-footer .save-btn").removeAttr("data-pfartifact-id").removeAttr("data-pfolder-id").html("Add").addClass("add-new-portfolio").removeClass("btn-danger");
 				portfolioForm("add");
 				e.preventDefault();
 			});
@@ -877,8 +930,8 @@ if (!defined("PARENT_INCLUDED")) {
 				if ($("#display-error-box-modal").length > 0) {
 					$("#display-error-box-modal").remove();
 				}
-				$("#manage-modal .modal-header h3").html("New Portfolio");
-				$("#manage-modal .modal-footer .btn-primary").html("Update").addClass("update-portfolio");
+				$("#manage-modal .modal-header h3").html("Edit Portfolio");
+				$("#manage-modal .modal-footer .save-btn").html("Update").addClass("update-portfolio");
 				portfolioForm("edit");
 
 				$.ajax({
@@ -1173,7 +1226,7 @@ if (!defined("PARENT_INCLUDED")) {
 				<div class="right-pane span9">
 					<h1 id="manage-eportfolio-title">Manage ePortfolio</h1>
 					<div id="portfolio-msg"></div>
-					<div id="portfolio-actions" class="btn-group hide">
+					<div id="portfolio-actions" class="btn-group hide space-below">
 						<a href="#manage-modal" data-toggle="modal" class="btn add-folder"><i class="icon-folder-open" title="Edit"></i> Add Folder</a>
 						<button class="btn dropdown-toggle" data-toggle="dropdown">
 							<span class="caret"></span>

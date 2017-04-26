@@ -204,23 +204,21 @@ if($COMMUNITY_ID) {
 								$mail_list = new MailingList($COMMUNITY_ID);
 								$mail_list->add_member($PROCESSED["proxy_id"]);
 							}
-							$community_url	= ENTRADA_URL."/community".$community_details["community_url"];
-
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$community_url."\\'', 5000)";
-
-							$SUCCESS++;
-							$SUCCESSSTR[] = "<strong>You have successfully joined ".html_encode($community_details["community_title"])."!</strong><br /><br />Please <a href=\"".$community_url."\">click here</a> to proceed to it or you will be automatically forwarded in 5 seconds.";
-
+                            Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully joined <strong>%s</strong>"), $community_details["community_title"]), "success", "login");
 							communities_log_history($COMMUNITY_ID, 0, $member_id, "community_history_add_member", 1);
+                            if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
+                                community_notify($COMMUNITY_ID, $ENTRADA_USER->getActiveId(), "join", ENTRADA_URL."/people?id=".$ENTRADA_USER->getActiveId(), $COMMUNITY_ID);
+                            }
+                            $community_url = ENTRADA_URL . "/community" . $community_details["community_url"];
+                            header("Location: " . $community_url);
+                            exit;
 						} else {
-							$community_url	= ENTRADA_URL."/communities";
-
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$community_url."\\'', 5000)";
-
-							$ERROR++;
-							$ERRORSTR[]	= "<strong>Failed to join ".html_encode($community_details["community_title"]).".</strong><br /><br />We were unable to register you in this community. The MEdTech Unit has been informed of this error, please try again later.";
-
+                            Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("Failed to join <strong>%s</strong><br /><br />We were unable to register you in this community. The MEdTech Unit has been informed of this error, please try again later."), $community_details["community_title"]), "error", $MODULE);
 							application_log("error", "Unable to register ".$ENTRADA_USER->getActiveId()." in community id ".$COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+
+							$community_url	= ENTRADA_URL . "/communities";
+                            header("Location: " . $community_url);
+                            exit;
 						}
 					break;
 					default :
@@ -230,17 +228,6 @@ if($COMMUNITY_ID) {
 
 				// Display Content
 				switch($STEP) {
-					case 2 :
-						if($SUCCESS) {
-							echo display_success();
-							if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-								community_notify($COMMUNITY_ID, $ENTRADA_USER->getActiveId(), "join", ENTRADA_URL."/people?id=".$ENTRADA_USER->getActiveId(), $COMMUNITY_ID);
-							}
-						}
-						if($ERROR) {
-							echo display_error();
-						}
-					break;
 					case 1 :	// Choose to join.
 					default :
 						/**

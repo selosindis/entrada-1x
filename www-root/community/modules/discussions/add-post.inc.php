@@ -53,6 +53,7 @@ if ($RECORD_ID) {
                  */
                 if ((isset($_POST["topic_title"])) && ($title = clean_input($_POST["topic_title"], array("notags", "trim")))) {
                     $PROCESSED["topic_title"] = $title;
+                    $topic_title = $title;
                 } else {
                     $ERROR++;
                     $ERRORSTR[] = "The <strong>Post Title</strong> field is required.";
@@ -318,14 +319,19 @@ if ($RECORD_ID) {
                                 }
                             }
                         }
-                            $url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$TOPIC_ID;
-                            $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+                        $SUCCESS++;
+                        Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong> to the community."), (isset($topic_title) ? $topic_title : "a new discussion post")), "success", $MODULE);
 
-                            $SUCCESS++;
-                            $SUCCESSSTR[]	= "You have successfully created a new discussion post.<br /><br />You will now be redirected to this thread; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-                            add_statistic("community:".$COMMUNITY_ID.":discussions", "post_add", "cdtopic_id", $TOPIC_ID);
-                            communities_log_history($COMMUNITY_ID, $PAGE_ID, $TOPIC_ID, "community_history_add_post", 1, $RECORD_ID);
+                        add_statistic("community:".$COMMUNITY_ID.":discussions", "post_add", "cdtopic_id", $TOPIC_ID);
+                        communities_log_history($COMMUNITY_ID, $PAGE_ID, $TOPIC_ID, "community_history_add_post", 1, $RECORD_ID);
+
+                        if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
+                            community_notify($COMMUNITY_ID, $TOPIC_ID, "post", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$TOPIC_ID, $RECORD_ID, $PROCESSED["release_date"]);
                         }
+                        $url = COMMUNITY_URL . $COMMUNITY_URL. ":" . $PAGE_URL . "?section=view-post&id=" . $TOPIC_ID;
+                        header("Location: " . $url);
+                        exit;
+                    }
 
 
                     if (!$SUCCESS) {
@@ -347,17 +353,6 @@ if ($RECORD_ID) {
 
         // Page Display
         switch($STEP) {
-            case 2 :
-                if ($NOTICE) {
-                    echo display_notice();
-                }
-                if ($SUCCESS) {
-                    echo display_success();
-                    if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-                        community_notify($COMMUNITY_ID, $TOPIC_ID, "post", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$TOPIC_ID, $RECORD_ID, $PROCESSED["release_date"]);
-                    }
-                }
-            break;
             case 1 :
             default :
                 if (count($file_uploads)<1) {
@@ -371,7 +366,7 @@ if ($RECORD_ID) {
                 }
                 ?>
 
-            <form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-post&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post">
+            <form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-post&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data">
                 <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Discussion Post">
                     <colgroup>
                         <col style="width: 20%" />

@@ -40,7 +40,7 @@
             build_selected_filters : true,
             child_field : "parent_id",
             close_button : true,
-            closeAfterSelect: false,
+            close_after_select: false,
             control_class: "",
             current_filter: "",
             current_filter_label: "",
@@ -49,10 +49,14 @@
             default_clear_search_label: "Clear All",
             default_close_search_label: "Close Search",
             default_select_label : "Select",
+            select_filter_type_label: "Select a filter type to begin",
             filters: "",
             filter_component_label: "Items",
             height: 400,
             interval: 500,
+            lazyload: false,
+            lazyload_limit: 50,
+            lazyload_offset: 0,
             list_container: "",
             list_selections: true,
             load_data_function: "",
@@ -138,7 +142,10 @@
 
         self.parent().on("keyup", ".search-input", function () {
             clearInterval(interval);
-            interval = window.setInterval(getFilterData, settings.interval);
+            interval = window.setInterval(function () {
+                resetLazyloadOffset();
+                getFilterData(true, true, true, false);
+            }, settings.interval);
         });
 
         self.parent().on("click", ".close-widget", function () {
@@ -146,10 +153,10 @@
         });
 
         self.parent().on("click", ".search-target-children-toggle", function (e) {
-            var parent_id = $(this).closest("li").attr("data-id");
-            settings.parent_id = parent_id;
-            getFilterChildren(parent_id);
-            e.preventDefault();
+                var parent_id = $(this).closest("li").attr("data-id");
+                settings.parent_id = parent_id;
+                getFilterChildren(parent_id);
+                e.preventDefault();
         });
 
         self.parent().on("click", ".filter-ellipsis-container", function () {
@@ -164,21 +171,21 @@
                 var checked = $(this).is(":checked");
                 var filter_type = $(this).attr("data-filter");
                 $(ul).find(".search-target-input-control").each(function (key, element) {
-                        var target_id = $(element).val();
-                        var target_title = $(element).attr("data-label");
-                        if (checked) {
-                            if ($(element).parent().parent().parent().parent().parent().parent().find(".selected-targets-container ." + filter_type + "_" + target_id).length < 1) {
-                                $(element).closest("li").addClass("search-target-selected");
-                                buildSearchTargetControl(target_id, target_title);
-                                if (!$(element).hasClass("select-all-targets-input-control")) {
-                                    buildSelectedListItem(target_id, target_title);
-                                }
+                    var target_id = $(element).val();
+                    var target_title = $(element).attr("data-label");
+                    if (checked) {
+                        if ($(element).parent().parent().parent().parent().parent().parent().find(".selected-targets-container ." + filter_type + "_" + target_id).length < 1) {
+                            $(element).closest("li").addClass("search-target-selected");
+                            buildSearchTargetControl(target_id, target_title);
+                            if (!$(element).hasClass("select-all-targets-input-control")) {
+                                buildSelectedListItem(target_id, target_title);
                             }
-                        } else {
-                            $(element).closest("li").removeClass("search-target-selected");
-                            removeFilterTag(target_id, filter_type);
-                            removeSearchTargetControl(target_id, filter_type);
                         }
+                    } else {
+                        $(element).closest("li").removeClass("search-target-selected");
+                        removeFilterTag(target_id, filter_type);
+                        removeSearchTargetControl(target_id, filter_type);
+                    }
                 }).attr("checked", (checked ? "checked" : null));
                 buildSelectedFilters();
             } else {
@@ -213,7 +220,7 @@
             }
 
             self.trigger("change", target_id);
-            if (settings.closeAfterSelect) {
+            if (settings.close_after_select) {
                 closeFilterInterface();
             }
         });
@@ -235,7 +242,7 @@
 
         function buildFilterMenu () {
             var filter_container = $(document.createElement("div")).addClass("filter-menu");
-            var filter_heading = $(document.createElement("h4")).addClass("filter-menu-heading").html("Select a filter type to begin");
+            var filter_heading = $(document.createElement("h4")).addClass("filter-menu-heading").html(settings.select_filter_type_label);
             var filter_ul = $(document.createElement("ul")).addClass("filter-list");
             var filter_counter = 0;
             var filter_li;
@@ -334,10 +341,11 @@
             container.offset({top: (self.offset().top + ($(".btn-search-filter").height() + 20)), left: self.offset().left});
 
             buildSelectedFilters();
-            getFilterData();
+            getFilterData(false, false, true, false);
         }
 
         function closeFilterInterface() {
+            resetLazyloadOffset();
             if ($(".search-overlay").length > 0) {
                 resetParentID();
                 $(".search-overlay").remove();
@@ -367,18 +375,36 @@
             return (overlay_height - ui_component_height);
         }
 
-        function showLoadingMessage() {
-            var msg_div         = $(document.createElement("div")).addClass("search-loading-msg");
-            var msg_p           = $(document.createElement("p")).html("Loading " + settings.current_filter_label + " data...");
-            var spinner_img     = $(document.createElement("img")).attr({src: settings.resource_url + "/images/loading_small.gif"});
+        function showLoadingMessage(show_loading_overlay) {
+            if (show_loading_overlay) {
+                if ($(".loading-overlay").length == 0) {
+                    var loading_overlay             = $(document.createElement("div")).addClass("loading-overlay");
+                    var loading_overlay_label       = $(document.createElement("span")).addClass("loading-overlay-label").html("Loading... ");
+                    var loading_overlay_spinner_img = $(document.createElement("img")).attr({src: settings.resource_url + "/images/loading_small.gif"});
 
-            msg_div.append(msg_p).append(spinner_img);
-            $(".filter-container").append(msg_div);
+                    loading_overlay_label.append(loading_overlay_spinner_img);
+                    loading_overlay.append(loading_overlay_label);
+                    $(".filter-container").append(loading_overlay);
+                }
+            } else {
+                var msg_div         = $(document.createElement("div")).addClass("search-loading-msg");
+                var msg_p           = $(document.createElement("p")).html("Loading " + settings.current_filter_label + " data...");
+                var spinner_img     = $(document.createElement("img")).attr({src: settings.resource_url + "/images/loading_small.gif"});
+
+                msg_div.append(msg_p).append(spinner_img);
+                $(".filter-container").append(msg_div);
+            }
         }
 
-        function removeLoadingMessage() {
-            if ($(".search-loading-msg").length > 0) {
-                $(".search-loading-msg").remove();
+        function removeLoadingMessage(show_loading_overlay) {
+            if (show_loading_overlay) {
+                if ($(".loading-overlay").length > 0) {
+                    $(".loading-overlay").remove();
+                }
+            } else {
+                if ($(".search-loading-msg").length > 0) {
+                    $(".search-loading-msg").remove();
+                }
             }
         }
 
@@ -392,14 +418,24 @@
             $(".filter-container").children().remove(":not(.data-source-error)");
         }
 
-        function getFilterData () {
-            resetFilterContainer();
+        function getFilterData (reset_filter_container, reset_offset, show_error, show_loading_overlay) {
+            if (reset_filter_container) {
+                resetFilterContainer();
+            }
+
+            if (reset_offset) {
+                resetLazyloadOffset();
+            }
+
             var data_source = settings.filters[settings.current_filter].data_source;
             var parent_id = settings.parent_id;
             var extra_params = "";
 
             if (typeof settings.filters[settings.current_filter].api_params != "undefined") {
                 $.each(settings.filters[settings.current_filter].api_params, function(param_name, param_value) {
+                    if ($.isFunction(param_value)){
+                        param_value = param_value();
+                    }
                     extra_params += "&" + param_name + "=" + param_value;
                 });
             }
@@ -411,36 +447,37 @@
             if (typeof data_source !== "undefined") {
                 if (typeof data_source === "string") {
                     var search_value = $(".search-input").val();
-                    var data = $.ajax(
-                        {
-                            url: settings.api_url,
-                            data: "method=" + data_source + "&search_value=" + search_value + "&parent_id=" + parent_id + extra_params,
-                            type: 'GET',
-                            error: function () {
-                                removeLoadingMessage();
-                                showDataErrorMessage("An error occured while attempting to fetch the data for self filter. Please try again later.");
-                            },
-                            beforeSend: function () {
-                                if ($(".search-input").val().length === 0) {
-                                    removeDataErrorMessage();
-                                    showLoadingMessage();
-                                }
-                            }
+                    var data = $.ajax({
+                        url: settings.api_url,
+                        data: "method=" + data_source + "&search_value=" + search_value + "&parent_id=" + parent_id + (settings.lazyload ? "&limit=" + settings.lazyload_limit + "&offset=" + settings.lazyload_offset : "") + extra_params,
+                        type: 'GET',
+                        error: function () {
+                            removeLoadingMessage(show_loading_overlay);
+                            showDataErrorMessage("An error occurred while attempting to fetch the data for self filter. Please try again later.");
+                        },
+                        beforeSend: function () {
+                            //if ($(".search-input").val().length === 0) {
+                            removeDataErrorMessage();
+                            showLoadingMessage(show_loading_overlay);
+                            //}
                         }
-                    );
+                    });
 
                     $.when(data).done(
                         function (data) {
-                            removeLoadingMessage();
+                            removeLoadingMessage(show_loading_overlay);
                             var jsonResponse = $.parseJSON(data);
                             switch (jsonResponse.status) {
                                 case "success" :
+                                    updateLazyloadOffset();
                                     removeDataErrorMessage();
                                     displayFilterData(jsonResponse.data, jsonResponse.level_selectable);
                                     buildSelectedFilters();
                                     break;
                                 case "error" :
-                                    showDataErrorMessage(jsonResponse.data);
+                                    if (show_error) {
+                                        showDataErrorMessage(jsonResponse.data);
+                                    }
                                     break;
                             }
                         }
@@ -456,16 +493,17 @@
 
         function getFilterChildren (parent_id) {
             resetFilterContainer();
+            resetLazyloadOffset();
             var data_source = settings.filters[settings.current_filter].secondary_data_source;
             if (typeof data_source !== "undefined") {
                 if (typeof data_source === "string") {
                     var data = $.ajax(
                         {
                             url: settings.api_url,
-                            data: "method=" + data_source + "&parent_id=" + parent_id,
+                            data: "method=" + data_source + "&parent_id=" + parent_id + (settings.lazyload ? "&limit=" + settings.lazyload_limit + "&offset=" + settings.lazyload_offset : ""),
                             type: 'GET',
                             error: function () {
-                                showDataErrorMessage("An error occured while attempting to fetch the data for self filter. Please try again later.");
+                                showDataErrorMessage("An error occurred while attempting to fetch the data for self filter. Please try again later.");
                             },
                             beforeSend: function () {
                             }
@@ -501,8 +539,13 @@
         }
 
         function displayFilterData (data, level_selectable) {
-            var targets_ul = $(document.createElement("ul")).addClass("search-filter-list");
-            if (typeof settings.select_all_enabled != "undefined" && settings.select_all_enabled) {
+            if ($(".search-filter-list").length == 0) {
+                var targets_ul = $(document.createElement("ul")).addClass("search-filter-list");
+            } else {
+                var targets_ul = $(".search-filter-list");
+            }
+
+            if (typeof settings.select_all_enabled != "undefined" && settings.select_all_enabled && (level_selectable == null || (level_selectable != null && level_selectable))) {
                 var target_li               = $(document.createElement("li")).addClass("search-filter-item").attr({"data-id": 0, "data-parent" : 0});
                 var target_li_div           = $(document.createElement("div")).addClass("search-target-controls");
                 var target_label_span       = $(document.createElement("span")).addClass("search-target-label");
@@ -544,6 +587,10 @@
                 var mode                    = (settings.filters[settings.current_filter].hasOwnProperty("mode") ? settings.filters[settings.current_filter].mode : "checkbox");
                 var is_selectable           = true;
                 var target_input;
+
+                if (typeof filter_target.target_title !== "undefined") {
+                    target_label.attr("title", filter_target.target_title);
+                }
 
                 if (typeof level_selectable !== "undefined") {
 
@@ -594,7 +641,14 @@
 
                 target_li_div.append(target_label_span).append(target_input_span);
                 target_li.append(target_li_div);
-                targets_ul.append(target_li);
+
+                if ($(".search-input").val() == "") {
+                    targets_ul.append(target_li);
+                } else {
+                    if ($(target_label).find(".search-hilite").length > 0) {
+                        targets_ul.append(target_li);
+                    }
+                }
 
                 if ($("#" + settings.current_filter + "_" + filter_target.target_id).length > 0) {
                     target_input.attr("checked", "checked");
@@ -602,7 +656,19 @@
                 }
             });
 
-            $(".filter-container").append(targets_ul);
+            if ($(".search-filter-list").length == 0) {
+                $(".filter-container").append(targets_ul);
+            }
+
+            if (settings.lazyload) {
+                $(".filter-container").on("scroll", function() {
+                    if($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight) {
+                        if ($.active == 0) {
+                            getFilterData(false, false, false, true);
+                        }
+                    }
+                });
+            }
         }
 
         function buildSecondarySearchLabel (parent_id, parent_name) {
@@ -931,6 +997,18 @@
                         buildSelectedListItem(target_id, target_label);
                     });
                 });
+            }
+        }
+
+        function updateLazyloadOffset () {
+            if (settings.lazyload) {
+                settings.lazyload_offset = settings.lazyload_limit + settings.lazyload_offset;
+            }
+        }
+
+        function resetLazyloadOffset () {
+            if (settings.lazyload) {
+                settings.lazyload_offset = 0;
             }
         }
 

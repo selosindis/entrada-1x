@@ -798,10 +798,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     }
                                 }
                             }
-							$course_report_object = new Models_Course_Report();
+
 							if (isset($PROCESSED["course_report_ids"]) && count($PROCESSED["course_report_ids"]) > 0) {
 								//remove existing course_reports for this course before adding the new set of course reports.
-								if (!$course_report_object->deleteByCourseID($COURSE_ID)) {
+								if (!Models_Course_Report::deleteByCourseID($COURSE_ID)) {
 									add_error("An error occurred while editing course reports.  The system administrator was informed of this error; please try again later.");
 									application_log("error", "Error inserting course reports for course id: " . $COURSE_ID);
 								}
@@ -810,6 +810,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										$PROCESSED["course_report_id"] = $course_report_id;		
 										$PROCESSED["course_id"] = $COURSE_ID;								
 
+                                        $course_report_object = new Models_Course_Report();
 										if ($course_report_object->fromArray($PROCESSED)->insert()) {
 											add_statistic("Course Edit", "edit", "course_reports.course_report_id", $PROCESSED["course_report_id"], $ENTRADA_USER->getID());
 										} else {
@@ -820,7 +821,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 							} else {
 								//No course reports for this course.
-								$course_report_object->deleteByCourseID($COURSE_ID);
+                                Models_Course_Report::deleteByCourseID($COURSE_ID);
 							}								
 
 							
@@ -940,13 +941,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 					$course_reports = Models_Course_Report::fetchAllByCourseID($COURSE_ID);
 
-					if($course_reports)
-						$results = $course_reports->toArray();
-
 					if (!isset($PROCESSED["course_report_ids"])) {
 						$PROCESSED["course_report_ids"] = array();
-						if ($results) {						
-							foreach ($results as $result) {
+						if ($course_reports) {
+							foreach ($course_reports as $course_report) {
+                                $result = $course_report->toArray();
 								$PROCESSED["course_report_ids"][] = $result["course_report_id"];
 							}
 						}

@@ -743,7 +743,7 @@ if ($COMMUNITY_URL) {
 							$mail_list = $db->GetRow($query);
 							if ($mail_list && $mail_list["list_type"] != "inactive") {
 								$sidebar_html .= "<ul class=\"menu\" style=\"padding-left: 0px;\">\n";
-								$sidebar_html .= "	<li class=\"status-online\" style=\"font-weight: strong;\">Mailing List Active</li>\n";
+								$sidebar_html .= "	<li class=\"status-online\" style=\"font-weight: bold;\">Mailing List Active</li>\n";
 								$sidebar_html .= "	<li class=\"none\">".($mail_list["list_type"] == "announcements" ? "Announcement" : "Discussion")." List</li>\n";
 								if ($mail_list["list_type"] == "discussion" || $COMMUNITY_ADMIN) {
 									$sidebar_html .= "	<li class=\"none\"><a href=\"mailto:".$mail_list["list_name"]."@".$GOOGLE_APPS["domain"]."\">Send Message</a></li>\n";
@@ -751,7 +751,7 @@ if ($COMMUNITY_URL) {
 								$sidebar_html .= "</ul>\n";
 							} elseif ($COMMUNITY_ADMIN) {
 								$sidebar_html .= "<ul class=\"menu\" style=\"padding-left: 0px;\">\n";
-								$sidebar_html .= "	<li class=\"status-offline\" style=\"font-weight: strong;\">Mailing List Not Active</li>\n";
+								$sidebar_html .= "	<li class=\"status-offline\" style=\"font-weight: bold;\">Mailing List Not Active</li>\n";
 								$sidebar_html .= "</ul>\n";
 							}
 						}
@@ -789,21 +789,18 @@ if ($COMMUNITY_URL) {
 							if ((@file_exists($module_file = COMMUNITY_ABSOLUTE.DIRECTORY_SEPARATOR."modules".DIRECTORY_SEPARATOR.$COMMUNITY_MODULE.".inc.php")) && (@is_readable($module_file))) {
 								require_once($module_file);
 							} else {
-								$ONLOAD[]	= "setTimeout('window.location=\\'".COMMUNITY_URL.$COMMUNITY_URL."\\'', 5000)";
-								$ERROR++;
-								$ERRORSTR[] = "The module you are attempting to access is not currently available.<br /><br />You will be automatically redirected in 5 seconds or <a href=\"".COMMUNITY_URL.$COMMUNITY_URL."\" style=\"font-weight: bold\">click here</a> to proceed.";
-
-								echo display_error();
-
+                                Entrada_Utilities_Flashmessenger::addMessage($translate->_("The module you are attempting to access is not currently available."), "error", $MODULE);
 								application_log("error", "Unable to load specified module: ".$COMMUNITY_MODULE);
+                                $url = COMMUNITY_URL . $COMMUNITY_URL;
+                                header("Location: " . $url);
+                                exit;
 							}
 						} else {
-							$ONLOAD[]	= "setTimeout('window.location=\\'".COMMUNITY_URL.$COMMUNITY_URL."\\'', 5000)";
+                            Entrada_Utilities_Flashmessenger::addMessage($translate->_("You do not have access to this page. Please contact a community administrator for assistance."), "error", $MODULE);
 
-							$ERROR++;
-							$ERRORSTR[] = "You do not have access to this page. Please contact a community administrator for assistance.<br /><br />You will be automatically redirected in 5 seconds or <a href=\"".COMMUNITY_URL.$COMMUNITY_URL."\" style=\"font-weight: bold\">click here</a> to proceed.";
-
-							echo display_error();
+                            $url = COMMUNITY_URL . $COMMUNITY_URL;
+                            header("Location: " . $url);
+                            exit;
 						}
 					}  elseif ($COMMUNITY_MODULE == "lticonsumer") {
 						$query  = "SELECT `page_title`, `page_content` FROM `community_pages` WHERE `cpage_id` = " . $db->qstr($PAGE_ID);
@@ -897,15 +894,11 @@ if ($COMMUNITY_URL) {
 							}
 						}
 					} else {
-						$url		= COMMUNITY_URL.$COMMUNITY_URL;
-						$ONLOAD[]	= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+                        Entrada_Utilities_Flashmessenger::addMessage($translate->_("The page you have requested does not currently exist within this community."), "error", $MODULE);
 
-						$ERROR++;
-						$ERRORSTR[]	= "The page you have requested does not currently exist within this community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-						echo "<h1>Page Not Found: <strong>404 Error</strong></h1>\n";
-
-						echo display_error();
+                        $url = COMMUNITY_URL . $COMMUNITY_URL;
+                        header("Location: " . $url);
+                        exit;
 					}
 				}
 
@@ -921,6 +914,24 @@ if ($COMMUNITY_URL) {
 					$query	= "SELECT `cpage_id`, `page_title`, `page_content` FROM `community_pages` WHERE `page_url` = ".(isset($PAGE_URL) && $PAGE_URL ? $db->qstr($PAGE_URL) : "''")." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
 					$result	= $db->GetRow($query);
 					if ($result) {
+                        $flash_messages = Entrada_Utilities_Flashmessenger::getMessages($MODULE);
+                        if ($flash_messages) {
+                            foreach ($flash_messages as $message_type => $messages) {
+                                switch ($message_type) {
+                                    case "error" :
+                                        $page_text .= display_error($messages);
+                                        break;
+                                    case "success" :
+                                        $page_text .= display_success($messages);
+                                        break;
+                                    case "notice" :
+                                    default :
+                                    $page_text .= display_notice($messages);
+                                        break;
+                                }
+                            }
+                        }
+
 						if ($COMMUNITY_ADMIN) {
 							$page_text .= "<a id=\"community-edit-button\" href=\"" . COMMUNITY_URL . $COMMUNITY_URL . ":pages?action=edit&amp;page=" . $result["cpage_id"] . "\" class=\"btn btn-primary pull-right\">Edit Page</a>\n";
 						}
@@ -971,7 +982,7 @@ if ($COMMUNITY_URL) {
 
 				}
 
-                if (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"]) {
+                if ($LOGGED_IN) {
                     $navigator_tabs = navigator_tabs();
                 } else {
                     $navigator_tabs = "";
@@ -1011,7 +1022,7 @@ if ($COMMUNITY_URL) {
                 $smarty->assign("development_mode", DEVELOPMENT_MODE);
                 $smarty->assign("google_analytics_code", GOOGLE_ANALYTICS_CODE);
 
-                $smarty->assign("isAuthorized", (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] ? true : false));
+                $smarty->assign("isAuthorized", $LOGGED_IN);
                 $smarty->assign("protocol", (isset($_SERVER["HTTPS"]) ? "https" : "http"));
 
                 $smarty->assign("navigator_tabs", $navigator_tabs);
@@ -1052,6 +1063,16 @@ if ($COMMUNITY_URL) {
 					}
 				}
 
+                // Determine whether or not to display the Bookmarks sidebar.
+                $settings = new Entrada_Settings();
+                if ($settings->read("bookmarks_display_sidebar")) {
+                    $smarty->assign("site_bookmarks_sidebar", Models_Bookmarks::showSidebar(true));
+                } else {
+                    $smarty->assign("site_bookmarks_sidebar", "");
+                }
+
+				//build entrada sidebar
+				$smarty->assign("site_entrada_sidebar", ($LOGGED_IN ? Entrada_Utilities::myEntradaSidebar(true) : ""));
 				$smarty->assign("site_primary_navigation", $COMMUNITY_PAGES["navigation"]);
 				$show_tertiary_sideblock = false;
 				foreach ($COMMUNITY_PAGES["navigation"] as $top_level_page) {
@@ -1098,6 +1119,7 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("user_is_admin", $COMMUNITY_ADMIN);
 				$smarty->assign("date_joined", $date_joined);
 				$smarty->assign("member_name", $member_name);
+				$smarty->assign("application_version", APPLICATION_VERSION);
 
 				$smarty->display("index.tpl");
 			}

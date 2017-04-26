@@ -124,18 +124,25 @@ if ($RECORD_ID) {
 								$db->AutoExecute("community_notifications", $notification, "UPDATE", "`cnotification_id` = ".$db->qstr($notification["cnotification_id"]));
 							}
 						}
-						$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
 
 						$SUCCESS++;
 						if (!$COMMUNITY_ADMIN && ($PAGE_OPTIONS["moderate_posts"] == 1)) {
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 15000)";
-							$SUCCESSSTR[]	= "You have successfully updated this event, however because you are not an administrator your changes must be reviewed before the event will appear on the page again.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+							Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>, however because you are not an administrator your event must be reviewed before appearing to all users."), $PROCESSED["event_title"]), "success", $MODULE);
 						} else {
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-							$SUCCESSSTR[]	= "You have successfully updated this event.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+							Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["event_title"]), "success", $MODULE);
 						}
 						add_statistic("community:".$COMMUNITY_ID.":events", "edit", "cevent_id", $RECORD_ID);
 						communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_event", 1);
+
+						if (COMMUNITY_NOTIFICATIONS_ACTIVE && (isset($_POST["notify_members"]) && $_POST["notify_members"]) && (!$PAGE_OPTIONS["moderate_posts"] || $COMMUNITY_ADMIN)) {
+							community_notify($COMMUNITY_ID, $EVENT_ID, "event", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$EVENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
+						}
+						if (COMMUNITY_NOTIFICATIONS_ACTIVE && ($PAGE_OPTIONS["moderate_posts"] && !$COMMUNITY_ADMIN)) {
+							community_notify($COMMUNITY_ID, $EVENT_ID, "event-moderation", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$EVENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
+						}
+						$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+						header("Location: " . $url);
+						exit;
 					}
 
 					if (!$SUCCESS) {
@@ -162,20 +169,6 @@ if ($RECORD_ID) {
 
 		// Page Display
 		switch ($STEP) {
-			case 2 :
-				if ($NOTICE) {
-					echo display_notice();
-				}
-				if ($SUCCESS) {
-					echo display_success();
-					if (COMMUNITY_NOTIFICATIONS_ACTIVE && (isset($_POST["notify_members"]) && $_POST["notify_members"]) && (!$PAGE_OPTIONS["moderate_posts"] || $COMMUNITY_ADMIN)) {
-						community_notify($COMMUNITY_ID, $EVENT_ID, "event", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$EVENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
-					}
-					if (COMMUNITY_NOTIFICATIONS_ACTIVE && ($PAGE_OPTIONS["moderate_posts"] && !$COMMUNITY_ADMIN)) {
-						community_notify($COMMUNITY_ID, $EVENT_ID, "event-moderation", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$EVENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
-					}
-				}
-				break;
 			case 1 :
 			default :
 				if ($ERROR) {

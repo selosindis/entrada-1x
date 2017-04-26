@@ -57,13 +57,23 @@ class Models_Country extends Models_Base {
         return $this->isonum;
     }
 
+    /* @return bool|Models_Country */
     public static function fetchRowByID($countries_id) {
         $self = new self();
         return $self->fetchRow(array(
             array("key" => "countries_id", "value" => $countries_id, "method" => "=")
         ));
     }
-    
+
+    /* @return bool|Models_Country */
+    public static function fetchRowByCountry($country) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "country", "value" => $country, "method" => "=")
+        ));
+    }
+
+    /* @return ArrayObject|Models_Country[] */
     public static function fetchAllRecords() {
         $self = new self();
         return $self->fetchAll(array(array("key" => "countries_id", "value" => 0, "method" => ">=")));

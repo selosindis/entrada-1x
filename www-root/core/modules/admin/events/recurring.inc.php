@@ -106,7 +106,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     if ($url) {
                                         echo "  <div class=\"btn-group\">\n";
                                         echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">\n";
-                                        echo "          <i class=\"icon-cog\"></i>\n";
+                                        echo "          <i class=\"fa fa-cog\" aria-hidden=\"true\"></i>\n";
                                         echo "      </button>";
                                         echo "      <ul class=\"dropdown-menu toggle-left\">\n";
                                         if ($ENTRADA_ACL->amIAllowed(new EventResource($recurring_event["event_id"], $recurring_event["course_id"], $event_info["organisation_id"]), 'update')) {

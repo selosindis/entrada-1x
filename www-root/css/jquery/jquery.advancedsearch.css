@@ -81,7 +81,7 @@
     background: #fff;
     max-height: 300px;
     min-height: 300px;
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 .entrada-search-widget .search-input {
@@ -216,6 +216,7 @@
 
 .entrada-search-widget .search-loading-msg {
     color: #bfbfbf;
+    margin-bottom: 30px;
     text-align: center;
 }
 
@@ -234,6 +235,7 @@
 
 .entrada-search-widget .search-target-controls {
     position: relative;
+    cursor: pointer;
 }
 
 .entrada-search-widget .search-target-label-span {
@@ -286,6 +288,7 @@
 }
 .entrada-search-widget .search-target-label-text {
     margin-bottom: 0;
+    width: 85%;
 }
 
 .entrada-search-widget .serach-target-clickable:hover {
@@ -599,4 +602,15 @@
 
 .entrada-search-widget .close-widget:hover {
     color: #838383;
+}
+.entrada-search-widget .loading-overlay {
+    background: #fff;
+    bottom: 0;
+    font-size: 12px;
+    opacity: 0.70;
+    padding: 8px 0 8px 0;
+    position: absolute;
+    text-align: center;
+    width: 100%;
+    z-index: 5000;
 }

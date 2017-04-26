@@ -52,10 +52,14 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 	</head>
 	<body>
 	<?php
-	$query = "	SELECT a.*, b.`course_name`, b.`course_code`, b.`organisation_id`
+	$query = "	SELECT a.*, b.`course_name`, b.`course_code`, b.`organisation_id`, IF(a.`room_id` IS NULL, a.`event_location`, CONCAT(d.`building_code`, '-', c.`room_number`)) AS `event_location`
 				FROM `events` AS a
 				LEFT JOIN `courses` AS b
 				ON b.`course_id` = a.`course_id`
+                LEFT JOIN `global_lu_rooms` AS c
+                ON c.`room_id` = a.`room_id`
+                LEFT JOIN `global_lu_buildings` AS d
+                ON d.`building_id` = c.`building_id`
 				WHERE a.`event_id` = ".$db->qstr($event_id);
 	$event_info	= $db->GetRow($query);
 	if ($event_info) {
@@ -78,6 +82,13 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 				$event_links		= (is_array($event_resources["links"]) ? count($event_resources["links"]) : 0);
 				$event_quizzes		= (is_array($event_resources["quizzes"]) ? count($event_resources["quizzes"]) : 0);
 				$event_discussions	= (is_array($event_resources["discussions"]) ? count($event_resources["discussions"]) : 0);
+				
+				if ($ENTRADA_USER->getActiveGroup() === "student") {
+				    $event_exams 	= Models_Exam_Post::fetchAllByEventIDNotHidden($event_id);
+				} else {
+				    $event_exams	= Models_Exam_Post::fetchAllByEventID($event_id);
+				}
+
 				?>
 				<div id="eventToolTip">
 					<div class="colLeft">
@@ -118,6 +129,15 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 							<li><a href="<?php echo ENTRADA_URL; ?>/events?id=<?php echo $event_id; ?>#event-resources-links"><?php echo $event_links; ?> attached link<?php echo (($event_links != 1) ? "s" : ""); ?></a></li>
 							<li><a href="<?php echo ENTRADA_URL; ?>/events?id=<?php echo $event_id; ?>#event-resources-quizzes"><?php echo $event_quizzes; ?> attached quiz<?php echo (($event_quizzes != 1) ? "zes" : ""); ?></a></li>
 							<li style="margin-top: 15px"><a href="<?php echo ENTRADA_URL; ?>/events?id=<?php echo $event_id; ?>#event-comments-section"><?php echo $event_discussions; ?> discussion<?php echo (($event_discussions != 1) ? "s" : ""); ?></a></li>
+                            <?php
+                            if (isset($event_exams) && is_array($event_exams)) {
+                                $exam_count = count($event_exams);
+                                $EXAM_TEXT = $translate->_("exams");
+                                ?>
+                                <li><a href="<?php echo ENTRADA_URL; ?>/events?drid=<?php echo $event_id; ?>#event-resources-exams"><?php echo $exam_count . " " . strtolower($EXAM_TEXT["exams"]["posts"]["title_singular"]) . (($exam_count != 1) ? "s" : ""); ?></a></li>
+                                <?php
+                            }
+                            ?>
 						</ul>
 					</div>
 					<div style="clear: both; text-align: center; padding-top: 15px">

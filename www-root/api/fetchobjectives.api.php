@@ -46,9 +46,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			$objective_ids_string .= ($objective_ids_string ? ", " : "").$db->qstr($objective_id);
 		}
 	}
+
 	$select = "a.*";
 
-	if ($course_id){
+	if ($course_id) {
 		$select .= ", COALESCE(b.`cobjective_id`, 0) AS `mapped`";
 	} elseif ($event_id) {
 		$select .= ", COALESCE(b.`eobjective_id`, 0) AS `mapped`";
@@ -58,25 +59,24 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$select .= ", COALESCE(b.`objective_id`, 0) AS `mapped`";
 	}
 
-
 	$qu_arr = array("SELECT ".$select." FROM `global_lu_objectives` a");
 	
-	if ($course_id){
+	if ($course_id) {
 		$qu_arr[1] = "	LEFT JOIN `course_objectives` b
-						ON a.`objective_id` = b.`objective_id`";
-		$qu_arr[3] = "	AND b.`course_id` = ".$db->qstr($course_id);					
+						ON a.`objective_id` = b.`objective_id`
+						AND b.`course_id` = ".$db->qstr($course_id);
 	} elseif ($event_id) {
 		$qu_arr[1] = "	LEFT JOIN `event_objectives` b
 						ON a.`objective_id` = b.`objective_id`
 						AND b.`event_id` = ".$db->qstr($event_id);									
 	} elseif ($assessment_id) {
 		$qu_arr[1] = "	LEFT JOIN `assessment_objectives` b
-						ON a.`objective_id` = b.`objective_id`";
-		$qu_arr[3] = "	AND b.`assessment_id` = ".$db->qstr($assessment_id);									
+						ON a.`objective_id` = b.`objective_id`
+						AND b.`assessment_id` = ".$db->qstr($assessment_id);
 	} elseif ($objective_ids_string) {
 		$qu_arr[1] = "	LEFT JOIN `global_lu_objectives` AS b
-						ON a.`objective_id` = b.`objective_id`";
-		$qu_arr[3] = "	AND b.`objective_id` IN (".$objective_ids_string.")";	
+						ON a.`objective_id` = b.`objective_id`
+						AND b.`objective_id` IN (".$objective_ids_string.")";
 	} else {
         $qu_arr[1] = "";
     }

@@ -36,53 +36,59 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-$record = array();
-if ($_POST['user_access'] == '3') {
+
+$response = [];
+
+/*
+ * @todo This is absolutely not right. We need the community_id passed in, and we check for
+ * ourselves whether or not this user has the permissions required to re-order folders.
+ */
+if ($_POST["user_access"] == "3") {
     $admin = true;
 } else {
     $admin = false;
 }
-$record = array();
 
-$folder_order_string = $_POST['fieldOrder'];
-$folder_order_array = array();
-foreach(explode('&', $folder_order_string) as $pair) {
-    list($key, $value) = explode("[]=", $pair);
-    $folder_order_array[] = $value;
+$folder_order_array = [];
+
+if (isset($_POST["fieldOrder"]) && $_POST["fieldOrder"]) {
+    foreach (explode("&", $_POST["fieldOrder"]) as $pair) {
+        list($key, $value) = explode("[]=", $pair);
+
+        $folder_order_array[] = (int) $value;
+    }
 }
 
-if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"]) && ((bool) $admin)) {
-    
-    if (isset($folder_order_array)) {
-        foreach($folder_order_array as $key => $folder) {
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"] && (bool) $admin) {
+    if (isset($folder_order_array) && is_array($folder_order_array)) {
+        foreach ($folder_order_array as $key => $folder) {
             if (!$folder == 0) {
-                $SQL = "UPDATE
-                `community_shares`
-                SET `folder_order` = '" . $key . "'
-                WHERE `cshare_id` = '" . $folder . "'";
-
-                if (!$db->Execute($SQL)) {
-                    $errors[] = array(
+                $query = "UPDATE `community_shares`
+                            SET `folder_order` = " . $db->qstr((int) $key) . "
+                            WHERE `cshare_id` = " . $db->qstr((int) $folder);
+                if (!$db->Execute($query)) {
+                    $errors[] = [
                         "id" => $folder
-                    );
-
+                    ];
                 }
             }
         }
     }
-
-    //adds the errors to the log files and the array for the page feedback
+    
     if ($errors) {
         foreach ($errors as $error) {
-            application_log("error", "Error updating order folder id: " . $error['id']);
+            application_log("error", "Error updating order folder id: " . $error["id"]);
         }
-        $record['errors'] = $errors;
+
+        $response["errors"] = $errors;
     }
 
 } else {
-    $record['errors'] = "Not Authorized";
-    application_log("error", "Error reordering folders - Account not authroized");
+    $response["errors"] = "Not Authorized";
+
+    application_log("error", "Error reordering folders - Account not authorized.");
 }
-    header("Content-type: application/json");
-    echo json_encode($record);
-?>
+
+header("Content-type: application/json");
+
+echo json_encode($response);

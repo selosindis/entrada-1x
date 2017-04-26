@@ -710,12 +710,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                             <span class="controls span8 offset1">
                                 <input type="hidden" id="default_procedure_involvement" value="Assisted" />
                                 <?php
-                                    $query = "SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
+                                    $deficient_procedures = false;
+                                    if (!empty($procedure_ids)) {
+                                        $query = "SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
                                                 LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
                                                 ON b.`lprocedure_id` = a.`lprocedure_id`
                                                 WHERE a.`lprocedure_id` IN (".$procedure_ids.")
                                                 AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()));
-                                    $deficient_procedures = $db->GetAll($query);
+                                        $deficient_procedures = $db->GetAll($query);
+                                    }
                                     if ($rotation) {
                                         $query = "SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
                                                     LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
@@ -750,7 +753,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                     }
                                 echo "<select id=\"rotation_procedure_id\" name=\"rotation_procedure_id\" onchange=\"addProcedure(this.value, 0)\" style=\"width: 100%;".(!isset($preferred_procedures) || !$preferred_procedures ? " display: none;" : "")."\">\n";
                                 echo "<option value=\"0\"".((!isset($PROCESSED["objective_id"])) ? " selected=\"selected\"" : "").">-- Select Clinical Tasks --</option>\n";
-                                if ($preferred_procedures) {
+                                if (!empty($preferred_procedures)) {
                                     foreach ($preferred_procedures as $result) {
                                         $locations = false;
 									    $query = "SELECT c.* FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS a

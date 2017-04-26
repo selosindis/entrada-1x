@@ -84,14 +84,13 @@ if ($RECORD_ID) {
 							$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
 
 							if ($db->AutoExecute("community_share_comments", $PROCESSED, "UPDATE", "`cscomment_id` = ".$db->qstr($RECORD_ID)." AND `csfile_id` = ".$db->qstr($comment_record["csfile_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID))) {
-								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$comment_record["csfile_id"]."#comment-".$RECORD_ID;
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully edited your file comment.<br /><br />You will now be redirected back to this file; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
+                                Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully edited your file comment"), "success", $MODULE);
 								add_statistic("community:".$COMMUNITY_ID.":shares", "comment_edit", "cscomment_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_file_comment", 0, $comment_record["csfile_id"]);
+
+                                $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-file&id=" . $comment_record["csfile_id"] . "#comment-" . $RECORD_ID;
+                                header("Location: " . $url);
+                                exit;
 							}
 
 							if (!$SUCCESS) {
@@ -114,64 +113,56 @@ if ($RECORD_ID) {
 
 				// Page Display
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-							echo display_success();
-						}
-					break;
 					case 1 :
 					default :
-					if ($ERROR) {
-						echo display_error();
-					}
-					if ($NOTICE) {
-						echo display_notice();
-					}
-					?>
-					<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=edit-comment&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post">
-					<table summary="Edit File Comment">
-					<colgroup>
-						<col style="width: 20%" />
-						<col style="width: 80%" />
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="2" style="padding-top: 15px; text-align: right">
-								<input type="submit" class="btn btn-primary" value="Save" />
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-							<td colspan="2">
-								<h2>File Comment Details</h2>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<label for="comment_title" class="form-nrequired">Comment Title</label>
-							</td>
-							<td>
-								<input type="text" id="comment_title" name="comment_title" value="<?php echo ((isset($PROCESSED["comment_title"])) ? html_encode($PROCESSED["comment_title"]) : ""); ?>" maxlength="128" style="width: 300px" />
-							</td>
-						</tr>
-						<tr>
-							<td colspan="2">
-								<label for="comment_description" class="form-required">Comment Body</label>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="2">
-								<textarea id="comment_description" name="comment_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["comment_description"])) ? html_encode($PROCESSED["comment_description"]) : ""); ?></textarea>
-							</td>
-						</tr>
-					</tbody>
-					</table>
-					</form>
-					<?php
+                        if ($ERROR) {
+                            echo display_error();
+                        }
+                        if ($NOTICE) {
+                            echo display_notice();
+                        }
+                        ?>
+                        <form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=edit-comment&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post">
+                            <table summary="Edit File Comment">
+                                <colgroup>
+                                    <col style="width: 20%" />
+                                    <col style="width: 80%" />
+                                </colgroup>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" style="padding-top: 15px; text-align: right">
+                                            <input type="submit" class="btn btn-primary" value="Save" />
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="2">
+                                            <h2>File Comment Details</h2>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label for="comment_title" class="form-nrequired">Comment Title</label>
+                                        </td>
+                                        <td>
+                                            <input type="text" id="comment_title" name="comment_title" value="<?php echo ((isset($PROCESSED["comment_title"])) ? html_encode($PROCESSED["comment_title"]) : ""); ?>" maxlength="128" style="width: 300px" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <label for="comment_description" class="form-required">Comment Body</label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <textarea id="comment_description" name="comment_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["comment_description"])) ? html_encode($PROCESSED["comment_description"]) : ""); ?></textarea>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </form>
+                        <?php
 					break;
 				}
 			} else {

@@ -39,11 +39,15 @@
 <?php endif; ?>
 <?php
 if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) :
-    $maxlifetime = ini_get("session.gc_maxlifetime");
-    ?>
+	$maxlifetime = ini_get("session.gc_maxlifetime");
+	$disable_timeout = false;
+	if ($disable_timeout_setting = $ENTRADA_SETTINGS->fetchByShortname("disable_timeout_monitor", $ENTRADA_USER->getActiveOrganisation())) {
+		$disable_timeout = (int)$disable_timeout_setting->getValue() ? true : false;
+	}
+	if (!$disable_timeout): ?>
     <script src = "<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.session.timeout.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>" ></script >
     <script type = "text/javascript" >
-        jQuery(document) . ready(function ($) {
+        jQuery(document).ready(function ($) {
             $.timeoutMonitor({
                 sessionTime: <?php echo ($maxlifetime -1) * 1000; ?>,
                 warnTime: 180000,    // 3 minutes before it expires
@@ -54,6 +58,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) :
             });
         });
     </script >
+	<?php endif; ?>
 <?php endif; ?>
 </body>
 </html>

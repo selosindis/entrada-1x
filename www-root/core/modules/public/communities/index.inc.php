@@ -30,7 +30,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 }
+
+Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
 ?>
+
 <div class="hero-unit tight">
     <h1><?php echo $translate->_("public_communities_heading_line"); ?></h1>
     <p><?php echo $translate->_("public_communities_tag_line"); ?></p>

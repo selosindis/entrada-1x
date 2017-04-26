@@ -202,9 +202,10 @@ if ($RECORD_ID) {
 														if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
 															community_notify($COMMUNITY_ID, $photo_id, "photo", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&id=".$photo_id, $RECORD_ID, $PROCESSED["release_date"]);
 														}
-														
-														$SUCCESS++;
-														$SUCCESSSTR[] = "Photo ".$photo_number." has been successfully uploaded [".$PROCESSED["photo_title"]."].";
+														Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong>."), $PROCESSED["photo_title"]), "success", $MODULE);
+
+														$SUCCESS++;																									
+
 														add_statistic("community:".$COMMUNITY_ID.":galleries", "photo_add", "cgphoto_id", $photo_id);
 														communities_log_history($COMMUNITY_ID, $PAGE_ID, $photo_id, "community_history_add_photo", 1, $RECORD_ID);
 													} else {
@@ -221,7 +222,6 @@ if ($RECORD_ID) {
 													}
 												}
 											}
-
 										}
 									}
 
@@ -244,6 +244,11 @@ if ($RECORD_ID) {
 						$ERROR++;
 						$ERRORSTR[] = "Please ensure you upload at least one photo.";
 					}
+					if ($SUCCESS) {
+						$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-gallery&id=" .$RECORD_ID;
+						header("Location: " . $url);
+						exit;
+					}
 					
 					if ($ERROR) {
 						$STEP = 1;
@@ -258,19 +263,6 @@ if ($RECORD_ID) {
 
 			// Page Display
 			switch($STEP) {
-				case 2 :
-					if ($NOTICE) {
-						echo display_notice();
-					}
-					
-					if ($SUCCESS) {											
-						$url				= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-gallery&id=".$RECORD_ID;
-						$ONLOAD[]			= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-						$SUCCESS++;
-						$SUCCESSSTR[]		= "All photos were uploaded successfully. <br /><br />You will now be redirected to the gallery index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-						echo display_success();
-					}
-				break;
 				case 1 :
 				default :
 					if (count($photo_uploads) < 1) {

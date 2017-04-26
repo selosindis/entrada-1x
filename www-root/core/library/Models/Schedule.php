@@ -63,6 +63,78 @@ class Models_Schedule extends Models_Base {
         return $this->child_types[$this->schedule_type];
     }
 
+    public function getScheduleParentID() {
+        return $this->schedule_parent_id;
+    }
+
+    public function getBlockTypeID() {
+        return $this->block_type_id;
+    }
+
+    public function getCourseID() {
+        return $this->course_id;
+    }
+
+    public function getRegionID() {
+        return $this->region_id;
+    }
+
+    public function getFacilityID() {
+        return $this->facility_id;
+    }
+
+    public function getStartDate() {
+        return $this->start_date;
+    }
+
+    public function getEndDate() {
+        return $this->end_date;
+    }
+
+    public function getCreatedDate() {
+        return $this->created_date;
+    }
+
+    public function getCreatedBy() {
+        return $this->created_by;
+    }
+
+    public function getUpdatedDate() {
+        return $this->updated_date;
+    }
+
+    public function getUpdatedBy() {
+        return $this->updated_by;
+    }
+
+    public function getDeletedDate() {
+        return $this->deleted_date;
+    }
+
+    public function getCperiodID() {
+        return $this->cperiod_id;
+    }
+
+    public function getDraftID() {
+        return $this->draft_id;
+    }
+
+    public function getOrganisationID() {
+        return $this->organisation_id;
+    }
+
+    public function getCode() {
+        return $this->code;
+    }
+
+    public function getOrder() {
+        return $this->schedule_order;
+    }
+
+    public function getCopiedFrom() {
+        return $this->copied_from;
+    }
+
     public function getChildren() {
         $self = new self();
         return $self->fetchAll(array(
@@ -172,79 +244,6 @@ class Models_Schedule extends Models_Base {
             }
         }
         return $output;
-    }
-
-
-    public function getScheduleParentID() {
-        return $this->schedule_parent_id;
-    }
-
-    public function getBlockTypeID() {
-        return $this->block_type_id;
-    }
-
-    public function getCourseID() {
-        return $this->course_id;
-    }
-
-    public function getRegionID() {
-        return $this->region_id;
-    }
-
-    public function getFacilityID() {
-        return $this->facility_id;
-    }
-
-    public function getStartDate() {
-        return $this->start_date;
-    }
-
-    public function getEndDate() {
-        return $this->end_date;
-    }
-
-    public function getCreatedDate() {
-        return $this->created_date;
-    }
-
-    public function getCreatedBy() {
-        return $this->created_by;
-    }
-
-    public function getUpdatedDate() {
-        return $this->updated_date;
-    }
-
-    public function getUpdatedBy() {
-        return $this->updated_by;
-    }
-
-    public function getDeletedDate() {
-        return $this->deleted_date;
-    }
-
-    public function getCperiodID() {
-        return $this->cperiod_id;
-    }
-
-    public function getDraftID() {
-        return $this->draft_id;
-    }
-
-    public function getOrganisationID() {
-        return $this->organisation_id;
-    }
-
-    public function getCode() {
-        return $this->code;
-    }
-
-    public function getOrder() {
-        return $this->schedule_order;
-    }
-    
-    public function getCopiedFrom() {
-        return $this->copied_from;
     }
 
     public static function fetchRowByID($schedule_id, $search_term = null, $deleted_date = NULL) {
@@ -419,6 +418,16 @@ class Models_Schedule extends Models_Base {
         ));
     }
 
+    public static function fetchAllBlockTemplatesByCPeriodIDBlockTypeID($cperiod_id, $block_type_id, $deleted_date = NULL) {
+        $self = new self();
+        return $self->fetchAll(array(
+            array("key" => "cperiod_id",            "value" => $cperiod_id, "method" => "="),
+            array("key" => "schedule_type",         "value" => "block", "method" => "="),
+            array("key" => "block_type_id",         "value" => $block_type_id, "method" => "="),
+            array("key" => "deleted_date",          "value" => ($deleted_date ? $deleted_date : NULL), "method" => ($deleted_date ? "<=" : "IS"))
+        ), "=", "AND", "schedule_id");
+    }
+
     public static function fetchAllByDraftID($draft_id, $type = NULL, $deleted_date = NULL) {
         $self = new self();
 
@@ -448,27 +457,50 @@ class Models_Schedule extends Models_Base {
         return $self->fetchAll($constraints, $default_method = "=", $default_mode = "AND", $sort_column = "title", $sort_order = "ASC");
     }
 
-    public static function fetchAllByAudience($audience_value, $audience_type) {
+    public static function fetchRowByAudienceValueAudienceType($audience_value, $audience_type, $current_schedule = true, $current_date = "") {
         global $db;
+        $AND_date_greater = "";
+        $AND_date_less = "";
+        $ORDER_BY = "";
+        $data = false;
 
-        $s = false;
+        if ($current_schedule) {
+            if ($current_date != "" && $current_date != null) {
+                $AND_date_greater = " AND " . $db->qstr($current_date) . " >= a.`start_date`";
+                $AND_date_less = " AND " . $db->qstr($current_date) . " <= a.`end_date`";
+            }
+            $ORDER_BY = "ORDER BY a.`end_date` ASC";
+        } else {
+            if ($current_date != "" && $current_date != null) {
+                $AND_date_greater = " AND a.`start_date` >= " . $db->qstr($current_date);
+            }
+            $ORDER_BY = "ORDER BY a.`start_date` ASC";
+        }
 
-        $query = "SELECT a.*
+        $query = "  SELECT a.*
                     FROM `cbl_schedule` AS a
                     JOIN `cbl_schedule_audience` AS b
                     ON a.`schedule_id` = b.`schedule_id`
+                    JOIN `cbl_schedule_drafts` AS c
+                    ON c.`cbl_schedule_draft_id` = a.`draft_id`
                     WHERE b.`audience_value` = ?
-                    AND b.`audience_type` = ?";
-        $results = $db->GetAll($query, array($audience_value, $audience_type));
-        echo $db->ErrorMsg();
-        if ($results) {
-            $s = array();
-            foreach ($results as $result) {
-                $s[] = new self($result);
-            }
+                    AND b.`audience_type` = ?
+                    AND c.`status` = 'live'
+                    AND a.`deleted_date` IS NULL
+                    AND b.`deleted_date` IS NULL
+                    
+                    $AND_date_greater
+                    $AND_date_less
+                    $ORDER_BY
+                    ";
+
+        $result = $db->GetRow($query, array($audience_value, $audience_type));
+
+        if ($result) {
+            $data = new self($result);
         }
 
-        return $s;
+        return $data;
     }
 
     public function getBreadCrumbData() {
@@ -888,6 +920,7 @@ class Models_Schedule extends Models_Base {
         $results = $db->GetAll($query);
         return $results;
     }
+
     public static function fetchLastID() {
         global $db;
         $results = $db->Insert_Id();
@@ -1014,5 +1047,65 @@ class Models_Schedule extends Models_Base {
             array("key" => "schedule_order", "value" => $schedule_order, "method" => "="),
             array("key" => "deleted_date", "value" => ($deleted_date ? $deleted_date : NULL), "method" => ($deleted_date ? "<=" : "IS"))
         ));
+    }
+
+    public static function fetchAllScheduleChangesByProxyID($proxy_id) {
+        $schedule_change_data = array();
+        $draft_id_list = array();
+
+        $drafts = Models_Schedule_Draft::fetchAllByProxyID($proxy_id, "live");
+        if ($drafts) {
+            foreach ($drafts as $draft) {
+                $draft_id_list[] = $draft->getID();
+            }
+            $draft_id_list = implode(",", $draft_id_list);
+
+            if ($draft_id_list && !empty($draft_id_list)) {
+                $audience_members = Models_Schedule_Audience::fetchAllOnServiceByDraftID($draft_id_list);
+
+                if ($audience_members) {
+                    foreach ($audience_members as $audience_member) {
+                        if (isset($audience_member["audience_value"]) && $audience_member["audience_value"]) {
+                            $current_schedule = Models_Schedule::fetchRowByAudienceValueAudienceType($audience_member["audience_value"], $audience_member["audience_type"], true, strtotime("today"));
+                            $next_schedule = Models_Schedule::fetchRowByAudienceValueAudienceType($audience_member["audience_value"], $audience_member["audience_type"], false, strtotime("today"));
+
+                            if ($current_schedule && $next_schedule && $current_schedule->getScheduleParentID() != $next_schedule->getScheduleParentID()) {
+                                $user = Models_User::fetchRowByID($audience_member["audience_value"]);
+
+                                if ($user) {
+                                    $current_schedule_title = $current_schedule->getTitle();
+                                    $next_schedule_title = $next_schedule->getTitle();
+
+                                    if ($current_schedule->getScheduleParentID()) {
+                                        $parent = $current_schedule->fetchRowByID($current_schedule->getScheduleParentID());
+                                        $current_schedule_title = $parent->getTitle();
+                                    }
+
+                                    if ($next_schedule->getScheduleParentID()) {
+                                        $parent = $next_schedule->fetchRowByID($next_schedule->getScheduleParentID());
+                                        $next_schedule_title = $parent->getTitle();
+                                    }
+
+                                    $user_schedule_change = array(
+                                        "audience_full_name" => $user->getFullname(false),
+                                        "schedule_title_before" => $current_schedule_title,
+                                        "schedule_start_before" => $current_schedule->getStartDate(),
+                                        "schedule_end_before" => $current_schedule->getEndDate(),
+                                        "schedule_title_after" => $next_schedule_title,
+                                        "schedule_start_after" => $next_schedule->getStartDate(),
+                                        "schedule_end_after" => $next_schedule->getEndDate(),
+                                        "schedule_old_url" => ENTRADA_URL . "/admin/rotationschedule?section=edit-draft&draft_id=" . $current_schedule->getDraftID(),
+                                        "schedule_new_url" => ENTRADA_URL . "/admin/rotationschedule?section=edit-draft&draft_id=" . $next_schedule->getDraftID()
+                                    );
+
+                                    $schedule_change_data[$audience_member["audience_value"]] = $user_schedule_change;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return $schedule_change_data;
     }
 }

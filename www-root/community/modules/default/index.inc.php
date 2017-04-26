@@ -25,6 +25,9 @@ $query	= "	SELECT *
 			AND `page_active` = '1'";
 $result	= $db->GetRow($query);
 if ($result) {
+
+	Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
 	echo "<a id=\"community-edit-button\" href=\"". COMMUNITY_URL.$COMMUNITY_URL .":pages?action=edit&amp;page=". ($result["page_url"] != "" ? $result["cpage_id"] : "home") ."\" class=\"btn btn-primary pull-right\">Edit Page</a>";
 
 	if (isset($result["page_title"]) && trim($result["page_title"]) != "") {
@@ -281,16 +284,11 @@ if ($result) {
 		header("Location: ".COMMUNITY_URL.$COMMUNITY_URL.":".$result["page_url"]."?".replace_query());
 		exit;
 	} else {
-		$url		= COMMUNITY_URL.$COMMUNITY_URL;
-		$ONLOAD[]	= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-	
-		$ERROR++;
-		$ERRORSTR[]	= "The page you have requested does not currently exist within this community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-		
-		echo "<h1>Page Not Found: <strong>404 Error</strong></h1>\n";
-		
-		echo display_error();
-		
+		Entrada_Utilities_Flashmessenger::addMessage($translate->_("The page you have requested does not currently exist within this community."), "error", $MODULE);
 		application_log("error", "Community default content page not found [".$PAGE_URL."] in community_id [".$COMMUNITY_ID."].");
+
+		$url = COMMUNITY_URL . $COMMUNITY_URL;
+		header("Location: " . $url);
+		exit;
 	}
 }

@@ -36,6 +36,8 @@ if (!defined("IN_COMMUNITIES")) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
+    Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
 	/**
 	 * Update requested column to sort by.
 	 * Valid: director, name

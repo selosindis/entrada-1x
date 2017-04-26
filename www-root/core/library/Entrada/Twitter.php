@@ -55,7 +55,7 @@ class Entrada_Twitter {
         /**
          * Get the current curriculum period
          */
-        $cperiod = new Models_CurriculumPeriod();
+        $cperiod = new Models_Curriculum_Period();
         $current_curriculum_periods = $cperiod->fetchAllCurrent();
 
         if ($current_curriculum_periods) {

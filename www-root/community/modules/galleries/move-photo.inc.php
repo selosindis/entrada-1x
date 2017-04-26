@@ -32,7 +32,7 @@ if ($RECORD_ID) {
 							AND a.`cgallery_id` != ".$db->qstr($gallery_id);
 		$photo_record	= $db->GetRow($query);
 		if ($photo_record) {
-			$query			= "	SELECT a.`gallery_cgphoto_id`, b.`page_url`
+			$query			= "	SELECT a.`gallery_cgphoto_id`, b.`page_url`, a.`gallery_title`
 								FROM `community_galleries` AS a
 								LEFT JOIN `community_pages` AS b
 								ON b.`cpage_id` = a.`cpage_id`
@@ -66,7 +66,7 @@ if ($RECORD_ID) {
 				} else {
 					application_log("error", "The provided photo id [".$RECORD_ID."] is already deactivated.");
 				}
-
+                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully moved the <strong>%s</strong> photo to <strong>%s</strong>."), $photo_record["photo_title"], $gallery_record["gallery_title"]), "success", $MODULE);
 				header("Location: ".COMMUNITY_URL.$COMMUNITY_URL.":".$gallery_record["page_url"]."?section=view-gallery&id=".$gallery_id);
 				exit;
 			}

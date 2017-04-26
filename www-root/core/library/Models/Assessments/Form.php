@@ -488,7 +488,7 @@ class Models_Assessments_Form extends Models_Base {
         }
     }
     
-    public static function fetchAllByOwner($proxy_id, $organisation_id, $search_value = "") {
+    public static function fetchAllByOwner($proxy_id, $organisation_id, $search_value = "", $limit = null, $offset = null) {
         global $db, $ENTRADA_USER;
         $course_permissions = $ENTRADA_USER->getCoursePermissions();
         $forms = false;
@@ -523,7 +523,12 @@ class Models_Assessments_Form extends Models_Base {
         }
 
         $query .= " GROUP BY a.`form_id`";
-        
+        if (!empty($limit)) {
+            $query .= " LIMIT " . $limit;
+        }
+        if (!empty($offset)) {
+            $query .= " OFFSET " . $offset;
+        }
         $results = $db->GetAll($query);
         if ($results) {
             foreach ($results as $form) {

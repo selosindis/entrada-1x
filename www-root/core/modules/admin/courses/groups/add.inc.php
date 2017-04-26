@@ -61,7 +61,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 	if ($course) {
 		$course_details = $course->toArray();
 		courses_subnavigation($course_details,"groups");
-		$curriculum_periods = Models_CurriculumPeriod::fetchRowByCurriculumTypeIDCourseID($course->getCurriculumTypeID(), $course->getID());
+		$curriculum_periods = Models_Curriculum_Period::fetchRowByCurriculumTypeIDCourseID($course->getCurriculumTypeID(), $course->getID());
 	}
 
 	// Error Checking

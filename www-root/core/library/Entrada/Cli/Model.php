@@ -44,6 +44,8 @@ class Entrada_Cli_Model extends Entrada_Cli {
     private $class_name;
     private $class_folders;
     private $class_contents;
+    private $database_name;
+    private $database_display_name;
 
     private static $header = <<<HEADERMESSAGE
 <?php
@@ -87,15 +89,30 @@ HEADERMESSAGE;
     protected function getTable() {
         global $db;
 
-        print "\nStep 1 - Please indicate the name of the database which the table you would like to create a model for resides in [or leave blank to use `".DATABASE_NAME."`]: ";
-        fscanf(STDIN, "%s\n", $database_name);
-        $database_name = clean_input($database_name, array("trim", "module"));
-        while ($database_name && !$db->getAll("SHOW TABLES FROM `".$database_name."`")) {
-            print "\n[Error] Please ensure you enter a database which already exists and has one or more table in it. The database you have entered was not found: ";
-            fscanf(STDIN, "%s\n", $database_name);
-            $database_name = clean_input($database_name, array("trim", "module"));
+        print "\nStep 1 - Please select the database which contains the table you would like to model [or leave blank to use `".DATABASE_NAME."`]: ";
+        print "\n";
+        print "\n   1) DATABASE_NAME      [" . DATABASE_NAME . "] ";
+        print "\n   2) AUTH_DATABASE      [" . AUTH_DATABASE . "] ";
+        print "\n   3) CLERKSHIP_DATABASE [" . CLERKSHIP_DATABASE . "] ";
+        print "\n\nEnter a number between 1 and 3 or press enter to accept the default of \"" . DATABASE_NAME . "\": ";
+
+        fscanf(STDIN, "%i\n", $active_field_index);
+
+        switch ($active_field_index) {
+            case 1:
+            default:
+                $this->database_display_name = "DATABASE_NAME";
+                $this->database_name = DATABASE_NAME;
+                break;
+            case 2:
+                $this->database_display_name = "AUTH_DATABASE";
+                $this->database_name = AUTH_DATABASE;
+                break;
+            case 3:
+                $this->database_display_name = "CLERKSHIP_DATABASE";
+                $this->database_name = CLERKSHIP_DATABASE;
         }
-        $this->database_name = ($database_name ? $database_name : DATABASE_NAME);
+
         print "\n          Please enter the full name of the database table you want to create a model for: ";
         fscanf(STDIN, "%s\n", $this->table_name);
         $this->table_name = clean_input($this->table_name, array("trim", "module"));
@@ -207,11 +224,11 @@ HEADERMESSAGE;
 
     protected function getAuthorDetails() {
         print "\nStep 4 - Please enter some personal information to be used in the comment block.";
-        print "\n         Full name [e.g. James Ellis]: ";
+        print "\n         Full name [e.g. Joe Developer]: ";
         $fullname = trim(fgets(STDIN));
-        print "\n         Email Address [e.g. james.ellis@queensu.ca]: ";
+        print "\n         Email Address [e.g. joe.developer@yourschool.edu]: ";
         fscanf(STDIN, "%s\n", $email);
-        print "\n         Organisation [e.g. Queen's University]: ";
+        print "\n         Organisation [e.g. Your University]: ";
         $organisation = trim(fgets(STDIN));
         $this->fullname = ($fullname ? $fullname : NULL);
         $this->email = ($email ? $email : NULL);
@@ -249,10 +266,13 @@ HEADERMESSAGE;
 
         $this->class_contents = str_replace($search, $replace, $this::$header);
         $this->class_contents .= "\n\n";
-        $this->class_contents .= "class ".$this->class_name." extends Models_Base {\n";
-        $this->class_contents .= "    protected $".implode(", $", $this->variables).";\n\n";
-        if (isset($this->database_name) && $this->database_name && $this->database_name != DATABASE_NAME) {
-            $this->class_contents .= "    protected \$database_name = \"" . $this->database_name . "\";\n";
+        $this->class_contents .= "class ".$this->class_name." extends Models_Base {\n\n";
+        foreach ($this->variables as $variable) {
+            $this->class_contents .= "    protected \$".$variable.";\n";
+        }
+        $this->class_contents .= "\n";
+        if (!empty($this->database_name) && !empty($this->database_display_name)) {
+            $this->class_contents .= "    protected static \$database_name = " . $this->database_display_name . ";\n";
         }
         $this->class_contents .= "    protected static \$table_name = \"".$this->table_name."\";\n";
         $this->class_contents .= "    protected static \$primary_key = \"".$this->primary_id."\";\n";
@@ -260,30 +280,56 @@ HEADERMESSAGE;
         $this->class_contents .= "    public function __construct(\$arr = NULL) {\n";
         $this->class_contents .= "        parent::__construct(\$arr);\n";
         $this->class_contents .= "    }\n\n";
-        $this->class_contents .= "    public function getID() {\n";
-        $this->class_contents .= "        return \$this->".$this->primary_id.";\n";
-        $this->class_contents .= "    }\n\n";
+        // write a getter for the primary id, unless there is a field 'id' already in the database
+        if (!in_array("id", $this->variables, true)) {
+            $this->class_contents .= "    public function getID() {\n";
+            $this->class_contents .= "        return \$this->".$this->primary_id.";\n";
+            $this->class_contents .= "    }\n\n";
+        }
         foreach ($this->variables as $variable) {
             $variable_name_formatted = str_replace(" ", "", preg_replace("/ Id$/", "ID", ucwords(str_replace("_", " ", $variable))));
+            // getter
             $this->class_contents .= "    public function get".$variable_name_formatted."() {\n";
             $this->class_contents .= "        return \$this->".$variable.";\n";
+            $this->class_contents .= "    }\n\n";
+            // setter
+            $this->class_contents .= "    public function set".$variable_name_formatted."(\$".$variable.") {\n";
+            $this->class_contents .= "        \$this->".$variable." = \$".$variable.";\n";
             $this->class_contents .= "    }\n\n";
         }
         if ($this->primary_id) {
             $this->class_contents .= "    public static function fetchRowByID(\$".$this->primary_id.($this->active_field ? ", $".$this->active_field : "").") {\n";
             $this->class_contents .= "        \$self = new self();\n";
             $this->class_contents .= "        return \$self->fetchRow(array(\n";
-            $this->class_contents .= "            array(\"key\" => \"".$this->primary_id."\", \"value\" => \$".$this->primary_id.", \"method\" => \"=\")".($this->active_field ? "," : "")."\n";
+            $this->class_contents .= "            array(\"key\" => \"".$this->primary_id."\", \"method\" => \"=\", \"value\" => \$".$this->primary_id.")".($this->active_field ? "," : "")."\n";
             if ($this->active_field) {
-                $this->class_contents .= "            array(\"key\" => \"".$this->active_field."\", \"value\" => \$".$this->active_field.", \"method\" => \"=\")\n";
+                $this->class_contents .= "            array(\"key\" => \"".$this->active_field."\", \"method\" => \"=\", \"value\" => \$".$this->active_field.")\n";
             }
             $this->class_contents .= "        ));\n";
             $this->class_contents .= "    }\n\n";
         }
         $this->class_contents .= "    public static function fetchAllRecords(".($this->active_field ? "\$".$this->active_field : "").") {\n";
         $this->class_contents .= "        \$self = new self();\n";
-        $this->class_contents .= "        return \$self->fetchAll(array(".($this->active_field ? "array(\"key\" => \"".$this->active_field."\", \"value\" => \$".$this->active_field.", \"method\" => \"=\")" : "array(\"key\" => \"".$this->primary_id."\", \"value\" => 0, \"method\" => \">=\")")."));\n";
-        $this->class_contents .= "    }\n";
+        $this->class_contents .= "        return \$self->fetchAll(array(".($this->active_field ? "array(\"key\" => \"".$this->active_field."\", \"method\" => \"=\", \"value\" => \$".$this->active_field.")" : "array(\"key\" => \"".$this->primary_id."\", \"method\" => \">=\", \"value\" => 0)")."));\n";
+        $this->class_contents .= "    }\n\n";
+        if (in_array("deleted_date", $this->variables, true)) {
+            $this->class_contents .= "    public function delete() {\n";
+            if (in_array("deleted_by", $this->variables, true) || in_array("updated_by", $this->variables, true)) {
+                $this->class_contents .= "        global \$ENTRADA_USER;\n\n";
+            }
+            $this->class_contents .= "        \$this->deleted_date = time();\n";
+            if (in_array("deleted_by", $this->variables, true)) {
+                $this->class_contents .= "        \$this->deleted_by = \$ENTRADA_USER->getActiveId();\n";
+            }
+            if (in_array("updated_date", $this->variables, true)) {
+                $this->class_contents .= "        \$this->updated_date = time();\n";
+            }
+            if (in_array("updated_by", $this->variables, true)) {
+                $this->class_contents .= "        \$this->updated_by = \$ENTRADA_USER->getActiveId();\n";
+            }
+            $this->class_contents .= "\n        return \$this->update();\n";
+            $this->class_contents .= "    }\n\n";
+        }
         $this->class_contents .= "}";
         print "\nFinal Step - The contents of the model file have been created, please confirm you would like to create this model. [Yes to confirm, No to cancel, or View to output the contents of the file that will be created]: ";
         fscanf(STDIN, "%s\n", $create);
@@ -300,12 +346,25 @@ HEADERMESSAGE;
                 $folder_path .= "/".$folder;
                 if ($key < (count($this->class_folders) - 1) && !@is_dir($folder_path)) {
                     mkdir($folder_path);
-                } elseif ($key == (count($this->class_folders) - 1) && !@file_exists($folder_path.".php")) {
-                    if (file_put_contents($folder_path.".php", $this->class_contents)) {
-                        print "\nNew Model file [".$folder_path.".php] created successfully!\n";
-                    } else {
-                        print "\nAn error was encountered and the new Model file [".$folder_path.".php] could not be created.\n";
+                } elseif ($key == (count($this->class_folders) - 1)) {
+                    $proceed = true;
+                    if (@file_exists($folder_path.".php")) {
+                        print "\nWarning - the Model file you have requested already exists. Do you want to overwrite? [Yes to confirm, No to cancel]: ";
+                        fscanf(STDIN, "%s\n", $overwrite);
+                        if (!(strtolower($create) == "y" || strtolower($create) == "yes")) {
+                            $proceed = false;
+                        }
                     }
+                    if ($proceed) {
+                        if (file_put_contents($folder_path.".php", $this->class_contents)) {
+                            print "\nNew Model file [".$folder_path.".php] created successfully!\n";
+                        } else {
+                            print "\nAn error was encountered and the new Model file [".$folder_path.".php] could not be created.\n";
+                        }
+                    } else {
+                        print "\nThe Model was not written, as requested. ";
+                    }
+
                 }
             }
         }

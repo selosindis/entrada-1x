@@ -254,4 +254,31 @@ class Models_Leave_Tracking extends Models_Base {
 
         return $output;
     }
+
+    public static function fetchAllByAssociatedLearnerFacultyProxyList($current_date) {
+        global $db;
+
+        $USER_ID_LIST = Entrada_Utilities_Assessments_AssessmentTask::getAssociatedLearnerFacultyProxyList();
+        if ($USER_ID_LIST) {
+            $query = "  SELECT CONCAT(b.`firstname`, ' ', b.`lastname`) AS 'full_name', a.`days_used`, a.`start_date`, a.`end_date`, a.`proxy_id`, c.`type_value` as `leave_type`
+                        FROM `cbl_leave_tracking` AS a
+                        JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                        ON a.`proxy_id` = b.`id`  
+                        JOIN `cbl_lu_leave_tracking_types` AS c
+                        ON c.`type_id` = a.`type_id`
+                        WHERE a.`deleted_date` IS NULL
+                        AND ((? BETWEEN a.`start_date` AND a.`end_date`) OR a.`start_date` >= ?)
+                        AND a.`proxy_id` IN ({$USER_ID_LIST})
+                        ORDER BY a.`start_date`";
+
+            $results = $db->GetAll($query, array($current_date, $current_date));
+            if ($results) {
+                foreach ($results as $key => $result) {
+                    $results[$key]["url"] = ENTRADA_URL . "/admin/rotationschedule/leave?section=user&proxy_id=" . $result["proxy_id"];
+                }
+            }
+            return $results ? $results : array();
+        }
+        return array();
+    }
 }

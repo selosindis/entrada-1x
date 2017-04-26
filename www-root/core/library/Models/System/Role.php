@@ -26,7 +26,7 @@
 class Models_System_Role extends Models_Base  {
     protected   $id,
                 $role_name,
-                $group_id;
+                $groups_id;
     
     protected static $primary_key = "id";
     protected static $table_name = "system_roles";
@@ -45,8 +45,15 @@ class Models_System_Role extends Models_Base  {
         return $this->role_name;
     }
 
+    /*
+     * Don't judge me.
+     */
     public function getGroupID() {
-        return $this->group_id;
+        return $this->groups_id;
+    }
+
+    public function getGroupsID() {
+        return $this->groups_id;
     }
 
     /* @return bool|Models_System_Role */

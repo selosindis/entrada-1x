@@ -979,7 +979,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								JOIN `group_organisations` AS b
 								ON a.`group_id` = b.`group_id`
 								LEFT JOIN `portfolios` AS c
-								ON a.`group_id` = c.`group_id`
+								ON a.`group_id` = c.`group_id` AND c.`active` = 1
 								WHERE a.`group_active` = '1'
 								AND b.`organisation_id` = ?
 								AND IF (a.`start_date` IS NOT NULL AND a.`start_date` <> 0, UNIX_TIMESTAMP(NOW()) BETWEEN a.`start_date` AND a.`expire_date`, '1' = '1')

@@ -283,7 +283,7 @@ function build_course_row (course) {
 
     var btn = "<div class=\"btn-group\">" +
         "<button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">" +
-        "<i class=\"icon-cog\"></i>" +
+        "<i class=\"fa fa-cog\" aria-hidden=\"true\"></i>" +
         "</button>" +
         "<ul class=\"dropdown-menu toggle-left\">" +
         btn_li +

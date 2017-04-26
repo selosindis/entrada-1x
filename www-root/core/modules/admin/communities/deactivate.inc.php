@@ -48,11 +48,12 @@ if (!defined("IN_COMMUNITIES")) {
 						} 
 					}
 				}
-				$url = $url = ENTRADA_URL."/admin/communities";
-				$msg = "Selected communities were successfully deactivated. You will now be redirected to the <strong>Manage Communities</strong> page, this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . $url . "\" style=\"font-weight: bold\">click here</a> to continue.";
-				$SUCCESS++;
-				$SUCCESSSTR[] = $msg;
-				$ONLOAD[] = "setTimeout('window.location=\\'" . $url . "\\'', 5000)";
+                Entrada_Utilities_Flashmessenger::addMessage($translate->_("Selected communities were successfully deactivated."), "success", $MODULE);
+
+                $url = ENTRADA_URL . "/admin/communities";
+                header("Location: " . $url);
+                exit;
+
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "You must select at least 1 community to deactivate by checking the checkbox to the left of the community name.";
@@ -79,17 +80,6 @@ if (!defined("IN_COMMUNITIES")) {
 	}
 	
 	switch ($STEP) {
-		case 2 :
-			if ($SUCCESS) {
-				echo display_success();
-			}
-			if ($NOTICE) {
-				echo display_notice();
-			}
-			if ($ERROR) {
-				echo display_error();
-			}
-		break;
 		case 1 :
 		default :
 			if (is_array($selected_communities)) { ?>

@@ -172,14 +172,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         </thead>
                         <tbody>
                             <?php
-							$audience = Models_Event_Attendance::sortAudience($audience);
-							if ($audience) {
-                                foreach ($audience as $proxy_id => $learner) {
+							if ($audience && is_array($audience)) {
+                                $audience = Models_Event_Attendance::sortAudience($audience);
+                                if ($audience) {
+                                    foreach ($audience as $proxy_id => $learner) {
+                                        ?>
+                                        <tr>
+                                            <td><input type="checkbox" class="attendance-check" value="<?php echo $proxy_id; ?>" id="learner-<?php echo $learner["id"]; ?>"<?php echo ($learner["has_attendance"] ? " checked=\"checked\"" : "");?> /></td>
+                                            <td><?php echo $learner["lastname"]; ?></td>
+                                            <td><?php echo $learner["firstname"]; ?></td>
+                                        </tr>
+                                        <?php
+                                    }
+                                } else {
                                     ?>
                                     <tr>
-                                        <td><input type="checkbox" class="attendance-check" value="<?php echo $proxy_id; ?>" id="learner-<?php echo $learner["id"]; ?>"<?php echo ($learner["has_attendance"] ? " checked=\"checked\"" : "");?> /></td>
-                                        <td><?php echo $learner["lastname"]; ?></td>
-                                        <td><?php echo $learner["firstname"]; ?></td>
+                                        <td colspan="3"><?php echo display_notice(array("There is no audience associated with this event."));?></td>
                                     </tr>
                                     <?php
                                 }
@@ -244,8 +252,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							alert('Error reading swipe. Please click Kiosk Mode to capture card swipes.');
 						}
 					});
-					reader.cardRead(function(data){			
-						number = data.substring(0,data.length-2);
+					<?php
+					$parser = defined("KIOSK_MODE_CARD_PARSER") ? KIOSK_MODE_CARD_PARSER : "data.substring(0,data.length-2)";
+					?>
+
+					reader.cardRead(function(data){
+						number = <?php echo $parser; ?>;
 						processSwipe(number);
 					});
 				});

@@ -199,7 +199,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<label for="course_directors" class="form-nrequired control-label"><strong><?php echo $translate->_("Course Directors"); ?></strong></label>
 						<div class="controls">
 						<?php
-							$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+							$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`
 										FROM `course_contacts` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 										ON b.`id` = a.`proxy_id`
@@ -210,7 +210,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$results = $db->GetAll($squery);
 							if ($results) {
 								foreach ($results as $key => $sresult) {
-									echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
+									echo "<a href=\"".ENTRADA_RELATIVE."/people?id=".$sresult["proxy_id"]."\" class=\"event-details-item\">".html_encode($sresult["fullname"])."</a><br />\n";
 								}
 							} else {
 								echo "To Be Announced";
@@ -223,7 +223,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<label for="curriculum_coordinators" class="form-nrequired control-label"><strong><?php echo $translate->_("Curriculum Coordinators"); ?></strong></label>
 						<div class="controls">
 							<?php
-								$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+								$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`
 											FROM `course_contacts` AS a
 											LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 											ON b.`id` = a.`proxy_id`
@@ -234,7 +234,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$results = $db->GetAll($squery);
 								if ($results) {
 									foreach ($results as $key => $sresult) {
-										echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
+                                        echo "<a href=\"".ENTRADA_RELATIVE."/people?id=".$sresult["proxy_id"]."\" class=\"event-details-item\">".html_encode($sresult["fullname"])."</a><br />\n";
 									}
 								} else {
 									echo "To Be Announced";
@@ -258,10 +258,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$results = $db->GetAll($squery);
 							if ($results) {
 								foreach ($results as $key => $sresult) {
-									echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
-								}
-							} else {
-								echo "To Be Announced";
+                                    echo "<a href=\"".ENTRADA_RELATIVE."/people?id=".$sresult["proxy_id"]."\" class=\"event-details-item\">".html_encode($sresult["fullname"])."</a><br />\n";
+                                }
+                            } else {
+                                echo "To Be Announced";
 							}
 							?>
 						</div>
@@ -379,33 +379,22 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								ORDER BY b.`objective_order`";
 					$results = $db->GetAll($query);
 					if ($results) {
-					?>
-					<h3><?php echo $translate->_("Clinical Presentations"); ?></h3>
-					<ul class="objectives">
-					<?php
-                    $HEAD[] = "<script type=\"text/javascript\" defer=\"defer\">Event.observe(window, 'load', function() {";
-                    foreach ($results as $result) {
-                        $HEAD[] = "new Control.Modal($('objective-".$result["objective_id"]."-details'), {
-                                overlayOpacity:	0.75,
-                                closeOnClick:	'overlay',
-                                className:		'modal-description',
-                                fade:			true,
-                                fadeDuration:	0.30
-                            });";
-                        if ($result["objective_name"]) {
-                            ?>
-                            <li>
-                                <a id="objective-<?php echo $result["objective_id"];?>-details" href="<?php echo ENTRADA_URL;?>/courses/objectives?section=objective-details&api=true&oid=<?php echo $result["objective_id"]."&cid=".$COURSE_ID;?>">
-                                    <?php echo $result["objective_name"];?>
-                                </a>
-                            </li>
-							<?php
-						}
-                    }
-                    $HEAD[] = "});</script>";
-                    ?>
-					</ul>
-					<?php
+                        ?>
+                        <h3><?php echo $translate->_("Clinical Presentations"); ?></h3>
+                        <ul class="objective-list">
+                        <?php
+                        foreach ($results as $result) {
+                            if ($result["objective_name"]) {
+                                ?>
+                                <li>
+                                    <?php echo html_encode($result["objective_name"]); ?>
+                                </li>
+                                <?php
+                            }
+                        }
+                        ?>
+                        </ul>
+                        <?php
 					}
                 ?>
 				</div>

@@ -155,9 +155,9 @@ class Models_Gradebook_Assessment_Graders extends Models_Base
     public static function deleteGraderForAssessment($grader_proxy_id, $assessment_id) {
         global $db;
 
-        $query = "DELETE FROM assessment_graders 
-                  WHERE assessment_id = ?
-                  AND grader_proxy_id = ?";
+        $query = "DELETE FROM `assessment_graders`
+                  WHERE `assessment_id` = ?
+                  AND `grader_proxy_id` = ?";
 
         return $db->Execute($query, array($assessment_id, $grader_proxy_id));
     }

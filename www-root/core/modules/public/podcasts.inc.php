@@ -34,12 +34,14 @@ if(!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
-	$sidebar_html  = "<div style=\"text-align: center\">\n";
-	$sidebar_html .= "	<a href=\"".str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL)."/podcasts/feed\"><img src=\"".ENTRADA_URL."/images/itunes_podcast_icon.png\" width=\"70\" height=\"70\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
-	$sidebar_html .= "	<a href=\"".str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL)."/podcasts/feed\" style=\"display: block; margin-top: 10px; font-size: 14px\">Subscribe Here</a>";
-	$sidebar_html .= "</div>\n";
-	new_sidebar_item("Podcasts in iTunes", $sidebar_html, "podcast-bar", "open", "1.1");
-
+    $settings = new Entrada_Settings();
+    if ($settings->read("podcast_display_sidebar")) {
+        $sidebar_html = "<div style=\"text-align: center\">\n";
+        $sidebar_html .= "	<a href=\"" . str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL) . "/podcasts/feed\"><img src=\"" . ENTRADA_URL . "/images/itunes_podcast_icon.png\" width=\"70\" height=\"70\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
+        $sidebar_html .= "	<a href=\"" . str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL) . "/podcasts/feed\" style=\"display: block; margin-top: 10px; font-size: 14px\">Subscribe Here</a>";
+        $sidebar_html .= "</div>\n";
+        new_sidebar_item("Podcasts in iTunes", $sidebar_html, "podcast-bar", "open", "1.1");
+    }
 	?>
     <div style="text-align: left; border-bottom: 1px #d9dee2 solid">
         <a href="<?php echo str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL); ?>/podcasts/feed"><img src="<?php echo ENTRADA_URL; ?>/images/podcast-header-image.png" width="750" height="258" alt="Podcasts in iTunes" title="" border="0" /></a>

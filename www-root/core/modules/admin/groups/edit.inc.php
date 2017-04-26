@@ -382,7 +382,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
                 <div class="row-fluid">
                     <div id="group_name_title"></div>
                 </div>
-                <div class="row-fluid">
+                <div class="row-fluid space-above">
 					<div class="member-add-type" id="existing-member-add-type">
 						<label for="choose-members-btn" class="control-label"><?php echo $translate->_("Select Learners"); ?></label>
 						<div class="controls">
@@ -429,9 +429,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						resource_url: ENTRADA_URL,
 						filter_component_label: "Users",
 						select_all_enabled: true,
-						filters: {
-						},
-						no_results_text: "<?php echo $translate->_("No Users found matching the search criteria"); ?>",
+						filters: {},
+						no_results_text: "<?php echo $translate->_("No users found matching the search criteria"); ?>",
 						list_data: {
 							selector: "#group_members_list",
 							background_value: "url(../images/list-community.gif) no-repeat scroll 0 4px transparent"
@@ -442,19 +441,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						target_name: "students"
 					});
 
-					jQuery.getJSON("<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-members"; ?>", {method: "get-roles"} , function (json) {
+					jQuery.getJSON("<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-members"; ?>", {method: "get-groups"} , function (json) {
 						jQuery.each(json.data, function (key, value) {
 							jQuery("#choose-members-btn").data("settings").filters[value.target_label] = {
 								label: value.target_label,
 								api_params: {
-									parent_id: value.target_id
+									group_id: value.target_id,
+                                    parent_name: value.parent_name
 								},
-								data_source: "get-role-members"
+								data_source: "get-roles",
+                                secondary_data_source: "get-role-members"
 							}
 						});
 					});
                 });
-
 
                 function selectgroup(group,name) {
                     $('group_id').value = group;

@@ -72,13 +72,6 @@ $ENTRADA_TEMPLATE = new Entrada_Template();
  */
 $ENTRADA_SETTINGS = new Entrada_Settings();
 
-$version_js = $ENTRADA_SETTINGS->read("version_js");
-
-if (isset($version_js) && $version_js) {
-    define("JAVASCRIPT_VERSION", ((int) $version_js));
-} else {
-    define("JAVASCRIPT_VERSION", APPLICATION_VERSION);
-}
 
 if ($ENTRADA_USER) {
     /**

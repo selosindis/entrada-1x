@@ -21,7 +21,7 @@
  */
 
 class Models_Assessments_Item extends Models_Base {
-    protected $item_id, $one45_element_id, $organisation_id, $itemtype_id, $item_code, $item_text, $item_description, $comment_type, $created_date, $created_by, $updated_date, $updated_by, $deleted_date;
+    protected $item_id, $one45_element_id, $organisation_id, $itemtype_id, $item_code, $item_text, $item_description, $comment_type, $mandatory = 1, $created_date, $created_by, $updated_date, $updated_by, $deleted_date;
 
     protected static $table_name = "cbl_assessments_lu_items";
     protected static $primary_key = "item_id";
@@ -65,6 +65,10 @@ class Models_Assessments_Item extends Models_Base {
 
     public function getCommentType() {
         return $this->comment_type;
+    }
+
+    public function getMandatory() {
+        return $this->mandatory;
     }
 
     public function getCreatedDate() {
@@ -147,7 +151,7 @@ class Models_Assessments_Item extends Models_Base {
             $rubric_items = array_merge($rubric_items, $existing_rubric_items);
         }
 
-        $query = "  SELECT a.`item_id`, a.`itemtype_id`, a.`item_code`, a.`organisation_id`, a.`item_text`, a.`comment_type`, a.`created_date`, b.`name`, COUNT(DISTINCT h.`iresponse_id`) AS `responses`
+        $query = "  SELECT a.`item_id`, a.`itemtype_id`, a.`item_code`, a.`organisation_id`, a.`item_text`, a.`comment_type`, a.`mandatory`, a.`created_date`, b.`name`, COUNT(DISTINCT h.`iresponse_id`) AS `responses`
                     FROM `cbl_assessments_lu_items` AS a
                     JOIN `cbl_assessments_lu_itemtypes` AS b
                     ON a.`itemtype_id` = b.`itemtype_id` "
@@ -238,7 +242,7 @@ class Models_Assessments_Item extends Models_Base {
 
         $course_permissions = $ENTRADA_USER->getCoursePermissions();
 
-        $query = "  SELECT a.`item_id`, a.`itemtype_id`, a.`item_code`, a.`organisation_id`, a.`item_text`, a.`comment_type`, a.`created_date`, b.`name`, COUNT(DISTINCT h.`iresponse_id`) AS `responses`
+        $query = "  SELECT a.`item_id`, a.`itemtype_id`, a.`item_code`, a.`organisation_id`, a.`item_text`, a.`comment_type`, a.`mandatory`, a.`created_date`, b.`name`, COUNT(DISTINCT h.`iresponse_id`) AS `responses`
                     FROM `cbl_assessments_lu_items` AS a
                     JOIN `cbl_assessments_lu_itemtypes` AS b
                     ON a.`itemtype_id` = b.`itemtype_id` ";
@@ -279,7 +283,7 @@ class Models_Assessments_Item extends Models_Base {
 
         $query = "  SELECT count(DISTINCT `item_id`) as `total_items`
                     FROM
-                    (SELECT a.`item_id`, a.`itemtype_id`, a.`item_code`, a.`organisation_id`, a.`item_text`, a.`comment_type`, a.`created_date`, b.`name`," . ((!($ENTRADA_USER->getActiveRole() == "admin" && $ENTRADA_USER->getActiveGroup() == "medtech")) ? " c.`author_type`, c.`author_id`, " : " ") ." COUNT(DISTINCT h.`iresponse_id`) AS `responses`
+                    (SELECT a.`item_id`, a.`itemtype_id`, a.`item_code`, a.`organisation_id`, a.`item_text`, a.`comment_type`, a.`mandatory`, a.`created_date`, b.`name`," . ((!($ENTRADA_USER->getActiveRole() == "admin" && $ENTRADA_USER->getActiveGroup() == "medtech")) ? " c.`author_type`, c.`author_id`, " : " ") ." COUNT(DISTINCT h.`iresponse_id`) AS `responses`
                     FROM `cbl_assessments_lu_items` AS a
                     JOIN `cbl_assessments_lu_itemtypes` AS b
                     ON a.`itemtype_id` = b.`itemtype_id` "

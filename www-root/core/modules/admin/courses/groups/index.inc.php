@@ -54,7 +54,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
         echo "<h1 id=\"page-top\">" . $course->getFullCourseTitle() . "</h1>";
 
         courses_subnavigation($course->toArray(), "groups");
-        $curriculum_periods = Models_CurriculumPeriod::fetchRowByCurriculumTypeIDCourseID($course->getCurriculumTypeID(), $course->getID());
+        $curriculum_periods = Models_Curriculum_Period::fetchRowByCurriculumTypeIDCourseID($course->getCurriculumTypeID(), $course->getID());
 
         switch ($STEP) {
             case 2 :
@@ -98,7 +98,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                 if ($SUCCESS) {
                     echo display_success();
                 }
-                $curriculum_periods = Models_CurriculumPeriod::fetchRowByCurriculumTypeIDCourseID($course->getCurriculumTypeID(), $course->getID());
+                $curriculum_periods = Models_Curriculum_Period::fetchRowByCurriculumTypeIDCourseID($course->getCurriculumTypeID(), $course->getID());
                 if ($curriculum_periods) {
                     ?>
                     <div id="msgs"></div>

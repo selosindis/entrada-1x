@@ -216,7 +216,7 @@ class Models_Event_Audience extends Models_Base {
         return false;
     }
 
-    public function getAudience($event_start = 0) {
+    public function getAudience($event_start = 0, $search_query = "") {
         global $db;
 
         $audience = false;
@@ -225,17 +225,20 @@ class Models_Event_Audience extends Models_Base {
 
         switch ($this->audience_type) {
             case "proxy_id" :
-                $query = "SELECT `id`, `firstname`, `lastname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ?";
-                $result = $db->GetRow($query, array($this->audience_value));
+                $query = "SELECT `id`, `firstname`, `lastname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ? AND (`firstname` LIKE ?
+										OR `lastname` LIKE ?)";
+                $result = $db->GetRow($query, array($this->audience_value, "%".$search_query."%", "%".$search_query."%"));
                 if ($result) {
                     $audience_data["audience_name"] = $result["firstname"] . " " . $result["lastname"];
                     $audience_data["audience_type"] = $this->audience_type;
+                    $audience_data["audience_members"][$result["id"]] = $result;
                     $audience = new Models_Audience($audience_data);
                 }
                 break;
             case "cohort" :
                 $query = "SELECT `group_id`, `group_name` FROM `groups` WHERE `group_id` = ?";
                 $result = $db->GetRow($query, array($this->audience_value));
+                $members = array();
                 if ($result) {
                     $audience_data["audience_name"] = $result["group_name"];
                     $audience_data["audience_type"] = $this->audience_type;
@@ -244,12 +247,16 @@ class Models_Event_Audience extends Models_Base {
                                 JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                 ON a.`proxy_id` = b.`id`
                                 WHERE a.`group_id` = ?
-                                AND a.`member_active` = '1'";
-                    $results = $db->GetAll($query, array($this->audience_value));
-                    if ($results) {
-                        $audience_data["audience_members"] = $results;
+                                AND a.`member_active` = '1'
+                                AND (b.`firstname` LIKE ? OR b.`lastname` LIKE ?)";
+                    $results = $db->GetAll($query, array($this->audience_value, "%".$search_query."%", "%".$search_query."%"));
+                    if ($results && is_array($results)) {
+                        foreach ($results as $proxy_id => $result) {
+                            $members[$result["id"]] = $result;
+                        }
                     }
 
+                    $audience_data["audience_members"] = $members;
                     if (!empty($audience_data)) {
                         $audience = new Models_Audience($audience_data);
                     }
@@ -258,6 +265,8 @@ class Models_Event_Audience extends Models_Base {
             case "group_id" :
                 $query = "SELECT `cgroup_id`, `group_name` FROM `course_groups` WHERE `cgroup_id` = ?";
                 $result = $db->GetRow($query, array($this->audience_value));
+
+                $members = array();
                 if ($result) {
                     $audience_data["audience_name"] = $result["group_name"];
                     $audience_data["audience_type"] = $this->audience_type;
@@ -266,12 +275,17 @@ class Models_Event_Audience extends Models_Base {
                                 JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                 ON a.`proxy_id` = b.`id`
                                 WHERE a.`cgroup_id` = ?
-                                AND a.`active` = '1'";
-                    $results = $db->GetAll($query, array($this->audience_value));
-                    if ($results) {
-                        $audience_data["audience_members"] = $results;
+                                AND a.`active` = '1'
+                                AND (b.`firstname` LIKE ? OR b.`lastname` LIKE ?)";
+                    $results = $db->GetAll($query, array($this->audience_value, "%".$search_query."%", "%".$search_query."%"));
+
+                    if ($results && is_array($results)) {
+                        foreach ($results as $proxy_id => $result) {
+                            $members[$result["id"]] = $result;
+                        }
                     }
 
+                    $audience_data["audience_members"] = $members;
                     if (!empty($audience_data)) {
                         $audience = new Models_Audience($audience_data);
                     }
@@ -302,10 +316,13 @@ class Models_Event_Audience extends Models_Base {
                                         JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                         ON a.`proxy_id` = b.`id`
                                         WHERE a.`group_id` = ?
-                                        AND a.`member_active` = '1'";
-                            $results = $db->GetAll($query, array($course_audience["audience_value"]));
+                                        AND a.`member_active` = '1'
+                                        AND (b.`firstname` LIKE ? OR b.`lastname` LIKE ?)";
+                            $results = $db->GetAll($query, array($course_audience["audience_value"], "%".$search_query."%", "%".$search_query."%"));
                             if ($results) {
-                                $members = array_merge($members, $results);
+                                foreach ($results as $proxy_id => $result) {
+                                    $members[$result["id"]] = $result;
+                                }
                             }
                         }
                     }
@@ -324,7 +341,28 @@ class Models_Event_Audience extends Models_Base {
 
         return $audience;
     }
-    
+
+    public static function buildAudienceMembers($audiences) {
+        $audience_members = array();
+        if (isset($audiences) && is_array($audiences) && !empty($audiences)) {
+            foreach ($audiences as $audience) {
+                if ($audience && is_object($audience)) {
+                    $audience_array = $audience->toArray();
+                    if (isset($audience_array["audience_members"]) && is_array($audience_array["audience_members"]) && !empty($audience_array["audience_members"])) {
+                        foreach ($audience_array["audience_members"] as $proxy => $member) {
+                            if (!in_array($proxy, $audience_members)) {
+                                $audience_members[] = $proxy;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $audience_members;
+    }
+
+
     public static function onlyCourse($audiences) {
         $course_exist = false;
         if ($audiences && is_array($audiences) && !empty($audiences)) {

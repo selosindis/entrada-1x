@@ -23,7 +23,46 @@
  */
 
 class Models_User extends Models_Base {
-    protected $id, $number, $username, $password, $salt, $organisation_id, $department, $prefix, $firstname, $lastname, $email, $email_alt, $email_updated, $google_id, $telephone, $fax, $address, $city, $province, $postcode, $country, $country_id, $province_id, $notes, $office_hours, $privacy_level, $copyright, $notifications, $entry_year, $grad_year, $gender, $clinical, $uuid, $updated_date, $updated_by;
+    const TABLE_NAME = "user_data";
+    protected
+        $id,
+        $number,
+        $username,
+        $password,
+        $salt,
+        $organisation_id,
+        $department,
+        $prefix,
+        $suffix_gen,
+        $suffix_post_nominal,
+        $firstname,
+        $lastname,
+        $email,
+        $email_alt,
+        $email_updated,
+        $google_id,
+        $telephone,
+        $fax,
+        $address,
+        $city,
+        $province,
+        $postcode,
+        $country,
+        $country_id,
+        $province_id,
+        $notes,
+        $office_hours,
+        $privacy_level,
+        $copyright,
+        $notifications,
+        $test_account,
+        $entry_year,
+        $grad_year,
+        $gender,
+        $clinical,
+        $uuid,
+        $updated_date,
+        $updated_by;
 
     protected static $database_name = AUTH_DATABASE;
     protected static $table_name = "user_data";
@@ -63,6 +102,14 @@ class Models_User extends Models_Base {
     public function getID() {
         return $this->id;
     }
+
+   /**
+	 * Returns the id of the user
+	 * @return int
+	 */
+	public function getProxyId() {
+		return $this->id;
+	}
 
     public function getNumber() {
         return $this->number;
@@ -236,6 +283,7 @@ class Models_User extends Models_Base {
         return $this->updated_by;
     }
 
+    /* @return bool|Models_User */
     public static function fetchRowByID($id) {
         $self = new self();
         return $self->fetchRow(array(
@@ -243,6 +291,7 @@ class Models_User extends Models_Base {
         ));
     }
 
+    /* @return bool|Models_User */
     public static function fetchRowByNumber($number) {
         $self = new self();
         return $self->fetchRow(array(
@@ -250,6 +299,7 @@ class Models_User extends Models_Base {
         ));
     }
 
+    /* @return bool|Models_User */
     public static function fetchRowByEmail($email) {
         $self = new self();
         return $self->fetchRow(array(
@@ -257,6 +307,7 @@ class Models_User extends Models_Base {
         ));
     }
 
+    /* @return bool|Models_User */
     public static function fetchRowByUsername($username) {
         $self = new self();
         return $self->fetchRow(array(
@@ -264,11 +315,13 @@ class Models_User extends Models_Base {
         ));
     }
 
+    /* @return ArrayObject|Models_User[] */
     public static function fetchAllRecords() {
         $self = new self();
         return $self->fetchAll(array(array("key" => "id", "value" => 0, "method" => ">=")));
     }
 
+    /* @return ArrayObject|Models_User[] */
     public static function fetchAllByCGroupIDSearchTerm($cgroup_id, $search_term = NULL) {
         global $db;
 

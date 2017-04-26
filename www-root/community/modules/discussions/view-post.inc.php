@@ -224,10 +224,12 @@ if ($RECORD_ID) {
 			if ($NOTICE) {
 				echo display_notice();
 			}
+            Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
 			?>
 			<a name="top"></a>
-			<div id="post-<?php echo $RECORD_ID; ?>">
-				<h1 id="post-<?php echo $RECORD_ID; ?>-title"><?php echo html_encode($topic_record["topic_title"]); ?></h1>
+			<div id="post-<?php echo $RECORD_ID; ?>">                
+                <h1 id="post-<?php echo $RECORD_ID; ?>-title"><?php echo html_encode($topic_record["topic_title"]); ?></h1>
 				<table class="table post">
 				<colgroup>
 					<col style="width: 30%" />

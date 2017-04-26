@@ -99,6 +99,23 @@ class Models_Objective {
 	}
 
 	/**
+     * Traverses up the objective tree to find the root objective
+     *
+     * @return Models_Objective
+     */
+	public function getRoot(){
+	    $root = $this;
+	    if ((int) $this->getParent() !== 0){
+            $parent = Models_Objective::fetchRow((int) $this->getParent());
+            if ($parent){
+                return $parent->getRoot();
+            }
+        }
+
+        return $root;
+    }
+	
+	/**
 	 * Returns objects values in an array.
 	 * @return Array
 	 */
@@ -416,6 +433,7 @@ class Models_Objective {
         return $found;
     }
 
+    /* @return bool|Models_Objective */
     public static function fetchRow($objective_id = 0, $active = 1) {
         global $db;
 
@@ -433,7 +451,14 @@ class Models_Objective {
         return $return;
     }
 
-    public static function fetchRowByName($organisation_id, $objective_name, $active = 1) {
+    public function insertOrganisationId($organisation_id) {
+        global $db;
+        $arr = array("objective_id" => $this->objective_id, "organisation_id" => $organisation_id);
+        return (bool)$db->AutoExecute("`objective_organisation`", $arr, "INSERT");
+    }
+
+    /* @return bool|Models_Objective */
+    public static function fetchRowByName($objective_name, $active = 1) {
         global $db;
 
         $organisation_id = (int) $organisation_id;
@@ -607,7 +632,7 @@ class Models_Objective {
         global $db;
         $objectives = array();
 
-        $query = "  SELECT `objective_id` FROM `global_lu_objectives` WHERE `objective_set_id` = ? AND `objective_parent` != 0 AND `objective_active` = ?";
+        $query = "  SELECT * FROM `global_lu_objectives` WHERE `objective_set_id` = ? AND `objective_parent` != 0 AND `objective_active` = ?";
         $results = $db->GetAll($query, array($objective_set_id, $active));
         if ($results) {
             foreach ($results as $result) {

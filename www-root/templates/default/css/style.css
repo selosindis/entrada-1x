@@ -48,6 +48,10 @@ h2 {
     color: #f07f2c;
 }
 
+h2 p {
+    color: #8b959d;
+}
+
 h1 {
     font-weight: 500;
 }
@@ -92,15 +96,19 @@ label.radio {
 }
 
 span.or {
-    color: #646253;
-    background: #faf8ec;
+    color: #8b959d;
+    background: #e8edf1;
     -webkit-border-radius: 50px;
-    -moz-border-radius:    50px;
-    border-radius:         50px;
+    -moz-border-radius: 50px;
+    border-radius: 50px;
     margin: 0 10px;
     padding: 8px;
     font-style: italic;
     font-weight: bold;
+    width: 22px;
+    height: 22px;
+    display: inline-block;
+    text-align: center;
 }
 
 .well {
@@ -185,6 +193,18 @@ pre {
 hr {
     border-top: 1px solid #ecf0f3;
     border-bottom: none;
+}
+
+.help-block,
+.help-inline {
+    color: #8b959d;
+    padding-left: 0;
+}
+
+.close {
+    font-size: 28px;
+    -webkit-transition: .2s;
+    transition: .2s;
 }
 
 
@@ -542,7 +562,7 @@ a.log-out:focus:active {
 .panel-head,
 .nl-field ul li:first-child {
     background: #17323b;
-    padding: 10px 20px;
+    padding: 5px 10px;
     -webkit-border-radius: 5px 5px 0 0;
     -moz-border-radius:    5px 5px 0 0;
     border-radius:         5px 5px 0 0;
@@ -769,6 +789,27 @@ a.log-out:focus:active {
     background-color: #3f923f;
 }
 
+/* Warning Button */
+.btn.btn-warning {
+    background-color: #f27f19;
+    border: 1px solid #d46e14;
+    background-image: none;
+    filter: none;
+    text-shadow: none;
+    color: #FFF;
+}
+
+.btn-warning:hover,
+.btn-warning:focus {
+    background-color: #e37412;
+}
+
+.btn-warning:active,
+.btn-warning:focus:active,
+.btn-warning.active {
+    background-color: #d46e14;
+}
+
 /* Danger Button */
 .btn.btn-danger {
     background-color: #f02c56;
@@ -977,6 +1018,10 @@ select[size] {
     max-height: 180px;
 }
 
+label {
+    line-height: 16px;
+}
+
 .input-append .add-on,
 .input-prepend .add-on {
     display: inline-block;
@@ -1024,6 +1069,134 @@ select[size] {
     width: 110px;
 }
 
+/*=================================================================================================*/
+/*  EXAMS                                                                                         */
+/*=================================================================================================*/
+
+a.exit_exam {
+  border-radius:20px;
+  background:#18323b;
+  -moz-box-shadow:0 0 6px rgba(0,0,0,0.1) inset,1px 1px 0 rgba(255,255,255,0.1);
+  -webkit-box-shadow:0 0 6px rgba(0,0,0,0.1) inset,1px 1px 0 rgba(255,255,255,0.1);
+  box-shadow:0 0 6px rgba(0,0,0,0.1) inset,1px 1px 0 rgba(255,255,255,0.1);
+  color:#d3e9f0;
+  padding:3px 10px 3px 15px;
+  float:right;
+  font-weight:bold;
+  margin-top:10px;
+}
+
+a.exit_exam:hover {
+  text-decoration:none;
+  color:#FFF;
+}
+
+#sidebar .panel {
+    margin-bottom: 30px;
+    background: #fff;
+    -webkit-border-radius: 5px;
+    -moz-border-radius:    5px;
+    border-radius:         5px;
+    border: 1px solid #d9dee2;
+}
+
+.panel-head, .nl-field ul li:first-child {
+    background: #17323b;
+    padding: 10px 20px;
+    -webkit-border-radius: 5px 5px 0 0;
+    -moz-border-radius:    5px 5px 0 0;
+    border-radius:         5px 5px 0 0;
+    border-bottom: none;
+}
+
+.panel-head h3, .nl-field ul li:first-child {
+    color: #fff;
+    font-size: 13px;
+    line-height: 21px;
+    margin: 0;
+    padding: 0;
+    font-family: "Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
+    font-weight: normal;
+}
+
+#login-sidebar .panel-head {
+  background: #17323b; /* Old browsers */
+  border-radius:3px 3px 0 0;
+}
+
+#login-sidebar .panel-head h3 {
+  color:#FFF;
+  font-size:18px;
+  text-shadow:1px 1px 0 rbga(0,0,0,0.75);
+  letter-spacing: 7px;
+  padding:3px 10px;
+  margin-top:0px;
+  text-align: center;
+}
+
+.panel-body {
+    background: transparent;
+    padding: 15px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius:    5px;
+    border-radius:         5px;
+}
+
+#login-sidebar .panel-body{
+  background:#FFF;
+  padding:10px;
+  -moz-border-radius:0 0 3px 3px;
+  -webkitborder-radius:0 0 3px 3px;
+  border-radius:0 0 3px 3px;
+}
+
+/* Secure Styling */
+#secure header#main-header .banner, #un_secure header#main-header .banner  {
+    padding: 5px 0;
+    background: #17323B;
+}
+#secure header#main-header .banner h1, #un_secure header#main-header .banner h1 {
+    line-height: 40px;
+    margin: 0;
+}
+#secure header#main-header .banner h1 img, #un_secure header#main-header .banner h1 img  {
+    height: 21px;
+    margin-top: -4px;
+}
+#secure header#main-header .banner .container .row-fluid .home, #un_secure header#main-header .banner .container .row-fluid .home  {
+    color: #D3E9F0;
+    background-color: inherit;
+}
+#secure .span2, #un_secure .span2 {
+    height: 40px;
+}
+#secure .nav-pills > li, #un_secure .nav-pills > li {
+    height: 40px;
+}
+#secure .nav-pills > li, #un_secure .nav-pills > li {
+/*    border-right: solid 1px #1D3569;*/
+    padding: 0 3px;
+}
+#secure .nav-pills > li.last, #un_secure .nav-pills > li.last {
+    border-right: none;
+}
+#secure header#main-header .banner .container .row-fluid .home:hover, #un_secure header#main-header .banner .container .row-fluid .home:hover {
+    color: #FFFFFF;
+}
+#secure header#main-header .banner .container .row-fluid .log-out, #un_secure header#main-header .banner .container .row-fluid .exit_exam {
+    margin: 3px 0 0 0;
+    cursor: pointer;
+    background-color: #5f9a48;
+    color: #FFF;
+    font-weight: 300;
+}
+#secure header#main-header .banner .container .row-fluid ul.nav, #un_secure header#main-header .banner .container .row-fluid ul.nav {
+    margin-bottom: 0;
+}
+
+#main-header a.exit_exam i, #main-header a.log-out i {
+    margin-left: 5px;
+}
 
 /*=================================================================================================*/
 /*  TABLES                                                                                         */
@@ -1054,7 +1227,8 @@ table.table {
     border-color: #d9dee2;
 }
 
-.table-bordered th, .table-bordered td {
+.table-bordered th,
+.table-bordered td {
     border-left: 1px solid #d9dee2;
 }
 
@@ -1741,6 +1915,17 @@ table.event-details .event-details-item:last-child {
 }
 
 #rotationschedule-modal-body {
+  min-height: 325px;
+}
+
+/*=================================================================================================*/
+/*  MODALS                                                                                         */
+/*=================================================================================================*/
+.modal-header h2 {
+    color: #000000;
+}
+
+#rotationschedule-modal-body {
     min-height: 325px;
 }
 
@@ -1811,6 +1996,10 @@ a.list-group-item:hover {
 
 .list-group-item .circle-img-xs > span {
     margin-right: 5px;
+}
+
+.modal > form {
+    margin: 0;
 }
 
 

@@ -165,13 +165,15 @@ if ($RECORD_ID) {
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 						if ($db->AutoExecute("community_galleries", $PROCESSED, "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `cgallery_id` = ".$db->qstr($RECORD_ID))) {
-							$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
 							$SUCCESS++;
-							$SUCCESSSTR[]	= "You have successfully updated the <strong>".html_encode($PROCESSED["gallery_title"])."</strong> photo gallery.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+							Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated the <strong>%s</strong> photo gallery."), $PROCESSED["gallery_title"]), "success", $MODULE);
+
 							add_statistic("community:".$COMMUNITY_ID.":galleries", "gallery_edit", "cgallery_id", $RECORD_ID);
 							communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_gallery", 1);
+
+							$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?confmsg=galleryedit&title=" . $PROCESSED["gallery_title"];
+							header("Location: " . $url);
+							exit;
 						}
 
 						if (!$SUCCESS) {
@@ -194,14 +196,6 @@ if ($RECORD_ID) {
 
 			// Page Display
 			switch($STEP) {
-				case 2 :
-					if ($NOTICE) {
-						echo display_notice();
-					}
-					if ($SUCCESS) {
-						echo display_success();
-					}
-				break;
 				case 1 :
 				default :
 					$ONLOAD[] = "updateThumbnailPreview('".(int) $gallery_record["gallery_cgphoto_id"]."')";

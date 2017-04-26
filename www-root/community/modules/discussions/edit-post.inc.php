@@ -341,17 +341,15 @@ if ($RECORD_ID) {
 										$db->Execute("INSERT INTO `community_notify_members` (`proxy_id`, `record_id`, `community_id`, `notify_type`, `notify_active`) VALUES (".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($RECORD_ID).", ".$db->qstr($COMMUNITY_ID).", 'reply', '".($notifications ? "1" : "0")."')");
 									}
 								}
-								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID;
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully updated your discussion post.<br /><br />You will now be redirected to this thread; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+								Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["topic_title"]), "success", $MODULE);
 
                                 add_statistic("community:".$COMMUNITY_ID.":discussions", "post_edit", "cdtopic_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_post", 0, $topic_record["cdiscussion_id"]);
-							}
 
-							if (!$SUCCESS) {
+                                $url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID;
+                                header("Location: " . $url);
+                                exit;
+							} else {
 								$ERROR++;
 								$ERRORSTR[] = "There was a problem updating this discussion post, perhaps there were no changes? The MEdTech Unit was informed of this error; please try again later.";
 
@@ -371,14 +369,6 @@ if ($RECORD_ID) {
 
 				// Page Display
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-							echo display_success();
-						}
-					break;
 					case 1 :
 					default :
 						if ($ERROR) {
@@ -692,16 +682,15 @@ if ($RECORD_ID) {
 										$db->Execute("INSERT INTO `community_notify_members` (`proxy_id`, `record_id`, `community_id`, `notify_type`, `notify_active`) VALUES (".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($topic_record["cdtopic_parent"]).", ".$db->qstr($COMMUNITY_ID).", 'reply', '".($notifications ? "1" : "0")."')");
 									}
 								}
-								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$topic_record["cdtopic_parent"]."#post-".$RECORD_ID;
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+                                Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully updated your discussion post reply."), "success", $MODULE);
 
-								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully updated your discussion post reply.<br /><br />You will now be redirected to this thread; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								add_statistic("community:".$COMMUNITY_ID.":discussions", "post_edit", "cdtopic_id", $RECORD_ID);
+                                add_statistic("community:".$COMMUNITY_ID.":discussions", "post_edit", "cdtopic_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_reply", 0, $topic_record["cdtopic_parent"]);
-							}
 
-							if (!$SUCCESS) {
+                                $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-post&id=" . $topic_record["cdtopic_parent"]; //#post-".$RECORD_ID;
+                                header("Location: " . $url);
+                                exit;
+                            } else {
 								$ERROR++;
 								$ERRORSTR[] = "There was a problem updating this discussion post reply, perhaps there were no changes?. The MEdTech Unit was informed of this error; please try again later.";
 
@@ -720,14 +709,6 @@ if ($RECORD_ID) {
 				}
 				// Page Display
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-							echo display_success();
-						}
-					break;
 					case 1 :
 					default :
 						if ($ERROR) {

@@ -179,6 +179,21 @@ class Models_Schedule_Audience extends Models_Base {
         return $results;
     }
 
+    public static function fetchAllOnServiceByDraftID($draft_id_list) {
+        global $db;
+        $query = "  SELECT DISTINCT a.`audience_value`, a.`audience_type`
+                    FROM `cbl_schedule_audience` AS a
+                    JOIN `cbl_schedule_slots` AS b
+                    ON a.`schedule_slot_id` = b.`schedule_slot_id`
+                    JOIN `cbl_schedule` AS c
+                    ON a.`schedule_id` = c.`schedule_id`
+                    WHERE b.`slot_type_id` = 1
+                    AND a.`deleted_date` IS NULL
+                    AND c.`draft_id` IN ({$draft_id_list})";
+        $results = $db->GetAll($query);
+        return $results;
+    }
+
     public static function fetchAllOnServiceByScheduleID($schedule_id) {
         global $db;
         $query = "SELECT `saudience_id`, a.`schedule_id`, a.`schedule_slot_id`, a.`audience_type`, a.`audience_value`, b.`slot_type_id`, c.`schedule_order`

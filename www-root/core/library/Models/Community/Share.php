@@ -354,7 +354,7 @@ class Models_Community_Share extends Models_Base {
         return $actions;
     }
     
-    protected static function isAllowed($community_id, $resource, $permission, $is_community_course = null) {
+    public static function isAllowed($community_id, $resource, $permission, $is_community_course = null) {
         global $ENTRADA_USER, $COMMUNITY_ADMIN, $COMMUNITY_MEMBER, $LOGGED_IN, $COMMUNITY_ACL;
         
         if ($is_community_course === null) {
@@ -448,7 +448,7 @@ class Models_Community_Share extends Models_Base {
         }
         if (!empty($share["actions"])) {
             $output .= "<div class=\"btn-group share-edit-btn\">\n";
-            $output .= "<button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\"><i class=\"icon-pencil\"></i></button>\n";
+            $output .= "<button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\"><i class=\"fa fa-cog\" aria-hidden=\"true\"></i></button>\n";
             $output .= "<ul class=\"dropdown-menu toggle-left\">\n";
             foreach ($share["actions"] as $action) {
                 $output .= "<li><a class=\"action\" href=\"{$action['href']}\">{$action['title']}</a></li>\n";
@@ -580,7 +580,7 @@ class Models_Community_Share extends Models_Base {
         $output = "";
         if (!empty($actions)) {
             $output .= "<div class=\"btn-group share-edit-btn\">\n";
-            $output .= "<button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\"><i class=\"icon-pencil\"></i></button>\n";
+            $output .= "<button class=\"btn btn-mini dropdown-toggle space-right\" data-toggle=\"dropdown\"><i class=\"fa fa-cog\" aria-hidden=\"true\"></i></button>\n";
             $output .= "<ul class=\"dropdown-menu toggle-left\">\n";
             foreach ($actions as $action) {
                 $output .= "<li><a class=\"action\" href=\"{$action['href']}\">{$action['title']}</a></li>\n";

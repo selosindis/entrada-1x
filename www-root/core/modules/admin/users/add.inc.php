@@ -408,6 +408,103 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                 }
 
                 if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT") && $PROCESSED_ACCESS["user_id"] = $db->Insert_Id()) {
+                
+                    /**
+                    * Bookmarks
+                    * Check to see if default bookmarks need to be added for the user according to their permissions
+                    */
+                    //Get all the default bookmarks from the database
+                    $query = "SELECT * FROM `bookmarks_default`";
+                    $default_bookmarks = $db->GetAll($query);
+
+                    //Build each bookmarks permissions
+                    if ($default_bookmarks){
+
+                        foreach ($default_bookmarks as $key => $new_bookmark){
+                            if (isset($new_bookmark["entity_type"]) && $new_bookmark["entity_type"] == "organisation") {
+                                // Organisation
+                                if (!isset($new_bookmark["entity_value"])) {
+                                    application_log("error", "Default Bookmark [".$new_bookmark["permission_id"]."] cannot have a null entity value. Please fix this in the database.");
+                                    continue;
+                                }
+                               $default_bookmarks[$key]["organisation"] = $new_bookmark["entity_value"];
+                               $default_bookmarks[$key]["group"] = NULL;
+                               $default_bookmarks[$key]["role"] = NULL;
+
+
+                            } else if (isset($new_bookmark["entity_type"]) && $new_bookmark["entity_type"] == "group") {
+                                //Group
+                                if (!isset($new_bookmark["entity_value"])) {
+                                    application_log("error", "Default Bookmark [".$new_bookmark["permission_id"]."] cannot have a null entity value. Please fix this in the database.");
+                                    continue;
+                                }
+                                $default_bookmarks[$key]["group"] = $new_bookmark["entity_value"];
+                                $default_bookmarks[$key]["organisation"] = NULL;
+                                $default_bookmarks[$key]["role"] = NULL;
+                            } else if (isset($new_bookmark["entity_type"]) && $new_bookmark["entity_type"] == "role") {
+                                if (!isset($new_bookmark["entity_value"])) {
+                                    application_log("error", "Default Bookmark [".$new_bookmark["permission_id"]."] cannot have a null entity value. Please fix this in the database.");
+                                    continue;
+                                }
+                                $default_bookmarks[$key]["role"] = $new_bookmark["entity_value"];
+                                $default_bookmarks[$key]["group"] = NULL;
+                                $default_bookmarks[$key]["organisation"] = NULL;
+                            } else if (isset($new_bookmark["entity_type"]) && $new_bookmark["entity_type"] == "group:role") {
+                                // Group:Role
+                                if (!isset($new_bookmark["entity_value"])) {
+                                    application_log("error", "Default Bookmark [".$new_bookmark["permission_id"]."] cannot have a null entity value. Please fix this in the database.");
+                                    continue;
+                                }
+
+                                $entity_vals = explode(":", $new_bookmark["entity_value"]);
+
+                                if (!isset($entity_vals[1])) {
+                                    application_log("error", "Default Bookmark [".$new_bookmark["permission_id"]."] needs to have both a group AND a role seperated by a colon. Please fix this in the database.");
+                                    continue;
+                                }
+                                $default_bookmarks[$key]["group"] = $entity_vals[0];
+                                $default_bookmarks[$key]["role"] = $entity_vals[1];
+                                $default_bookmarks[$key]["organisation"] = NULL;
+
+                            } else if(isset($new_bookmark["entity_type"]) && $new_bookmark["entity_type"] == "organisation:group") {
+
+                                // Organisation:group
+                                if (!isset($new_bookmark["entity_value"])) {
+                                    application_log("error", "Default Bookmark [".$new_bookmark["permission_id"]."] cannot have a null entity value. Please fix this in the database.");
+                                    continue;
+                                }
+
+                                $entity_vals = explode(":", $new_bookmark["entity_value"]);
+
+                                if (!isset($entity_vals[1])) {
+                                    application_log("error", "Default Bookmark [".$new_bookmark["permission_id"]."] needs to have both an organisation AND a group seperated by a colon. Please fix this in the database.");
+                                    continue;
+                                }
+                                $default_bookmarks[$key]['organisation'] = $entity_vals[0];
+                                $default_bookmarks[$key]['group'] = $entity_vals[1];
+                                $default_bookmarks[$key]['role'] = NULL;
+
+                            } else if(isset($new_bookmark["entity_type"]) && $new_bookmark["entity_type"] == "organisation:group:role") {
+
+                                // Organisation:group:role
+                                if (!isset($new_bookmark["entity_value"])) {
+                                    application_log("error", "Default Bookmark [".$new_bookmark["permission_id"]."] cannot have a null entity value. Please fix this in the database.");
+                                    continue;
+                                }
+
+                                $entity_vals = explode(":", $new_bookmark["entity_value"]);
+
+                                if (!isset($entity_vals[1]) || !isset($entity_vals[2])) {
+                                    application_log("error", "Default Bookmark [".$new_bookmark["permission_id"]."] needs to have both a group, role AND organisation seperated by a colon. Please fix this in the database.");
+                                    continue;
+                                }
+                                $default_bookmarks[$key]['organisation'] = $entity_vals[0];
+                                $default_bookmarks[$key]['group'] = $entity_vals[1];
+                                $default_bookmarks[$key]['role'] = $entity_vals[2];
+                            }
+                        }
+                    }
+                
                     foreach ($organisation_order as $organisation_id) {
                         if (!$ENTRADA_ACL->amIAllowed(new UserResource(null, $organisation_id), "create")) {
                             add_error("You do not have permission to create a user with those details. Please try again with a different organisation.");
@@ -426,7 +523,13 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
                             $PROCESSED_ACCESS["app_id"] = AUTH_APP_ID;
                             $PROCESSED_ACCESS["private_hash"] = generate_hash(32);
 
-                            if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
+                            $user_group_role = $ENTRADA_USER->getActiveGroup() . ":" . $ENTRADA_USER->getActiveRole();
+
+                            if ($user_group_role != "medtech:admin" && $PROCESSED_ACCESS["group"] == "medtech" && $PROCESSED_ACCESS["role"] == "admin") {
+                                add_error("You don't have permission to give " . $PROCESSED_ACCESS["group"] . "/" . $PROCESSED_ACCESS["role"] . " privileges to this user.");
+
+                                application_log("error", "The user id [".$ENTRADA_USER->getID()."] tried to give " . $PROCESSED_ACCESS["group"]."/".$PROCESSED_ACCESS["role"] . " privileges to user id [".$PROCESSED_ACCESS["user_id"]."]");
+                            } else if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
                                 if ($PROCESSED_ACCESS["group"] == "medtech" || $PROCESSED_ACCESS["role"] == "admin") {
                                     application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
                                 }
@@ -528,6 +631,97 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_USERS")) {
 			if ($ERROR) {
 				$STEP = 1;
 			} else {
+              
+                /*
+                 * Process Bookmarks
+                 */
+
+                //See if there is a match for each of the user's entries in user_access
+                foreach ($default_bookmarks as $new_bookmark) {
+                    $add_bookmark = false;
+
+                    switch ($new_bookmark["entity_type"]) {
+                        case NULL:
+                             $add_bookmark = true;
+
+                             break;
+                        case "organisation":
+                            $check_perm = $PROCESSED_ACCESS["organisation_id"];
+                            if ($PROCESSED_ACCESS["organisation_id"] == $new_bookmark["entity_value"]){
+                                $add_bookmark = true;
+                            }
+
+                            break;
+                        case "group":
+                            $check_perm = $PROCESSED_ACCESS["group"];
+                            if ($PROCESSED_ACCESS["group"] == $new_bookmark["entity_value"]) {
+                                $add_bookmark = true;
+                            }
+
+                            break;
+                        case "role":
+                            $check_perm = $PROCESSED_ACCESS["role"];
+                            if ($PROCESSED_ACCESS["role"] == $new_bookmark["entity_value"]) {
+                                $add_bookmark = true;
+                            }
+
+                            break;
+                        case "organisation:group":
+                            $check_perm = $PROCESSED_ACCESS["organisation_id"].":".$PROCESSED_ACCESS["group"];
+
+                            if ($check_perm == $new_bookmark["entity_value"]){
+                                $add_bookmark = true;
+                            }
+                            break;
+                        case "organisation:role":
+                            $check_perm = $PROCESSED_ACCESS["organisation_id"].":".$PROCESSED_ACCESS["role"];
+
+                            break;
+                        case "group:role";
+                            $check_perm = $PROCESSED_ACCESS["group"].":".$PROCESSED_ACCESS["role"];
+
+                            if ($check_perm == $new_bookmark["entity_value"]) {
+                                $add_bookmark = true;
+                            }
+                            break;
+                        case "organisation:group:role":
+                            $check_perm = $PROCESSED_ACCESS["organisation_id"].":".$PROCESSED_ACCESS["group"].":".$PROCESSED_ACCESS["role"];
+
+                            if ($check_perm == $new_bookmark["entity_value"]) {
+                                $add_bookmark = true;
+                            }
+                            break;
+                    }
+
+                    if ($add_bookmark === true) {
+
+                        //check if the user already has the bookmark in their bookmarks
+                        $query = "SELECT
+                                        EXISTS(SELECT 1 
+                                                FROM `bookmarks` 
+                                                WHERE `uri` = " . $db->qstr($new_bookmark['uri']) . " 
+                                                AND `proxy_id` = " . $db->qstr($PROCESSED_ACCESS["user_id"]) . ")";
+                        $results = $db->GetOne($query);
+
+                        //If the bookmark doesn't exist, add it
+                        if (!$results) {
+
+                            $Bookmark = new Models_Bookmarks($new_bookmark);
+                            $Bookmark->setId(NULL); //Set the ID to null since one will be assigned after insert
+                            $Bookmark->setProxyId($PROCESSED_ACCESS["user_id"]);
+                            $Bookmark->setOrder(0);
+                            $Bookmark->setUpdatedDate(time());
+
+                            if (!$Bookmark->insert()) {
+                                application_log("error", "Unable to add default bookmark for proxy id[\"".$PROCESSED_ACCESS["user_id"]."\"]. Database said: ".$db->ErrorMsg());
+                            }
+
+                        }
+                        $add_bookmark = false;
+                    }
+               }
+               //END Bookmarks
+            
 				$url = ENTRADA_URL."/admin/users";
 				$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 

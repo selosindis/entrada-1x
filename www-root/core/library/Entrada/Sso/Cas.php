@@ -91,7 +91,7 @@ class Entrada_Sso_Cas implements Entrada_Sso_Provider
                     $result = array();
                     $result["username"] = $user_details->getUserName();
                     $result["password"] = $user_details->getPassword();
-                    $result["id"] = $user_details->getId();
+                    $result["access_id"] = $user_details->getAccessId();
 
                     return $result;
                 }

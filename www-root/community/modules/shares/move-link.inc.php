@@ -34,7 +34,7 @@ if ($RECORD_ID) {
 							AND b.`folder_active` = '1'";
 		$file_record	= $db->GetRow($query);
 		if ($file_record) {
-			$query			= "	SELECT b.`page_url`
+			$query			= "	SELECT b.`page_url`, a.`folder_title`
 								FROM `community_shares` AS a
 								LEFT JOIN `community_pages` AS b
 								ON b.`cpage_id` = a.`cpage_id`
@@ -49,12 +49,15 @@ if ($RECORD_ID) {
 							communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_move_link", true, $share_id);
 							add_statistic("community:".$COMMUNITY_ID.":shares", "link_move", "cslink_id", $RECORD_ID);
 							$db->AutoExecute("community_history", array("history_display" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_id` = ".$db->qstr($MODULE_ID)." AND `record_id` = ".$db->qstr($RECORD_ID));
-						} else {
-							application_log("error", "Failed to move [".$RECORD_ID."] file to folder. Database said: ".$db->ErrorMsg());
+                            Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully moved <strong>%s</strong> to <strong>%s</strong>."), $file_record["link_title"], $share_record["folder_title"]), "success", $MODULE);
+                        } else {
+                            Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("Failed to move <strong>%s</strong> to <strong>%s</strong>."), $file_record["link_title"], $share_record["folder_title"]), "error", $MODULE);
+                            application_log("error", "Failed to move [".$RECORD_ID."] file to folder. Database said: ".$db->ErrorMsg());
 						}
 					}
 				} else {
-					application_log("error", "The provided link id [".$RECORD_ID."] is deactivated.");
+                    Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("The provided link <strong>%s</strong> is deactivated."), $file_record["link_title"]), "error", $MODULE);
+                    application_log("error", "The provided link id [".$RECORD_ID."] is deactivated.");
 				}
 
                 header("Location: ".COMMUNITY_URL.$COMMUNITY_URL.":".$share_record["page_url"]."?section=view-folder&id=".$current_share_id);

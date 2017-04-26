@@ -113,26 +113,17 @@ if ($RECORD_ID) {
 						$ERRORSTR[] = "There was a problem inserting the responses for this question into the system. The MEdTech Unit was informed of this error; please try again later.";
 		
 						application_log("error", "There was an error inserting the responses to a question (ID: ".$RECORD_ID."). Database said: ".$db->ErrorMsg());
-					}
-					
-					if (!$SUCCESS) {
-						$ERROR++;
-						$ERRORSTR[] = "There was a problem inserting the responses for this question into the system. The MEdTech Unit was informed of this error; please try again later.";
-		
-						application_log("error", "There was an error inserting the responses to a question (ID: ".$RECORD_ID."). Database said: ".$db->ErrorMsg());
-					}
-					
-					$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-poll&id=".$POLL_ID;
-					$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+					} else {
+                        Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["poll_question"]), "success", $MODULE);
 
-					$SUCCESS++;
-					$SUCCESSSTR[]	= "You have successfully edited a question.<br /><br />You will now be redirected back to edit this ".$terminology."; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                        add_statistic("community_polling", "question_edit", "cpquestion_id", $RECORD_ID);
+                        communities_log_history($COMMUNITY_ID, $PAGE_ID, $POLL_ID, "community_history_edit_poll", 0);
 
-					add_statistic("community_polling", "question_edit", "cpquestion_id", $RECORD_ID);
-					communities_log_history($COMMUNITY_ID, $PAGE_ID, $POLL_ID, "community_history_edit_poll", 0);
-				}
-	
-				if (!$SUCCESS) {
+                        $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=edit-poll&id=" . $POLL_ID;
+                        header("Location: " . $url);
+                        exit;
+                    }
+				} else {
 					$ERROR++;
 					$ERRORSTR[] = "There was a problem editing this question in the system. The MEdTech Unit was informed of this error; please try again later.";
 	
@@ -163,14 +154,6 @@ if ($RECORD_ID) {
 	
 	// Page Display
 	switch($STEP) {
-		case 2 :
-			if ($NOTICE) {
-				echo display_notice();
-			}
-			if ($SUCCESS) {
-				echo display_success();
-			}
-		break;
 		case 1 :
 		default :
 			if ($ERROR) {

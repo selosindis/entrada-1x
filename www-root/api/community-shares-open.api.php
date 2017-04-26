@@ -37,35 +37,45 @@
  */
 require_once("init.inc.php");
 
-if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
-    //checks to make sure that the variables we need are set
-    if(isset($_POST['community_id']) && isset($_POST['foldersOpen'])) {
-        $PROXY_ID = $ENTRADA_USER->getActiveId();
-        
-        $query        = "SELECT *
-                        FROM `community_shares_open`
-                        WHERE `community_id` = ".$_POST['community_id']."
-                        AND `page_id` = ".$_POST['page_id']."
-                        AND `proxy_id` = ".$PROXY_ID;
-        
-        $results    = $db->GetAll($query);
-        if ($results) {
-            //update sql
-            $SQL = "UPDATE
-                    `community_shares_open`
-                    SET `shares_open` = '".$_POST['foldersOpen']."'
-                    WHERE  `community_id` = ".$_POST['community_id']."
-                    AND `page_id` = ".$_POST['page_id']."
-                    AND `proxy_id` = ".$PROXY_ID;
-        } else {
-            //insert sql
-            $SQL = "INSERT INTO
-                    `community_shares_open` (community_id, page_id, proxy_id, shares_open)
-                    VALUES (".$_POST['community_id'].",".$_POST['page_id'].",".$PROXY_ID.",'".$_POST['foldersOpen']."')";
-        }
-        $db->Execute($SQL);
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
+    $community_id = 0;
+    $page_id = 0;
+    $open = 0;
+
+    if (isset($_POST["community_id"]) && ($tmp_input = clean_input($_POST["community_id"], "int"))) {
+        $community_id = $tmp_input;
     }
-       
-header("Content-type: application/json");
+
+    if (isset($_POST["page_id"]) && ($tmp_input = clean_input($_POST["page_id"], "int"))) {
+        $page_id = $tmp_input;
+    }
+
+    if (isset($_POST["foldersOpen"]) && ($tmp_input = clean_input($_POST["foldersOpen"], "int"))) {
+        $open = $tmp_input;
+    }
+
+    if ($community_id && $page_id) {
+        $query = "SELECT *
+                    FROM `community_shares_open`
+                    WHERE `community_id` = " . $db->qstr($community_id) . "
+                    AND `page_id` = " . $db->qstr($page_id) . "
+                    AND `proxy_id` = " . $db->qstr($ENTRADA_USER->getID());
+        $results = $db->GetAll($query);
+        if ($results) {
+            $query = "UPDATE `community_shares_open`
+                        SET `shares_open` = " . $db->qstr($open) . "
+                        WHERE  `community_id` = " . $db->qstr($community_id) . "
+                        AND `page_id` = " . $db->qstr($page_id) . "
+                        AND `proxy_id` = " . $db->qstr($ENTRADA_USER->getID());
+        } else {
+            $query = "INSERT INTO `community_shares_open`
+                        (`community_id`, `page_id`, `proxy_id`, `shares_open`)
+                        VALUES
+                        (" . $db->qstr($community_id) . ", " . $db->qstr($page_id) . ", " . $db->qstr($ENTRADA_USER->getID()) . ", " . $db->qstr($open) . ")";
+        }
+
+        $db->Execute($query);
+    }
+
+    header("Content-type: application/json");
 }
-?>

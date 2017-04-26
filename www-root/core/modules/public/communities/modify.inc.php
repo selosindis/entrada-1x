@@ -30,14 +30,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed('community', 'update', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
-
-	$ERROR++;
-	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
-
-	echo display_error();
-
+    Entrada_Utilities_Flashmessenger::addMessage($translate->_("You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance."), "error", $MODULE);
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
+
+	$url = ENTRADA_URL . "/" . $MODULE;
+    header("Location: " . $url);
+    exit;
 } else {
 
 	if ($MAILING_LISTS["active"]) {
@@ -351,7 +349,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				// Display Content
 				switch ($STEP) {
 					case 3 :
-						$community_url	= ENTRADA_URL."/community".$community_details["community_url"];
+						$community_url = ENTRADA_URL . "/community" . $community_details["community_url"];
 
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
@@ -408,26 +406,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								$mailing_list->mode_change($PROCESSED["community_list_mode"]);
 							}
 							$SUCCESS++;
-							$SUCCESSSTR[] = "<strong>You have successfully updated your community.</strong><br /><br />Please <a href=\"".$community_url."\">click here</a> to proceed to it or you will be automatically forwarded in 5 seconds.";
-
+                            Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["community_title"]), "success", "login");
 							communities_log_history($COMMUNITY_ID, 0, $ENTRADA_USER->getID(), "community_history_edit_community", 1);
 
 							if ($community_details["community_title"] != $PROCESSED["community_title"]) {
 								communities_log_history($COMMUNITY_ID, 0, 0, "community_history_rename_community", 1);
 							}
-						}
 
-						application_log("success", "Community ID ".$community_id." was successfully updated.");
+                            application_log("success", "Community ID ".$community_id." was successfully updated.");
 
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-							echo display_success();
-						}
+							header("Location: " . $community_url);
+                            exit;
+						} else {
+                            Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("We encountered a problem while updating <strong>%s</strong>.<br /><br />The system administrator has been informed of this problem, please try again later."), $PROCESSED["community_title"]), "error", $MODULE);
+                            application_log("error", "Failed to create new community. Database said: ".$db->ErrorMsg());
 
-						$ONLOAD[]		= "setTimeout('window.location=\\'".$community_url."\\'', 5000)";
-
+                            $url = ENTRADA_URL . "/" . "communities";
+                            header("Location: " . $url);
+                            exit;
+                        }
 						break;
 					case 2 :
 						?>

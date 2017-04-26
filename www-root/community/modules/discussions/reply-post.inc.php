@@ -98,7 +98,7 @@ if ($RECORD_ID) {
 						$PROCESSED["anonymous"]	= 1;
 					} else {
 						$PROCESSED["anonymous"]	= 0;
-					}						
+					}
 					
 					if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"] && isset($_POST["enable_notifications"])) {
 						$notifications = $_POST["enable_notifications"];
@@ -125,7 +125,6 @@ if ($RECORD_ID) {
 								} elseif (isset($notifications) && !$notify_record_exists && COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
 									$db->Execute("INSERT INTO `community_notify_members` (`proxy_id`, `record_id`, `community_id`, `notify_type`, `notify_active`) VALUES (".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($RECORD_ID).", ".$db->qstr($COMMUNITY_ID).", 'reply', '".($notifications ? "1" : "0")."')");
 								}
-
                             }
 							/*
 							 * upload file section error checking
@@ -300,15 +299,19 @@ if ($RECORD_ID) {
 									}
 								}
 							}
-							$url=COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID;
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully replied to ".html_encode($topic_record["topic_title"]).".<br /><br />You will now be redirected back to this thread now; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								add_statistic("community:".$COMMUNITY_ID.":discussions", "post_add", "cdtopic_id", $TOPIC_ID);
-								communities_log_history($COMMUNITY_ID, $PAGE_ID, $TOPIC_ID, "community_history_add_reply", 1, $RECORD_ID);
+							Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully replied to <strong>%s</strong>."), $topic_record["topic_title"]), "success", $MODULE);
+
+							add_statistic("community:".$COMMUNITY_ID.":discussions", "post_add", "cdtopic_id", $TOPIC_ID);
+							communities_log_history($COMMUNITY_ID, $PAGE_ID, $TOPIC_ID, "community_history_add_reply", 1, $RECORD_ID);
+
+							if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
+								community_notify($COMMUNITY_ID, $TOPIC_ID, "reply", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID, $RECORD_ID);
 							}
 
-						if (!$SUCCESS) {
+							$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-post&id=" . $RECORD_ID;
+							header("Location: " . $url);
+							exit;
+						} else {
 							$ERROR++;
 							$ERRORSTR[] = "There was a problem inserting this discussion post reply into the system. The MEdTech Unit was informed of this error; please try again later.";
 
@@ -326,17 +329,6 @@ if ($RECORD_ID) {
 
 			// Page Display
 			switch($STEP) {
-				case 2 :
-					if ($NOTICE) {
-						echo display_notice();
-					}
-					if ($SUCCESS) {
-						echo display_success();
-							if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-								community_notify($COMMUNITY_ID, $TOPIC_ID, "reply", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID, $RECORD_ID);
-							}
-					}
-				break;
 				case 1 :
 				default :
                             if(count($file_uploads)<1){
@@ -351,111 +343,109 @@ if ($RECORD_ID) {
 					?>
 
 					<form action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=reply-post&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data">
-
-					<div class="container-file">
-						<?php
-						if ($read_allowed) {
-							?>
-
-							<h2>Original Post: <?php echo html_encode($topic_record["topic_title"]); ?></h2>
-							<table class="discussions posts table">
-								<colgroup>
-									<col style="width: 30%" />
-									<col style="width: 70%" />
-								</colgroup>
-								<tr>
-									<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span>  <?php if(defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && !$COMMUNITY_ADMIN && isset($topic_record["anonymous"]) && $topic_record["anonymous"]){?><span style="font-size: 10px">Anonymous</span><?php } else {?><a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($topic_record["poster_username"]); ?>" style="font-size: 10px"><?php echo html_encode($topic_record["poster_fullname"]); ?></a><?php } ?></td>
-									<td style="border-bottom: none; text-align: left">
-										<div>
-											<span class="content-small"><strong>Posted:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $topic_record["updated_date"]); ?></span>
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2" class="content">
-										<?php echo $topic_record["topic_description"]; ?>
-									</td>
-								</tr>
-								<?php
-								$query		= "	SELECT a.*, b.`username` AS `owner_username`
-                                                        FROM `community_discussions_files` AS a
-                                                        LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                                        ON a.`proxy_id` = b.`id`
-                                                        LEFT JOIN `community_discussion_topics` AS c
-                                                        ON a.`cdtopic_id` = c.`cdtopic_id`
-                                                        WHERE a.`cdtopic_id` = ".$db->qstr($RECORD_ID)."
-                                                        AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-                                                        AND a.`file_active` = '1'
-                                                        ".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "");
-								$results	= $db->GetAll($query);
-								if ($results) {
-									?>
+						<div class="container-file">
+							<?php
+							if ($read_allowed) {
+								?>
+								<h2>Original Post: <?php echo html_encode($topic_record["topic_title"]); ?></h2>
+								<table class="discussions posts table">
+									<colgroup>
+										<col style="width: 30%" />
+										<col style="width: 70%" />
+									</colgroup>
 									<tr>
-										<?php
-										echo '<td colspan="2">';
-										foreach($results as $result) {
-											$query = "  SELECT *
-                                                FROM `community_discussion_file_versions`
-                                                WHERE `cdfile_id` = '".$result["cdfile_id"]."'
-                                                AND `file_active` = '1'
-                                                ORDER BY `cdfversion_id`
-                                                LIMIT 1";
-											$version_result = $db->GetRow($query);
-											echo '<a href="'.COMMUNITY_URL.$COMMUNITY_URL.':'.$PAGE_URL.'?section=view-post&amp;id='.$RECORD_ID.'&amp;reply_id='.$result["cdtopic_id"].'&amp;cdfile_id='.$result["cdfile_id"].'&amp;download=latest">'.$result["file_title"] . '</a> - ' . formatSizeUnits($version_result["file_filesize"])."<br />";
-											if (isset($result["file_description"]) && $result["file_description"] != "") {
-												echo '<br/>'.$result["file_description"];
-											}
-										}
-										echo '</td>';
-										?>
+										<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span>  <?php if(defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && !$COMMUNITY_ADMIN && isset($topic_record["anonymous"]) && $topic_record["anonymous"]){?><span style="font-size: 10px">Anonymous</span><?php } else {?><a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($topic_record["poster_username"]); ?>" style="font-size: 10px"><?php echo html_encode($topic_record["poster_fullname"]); ?></a><?php } ?></td>
+										<td style="border-bottom: none; text-align: left">
+											<div>
+												<span class="content-small"><strong>Posted:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $topic_record["updated_date"]); ?></span>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="2" class="content">
+											<?php echo $topic_record["topic_description"]; ?>
+										</td>
 									</tr>
 									<?php
-								}
-								?>
-							</table>
-							<br/>
-							<?php
-						} ?>
-						<h2 class="title">Your Reply To: <?php echo html_encode($topic_record["topic_title"]); ?></h2>
-						<div class="clearfix"></div>
-						<hr>
-						<ul class="container-file-group">
-							<li>
-								<label for="topic_description" class="db_file_col1 form-required">Post Body</label>
-								<br />
-								<span class="db_file_col3">
-									<textarea id="topic_description" name="topic_description" style="width: 100%; height: 200px" cols="68" rows="12">
-										<?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?>
-									</textarea>
-								</span>
-							</li>
-							<?php if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON) { ?>
-							<li>
-								<table class="table table-bordered no-thead space-above">
-								    <tr>
-										<td>
-											<input type="checkbox" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/>
-										</td>
-										<td>
-											<span class="file-checkbox-text">Hide my name from other community members.</span>
-										</td>
-								    </tr>
-							<?php 
-							}
-							if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
-								?>
-									<tr>
-										<td>
-											<input type="checkbox" name="enable_notifications" id="enable_notifications" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?> />
-										</td>
-										<td>
-											<span class="file-checkbox-text">Receive e-mail notification when people reply to this thread.</span>
-										</td>
-									</tr>
-								<?php } ?>
+									$query		= "	SELECT a.*, b.`username` AS `owner_username`
+															FROM `community_discussions_files` AS a
+															LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+															ON a.`proxy_id` = b.`id`
+															LEFT JOIN `community_discussion_topics` AS c
+															ON a.`cdtopic_id` = c.`cdtopic_id`
+															WHERE a.`cdtopic_id` = ".$db->qstr($RECORD_ID)."
+															AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+															AND a.`file_active` = '1'
+															".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "");
+									$results	= $db->GetAll($query);
+									if ($results) {
+										?>
+										<tr>
+											<?php
+											echo '<td colspan="2">';
+											foreach($results as $result) {
+												$query = "  SELECT *
+													FROM `community_discussion_file_versions`
+													WHERE `cdfile_id` = '".$result["cdfile_id"]."'
+													AND `file_active` = '1'
+													ORDER BY `cdfversion_id`
+													LIMIT 1";
+												$version_result = $db->GetRow($query);
+												echo '<a href="'.COMMUNITY_URL.$COMMUNITY_URL.':'.$PAGE_URL.'?section=view-post&amp;id='.$RECORD_ID.'&amp;reply_id='.$result["cdtopic_id"].'&amp;cdfile_id='.$result["cdfile_id"].'&amp;download=latest">'.$result["file_title"] . '</a> - ' . formatSizeUnits($version_result["file_filesize"])."<br />";
+												if (isset($result["file_description"]) && $result["file_description"] != "") {
+													echo '<br/>'.$result["file_description"];
+												}
+											}
+											echo '</td>';
+											?>
+										</tr>
+										<?php
+									}
+									?>
 								</table>
-							</li>
-						</ul>
+								<br/>
+								<?php
+							} ?>
+							<h2 class="title">Your Reply To: <?php echo html_encode($topic_record["topic_title"]); ?></h2>
+							<div class="clearfix"></div>
+							<hr>
+							<ul class="container-file-group">
+								<li>
+									<label for="topic_description" class="db_file_col1 form-required">Post Body</label>
+									<br />
+									<span class="db_file_col3">
+										<textarea id="topic_description" name="topic_description" style="width: 100%; height: 200px" cols="68" rows="12">
+											<?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?>
+										</textarea>
+									</span>
+								</li>
+								<?php if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON) { ?>
+								<li>
+									<table class="table table-bordered no-thead space-above">
+										<tr>
+											<td>
+												<input type="checkbox" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/>
+											</td>
+											<td>
+												<span class="file-checkbox-text">Hide my name from other community members.</span>
+											</td>
+										</tr>
+								<?php
+								}
+								if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
+									?>
+										<tr>
+											<td>
+												<input type="checkbox" name="enable_notifications" id="enable_notifications" <?php echo ($notifications ? "checked=\"checked\"" : ""); ?> />
+											</td>
+											<td>
+												<span class="file-checkbox-text">Receive e-mail notification when people reply to this thread.</span>
+											</td>
+										</tr>
+									<?php } ?>
+									</table>
+								</li>
+							</ul>
 							<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
 							<div id="file_list">
 								<h2>File Attachments</h2>
@@ -478,25 +468,25 @@ if ($RECORD_ID) {
 									</li>
 								</ul>
 							</div>
-                            <h2>Time Release Options</h2>
-                                <table class="date-time">
-                                    <colgroup>
-                                        <col style="width: 5%" />
-                                        <col style="width: 5%" />
-                                        <col style="width: 90%" />
-                                    </colgroup>
-                                    <?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-                                        <tr>
-                                            <td style="padding-top: 15px; text-align: left;" colspan="2">
-                                                <input type="button" class="btn button-right" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-forum&id=".$RECORD_ID; ?>'" />
-                                            </td>
+							<h2>Time Release Options</h2>
+							<table class="date-time">
+								<colgroup>
+									<col style="width: 5%" />
+									<col style="width: 5%" />
+									<col style="width: 90%" />
+								</colgroup>
+								<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+								<tr>
+									<td style="padding-top: 15px; text-align: left;" colspan="2">
+										<input type="button" class="btn button-right" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-forum&id=".$RECORD_ID; ?>'" />
+									</td>
 
-                                            <td style="padding-top: 15px; text-align: right;">
-                                                <input type="submit" class="btn btn-primary button-right clearfix" value="<?php echo $translate->_("global_button_reply"); ?>" />
-                                            </td>
-                                        </tr>
-                                </table>
-					</div>
+									<td style="padding-top: 15px; text-align: right;">
+										<input type="submit" class="btn btn-primary button-right clearfix" value="<?php echo $translate->_("global_button_reply"); ?>" />
+									</td>
+								</tr>
+							</table>
+						</div>
                     </form>
                 <?php
 				break;

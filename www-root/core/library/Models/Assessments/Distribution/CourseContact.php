@@ -109,12 +109,48 @@ class Models_Assessments_Distribution_CourseContact extends Models_Base {
         return $self->fetchRow($constraints);
     }
 
-    public function fetchAllByCourseID($course_id) {
+    public function fetchRowByAssessorValue($assessor_value) {
         $self = new self();
         $constraints = array(
-            array("key" => "course_id", "value" => $course_id, "method" => "=")
+            array("key" => "assessor_value", "value" => $assessor_value, "method" => "=")
         );
-        return $self->fetchAll($constraints);
+        return $self->fetchRow($constraints);
+    }
+
+    public function fetchAllByCourseID($course_id, $assessor_type = null, $search_term = null) {
+        global $db;
+
+        $assessor_type_user_data = 'internal';
+        $assessor_type_external_assessors = 'external';
+        $AND_name_like = "";
+
+        if (!is_null($assessor_type) && $assessor_type) {
+            if ($assessor_type == "external") {
+                $assessor_type_user_data = "";
+            } else {
+                $assessor_type_external_assessors = "";
+            }
+        }
+
+        if (!is_null($search_term) && $search_term) {
+            $AND_name_like = " AND CONCAT(COALESCE(CONCAT(b.`firstname`, ' ', b.`lastname`), ''), COALESCE(CONCAT(c.`firstname`, ' ', c.`lastname`), '')) LIKE (". $db->qstr("%". $search_term ."%") .") ";
+        }
+
+        $query = "  SELECT a.`assessor_value`, a.`assessor_type`, CONCAT(COALESCE(CONCAT(b.`firstname`, ' ', b.`lastname`), ''), COALESCE(CONCAT(c.`firstname`, ' ', c.`lastname`), '')) as 'fullname'
+                    FROM `cbl_course_contacts` as a
+                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` as b
+                    ON a.`assessor_value` = b.`id`
+                    AND a.`assessor_type` = '$assessor_type_user_data'
+                    LEFT JOIN `cbl_external_assessors` as c
+                    ON a.`assessor_value` = c.`eassessor_id`
+                    AND a.`assessor_type` = '$assessor_type_external_assessors'
+                    WHERE (b.`id` IS NOT NULL OR c.`eassessor_id` IS NOT NULL)
+                    AND a.`course_id` = ?
+                    $AND_name_like
+                    ORDER BY 3
+                ";
+
+        return $db->GetAll($query, array($course_id));
     }
 
     public function insertCourseContactRecord($course_id, $assessor_value, $assessor_type) {
@@ -171,80 +207,5 @@ class Models_Assessments_Distribution_CourseContact extends Models_Base {
                 add_error($translate->_("An error occurred while attempting to insert a course contact"));
             }
         }
-    }
-
-    public function getFaculty($proxy_id, $organisation_id, $url = null, $search_term = null, $add_externals = true) {
-        $users = array();
-        $courses = Models_Course::getUserCourses($proxy_id, $organisation_id);
-
-        if ($courses) {
-            $faculty = array();
-            $assessment_user = new Entrada_Utilities_AssessmentUser();
-
-            foreach ($courses as $course) {
-                $course_contact_list = $this->fetchAllByCourseID($course->getID());
-                foreach ($course_contact_list as $course_contact) {
-                    $faculty[] = array($course_contact->getAssessorValue() => $course_contact->getAssessorType());
-                }
-            }
-
-            foreach ($faculty as $faculty_member) {
-                foreach ($faculty_member as $proxy_id => $course_contact_type) {
-                    if ($course_contact_type == "internal") {
-                        $user = Models_User::fetchRowByID($proxy_id);
-                        if ($user) {
-                            $add_record = false;
-                            if (is_null($search_term)) {
-                                $add_record = true;
-                            } else if (strpos(strtolower($user->getFullname(false)), strtolower($search_term)) !== false) {
-                                $add_record = true;
-                            }
-
-                            if ($add_record) {
-                                $users[$user->getID()] = new Entrada_Utilities_AssessmentUser(array(
-                                    "proxy_id" => $user->getID(),
-                                    "firstname" => $user->getFirstname(),
-                                    "lastname" => $user->getLastname(),
-                                    "email" => $user->getEmail(),
-                                    "number" => $user->getNumber(),
-                                    "assessment_count" => null,//$assessment_user->getUserAssessmentCount($user->getID(), $organisation_id, "faculty"),
-                                    "assessment_url" => is_null($url) ? "" : $url . "/assessments/faculty?proxy_id=" . $user->getID(),
-                                    "photo_url" => is_null($url) ? "" : $url . "/api/photo.api.php/" . $user->getID() . "/official"
-                                ));
-                            }
-                        }
-                    } else {
-                        $external_assessor = Models_Assessments_Distribution_ExternalAssessor::fetchRowByID($proxy_id);
-                        if ($external_assessor) {
-                            $add_record = false;
-                            if (is_null($search_term)) {
-                                $add_record = true;
-                            } else if (strpos(strtolower($external_assessor->getFirstname() . " " . $external_assessor->getLastname()), strtolower($search_term)) !== false) {
-                                $add_record = true;
-                            }
-
-                            if ($add_record && $add_externals) {
-                                $users[$external_assessor->getID()] = new Models_Assessments_Distribution_ExternalAssessor(array(
-                                    "eassessor_id" => $external_assessor->getID(),
-                                    "firstname" => $external_assessor->getFirstname(),
-                                    "lastname" => $external_assessor->getLastname(),
-                                    "email" => $external_assessor->getEmail()
-                                ));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        uasort($users, array("Models_Assessments_Distribution_CourseContact", "compareUser"));
-
-        return $users;
-    }
-
-    private function compareUser($user1, $user2) {
-        if (strtolower($user1->getLastname()) == strtolower($user2->getLastname())) {
-            return strcmp(strtolower($user1->getFirstname()), strtolower($user2->getLastname()));
-        }
-        return strcmp(strtolower($user1->getLastname()), strtolower($user2->getLastname()));
     }
 }

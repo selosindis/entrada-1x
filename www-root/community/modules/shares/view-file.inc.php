@@ -159,7 +159,7 @@ if ($RECORD_ID) {
 		} else {
 			if (shares_file_module_access($RECORD_ID, "view-file")) {
 
-				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$file_record["cshare_id"], "title" => limit_chars($file_record["folder_title"], 32));
+				Models_Community_Share::getParentsBreadCrumbs($file_record["cshare_id"]);
 				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID, "title" => limit_chars($file_record["file_title"], 32));
 
 				$ADD_COMMENT	= shares_module_access($file_record["cshare_id"], "add-comment");
@@ -254,6 +254,8 @@ if ($RECORD_ID) {
 						add_notice("This file was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong> by others.");
 					}
 				}
+
+                Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
 
                 if ($NAVIGATION && (int) $NAVIGATION["back"]) {
                     $url_back = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-file&amp;id=" . (int) $NAVIGATION["back"];

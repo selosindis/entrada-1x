@@ -89,7 +89,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                         }
                         */
                         if ($cperiod) {
-                            $curriculum_period = Models_CurriculumPeriod::fetchRowByID($cperiod);
+                            $curriculum_period = Models_Curriculum_Period::fetchRowByID($cperiod);
                         }
                         
                         $e = new Models_Event();

@@ -565,14 +565,14 @@ function profile_update_notifications() {
 	$user = Models_User::fetchRowByID($ENTRADA_USER->getID());
 	if ($_POST["enable-notifications"] == 1) {
 		if ($user && ((int)$user->getNotifications()) != 1) {
-			if (!$user->fromArray(array("notofications" => 1))->update()) {
+			if (!$user->fromArray(array("notifications" => 1))->update()) {
 				$ERROR++;
 				application_log("error", "Notification settings for the Proxy ID [".$ENTRADA_USER->getID()."] could not be activated");
 			}
 		}
 	} else {
 		if ($user && ((int)$user->getNotifications()) != 0) {
-			if (!$user->fromArray(array("notofications" => 0))->update()) {
+			if (!$user->fromArray(array("notifications" => 0))->update()) {
 				$ERROR++;
 				application_log("error", "Notification settings for the Proxy ID [".$ENTRADA_USER->getID()."] could not be deactivated");
 			}

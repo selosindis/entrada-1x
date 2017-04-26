@@ -36,102 +36,126 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-$record = array();
-if ($_POST['user_access'] == '3') {
-    $admin = true;
-} else {
-    $admin = false;
-}
-    
-if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"]) && ((bool) $admin)) {
-    
-    //checks to make sure that the variables we need are set
-    if(isset($_POST['community_id']) && (isset($_POST['movedFolders'])) || isset($_POST['movedFiles'])) {
-        
-        if (isset($_POST['movedFolders'])) {
-            foreach($_POST['movedFolders'] as $movedFolder) {
-                $SQL = "UPDATE
-                `community_shares`
-                SET `parent_folder_id` = '" . $movedFolder['destinationFolder'] . "'
-                WHERE  `community_id` = " . $_POST['community_id'] . "
-                AND `cshare_id` = '" . $movedFolder['folderMoved'] . "'";
-                
-                if (!$db->Execute($SQL)) {
-                    $errors[] = array(
+
+/**
+ * This file needs some love. I just cleaned it up a bit the front end JS side needs to be
+ * updated as well.
+ */
+
+$response = [];
+$errors = [];
+
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
+    $is_community_admin = false;
+
+    $community_id = 0;
+    $moved_folders = [];
+    $moved_files = [];
+
+    if (isset($_POST["community_id"]) && ($tmp_input = clean_input($_POST["community_id"], "int"))) {
+        $community_id = $tmp_input;
+
+        $membership = Models_Community_Member::fetchRowByProxyIDCommunityID($ENTRADA_USER->getID(), $community_id);
+        if ($membership && ($membership->getMemberACL() == 1)) {
+            $is_community_admin = true;
+        }
+    }
+
+    if (isset($_POST["movedFolders"]) && is_array($_POST["movedFolders"]) && $_POST["movedFolders"]) {
+        $moved_folders = $_POST["movedFolders"];
+    }
+
+    if (isset($_POST["movedFiles"]) && is_array($_POST["movedFiles"]) && $_POST["movedFiles"]) {
+        $moved_files = $_POST["movedFiles"];
+    }
+
+    if ($community_id && $is_community_admin && ($moved_folders || $moved_files)) {
+        if ($moved_folders) {
+            foreach ($moved_folders as $folder) {
+                $query = "UPDATE `community_shares`
+                            SET `parent_folder_id` = " . $db->qstr((int) $folder["destinationFolder"]) . "
+                            WHERE `community_id` = " . $db->qstr($community_id) . "
+                            AND `cshare_id` = " . $db->qstr((int) $folder["folderMoved"]);
+                if (!$db->Execute($query)) {
+                    $errors[] = [
                         "type" => "folder",
-                        "community_id" => $_POST['community_id'],
-                        "id" => $movedFolder['folderMoved']
-                    );
-                
+                        "community_id" => $community_id,
+                        "id" => $folder["folderMoved"]
+                    ];
                 }
             }
         }   
 
-        if (isset($_POST['movedFiles'])) {
-            foreach($_POST['movedFiles'] as $movedFile) {
-                if ($movedFile['type'] == 'file') {
-                    $SQL = "UPDATE
-                    `community_share_files`
-                    SET `cshare_id` = '" . $movedFile['destinationFolder'] . "'
-                    WHERE  `community_id` = " . $_POST['community_id'] . "
-                    AND `csfile_id` = '" . $movedFile['id_moved'] . "'";
-                    
-                    $SQL_file_versions = "UPDATE
-                    `community_share_file_versions`
-                    SET `cshare_id` = '" . $movedFile['destinationFolder'] . "'
-                    WHERE  `community_id` = " . $_POST['community_id'] . "
-                    AND `csfile_id` = '" . $movedFile['id_moved'] . "'";
-                            //
-                } else if ($movedFile['type'] == 'link') { //link
-                    $SQL = "UPDATE
-                    `community_share_links`
-                    SET `cshare_id` = '" . $movedFile['destinationFolder'] . "'
-                    WHERE  `community_id` = " . $_POST['community_id'] . "
-                    AND `cslink_id` = '" . $movedFile['id_moved'] . "'"; 
-                }
-                
-                if (!$db->Execute($SQL)) {
-                    $errors[] = array(
-                        "type" => $movedFile['type'],
-                        "community_id" => $_POST['community_id'],
-                        "id" => $movedFile['id_moved']
-                    );
+        if ($moved_files) {
+            foreach ($moved_files as $file) {
+                if ($file["type"] == "file") {
+                    $query = "UPDATE `community_share_files`
+                                SET `cshare_id` = " . $db->qstr((int) $file["destinationFolder"]) . "
+                                WHERE `community_id` = " . $db->qstr($community_id) . "
+                                AND `csfile_id` = " . $db->qstr((int) $file["id_moved"]);
+
+                    $query_file_versions = "UPDATE `community_share_file_versions`
+                                            SET `cshare_id` = " . $db->qstr((int) $file["destinationFolder"]) . "
+                                            WHERE  `community_id` = " . $db->qstr((int) $community_id) . "
+                                            AND `csfile_id` = " . $db->qstr((int) $file["id_moved"]);
+                } else if ($file["type"] == "link") {
+                    $query = "UPDATE `community_share_links`
+                                SET `cshare_id` = " . $db->qstr((int) $file["destinationFolder"]) . "
+                                WHERE `community_id` = " . $db->qstr((int) $community_id) . "
+                                AND `cslink_id` = " . $db->qstr((int) $file["id_moved"]);
+                } else if ($file["type"] == "html") {
+                    $query = "UPDATE `community_share_html`
+                                SET `cshare_id` = " . $db->qstr((int) $file["destinationFolder"]) . "
+                                WHERE  `community_id` = " . $db->qstr((int) $community_id) . "
+                                AND `cshtml_id` = " . $db->qstr((int) $file["id_moved"]);
                 }
 
-                if ($SQL_file_versions) {
-                    if (!$db->Execute($SQL_file_versions)) {
-                        $errors[] = array(
-                            "type" => $movedFile['type'],
-                            "community_id" => $_POST['community_id'],
-                            "id" => $movedFile['id_moved']
-                        );
+                if (!$db->Execute($query)) {
+                    $errors[] = [
+                        "type" => $file["type"],
+                        "community_id" => $community_id,
+                        "id" => $file["id_moved"]
+                    ];
+                }
+
+                if ($query_file_versions) {
+                    if (!$db->Execute($query_file_versions)) {
+                        $errors[] = [
+                            "type" => $file["type"],
+                            "community_id" => $community_id,
+                            "id" => $file["id_moved"]
+                        ];
                     }
                 }
-
             }
         }
-        //adds the errors to the log files and the array for the page feedback
+
         if ($errors) {
             foreach ($errors as $error) {
-                switch ($error['type']) {
-                    case 'folder':
-                        application_log("error", "Error moving folder id: " . $movedFolder['folderMoved'] . " to folder: " . $movedFolder['destinationFolder']);
+                switch ($error["type"]) {
+                    case "folder":
+                        application_log("error", "Error moving folder id: " . $folder["folderMoved"] . " to folder: " . $folder["destinationFolder"]);
                         break;
-                    case 'file':
-                        application_log("error", "Error moving file id: " . $movedFile['id_moved'] . " to folder: " . $movedFile['destinationFolder']);
+                    case "file":
+                        application_log("error", "Error moving file id: " . $file["id_moved"] . " to folder: " . $file["destinationFolder"]);
                         break;
-                    case 'link':
-                        application_log("error", "Error moving link id: " . $movedFile['id_moved'] . " to folder: " . $movedFile['destinationFolder']);
+                    case "link":
+                        application_log("error", "Error moving link id: " . $file["id_moved"] . " to folder: " . $file["destinationFolder"]);
                         break;                        
+                    case "html":
+                        application_log("error", "Error moving html id: " . $file["id_moved"] . " to folder: " . $file["destinationFolder"]);
+                        break;
                 }
             }
-            $record['errors'] = $errors;
+
+            $response["errors"] = $errors;
         }
     }
 } else {
-    $record['errors'] = "Not Authorized";
-    application_log("error", "Error moving folders - Account not authroized");
+    $response["errors"] = "Not Authorized";
+
+    application_log("error", "Error moving folders - Account not authorized");
 }
-    header("Content-type: application/json");
-    echo json_encode($record);
-?>
+
+header("Content-type: application/json");
+echo json_encode($response);

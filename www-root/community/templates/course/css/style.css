@@ -556,8 +556,7 @@ a.log-out:focus:active {
   border: 1px solid #d9dee2;
 }
 
-.panel-head,
-.nl-field ul li:first-child {
+.panel-head, .nl-field ul li:first-child {
   background: #17323b;
   padding: 10px 20px;
   -webkit-border-radius: 5px 5px 0 0;
@@ -575,19 +574,19 @@ a.log-out:focus:active {
   background: #f02c56;
 }
 
-.panel-head h3,
-.nl-field ul li:first-child {
+.panel-head h3, .nl-field ul li:first-child {
   color: #fff;
-  font-size: 14px;
-  line-height: 26px;
+  font-size: 13px;
+  line-height: 21px;
   margin: 0;
   padding: 0;
   font-family: "Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
+  font-weight: normal;
 }
 
 .panel-body {
   background: transparent;
-  padding: 20px;
+  padding: 15px;
   -webkit-border-radius: 5px;
   -moz-border-radius:    5px;
   border-radius:         5px;
@@ -1725,4 +1724,18 @@ table.event-details tbody tr td {
 
 #rotationschedule-modal-body {
   min-height: 325px;
+}
+
+
+/* My Entrada */
+#my_entrada .nav > li > a {
+  display: inline-block;
+}
+
+#my_entrada .nav > li > span.badge {
+  margin-left: 5px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #000000;
+  background-color: #FFB921;
 }

@@ -412,8 +412,8 @@ header h1 {
     /*text-transform: uppercase;*/
 }
 .alert-block {
-    text-shadow: none;
-    margin-bottom: 0;
+    padding-top: 14px;
+    padding-bottom: 14px;
 }
 .alert-block ul {
     list-style: none;

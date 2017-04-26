@@ -40,15 +40,6 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
     $MODULE_TEXT = $translate->_($MODULE);
 
-    $sidebar_html  = "<ul class=\"menu\">\n";
-    $sidebar_html .= "	<li class=\"".(!$SUBMODULE ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."\">".$translate->_("Dashboard")."</a></li>";
-    $sidebar_html .= "	<li class=\"".($SUBMODULE == "distributions" ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."/distributions\">".$translate->_("Distributions")."</a></li>";
-    $sidebar_html .= "	<li class=\"".($SUBMODULE == "forms" ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."/forms\">".$translate->_("Forms")."</a></li>";
-    $sidebar_html .= "	<li class=\"".($SUBMODULE == "items" || $SUBMODULE == "rubrics" ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."/items\">".$translate->_("Items")."</a></li>";
-    $sidebar_html .= "</ul>\n";
-
-    new_sidebar_item($translate->_("Assessment & Evaluation"), $sidebar_html, "page-assessments-eval", "open");
-    
     define("IN_ASSESSMENTS", true);
 
     define("RUBRIC_ITEMTYPE_ID", 11);

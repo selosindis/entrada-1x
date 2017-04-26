@@ -1,11 +1,8 @@
 <!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<html class="no-js" lang="en">
     <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta charset="<?php echo DEFAULT_CHARSET; ?>" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <title>%TITLE%</title>
 
         <meta name="description" content="%DESCRIPTION%" />
@@ -21,12 +18,17 @@
         <link href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/css/style.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" media="all" />
 
         <link href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        <link rel="apple-touch-icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/touch-icon-iphone.png"/>
+        <link rel="apple-touch-icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/touch-icon-ipad.png" sizes="76x76"/>
+        <link rel="apple-touch-icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/touch-icon-iphone-retina.png" sizes="120x120"/>
+        <link rel="apple-touch-icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/touch-icon-ipad-retina.png" sizes="152x152"/>
+
         <script>
             if (self !== top) {
                 top.location = self.location;
             }
         </script>
-        <link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery-ui.css" rel="stylesheet" />
+        <link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery-ui.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" />
 
         <script type="text/javascript">
             %JAVASCRIPT_TRANSLATIONS%
@@ -34,6 +36,7 @@
         <script src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         <script src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery-ui.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         <script>jQuery.noConflict();</script>
+        <script>var ENTRADA_URL = '<?php echo ENTRADA_URL; ?>'; var ENTRADA_RELATIVE = '<?php echo ENTRADA_RELATIVE; ?>'; var TEMPLATE_URL = '<?php echo $ENTRADA_TEMPLATE->url(); ?>'; var TEMPLATE_RELATIVE = '<?php echo $ENTRADA_TEMPLATE->relative(); ?>';</script>
         %JQUERY%
 
         <script src="<?php echo ENTRADA_RELATIVE; ?>/javascript/scriptaculous/prototype.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
@@ -46,6 +49,8 @@
 
         <script src="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/js/libs/bootstrap.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         <script src="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/js/libs/modernizr-2.5.3.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
+        <script src="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/js/libs/jquery.matchHeight.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
+        <script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/bookmark.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         %HEAD%
     </head>
     <body>
@@ -111,7 +116,8 @@
                 if ((isset($_GET["external_hash"]) && $tmp_input = clean_input($_GET["external_hash"], array("trim", "striptags"))) || (isset($_POST["external_hash"]) && $tmp_input = clean_input($_POST["external_hash"], array("trim", "striptags")))) {
                     $hash = true;
                 }
-                if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"]) || ($MODULE == "assessment" && $hash)) {
+                $full_screen_pages = array("attempt", "confirmation", "feedback", "incorrect");
+                if (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] && ($MODULE == "exams" ? !in_array($SECTION, $full_screen_pages) : "1 == 1") || $MODULE == "news" || $MODULE == "news_stream" || ($MODULE == "assessment" && $hash)) {
                     ?>
                     <div class="span3 no-printing" id="sidebar">%SIDEBAR%</div>
                     <div class="span9" id="content">

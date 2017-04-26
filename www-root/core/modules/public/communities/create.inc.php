@@ -30,13 +30,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("community", "create")) {
-	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	add_error("You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
+    Entrada_Utilities_Flashmessenger::addMessage($translate->_("You do not have the permissions required to use this module."), "error", $MODULE);
 
-	echo display_error();
-
+	$url = ENTRADA_URL . "/admin/" . $MODULE;
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
+    header("Location: " . $url);
+    exit;
 } else {
 
 	if ($MAILING_LISTS["active"]) {
@@ -440,13 +440,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							if ($MAILING_LISTS["active"]) {
 								$mail_list = new MailingList($community_id, $PROCESSED["community_list_mode"]);
 							}
-							$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/communities\\'', 10000)";
 
 							if (communities_approval_notice($community_id)) {
-								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully created your new community; however, it must be approved by an administrator before you can actually access the site.<br /><br />An e-mail has been sent to us and we will review and approve your Commmunity shortly. You will receive an e-mail notification once the Community has been activated.";
-
+                                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully created <strong>%s</strong>, however because you are not an administrator your event must be reviewed before appearing to all users."), $PROCESSED["community_title"]), "success", $MODULE);
 								communities_log_history($community_id, 0, $community_id, "community_history_create_moderated_community", 1);
+
+								$url = ENTRADA_URL . "/communities";
+                                header("Location: " . $url);
+                                exit;
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "Your new community has been successfully created; however, this community requires an administrator's approval before it is activated and there was an error when trying to send an administrator this notification.<br /><br />The MEdTech Unit has been informed of this error and will contact you shortly.";
@@ -458,17 +459,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							if ($MAILING_LISTS["active"]) {
 								$mail_list = new MailingList($community_id, $PROCESSED["community_list_mode"]);
 							}
-							$community_url	= ENTRADA_URL."/community".$PROCESSED["community_url"];
-
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$community_url."\\'', 5000)";
-
-							$SUCCESS++;
-							$SUCCESSSTR[] = "<strong>You have successfully created your new community!</strong><br /><br />Please <a href=\"".$community_url."\">click here</a> to proceed to it or you will be automatically forwarded in 5 seconds.";
-
+                            Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully created <strong>%s</strong>"), $PROCESSED["community_title"]), "success", "login");
 							communities_log_history($community_id, 0, $community_id, "community_history_create_active_community", 1);
+
+							$url = ENTRADA_URL . "/community" . $PROCESSED["community_url"];
+                            header("Location: " . $url);
+                            exit;
 						}
 					} else {
 						$ERROR++;
+
 						$ERRORSTR[] = "Your community was successfully created; however, administrative permissions for your account could not be set to the new community.<br /><br />The system administrator has been informed of this problem, and they will resolve it shortly.";
 
 						application_log("error", "Community was created, but admin permissions for proxy id ".$ENTRADA_USER->getActiveId()." could not be set. Database said: ".$db->ErrorMsg());
@@ -501,11 +501,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 	// Display Content
 	switch($STEP) {
-		case 3 :
-			if ($SUCCESS) {
-				echo display_success();
-			}
-		break;
 		case 2 :
             if (isset($PROCESSED["community_shortname"]) && $PROCESSED["community_shortname"]) {
 				$ONLOAD[] = "validateShortname('".html_encode($PROCESSED["community_shortname"])."')";

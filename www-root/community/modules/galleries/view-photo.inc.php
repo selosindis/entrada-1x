@@ -193,6 +193,7 @@ if ($RECORD_ID) {
 					if ($NOTICE) {
 						echo display_notice();
 					}
+					Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
 					?>
 					<a name="top"></a>
 						<?php

@@ -44,7 +44,7 @@ class Event {
 			$event_goals,
 			$event_objectives,
 			$event_message,
-			$event_location,
+			$room_id,
 			$event_start,
 			$event_finish,
 			$event_duration,
@@ -63,7 +63,7 @@ class Event {
 							$event_goals,
 							$event_objectives,
 							$event_message,
-							$event_location,
+							$room_id,
 							$event_start,
 							$event_finish,
 							$event_duration,
@@ -83,7 +83,7 @@ class Event {
 		$this->event_goals = $event_goals;
 		$this->event_objectives = $event_objectives;
 		$this->event_message = $event_message;
-		$this->event_location = $event_location;
+		$this->room_id = $room_id;
 		$this->event_start = $event_start;
 		$this->event_finish = $event_finish;
 		$this->event_duration = $event_duration;
@@ -206,7 +206,7 @@ class Event {
 			$query = "SELECT * FROM `events` WHERE `id` = ".$db->qstr($event_id);
 			$result = $db->getRow($query);
 			if ($result) {
-				$event = new Event($result['event_id'],$result['recurring_id'],$result['region_id'],$result['course_id'],$result['event_phase'],$result['event_title'],$result['event_description'],$result['event_goals'],$result['event_objectives'],$result['event_message'],$result['event_location'],$result['event_start'],$result['event_finish'],$result['event_duration'],$result['release_date'],$result['release_until'],$result['updated_date'],$result['updated_by']);
+				$event = new Event($result['event_id'],$result['recurring_id'],$result['region_id'],$result['course_id'],$result['event_phase'],$result['event_title'],$result['event_description'],$result['event_goals'],$result['event_objectives'],$result['event_message'],$result['room_id'],$result['event_start'],$result['event_finish'],$result['event_duration'],$result['release_date'],$result['release_until'],$result['updated_date'],$result['updated_by']);
 			}		
 		} 
 		return $user;

@@ -112,11 +112,14 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		$sidebar_html .= "</ul>\n";
 		new_sidebar_item("My Communities", $sidebar_html, "my-communities", "open");
 	} else {
-		$sidebar_html  = "<div style=\"text-align: center\">\n";
-		$sidebar_html .= "	<a href=\"".ENTRADA_RELATIVE."/podcasts\"><img src=\"".ENTRADA_RELATIVE."/images/itunes_podcast_icon.png\" width=\"70\" height=\"70\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
-		$sidebar_html .= "	<a href=\"".ENTRADA_RELATIVE."/podcasts\" style=\"display: block; margin-top: 10px; font-size: 14px\">Podcasts Available</a>";
-		$sidebar_html .= "</div>\n";
-		new_sidebar_item("Podcasts in iTunes", $sidebar_html, "podcast-bar", "open");
+        $settings = new Entrada_Settings();
+        if ($settings->read("podcast_display_sidebar")) {
+            $sidebar_html = "<div style=\"text-align: center\">\n";
+            $sidebar_html .= "	<a href=\"" . ENTRADA_RELATIVE . "/podcasts\"><img src=\"" . ENTRADA_RELATIVE . "/images/itunes_podcast_icon.png\" width=\"70\" height=\"70\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
+            $sidebar_html .= "	<a href=\"" . ENTRADA_RELATIVE . "/podcasts\" style=\"display: block; margin-top: 10px; font-size: 14px\">Podcasts Available</a>";
+            $sidebar_html .= "</div>\n";
+            new_sidebar_item("Podcasts in iTunes", $sidebar_html, "podcast-bar", "open");
+        }
 	}
 
     /**
@@ -259,7 +262,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		case "medtech" :
 		case "student" :
 
-            $BREADCRUMB[] = array("url" => ENTRADA_RELATIVE . "/dashboard", "title" => "Student Dashboard");
+            $BREADCRUMB[] = array("url" => ENTRADA_RELATIVE . "/dashboard", "title" => $translate->_("Student Dashboard"));
 
 			/**
 			 * How did this person not get assigned this already? Mak'em new.

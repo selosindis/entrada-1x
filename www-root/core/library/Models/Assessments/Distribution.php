@@ -21,7 +21,7 @@
  */
 
 class Models_Assessments_Distribution extends Models_Base {
-    protected $adistribution_id, $one45_scenariosAttached_id, $form_id, $method, $organisation_id, $title, $description, $cperiod_id, $course_id, $assessor_option, $min_submittable, $max_submittable, $repeat_targets, $submittable_by_target, $flagging_notifications, $start_date, $end_date, $release_start_date, $release_end_date, $release_date, $mandatory, $feedback_required, $distributor_timeout, $notifications, $visibility_status, $delivery_date, $updated_date, $updated_by, $created_date, $created_by, $deleted_date;
+    protected $adistribution_id, $one45_scenariosAttached_id, $form_id, $method, $organisation_id, $title, $description, $assessment_type, $cperiod_id, $course_id, $assessor_option, $min_submittable, $max_submittable, $repeat_targets, $submittable_by_target, $flagging_notifications, $start_date, $end_date, $release_start_date, $release_end_date, $release_date, $mandatory, $feedback_required, $distributor_timeout, $notifications, $visibility_status, $delivery_date, $updated_date, $updated_by, $created_date, $created_by, $deleted_date;
 
     protected static $table_name = "cbl_assessment_distributions";
     protected static $primary_key = "adistribution_id";
@@ -61,6 +61,10 @@ class Models_Assessments_Distribution extends Models_Base {
 
     public function getDescription() {
         return $this->description;
+    }
+
+    public function getAssessmentType() {
+        return $this->assessment_type;
     }
 
     public function getCperiodID() {

@@ -50,8 +50,9 @@ class Entrada_Event_Draft_CsvImporter {
             "event_title"               => array("trim", "striptags"),
             "event_description"         => array("trim", "striptags"),
             "location"                  => array("trim", "striptags"),
+            "location_room"             => array("trim", "striptags"),
             "audience_groups"           => array("trim", "striptags"),
-            "audience_cohorts"           => array("trim", "striptags"),
+            "audience_cohorts"          => array("trim", "striptags"),
             "audience_students"         => array("trim", "striptags"),
             "teacher_names"             => array("trim", "striptags"),
             "teacher_numbers"           => array("trim", "striptags"),
@@ -93,12 +94,12 @@ class Entrada_Event_Draft_CsvImporter {
         $mapped_cols = array();
         
         foreach ($this->col_map as $col => $field_name) {
-            $mapped_cols[$field_name] = clean_input($row[$col], $validation_rules[$field_name]);
+            $mapped_cols[$field_name] = clean_input($row[$col], $this->validation_rules[$field_name]);
             if (in_array($field_name, $this->delimited_fields) && !empty($mapped_cols[$field_name])) {
                 $mapped_cols[$field_name] = explode(";", $mapped_cols[$field_name]);
                 if (!empty($mapped_cols[$field_name])) {
                     foreach ($mapped_cols[$field_name] as $entry => $value) {
-                        $mapped_cols[$field_name][$entry] = clean_input($value, $validation_rules[$field_name]);
+                        $mapped_cols[$field_name][$entry] = clean_input($value, $this->validation_rules[$field_name]);
                     }
                 }
             }
@@ -237,6 +238,18 @@ class Entrada_Event_Draft_CsvImporter {
 			}
 		}
 
+        // event location room_id, not required
+        if (strlen($mapped_cols["location_room"]) > 0) {
+		    $room_str = explode("-",$mapped_cols["location_room"]);
+		    $building = Models_Location_Building::fetchRowByCode($room_str[0], $organisation_id);
+		    $room = Models_Location_Room::fetchRowByNumber($room_str[1], $building->getBuildingID());
+            $output[$mapped_cols["original_event"]]["room_id"] = (int) $room->getRoomId();
+        } else {
+            if ($old_event_data) {
+                $output[$mapped_cols["original_event"]]["room_id"] = $old_event_data["room_id"];
+            }
+        }
+
 		// event audience, not required	but needs to be verified
 		if (!empty($mapped_cols["audience_cohorts"])) {
 			foreach ($mapped_cols["audience_cohorts"] as $i => $cohort) {
@@ -361,12 +374,13 @@ class Entrada_Event_Draft_CsvImporter {
                                     `event_start` = ".$db->qstr($row["event_start"]).",
                                     `event_finish` = ".$db->qstr(($row["event_start"] + ($row["total_duration"] * 60))).",
                                     `event_duration` = ".$db->qstr($row["total_duration"]).",
-                                    `event_location` = ".$db->qstr($row["event_location"])."
+                                    `event_location` = ".$db->qstr($row["event_location"]).",
+                                    `room_id` = ".$db->qstr($row["room_id"])."
                                     WHERE `devent_id` = ".$db->qstr($row["devent_id"]);
                 } else {
                     $update = false;
-                    $query = "INSERT INTO `draft_events` (`draft_id`, `event_id`, `parent_id`, `recurring_id`, `course_id`, `event_title`, `event_description`, `event_start`, `event_finish`, `event_duration`, `event_location`)
-                                VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["parent_event"]).", ".$db->qstr($row["recurring_event"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_description"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).", ".$db->qstr($row["event_location"]).")";
+                    $query = "INSERT INTO `draft_events` (`draft_id`, `event_id`, `parent_id`, `recurring_id`, `course_id`, `event_title`, `event_description`, `event_start`, `event_finish`, `event_duration`, `event_location`, `room_id`)
+                                VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["parent_event"]).", ".$db->qstr($row["recurring_event"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_description"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).", ".$db->qstr($row["event_location"]).", ".$db->qstr($row["room_id"]).")";
                 }
 
                 $result = $db->Execute($query);

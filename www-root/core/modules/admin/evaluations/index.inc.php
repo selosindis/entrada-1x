@@ -122,7 +122,7 @@ if (!defined("IN_EVALUATIONS")) {
                 if ($ENTRADA_ACL->amIAllowed(new EvaluationResource($result["evaluation_id"], $result["organisation_id"], true), 'update')) {
                 echo "  <div class=\"btn-group\">\n";
                 echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">\n";
-                echo "          <i class=\"icon-cog\"></i>\n";
+                echo "          <i class=\"fa fa-cog\" aria-hidden=\"true\"></i>\n";
                 echo "      </button>";
                 echo "      <ul class=\"dropdown-menu toggle-left\">\n";
                 echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/evaluations?section=edit&id=".$result["evaluation_id"]."\">Edit Evaluation</a></li>";

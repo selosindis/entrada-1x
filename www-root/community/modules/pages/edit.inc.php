@@ -616,15 +616,14 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 												if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_events"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_events"]["cpoption_id"]))) {
 													if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_history"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_history"]["cpoption_id"]))) {
 														if (!$ERROR) {
-															communities_log_history($COMMUNITY_ID, 0, 0, "community_history_edit_home_page", 1);
-															$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
+															Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully updated the home page of the community."), "success", $MODULE);
 
-															$SUCCESS++;
-															$SUCCESSSTR[]	= "You have successfully updated the home page of the community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                                                            communities_log_history($COMMUNITY_ID, 0, 0, "community_history_edit_home_page", 1);
+                                                            application_log("success", "Home Page [".$PAGE_ID."] updated in the system.");
 
-															$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
-
-															application_log("success", "Home Page [".$PAGE_ID."] updated in the system.");
+															$url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages";
+															header("Location: " . $url);
+															exit;
 														}
 													} else {
 														$ERROR++;
@@ -649,15 +648,13 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 												if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["allow_member_posts"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["allow_member_posts"]["cpoption_id"]))) {
 													if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["allow_troll_posts"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["allow_troll_posts"]["cpoption_id"]))) {
 														if (!$ERROR) {
-
-															$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-
-															$SUCCESS++;
-															$SUCCESSSTR[]	= "You have successfully updated the home page of the community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-															$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
+                                                            Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully updated the home page of the community."), "success", $MODULE);
 
 															application_log("success", "Home Page [".$PAGE_ID."] updated in the system.");
+
+                                                            $url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages";
+                                                            header("Location: " . $url);
+															exit;
 														}
 													} else {
 														$ERROR++;
@@ -679,14 +676,13 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 											}
 										} else {
 											if (!$ERROR) {
-												$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-
-												$SUCCESS++;
-												$SUCCESSSTR[]	= "You have successfully updated the home page of the community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-												$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
+												Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully updated the home page of the community."), "success", $MODULE);
 
 												application_log("success", "Home Page [".$PAGE_ID."] updated in the system.");
+
+                                                $url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages";
+                                                header("Location: " . $url);
+												exit;
 											}
 										}
 									} else {
@@ -717,14 +713,13 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 												if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["allow_member_posts"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["allow_member_posts"]["cpoption_id"]))) {
 													if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["allow_troll_posts"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["allow_troll_posts"]["cpoption_id"]))) {
 														if (!$ERROR) {
-															$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-
-															$SUCCESS++;
-															$SUCCESSSTR[]	= "You have successfully updated this page of the community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-															$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
+															Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["menu_title"]), "success", $MODULE);
 
 															application_log("success", "Page [".$PAGE_ID."] updated in the system.");
+
+															$url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages";
+                                                            header("Location: " . $url);
+															exit;
 														}
 													} else {
 														$ERROR++;
@@ -775,26 +770,24 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 												}
 											}
 											if (!$ERROR) {
-												$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-
-												$SUCCESS++;
-												$SUCCESSSTR[]	= "You have successfully updated this page of the community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-												$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
+												Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["menu_title"]), "success", $MODULE);
 
 												application_log("success", "Page [".$PAGE_ID."] updated in the system.");
+
+                                                $url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages";
+                                                header("Location: " . $url);
+												exit;
 											}
 										} elseif ($PAGE_TYPE == "url") {
 											if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["new_window"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["new_window"]["cpoption_id"]))) {
 												if (!$ERROR) {
-													$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-
-													$SUCCESS++;
-													$SUCCESSSTR[]	= "You have successfully updated this page of the community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-													$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
+													Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["menu_title"]), "success", $MODULE);
 
 													application_log("success", "Page [".$PAGE_ID."] updated in the system.");
+
+                                                    $url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages";
+													header("Location: " . $url);
+													exit;
 												}
 											} else {
 												$ERROR++;
@@ -803,14 +796,13 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 												application_log("error", "There was an error updating this page option. Database said: ".$db->ErrorMsg());
 											}
 										} elseif (!$ERROR) {
-											$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-
-											$SUCCESS++;
-											$SUCCESSSTR[]	= "You have successfully updated this page of the community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-											$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
+											Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["menu_title"]), "success", $MODULE);
 
 											application_log("success", "Page [".$PAGE_ID."] updated in the system.");
+
+                                            $url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages";
+                                            header("Location: " . $url);
+											exit;
 										}
 									}
 
@@ -895,21 +887,13 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 
 					//Display Page
 					switch($STEP) {
-						case 2 :
-							if ($NOTICE) {
-								echo display_notice();
-							}
-
-							if ($SUCCESS) {
-								echo display_success();
-							}
-
-							if ($ERROR) {
-								echo display_error();
-							}
-						break;
 						case 1:
 						default:
+							// echo print_r($PAGE_TYPES)."<br />";//[3]);//["module_title"])."\n";
+							// echo $page_details["page_type"]."<br />";
+							// $key = searchForId($page_details["page_type"], $PAGE_TYPES, "module_shortname");
+							// echo $PAGE_TYPES[$key]['module_title'];
+							// echo $_POST["page_type"];
 							if ($NOTICE) {
 								echo display_notice();
 							}
@@ -1499,12 +1483,12 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 					}
 				} else {
 					$url		= COMMUNITY_URL.$COMMUNITY_URL.":pages";
-					$ONLOAD[]	= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+					$ONLOAD[]	= "setTimeout('window.location=\\'".$url."?errmsg=pages404\\'', 0)";
 
 					$ERROR++;
-					$ERRORSTR[]	= "The page you have requested does not currently exist within this community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+					// $ERRORSTR[]	= "The page you have requested does not currently exist within this community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
-					echo display_error();
+					// echo display_error();
 				}
 			} else {
 				application_log("error", "Someone attempted to access this page who was not a community administrator. (Edit Page)");

@@ -105,19 +105,27 @@ switch ($STEP) {
 
 			if ($db->AutoExecute("community_events", $PROCESSED, "INSERT")) {
 				if ($EVENT_ID = $db->Insert_Id()) {
-					$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
 					
 					$SUCCESS++;
-					
+
 					if (!$COMMUNITY_ADMIN && ($PAGE_OPTIONS["moderate_posts"] == 1)) {
-						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 15000)";
-						$SUCCESSSTR[]	= "You have successfully created a new event for this page, however because you are not an administrator your event must be reviewed before appearing to all users.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong> to this page, however because you are not an administrator your event must be reviewed before appearing to all users."), $PROCESSED["event_title"]), "success", $MODULE);
 					} else {
-						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-						$SUCCESSSTR[]	= "You have successfully added a new event to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong> to the community."), $PROCESSED["event_title"]), "success", $MODULE);
 					}
+
 					communities_log_history($COMMUNITY_ID, $PAGE_ID, $EVENT_ID, "community_history_add_event", ($PROCESSED["pending_moderation"] == 1 ? 0 : 1));
 					add_statistic("community:".$COMMUNITY_ID.":events", "add", "cevent_id", $EVENT_ID);
+
+					if (COMMUNITY_NOTIFICATIONS_ACTIVE && (isset($_POST["notify_members"]) && $_POST["notify_members"]) && (!$PAGE_OPTIONS["moderate_posts"] || $COMMUNITY_ADMIN)) {
+						community_notify($COMMUNITY_ID, $EVENT_ID, "event", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$EVENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
+					}
+					if (COMMUNITY_NOTIFICATIONS_ACTIVE && ($PAGE_OPTIONS["moderate_posts"] && !$COMMUNITY_ADMIN)) {
+						community_notify($COMMUNITY_ID, $EVENT_ID, "event-moderation", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$EVENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
+					}
+					$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+					header("Location: " . $url);
+					exit;
 				}
 			}
 
@@ -141,20 +149,6 @@ switch ($STEP) {
 
 // Page Display
 switch ($STEP) {
-	case 2 :
-		if ($NOTICE) {
-			echo display_notice();
-		}
-		if ($SUCCESS) {
-			echo display_success();
-			if (COMMUNITY_NOTIFICATIONS_ACTIVE && (isset($_POST["notify_members"]) && $_POST["notify_members"]) && (!$PAGE_OPTIONS["moderate_posts"] || $COMMUNITY_ADMIN)) {
-				community_notify($COMMUNITY_ID, $EVENT_ID, "event", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$EVENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
-			}
-			if (COMMUNITY_NOTIFICATIONS_ACTIVE && ($PAGE_OPTIONS["moderate_posts"] && !$COMMUNITY_ADMIN)) {
-				community_notify($COMMUNITY_ID, $EVENT_ID, "event-moderation", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$EVENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
-			}
-		}
-	break;
 	case 1 :
 	default :
 		if ($ERROR) {

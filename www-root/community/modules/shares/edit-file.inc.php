@@ -45,7 +45,8 @@ if ($RECORD_ID) {
 	if ($file_record) {
 		if ((int) $file_record["file_active"]) {
 			if (shares_file_module_access($RECORD_ID, "edit-file")) {
-				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$file_record["cshare_id"], "title" => limit_chars($file_record["folder_title"], 32));
+
+                Models_Community_Share::getParentsBreadCrumbs($RECORD_ID);
 				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID, "title" => limit_chars($file_record["file_title"], 32));
 				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-file&amp;id=".$RECORD_ID, "title" => "Edit File");
 
@@ -261,13 +262,15 @@ if ($RECORD_ID) {
 										}
 									}
 								}
-								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID;
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+                                if (!$ERROR) {
+                                    Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["file_title"]), "success", $MODULE);
+                                    add_statistic("community:" . $COMMUNITY_ID . ":shares", "file_edit", "csfile_id", $RECORD_ID);
+                                    communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_file", 1, $file_record["cshare_id"]);
 
-								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully updated this file.<br /><br />You will now be redirected to this file page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								add_statistic("community:".$COMMUNITY_ID.":shares", "file_edit", "csfile_id", $RECORD_ID);
-								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_file", 1, $file_record["cshare_id"]);
+                                    $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-file&id=" . $RECORD_ID;
+                                    header("Location: " . $url);
+                                    exit;
+                                }
 							}
 						}
 
@@ -283,14 +286,6 @@ if ($RECORD_ID) {
 
 				// Page Display
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-                            echo display_success();
-						}
-					break;
 					case 1 :
 					default :
 						if ($ERROR) {

@@ -17,16 +17,21 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_POLLS"))) {
 } elseif (!$COMMUNITY_LOAD) {
 	exit;
 }
-	
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".COMMUNITY_URL."/javascript/polls.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	
-	echo "<h1>Add Question</h1>\n";
+
+
 
 if ($RECORD_ID) {
+
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".COMMUNITY_URL."/javascript/polls.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	
 	
 	$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-question&id=".$RECORD_ID, "title" => "Add Question");
 
 	$terminology = $db->GetOne("SELECT `poll_terminology` FROM `community_polls` WHERE `cpolls_id` = ".$RECORD_ID);
+
+	Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
+	echo "<h1>Add Question</h1>\n";
 	
 	// Error Checking
 	switch($STEP) {
@@ -97,8 +102,7 @@ if ($RECORD_ID) {
 						$RESPONSES["cpolls_id"] 	= $PROCESSED["cpolls_id"];
 						$RESPONSES["cpquestion_id"] = $QUESTION_ID;
 						
-						foreach($poll_responses as $respKey => $respValue)
-						{
+						foreach($poll_responses as $respKey => $respValue) {
 							$SUCCESS = FALSE;
 							$RESPONSES["response"] 				= $respValue;
 							$RESPONSES["response_index"] 		= $respKey + 1;
@@ -114,38 +118,26 @@ if ($RECORD_ID) {
 							$ERRORSTR[] = "There was a problem inserting the responses for this question into the system. The MEdTech Unit was informed of this error; please try again later.";
 			
 							application_log("error", "There was an error inserting the responses to a question (ID: ".$QUESTION_ID."). Database said: ".$db->ErrorMsg());
-						}
-						
-						if (!$SUCCESS) {
-							$ERROR++;
-							$ERRORSTR[] = "There was a problem inserting the responses for this question into the system. The MEdTech Unit was informed of this error; please try again later.";
-			
-							application_log("error", "There was an error inserting the responses to a question (ID: ".$QUESTION_ID."). Database said: ".$db->ErrorMsg());
-						}
-						
-						$SUCCESS++;
-						if (isset($_POST["poll_action"])) {
-							if ($_POST["poll_action"] == "edit-poll") {
-								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-poll&id=".$RECORD_ID;
-								$SUCCESSSTR[]	= "You have successfully added a new question to the ".$terminology.".<br /><br />You will now be redirected back to edit this ".$terminology."; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							} elseif ($_POST["poll_action"] == "add-question") {
-								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-question&id=".$PROCESSED["cpolls_id"];
-								$SUCCESSSTR[]	= "You have successfully added a new question to the ".$terminology.".<br /><br />You will now be redirected to add another question to this ".$terminology."; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							} else {
-								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-								$SUCCESSSTR[]	= "You have successfully added a new question to the ".$terminology.".<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							}
 						} else {
-							$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-							$SUCCESSSTR[]	= "You have successfully added a new question to the ".$terminology.".<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-						}
-						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-						add_statistic("community_polling", "question_add", "cpquestion_id", $QUESTION_ID);
-						communities_log_history($COMMUNITY_ID, $PAGE_ID, $PROCESSED["cpolls_id"], "community_history_edit_poll", 0);
+                            if (isset($_POST["poll_action"])) {
+                                if ($_POST["poll_action"] == "edit-poll") {
+                                    $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=edit-poll&id=" . $RECORD_ID;
+                                } elseif ($_POST["poll_action"] == "add-question") {
+                                    $url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-question&id=".$PROCESSED["cpolls_id"];
+                                } else {
+                                    $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?confmsg=questionadd&term=" . $terminology;
+                                }
+                            } else {
+                                $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?confmsg=questionadd&term=" . $terminology;
+                            }
+                            Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added a new question to the <strong>%s</strong>."), $terminology), "success", $MODULE);
+                            add_statistic("community_polling", "question_add", "cpquestion_id", $QUESTION_ID);
+                            communities_log_history($COMMUNITY_ID, $PAGE_ID, $PROCESSED["cpolls_id"], "community_history_edit_poll", 0);
+                            header("Location: " . $url);
+                            exit;
+                        }
 					}
-				}
-	
-				if (!$SUCCESS) {
+				} else {
 					$ERROR++;
 					$ERRORSTR[] = "There was a problem inserting this question into the system. The MEdTech Unit was informed of this error; please try again later.";
 	
@@ -165,14 +157,6 @@ if ($RECORD_ID) {
 	
 	// Page Display
 	switch($STEP) {
-		case 2 :
-			if ($NOTICE) {
-				echo display_notice();
-			}
-			if ($SUCCESS) {
-				echo display_success();
-			}
-		break;
 		case 1 :
 		default :
 			if ($ERROR) {

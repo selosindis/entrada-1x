@@ -37,7 +37,7 @@ if ($RECORD_ID) {
 		
 		if (!$db->GetOne($query) || ($COMMUNITY_MEMBER && $folder_record["allow_member_read"]) || (!$COMMUNITY_MEMBER && $folder_record["allow_troll_read"]) || $COMMUNITY_ADMIN) {
 			if (shares_module_access($RECORD_ID, "add-file")) {
-				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$folder_record["cshare_id"], "title" => limit_chars($folder_record["folder_title"], 32));
+                Models_Community_Share::getParentsBreadCrumbs($folder_record["cshare_id"]);
 				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-file&id=".$RECORD_ID, "title" => "Upload File");
 	
                 if ($isCommunityCourse) {
@@ -331,24 +331,27 @@ if ($RECORD_ID) {
 														if ($LOGGED_IN) {
 															if ($COMMUNITY_MEMBER) {
 																if (($COMMUNITY_ADMIN) || ($folder_record["allow_member_read"] == 1)) {
-																	$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$RECORD_ID;
+																	$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-folder&id=" . $RECORD_ID;
 																} elseif ($folder_record["allow_member_upload"] == 1){
-																	$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
+																	$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
 																}
 															} else {
 																if ($folder_record["allow_troll_read"] == 1) {
-																	$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$RECORD_ID;
+																	$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-folder&id=" . $RECORD_ID;
 																} elseif ($folder_record["allow_troll_upload"] == 1) {
-																	$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
+																	$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
 																}
 															}
 														}
-														$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-														$SUCCESS++;
-														$SUCCESSSTR[]	= "You have successfully uploaded ".html_encode($PROCESSED["file_filename"])." (version 1).<br /><br />You will now be redirected to this files page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                                                        Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully uploaded <strong>%s</strong>."), $PROCESSED["file_filename"]), "success", $MODULE);
 														add_statistic("community:".$COMMUNITY_ID.":shares", "file_add", "csfile_id", $VERSION_ID);
 														communities_log_history($COMMUNITY_ID, $PAGE_ID, $FILE_ID, "community_history_add_file", 1, $RECORD_ID);
+                                                        if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
+                                                            community_notify($COMMUNITY_ID, $FILE_ID, "file", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$FILE_ID, $RECORD_ID, $PROCESSES["release_date"]);
+                                                        }
+
+                                                        header("Location: " . $url);
+                                                        exit;
 													}
 												}
 											}
@@ -399,17 +402,6 @@ if ($RECORD_ID) {
 	
 				// Page Display
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-							echo display_success();
-							if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-								community_notify($COMMUNITY_ID, $FILE_ID, "file", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$FILE_ID, $RECORD_ID, $PROCESSES["release_date"]);
-							}
-						}
-					break;
 					case 1 :
 					default :					
 						if(count($file_uploads)<1){
@@ -935,7 +927,7 @@ if ($RECORD_ID) {
 					echo display_notice();
 				}
 			}
-		}else{
+		} else {
 			
 			$ERROR++;
 			$ERRORSTR[] = "Your access level only allows you to upload one file and revisions of it. Any additional files can be uploaded as a new revision of that file without overwriting the current file.";

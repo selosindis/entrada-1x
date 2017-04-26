@@ -701,7 +701,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                             foreach ($results as $result) {
                                 echo "<option id=\"all-obj-item-".$result["objective_id"]."\" value=\"".(int) $result["objective_id"]."\">".html_encode($result["objective_name"])."</option>\n";
                                 $query = "SELECT a.* FROM `global_lu_objectives` AS a
-                                            JOIN `obective_organisation` AS b
+                                            JOIN `objective_organisation` AS b
                                             ON a.`objective_id` = b.`objective_id`
                                             WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])."
                                             AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
@@ -767,21 +767,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                         <input type="hidden" id="default_procedure_involvement" value="Assisted" />
                         <?php
                         // Fetch any deficient procedures.
-                        $query = "SELECT DISTINCT a.*
+                        $deficient_procedures = false;
+                        if (!empty($procedure_ids)) {
+                            $query = "SELECT DISTINCT a.*
                                     FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
                                     LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
                                     ON b.`lprocedure_id` = a.`lprocedure_id`
                                     WHERE a.`lprocedure_id` IN (".$procedure_ids.")
                                     AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()));
-                        $deficient_procedures = $db->GetAll($query);
-
+                            $deficient_procedures = $db->GetAll($query);
+                        }
                         // Fetch any preferred procedures.
-                        $query = "SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
+                        $preferred_procedures = false;
+                        if (!empty($rotation["rotation_id"])) {
+                            $query = "SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
                                         LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
                                         ON b.`lprocedure_id` = a.`lprocedure_id`
                                         WHERE b.`rotation_id` = ".$db->qstr($rotation["rotation_id"])."
                                         AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()));
-                        $preferred_procedures = $db->GetAll($query);
+                            $preferred_procedures = $db->GetAll($query);
+                        }
                         ?>
                         <label for="procedure_display_type_all" class="radio"><input type="radio" name="procedure_display_type" id="procedure_display_type_all" onclick="showAllProcedures()"<?php echo ((!$rotation || !$preferred_procedures) ? " checked=\"checked\"" : ""); ?> /> Show all clinical tasks</label>
                         <?php

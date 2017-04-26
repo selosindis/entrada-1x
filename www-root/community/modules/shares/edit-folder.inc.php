@@ -34,7 +34,9 @@ if ($RECORD_ID) {
 	$folder_record	= $db->GetRow($query);
 	if ($folder_record) {
 		if ((int) $folder_record["folder_active"]) {
-            Models_Community_Share::getParentsBreadCrumbs($folder_record["parent_folder_id"]);
+
+			Models_Community_Share::getParentsBreadCrumbs($RECORD_ID);
+//            Models_Community_Share::getParentsBreadCrumbs($folder_record["parent_folder_id"]);
 			$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$RECORD_ID, "title" => limit_chars($folder_record["folder_title"], 32));
 			$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-folder&amp;id=".$RECORD_ID, "title" => "Edit Shared Folder");
 
@@ -299,17 +301,16 @@ if ($RECORD_ID) {
                                 $ERROR++;
                                 $ERRORSTR[] = "Error updating the community ACL.";
                             }
-                            
-							$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
                             if (!$ERROR) {
-							$SUCCESS++;
-							$SUCCESSSTR[]	= "You have successfully updated the <strong>".html_encode($PROCESSED["folder_title"])."</strong> shared folder.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							
-							add_statistic("community:".$COMMUNITY_ID.":shares", "folder_edit", "cshare_id", $RECORD_ID);
-							communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_share", 1);
-						}
+                                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["folder_title"]), "success", $MODULE);
+                                add_statistic("community:".$COMMUNITY_ID.":shares", "folder_edit", "cshare_id", $RECORD_ID);
+                                communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_share", 1);
+
+                                $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+                                header("Location: " . $url);
+                                exit;
+                            }
 						}
 
 						if (!$SUCCESS) {
@@ -332,14 +333,6 @@ if ($RECORD_ID) {
 
 			// Page Display
 			switch($STEP) {
-				case 2 :
-					if ($NOTICE) {
-						echo display_notice();
-					}
-					if ($SUCCESS) {
-						echo display_success();
-					}
-				break;
 				case 1 :
 				default :
 					if ((!isset($PROCESSED["folder_icon"])) || (!(int) $PROCESSED["folder_icon"]) || ($PROCESSED["folder_icon"] < 1) || ($PROCESSED["folder_icon"] > 6) ) {
@@ -704,7 +697,7 @@ if ($RECORD_ID) {
 													<input type="radio" id="student_hidden_1" name="student_hidden" value="1" style="vertical-align: middle"<?php echo (((isset($PROCESSED["student_hidden"])) && ((int) $PROCESSED["student_hidden"])) ? " checked=\"checked\"" : ""); ?> />
 												</td>
 												<td>
-													<label for="student_hidden_1" class="content-small">Hide this file from folder.</label>
+													<label for="student_hidden_1" class="content-small">Hide this folder from students.</label>
 												</td>
 											</tr>
 											</tbody>

@@ -72,7 +72,7 @@ class Models_Assessment_AssessmentEvent extends Models_Base {
     }
     
     public function getAssessment() {
-        return Models_Assessment::fetchRowByID($this->assessment_id);
+        return Models_Gradebook_Assessment::fetchRowByID($this->assessment_id);
     }
 
     public static function fetchRowByAssessmentID ($assessment_id) {

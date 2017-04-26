@@ -199,16 +199,30 @@ define("DEFAULT_ROWS_PER_PAGE", 25);
 define("ENCRYPTION_KEY", "UXZF4tTES8RmTHY9qA7DQrvqEde7R5a8");					// Encryption key to encrypt data in the encrypted session ;)
 
 /**
+ * Kiosk Mode Card Parsing
+ * define a javascript expression to extract id number from card input
+ */
+define("KIOSK_MODE_CARD_PARSER", "data.substring(0,data.length-2)");
+
+/**
  * Google Analystics Tracking Code
  * Create an account at: http://www.google.com/analytics
  */
-define("GOOGLE_ANALYTICS_CODE",	"UA-80882-22");											// If you would like Google Analytics to track your usage (in production), then enter your tracking code.
+define("GOOGLE_ANALYTICS_CODE",	"UA-80882-22");									// If you would like Google Analytics to track your usage (in production), then enter your tracking code.
 
 /**
  * Goole Maps API Key
  * Generate your key from: http://code.google.com/apis/maps/
  */
 define("GOOGLE_MAPS_API", "http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=XXXXXXXXXXX");
+
+/**
+ * Safe iframe regex
+ * iframes matching this pattern will not have the src attribute stripped out by HTMLPurifier
+ */
+define("VIDEO_EMBED_REGEX", "www.youtube.com/embed/|player.vimeo.com/video/");
+
+
 
 /**
  * Defines whether the system should allow communities to have mailing lists created for them,
@@ -218,6 +232,14 @@ define("GOOGLE_MAPS_API", "http://maps.google.com/maps?file=api&amp;v=2&amp;sens
 $MAILING_LISTS = array();
 $MAILING_LISTS["active"] = false;
 $MAILING_LISTS["type"] = "google";
+
+/* RP NOW SECURE BROWSER API */
+define("RP_NOW_API", "https://exams.remoteproctor.io/");
+define("RP_NOW_ACCESS_KEY_ID", "XXXXXXXXXXXXXXXXXXXX");
+define("RP_NOW_SSI_SECRET_KEY", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+define("RP_NOW_CRYPTO_KEY", "XXXXXXXXXXXXXXXXXXXXXXXX");
+define("RP_NOW_ORGANIZATION", "zentrada");
+define("RP_NOW_DOWNLOAD_URL", "http://zentrada.remoteproctor.com/RPInstallCEF/sep28install/InstallV2.html?orgName=zentrada&orgType=true");
 
 /**
  * Google Hosted Apps Details
@@ -333,13 +355,17 @@ $COMMUNITY_ORGANISATIONS = array();															// Array of integer organisati
 define("ANNUALREPORT_STORAGE", $config->entrada_storage."/annualreports");		// Full directory path where the annual reports are stored without trailing slash.
 
 define("STORAGE_USER_PHOTOS", $config->entrada_storage . "/user-photos");		// Full directory path where user profile photos are stored without trailing slash.
+
 define("STORAGE_RESOURCE_IMAGES", $config->entrada_storage . "/resource-images");		// Full directory path where course/track images are stored without trailing slash.
 define("FILE_STORAGE_PATH", $config->entrada_storage . "/event-files");			// Full directory path where off-line files are stored without trailing slash.
+define("SECURE_QUIZ_STORAGE_PATH", $config->entrada_storage . "/secure-quiz");	// Full directory path where secure quiz access files are stored without trailing slash.
+define("SECURE_ACCESS_STORAGE_PATH", $config->entrada_storage . "/secure-access");	// Full directory path where secure access files are stored without trailing slash.
 define("MSPR_STORAGE",$config->entrada_storage . "/msprs");						//Full directory path where student Medical School Performance Reports should be sotred
 define("SEARCH_INDEX_PATH",$config->entrada_storage . "/search-indexes");		//Full directory path where student Medical School Performance Reports should be sotred
 define("SYLLABUS_STORAGE", $config->entrada_storage . "/syllabi");			// Full directory path where syllabi are stored without trailing slash.
 define("EPORTFOLIO_STORAGE_PATH", $config->entrada_storage . "/eportfolio");	// Full directory path where eportfolio files should be sotred 
 define("LOR_STORAGE_PATH", $config->entrada_storage . "/lor");                                // Full directory path where learning object repository files are stored without trailing slash.
+define("EXAM_STORAGE_PATH", $config->entrada_storage . "/exam-files");          // Full directory path where learning object repository files are stored without trailing slash.
 
 define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and parametres to sendmail.
 
@@ -347,7 +373,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada ME Open Edition");							// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.8.0"); 										// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.9.0"); 										// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada ME Open Edition: An eLearning Ecosystem";
@@ -422,7 +448,7 @@ $VALID_PODCASTS[] = "application/pdf";
 $VALID_PODCASTS[] = "document/x-epub";
 
 /**
- * Array containing valid name prefix's.
+ * Array containing valid name prefixes.
  */
 $PROFILE_NAME_PREFIX = array();
 $PROFILE_NAME_PREFIX[] = "Dr.";
@@ -577,6 +603,7 @@ $MODULES["communities"] = array("title" => "Manage Communities", "resource" => "
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
 $MODULES["eportfolio"] = array("title" => "Manage ePortfolios", "resource" => "eportfolio", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
+$MODULES["exams"] = array("title" => "Manage Exams", "resource" => "examdashboard", "permission" => "read");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
@@ -653,6 +680,12 @@ $ADMINISTRATION["staff"]["staff"] = array(
     "registered" => array("dashboard", "quizzes"),
     "assistant_support"	=> false
 );
+
+
+/**
+ * Breadcrumb separator
+ */
+$BREADCRUMB_SEPARATOR = ">";
 
 /**
  * These are the avialable character sets in both PHP and their cooresponding MySQL names and collation.

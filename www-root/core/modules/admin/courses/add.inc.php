@@ -56,6 +56,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
     $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/Twitter.js\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.iris.min.js?release=". html_encode(APPLICATION_VERSION) ."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/color-picker.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+    $HEAD[] = "<script type=\"text/javascript\">var COURSE_COLOR_PALETTE = ".json_encode($translate->_("course_color_palette")).";</script>\n";
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add")), "title" => "Adding " . $translate->_("course"));
 
@@ -683,9 +684,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						}
 
 						if (isset($PROCESSED["course_report_ids"]) && count($PROCESSED["course_report_ids"]) > 0) {
-
-							$course_reports_object = new Models_Course_Report();
-							foreach ($PROCESSED["course_report_ids"] as $index => $course_report_id) {									
+							foreach ($PROCESSED["course_report_ids"] as $index => $course_report_id) {
+                                $course_reports_object = new Models_Course_Report();
 								$PROCESSED["course_report_id"] = $course_report_id;		
 								$PROCESSED["course_id"] = $COURSE_ID;								
 
@@ -939,33 +939,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			}
 			?>
 			<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="courseForm" enctype="multipart/form-data">
-				<div id="upload-image-mod" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="label" aria-hidden="true">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-						<h3 id="label">Upload Image</h3>
-					</div>
-					<div class="modal-body">
-						<div class="preview-img"></div>
-						<div class="description alert" style="height:264px;width:483px;padding:20px;">
-							To upload a new course image you can drag and drop it on this area, or use the Browse button to select an image from your computer.
-						</div>
-					</div>
-					<div class="modal-footer">
-							<input type="hidden" name="coordinates" id="coordinates" value="" />
-							<input type="hidden" name="dimensions" id="dimensions" value="" />
-							<input type="file" name="image" id="image" />
-						<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-						<button class="btn"  data-dismiss="modal" class="btn btn-primary" id="upload-image-button">Upload</button>
-					</div>
-				</div>
 				<h2 title="Course Setup Section"><?php echo $translate->_("Course Setup"); ?></h2>
                 <div id="course-setup-section">
-					<div id="image-container" class="pull-right">
-						<a href="#upload-image-mod" id="upload-image-modal-btn" data-toggle="modal" class="btn btn-primary" id="upload-image">Upload Image</a>
-						<span>
-							<img src="<?php echo ENTRADA_URL; ?>/admin/courses?section=api-image&method=get-image&resource_id=0" width="150" height="250" class="img-polaroid" />
-						</span>
-					</div>
                     <div class="control-group">
                         <label for="curriculum_type_id" class="control-label form-nrequired"><?php echo $translate->_("Curriculum Layout"); ?></label>
                         <div class="controls">

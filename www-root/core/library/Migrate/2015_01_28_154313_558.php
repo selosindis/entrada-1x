@@ -604,6 +604,7 @@ class Migrate_2015_01_28_154313_558 extends Entrada_Cli_Migrate {
         `draft_title` varchar(64) NOT NULL DEFAULT '',
         `status` enum('draft','live') NOT NULL DEFAULT 'draft',
         `course_id` int(11) DEFAULT NULL,
+        `cperiod_id` int(11) DEFAULT '0',
         `created_date` int(11) NOT NULL,
         `created_by` int(11) NOT NULL,
         `deleted_date` int(11) DEFAULT NULL,

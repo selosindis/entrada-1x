@@ -220,16 +220,13 @@ class Organisation {
 	 * @return Organisation
 	 */
 	static function get($organisation_id) {
-		//$cache = SimpleCache::getCache();
-		//$organisation = $cache->get("Organisation",$organisation_id);
-		//if (!$organisation) {
-			global $db;
-			$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$db->qstr($organisation_id);
-			$result = $db->getRow($query);
-			if ($result) {
-				$organisation = new Organisation($result['organisation_id'], $result['organisation_title'], $result['organisation_address1'], $result['organisation_address2'], $result['organisation_city'], $result['organisation_province'], $result['organisation_country'], $result['organisation_postcode'], $result['organisation_telephone'], $result['organisation_fax'], $result['organisation_email'], $result['organisation_url'], $result['organisation_desc'], $result['aamc_institution_id'], $result['aamc_institution_name'], $result['aamc_program_id'], $result['aamc_program_name'], $result['organisation_active']);
-			}
-		//}
+		global $db;
+		$organisation = null;
+		$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$db->qstr($organisation_id);
+		$result = $db->getRow($query);
+		if ($result) {
+			$organisation = new Organisation($result['organisation_id'], $result['organisation_title'], $result['organisation_address1'], $result['organisation_address2'], $result['organisation_city'], $result['organisation_province'], $result['organisation_country'], $result['organisation_postcode'], $result['organisation_telephone'], $result['organisation_fax'], $result['organisation_email'], $result['organisation_url'], $result['organisation_desc'], $result['aamc_institution_id'], $result['aamc_institution_name'], $result['aamc_program_id'], $result['aamc_program_name'], $result['organisation_active']);
+		}
 		return $organisation;
 	}
 }

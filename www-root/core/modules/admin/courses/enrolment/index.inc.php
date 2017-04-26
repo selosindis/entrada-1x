@@ -45,7 +45,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
         echo "<h1 id=\"page-top\">" . $course->getFullCourseTitle() . "</h1>";
 
         courses_subnavigation($course->toArray(), "enrolment");
-        $curriculum_periods = Models_CurriculumPeriod::fetchRowByCurriculumTypeIDCourseID($course->getCurriculumTypeID(), $course->getID());
+        $curriculum_periods = Models_Curriculum_Period::fetchRowByCurriculumTypeIDCourseID($course->getCurriculumTypeID(), $course->getID());
         if ($curriculum_periods) {
 	        if (isset($_GET["cperiod_id"]) && $temp = clean_input($_GET["cperiod_id"], array("trim", "int"))) {
                 $cperiod_id = $temp;

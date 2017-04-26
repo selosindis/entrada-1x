@@ -92,7 +92,7 @@ if ($RECORD_ID) {
                 } else {
                     if ($file_record["session_variables"]) {
                         if ($file_record["iframe_resize"]) {
-                            $iframe = "<iframe class='iframeSize'  width='100%' scrolling='no' src='" . $file_record["link_url"] . "?course_id=" . $course_id['course_id'] . "&community_id=" . $COMMUNITY_ID . "&username=" . $ENTRADA_USER->getUsername() .  "&firstname=" . $ENTRADA_USER->getFirstname() . "&lastname=" . $ENTRADA_USER->getLastname() . "&role=" . $ENTRADA_USER->getActiveRole() . "&group=" . $ENTRADA_USER->getActiveGroup() . "'></iframe>";
+                            $iframe = "<iframe class='iframeSize'  width='100%' scrolling='no' src='" . $file_record["link_url"] . "?course_id=" . $course_id['course_id'] . "&community_id=" . $COMMUNITY_ID . "&username=" . $ENTRADA_USER->getUsername() .  "&firstname=" . $ENTRADA_USER->getFirstname() . "&lastname=" . $ENTRADA_USER->getLastname() . "&role=" . $ENTRADA_USER->getActiveRole() . "&group=" . $ENTRADA_USER->getActiveGroup() . "&email=" . $ENTRADA_USER->getEmail() . "'></iframe>";
                     } else {
                             $iframe = "<iframe class='iframeSize'  width='100%' src='" . $file_record["link_url"] . "?course_id=" . $course_id['course_id'] . "&community_id=" . $COMMUNITY_ID . "&username=" . $ENTRADA_USER->getUsername() .  "&firstname=" . $ENTRADA_USER->getFirstname() . "&lastname=" . $ENTRADA_USER->getLastname()  . "&role=" . $ENTRADA_USER->getActiveRole() . "&group=" . $ENTRADA_USER->getActiveGroup() .  "&email=" . $ENTRADA_USER->getEmail() ."'></iframe>";
                         }

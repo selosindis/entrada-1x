@@ -44,7 +44,8 @@ if ($RECORD_ID) {
 	if ($file_record) {
 		if ((int) $file_record["link_active"]) {
 			if (shares_link_module_access($RECORD_ID, "edit-link")) {
-				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$file_record["cshare_id"], "title" => limit_chars($file_record["folder_title"], 32));
+                Models_Community_Share::getParentsBreadCrumbs($RECORD_ID);
+                $BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-link&id=".$RECORD_ID, "title" => limit_chars($file_record["link_title"], 32));
 				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-link&amp;id=".$RECORD_ID, "title" => "Edit Link");
 
                 if ($isCommunityCourse) {
@@ -295,13 +296,13 @@ if ($RECORD_ID) {
                                             }
                                         }
                                     }
-                                    $url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$file_record["cshare_id"];
-                                    $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-                                    $SUCCESS++;
-                                    $SUCCESSSTR[]	= "You have successfully updated this link.<br /><br />You will now be redirected to the folder; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                                    Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["link_title"]), "success", $MODULE);
                                     add_statistic("community:".$COMMUNITY_ID.":shares", "link_edit", "cslink_id", $RECORD_ID);
                                     communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_link", 1, $file_record["cshare_id"]);
+
+                                    $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-folder&id=" . $file_record["cshare_id"];
+                                    header("Location: " . $url);
+                                    exit;
                                 }     
                             }
 
@@ -595,17 +596,28 @@ if ($RECORD_ID) {
                                             </thead>
                                             <tbody>
                                             <tr>
-                                                <td class="on"><input type="checkbox" id="read" name="read" value="read"<?php echo (isset($permission_db['read']) && ($permission_db['read'] == 1)) ? " checked=\"checked\"" : ""; ?> /></td>
-                                                <td>&nbsp;</td>
+                                            <td class="on">
+                                                <label for="read" class="content-small">
+                                                    <input type="checkbox" id="read" name="read" value="read"<?php echo (isset($permission_db['read']) && ($permission_db['read'] == 1)) ? " checked=\"checked\"" : ""; ?> />
+                                                    Read
+                                                </label>
+                                            </td>
+                                            <td>
+                                                <label for="update" class="content-small">
+                                                    <input type="checkbox" id="update" name="update" value="update"<?php echo (isset($permission_db['update']) && ($permission_db['update'] == 1)) ? " checked=\"checked\"" : ""; ?> />
+                                                    Update
+                                                </label>
+                                            </td>
                                             </tr>
                                             </tbody>
                                         </table>
                                     </td>
                                 </tr>
                             <?php } ?>
-
                             <tr class="course-group-permissions">
-                                <td colspan="3"><h3>Course Group Permissions</h3></td>
+                                <td colspan="3">
+                                    <h3>Course Group Permissions</h3>
+                                </td>
                             </tr>
 
                             <tr class="course-group-permissions">
@@ -645,13 +657,12 @@ if ($RECORD_ID) {
                                         </thead>
                                         <tbody>
                                         <?php
-
                                         foreach ($course_groups as $course_group) {
                                             $query = "SELECT `create`, `read`, `update`, `delete`
                                                                   FROM `community_acl_groups`
                                                                   WHERE `cgroup_id` = ".$db->qstr($course_group['cgroup_id'])."
                                                                   AND `resource_value` = ".$db->qstr($RECORD_ID)."
-                                                                  AND `resource_type` = 'communityhtml'";
+                                                                  AND `resource_type` = 'communitylink'";
                                             $community_course_perms = $db->GetRow($query);
                                             ?>
                                             <tr>
@@ -785,4 +796,3 @@ if ($RECORD_ID) {
 
 	application_log("error", "No link id was provided to edit. (Edit Link)");
 }
-?>

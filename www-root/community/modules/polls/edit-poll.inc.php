@@ -31,6 +31,9 @@ if ($RECORD_ID) {
 	$poll_record		= $db->GetRow($query);
 	if ($poll_record) {
 		$terminology		= $poll_record["poll_terminology"];
+
+        Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+
 		echo "<h1>Edit ".$terminology."</h1>\n";
 		
 		$query = "	SELECT COUNT(b.`cpresults_id`) 
@@ -300,13 +303,16 @@ if ($RECORD_ID) {
 							}
 						}
 						
-						$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-	
+						$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+
 						$SUCCESS++;
-						$SUCCESSSTR[]	= "You have successfully updated a ".$terminology." to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-						add_statistic("community_polling", "poll_edit", "cpolls_id", $RECORD_ID);
+                        Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["poll_title"]), "success", $MODULE);
+
+                        add_statistic("community_polling", "poll_edit", "cpolls_id", $RECORD_ID);
 						communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_poll", 0);
+
+						header("Location: " . $url);
+                        exit;
 					}
 		
 					if (!$SUCCESS) {
@@ -329,14 +335,6 @@ if ($RECORD_ID) {
 		
 		// Page Display
 		switch($STEP) {
-			case 2 :
-				if ($NOTICE) {
-					echo display_notice();
-				}
-				if ($SUCCESS) {
-					echo display_success();
-				}
-			break;
 			case 1 :
 			default :
 				if ($ERROR) {

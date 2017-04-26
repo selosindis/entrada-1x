@@ -24,7 +24,7 @@ $shares_index = Models_Community_Share::getSharesIndex($COMMUNITY_ID, $PAGE_ID, 
 // Section for feedback and error messages
 if (isset($_POST["success"])) {
     if ($_POST["success"] == "yes") {
-        add_success("You have successfully moved files, links and folders");
+        add_success("You have successfully moved files, links and folders.");
         echo display_success();
     } else {
         $errors_lvl_1 = json_decode($_POST["data_json"], true);
@@ -84,7 +84,7 @@ if (isset($_POST["success"])) {
 
 if (isset($_POST["success_reorder"])) {
     if ($_POST["success_reorder"] == "yes") {
-        add_success("You have successfully updated the folder order");
+        add_success("You have successfully updated the folder order.");
 
         echo display_success();
     } else {
@@ -390,10 +390,10 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
         }
 
         //insert/update code
-        var url = '<?php echo ENTRADA_URL . "/api/community-shares-open.api.php";?>';
-        var community_id = '<?php echo $COMMUNITY_ID?>';
-        var page_id =  '<?php echo $PAGE_ID?>';
-        var dataString = 'community_id=' + community_id + '&foldersOpen=' + foldersOpen + '&page_id=' + page_id;
+        var url = "<?php echo ENTRADA_URL . "/api/community-shares-open.api.php";?>";
+        var community_id = "<?php echo $COMMUNITY_ID?>";
+        var page_id =  "<?php echo $PAGE_ID?>";
+        var dataString = "community_id=" + community_id + "&foldersOpen=" + foldersOpen + "&page_id=" + page_id;
         jQuery.ajax({
             type: "POST",
             url: url,
@@ -406,10 +406,10 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
     
     //creates the js array of opened folders   
     function openFoldersSaved() {
-        var url = '<?php echo ENTRADA_URL . "/api/community-shares-load-open.api.php";?>';
-        var community_id = '<?php echo $COMMUNITY_ID?>';
-        var page_id =  '<?php echo $PAGE_ID?>';
-        var dataString = 'community_id=' + community_id + '&page_id=' + page_id;    
+        var url = "<?php echo ENTRADA_URL . "/api/community-shares-load-open.api.php";?>";
+        var community_id = "<?php echo $COMMUNITY_ID?>";
+        var page_id =  "<?php echo $PAGE_ID?>";
+        var dataString = "community_id=" + community_id + "&page_id=" + page_id;
         jQuery.ajax({
             type: "POST",
             url: url,
@@ -434,7 +434,7 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
         }
 
         jQuery(".point-right").click(function() {
-            if (jQuery("#expandAllFolders").is(':visible')) {
+            if (jQuery("#expandAllFolders").is(":visible")) {
                 if (jQuery(this).hasClass("icon-chevron-right")) {
                     showFolder(this);
                 } else {
@@ -445,7 +445,7 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
         });
 
         jQuery(".folderIcon").click(function() {
-            if (jQuery("#expandAllFolders").is(':visible')) {
+            if (jQuery("#expandAllFolders").is(":visible")) {
                 var clicked= ".share_id" + this.id.substr(9);
                 if (jQuery(clicked).hasClass("icon-chevron-right")) {
                     showFolder(clicked);
@@ -460,90 +460,88 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
             expandFolders();
         });
         
-
-        
         var moving = false;
         var reordering = false;
         var sortableChanged = false;
         var orderChangedFolders = false;
         var orderChangedFiles = false;
         var reorderFolders = false
-        jQuery('#savemove').hide();
-        jQuery('#saveorder').hide();
-        jQuery('li[data-parent="0"]:first').hide();
+        jQuery("#savemove").hide();
+        jQuery("#saveorder").hide();
+        jQuery("li[data-parent=\"0\"]:first").hide();
         var movedFolders = {};
         var movedFiles = {};
        
-        jQuery('#move').click(function(){
+        jQuery("#move").click(function() {
             
             if(moving == false) {
                 
                 //files
-                jQuery('li.fileshare').prepend('<div class="dropzone"></div>');
-                jQuery('li.fileshare').prepend('<span class="handleFile"></span>');
+                jQuery("li.fileshare").prepend("<div class=\"dropzone\"></div>");
+                jQuery("li.fileshare").prepend("<span class=\"handleFile\"></span>");
                 
                 //folders
-                jQuery('#savemove').show();
-                jQuery('li[data-parent="0"]:first').show();
+                jQuery("#savemove").show();
+                jQuery("li[data-parent=\"0\"]:first").show();
                 var count = 0;
                 var filesCount = 0;
                 
-                jQuery('.folder_container').prepend('<div class="dropzone"></div>');
-                jQuery('.point-right, .iconPlaceholder').hide();
-                jQuery('.folder_container').prepend('<span class="handle"></span>');
+                jQuery(".folder_container").prepend("<div class=\"dropzone\"></div>");
+                jQuery(".point-right, .iconPlaceholder").hide();
+                jQuery(".folder_container").prepend("<span class=\"handle\"></span>");
                 
-                jQuery('#move').attr('value', 'Cancel Move');
+                jQuery("#move").attr("value", "Cancel Move");
                 jQuery("#reorder").hide();
             
                 jQuery(".share-edit-btn").hide();
             
                 //folder drag
-                jQuery('.folder_container').draggable({
-                    handle: '.handle',
+                jQuery(".folder_container").draggable({
+                    handle: ".handle",
                     opacity: .8,
                     addClasses: false,
-                    helper: 'clone',
+                    helper: "clone",
                     zIndex: 100
                 });
                 
                 //file drag
-                jQuery('.fileshare').draggable({
-                    handle: '.handleFile',
+                jQuery(".fileshare").draggable({
+                    handle: ".handleFile",
                     opacity: .8,
                     addClasses: false,
-                    helper: 'clone',
+                    helper: "clone",
                     zIndex: 100,
                     start: function() {
                         //disbale the root level dragable
-                        jQuery('li[data-parent="0"]:first').children('span.handle').hide();
-                        jQuery('li[data-parent="0"]:first').children('span.iconPlaceholder').show();
+                        jQuery("li[data-parent=\"0\"]:first").children("span.handle").hide();
+                        jQuery("li[data-parent=\"0\"]:first").children("span.iconPlaceholder").show();
                     },
                     stop: function() {
                         //enables the root drop 
-                        jQuery('li[data-parent="0"]:first').children('span.handle').show();
-                        jQuery('li[data-parent="0"]:first').children('span.iconPlaceholder').hide();                     
+                        jQuery("li[data-parent=\"0\"]:first").children("span.handle").show();
+                        jQuery("li[data-parent=\"0\"]:first").children("span.iconPlaceholder").hide();
                     }
                 });     
                 
-                //disbale the root level dragable
-                jQuery('#parent_folder_id_0:first').draggable('destroy');
+                //disable the root level dragable
+                jQuery("#parent_folder_id_0:first").draggable("destroy");
                 
                 //folder drop action
-                jQuery('.handle').droppable({
-                    accept: '.folder_container, .fileshare',
-                    tolerance: 'pointer',
-                    hoverClass: 'hoverClass',
+                jQuery(".handle").droppable({
+                    accept: ".folder_container, .fileshare",
+                    tolerance: "pointer",
+                    hoverClass: "hoverClass",
                     drop: function(e, ui) {
                         //folder drop
-                        if ($(ui.draggable).hasClass('folder_container')) {
+                        if ($(ui.draggable).hasClass("folder_container")) {
                             var li = jQuery(this).parent();
                             var folder_sub_loop = jQuery(li).children("div.folder_sub_loop");
 
                             if (folder_sub_loop) {
                                 //gets the folders invlovled
-                                var folderMoved = jQuery(ui.draggable).children("i").attr('id');
-                                var destinationFolder = jQuery(li).find("div.folder_sub_loop").children(".folderIcon").attr('id');
-                                var originFolder = jQuery(ui.draggable).attr('id');      
+                                var folderMoved = jQuery(ui.draggable).children("i").attr("id");
+                                var destinationFolder = jQuery(li).find("div.folder_sub_loop").children(".folderIcon").attr("id");
+                                var originFolder = jQuery(ui.draggable).attr("id");
 
                                 if (destinationFolder.substring(10) == 0) {
                                     jQuery("ul#sharetop").append(ui.draggable);
@@ -553,7 +551,7 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
                                     if (ulPath.children("ul:first").length) {
                                         ulPath.children("ul:first").append(ui.draggable);
                                     } else {
-                                        ulPath.append("<ul class='shares subshare'></ul>");
+                                        ulPath.append("<ul class=\"shares subshare\"></ul>");
                                         ulPath.children("ul:first").append(ui.draggable);
                                         ulPath.children("ul:first").show();
                                     }
@@ -561,16 +559,16 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
                                 //sets the new parent folder on the moved folder
                                 //substring folder_id_8
                                 var folderSub = destinationFolder.substring(10);
-                                jQuery(ui.draggable).attr('id', 'parent_folder_id_'+folderSub);
+                                jQuery(ui.draggable).attr("id", "parent_folder_id_"+folderSub);
 
                                 //logs the move in an array
                                 movedFolders[count] = {};
-                                movedFolders[count]['folderMoved'] = folderMoved.substring(9);
-                                movedFolders[count]['destinationFolder'] = destinationFolder.substring(10);
-                                movedFolders[count]['originFolder'] = originFolder.substring(17);
+                                movedFolders[count]["folderMoved"] = folderMoved.substring(9);
+                                movedFolders[count]["destinationFolder"] = destinationFolder.substring(10);
+                                movedFolders[count]["originFolder"] = originFolder.substring(17);
                             }
                             //reset our background colours.
-                            li.find('.handle,.dropzone').css({ backgroundColor: '', borderColor: '' });
+                            li.find(".handle,.dropzone").css({ backgroundColor: "", borderColor: "" });
 
                             count++;
 
@@ -582,15 +580,15 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
                         }//end folder
                         
                         //file drop
-                        if ($(ui.draggable).hasClass('fileshare')) {
+                        if ($(ui.draggable).hasClass("fileshare")) {
                             var li = jQuery(this).parent(); //folder_sub_loop
                             var folder_sub_loop = jQuery(li).children("div.folder_sub_loop");
                             
                             //ui.draggable is our reference to the item that's been dragged.
                             if (folder_sub_loop) {
                                 //gets the folders invlovled
-                                var id_moved = jQuery(ui.draggable).children("a:first").attr('id');
-                                var destinationFolder = jQuery(li).find("div.folder_sub_loop").children(".folderIcon").attr('id');         
+                                var id_moved = jQuery(ui.draggable).children("a:first").attr("id");
+                                var destinationFolder = jQuery(li).find("div.folder_sub_loop").children(".folderIcon").attr("id");
                                 
                                 if (destinationFolder.substring(10) == 0) {
                                     
@@ -601,19 +599,19 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
                                     if (ulPath.children("ul:first").length) {
                                         ulPath.children("ul:first").append(ui.draggable);
                                     } else {
-                                        ulPath.append("<ul class='fileUL subshare'></ul>");
+                                        ulPath.append("<ul class=\"fileUL subshare\"></ul>");
                                         ulPath.children("ul:first").append(ui.draggable);
                                         ulPath.children("ul:first").show();
                                     }
                                 }
                                 //logs the move in an array
                                 movedFiles[filesCount] = {};
-                                movedFiles[filesCount]['type'] = id_moved.substring(0, 4);
-                                movedFiles[filesCount]['id_moved'] = id_moved.substring(5, (id_moved.length - 6));
-                                movedFiles[filesCount]['destinationFolder'] = destinationFolder.substring(10);
+                                movedFiles[filesCount]["type"] = id_moved.substring(0, 4);
+                                movedFiles[filesCount]["id_moved"] = id_moved.substring(5, (id_moved.length - 6));
+                                movedFiles[filesCount]["destinationFolder"] = destinationFolder.substring(10);
                             }
                             //reset our background colours.
-                            li.find('.handleFile,.handle,.dropzone').css({ backgroundColor: '', borderColor: '' });
+                            li.find(".handleFile,.handle,.dropzone").css({ backgroundColor: "", borderColor: "" });
 
                             filesCount++;
 
@@ -625,33 +623,33 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
                         }
                     },
                     over: function() {
-                        jQuery(this).filter('.handle').css({ backgroundColor: '#ccc' });
-                        jQuery(this).filter('.dropzone').css({ borderColor: '#aaa' });
+                        jQuery(this).filter(".handle").css({ backgroundColor: "#ccc" });
+                        jQuery(this).filter(".dropzone").css({ borderColor: "#aaa" });
                     },
                     out: function() {
-                        jQuery(this).filter('.handle').css({ backgroundColor: '' });
-                        jQuery(this).filter('.dropzone').css({ borderColor: '' });
+                        jQuery(this).filter(".handle").css({ backgroundColor: "" });
+                        jQuery(this).filter(".dropzone").css({ borderColor: "" });
                     }
                 });
                 moving = true;
             } else {
-                jQuery('#savemove').hide();
+                jQuery("#savemove").hide();
                 jQuery("#reorder").show();
                 jQuery(".share-edit-btn").show();
-                //$('li[data-parent="0"]');
-                jQuery('li[data-parent="0"]:first').hide();
-                jQuery('.handle').droppable('destroy');
-                jQuery('.fileshare').draggable('destroy');
-                jQuery('.folder_container').draggable('destroy');
-                jQuery('#move').attr('value', 'Move Files and Folders');
-                jQuery('.folder_container .handle, .folder_container .dropzone, .fileshare .handleFile, .fileshare .dropzone').remove();
+                //$("li[data-parent="0"]");
+                jQuery("li[data-parent=\"0\"]:first").hide();
+                jQuery(".handle").droppable("destroy");
+                jQuery(".fileshare").draggable("destroy");
+                jQuery(".folder_container").draggable("destroy");
+                jQuery("#move").attr("value", "Move Files and Folders");
+                jQuery(".folder_container .handle, .folder_container .dropzone, .fileshare .handleFile, .fileshare .dropzone").remove();
                 //show all point-rights show all iconPlaceholders nexto .i-hidden
-                jQuery('.point-right').show();
-                jQuery('.i-hidden').prev("span").show();
-                //jQuery('.point-right, .iconPlaceholder').hide();    
+                jQuery(".point-right").show();
+                jQuery(".i-hidden").prev("span").show();
+                //jQuery(".point-right, .iconPlaceholder").hide();
                 moving = false;
                 if (orderChangedFiles == true || orderChangedFolders == true) {
-                    url = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>';
+                    url = "<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>";
                     window.location.replace(url);
                 } else {                   
                     
@@ -662,13 +660,13 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
         });
         
         //this button allows you to change the order of the main folders
-        jQuery('#reorder').click(function(){
+        jQuery("#reorder").click(function() {
             if(moving == false) {
                 //saves the open folders into a variable to reload once the sorting is done
                 openArray = openFoldersSaved();
                 
                 //sets buttons
-                jQuery('#reorder').attr('value', 'Cancel Reorder');
+                jQuery("#reorder").attr("value", "Cancel Reorder");
                 jQuery("#expandAllFolders").hide();
                 jQuery("#move").hide();
                 jQuery("#saveorder").show();
@@ -678,11 +676,11 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
                 moving = true;
                 
                 //switches the handles
-                jQuery('.folder_container').prepend('<span class="handle"></span>');
-                jQuery('.point-right, .iconPlaceholder').hide();   
+                jQuery(".folder_container").prepend("<span class=\"handle\"></span>");
+                jQuery(".point-right, .iconPlaceholder").hide();
                           
-                jQuery('#sharetop').sortable({
-                    items: '> li',
+                jQuery("#sharetop").sortable({
+                    items: "> li",
                     axis: "y",
                     scroll: true,
                     containment: "#folderTop",
@@ -694,11 +692,11 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
             } else {           
                 //reloads the page if the order was changed but not saved
                 if (sortableChanged == true) {
-                    url = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>';
+                    url = "<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>";
                     window.location.replace(url);
                 } else {
                     //reset buttons
-                    jQuery('#reorder').attr('value', 'Reorder Root Level Folders');
+                    jQuery("#reorder").attr("value", "Reorder Root Level Folders");
                     jQuery("#expandAllFolders").show();
                     jQuery("#move").show();
                     jQuery("#saveorder").hide();
@@ -707,8 +705,8 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
                     moving = false;
 
                     //switches the handles
-                    jQuery('.point-right').show();
-                    jQuery('.i-hidden').prev("span").show();
+                    jQuery(".point-right").show();
+                    jQuery(".i-hidden").prev("span").show();
 
                     //reopens folders that were open before
                     //loop through the folders to open them
@@ -716,33 +714,33 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
                         showFolder(".share_id_"+openArray[i]);
                     }
 
-                    jQuery('.folder_container .handle').remove();
-                    jQuery('#sharetop').destroy();
+                    jQuery(".folder_container .handle").remove();
+                    jQuery("#sharetop").destroy();
                 }
             }
         });
         
           
-        jQuery('#savemove').click(function() {
+        jQuery("#savemove").click(function() {
             //insert/update code
-            var url = '<?php echo ENTRADA_URL . "/api/community-shares-move-folders.api.php";?>';
-            var community_id = '<?php echo $COMMUNITY_ID?>';
-            var user_access = '<?php echo $USER_ACCESS?>';
-            //var dataString = 'community_id=' + community_id + '&movedFolders=' + movedFolders;
+            var url = "<?php echo ENTRADA_URL . "/api/community-shares-move-folders.api.php";?>";
+            var community_id = "<?php echo $COMMUNITY_ID?>";
+            var user_access = "<?php echo $USER_ACCESS?>";
+            //var dataString = "community_id=" + community_id + "&movedFolders=" + movedFolders;
             jQuery.ajax({
                 type: "POST",
                 url: url,
                 data: { community_id: community_id, user_access: user_access, movedFolders: movedFolders, movedFiles: movedFiles },
                 dataType: "json",
                 success: function(data) {
-                    if (data['errors']) {
-                        var success = 'no';
+                    if (data["errors"]) {
+                        var success = "no";
                         var data_json = JSON.stringify(data);
                         jQuery("#success").val(success);
                         jQuery("#data_json").val(data_json);
                         jQuery("#submit").submit();
                     } else {
-                        var success = 'yes';
+                        var success = "yes";
                         jQuery("#success").val(success);
                         jQuery("#submit").submit();
                     }
@@ -752,11 +750,11 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
         
         //submits the reorder
         jQuery("#saveorder").click(function() {
-            var fieldOrder = jQuery('#sharetop').sortable('serialize');
-            var community_id = '<?php echo $COMMUNITY_ID?>';
-            var user_access = '<?php echo $USER_ACCESS?>';   
-            var url = '<?php echo ENTRADA_URL . "/api/community-shares-reorder-folders.api.php";?>';
-            //var community_id = '<?php echo $COMMUNITY_ID?>';       
+            var fieldOrder = jQuery("#sharetop").sortable("serialize");
+            var community_id = "<?php echo $COMMUNITY_ID?>";
+            var user_access = "<?php echo $USER_ACCESS?>";
+            var url = "<?php echo ENTRADA_URL . "/api/community-shares-reorder-folders.api.php";?>";
+            //var community_id = "<?php echo $COMMUNITY_ID?>";
             
             jQuery.ajax({
                 type: "POST",
@@ -765,14 +763,14 @@ $community_shares_select_documents = "<select id=\"share_id\" name=\"share_id\" 
                 //data: fieldOrder,
                 dataType: "json",
                 success: function(data) {
-                    if (data['errors']) {
-                        var success = 'no';
+                    if (data["errors"]) {
+                        var success = "no";
                         var data_json = JSON.stringify(data);
                         jQuery("#success_reorder").val(success);
                         jQuery("#data_json_reorder").val(data_json);
                         jQuery("#submitReorder").submit();
                     } else {
-                        var success = 'yes';
+                        var success = "yes";
                         jQuery("#success_reorder").val(success);
                         jQuery("#submitReorder").submit();
                     }
@@ -800,12 +798,12 @@ div.content {
 }
 </style>
 <form id="submit" method="post" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL?>">
-    <input type="hidden" name="success" id="success"></input>
-    <input type="hidden" name="data_json" id="data_json"></input>
+    <input type="hidden" name="success" id="success"/>
+    <input type="hidden" name="data_json" id="data_json"/>
 </form>
 <form id="submitReorder" method="post" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL?>">
-    <input type="hidden" name="success_reorder" id="success_reorder"></input>
-    <input type="hidden" name="data_json_reorder" id="data_json_reorder"></input>
+    <input type="hidden" name="success_reorder" id="success_reorder"/>
+    <input type="hidden" name="data_json_reorder" id="data_json_reorder"/>
 </form>
 <div style="padding-top: 10px; clear: both" id="folderTop">
 	<?php
@@ -823,7 +821,7 @@ div.content {
     //checks the role of the user and sets hidden to true if they're not a faculty, staff, or medtech memeber
     //used to control access to files if they're marked hidden from students
     $group = $ENTRADA_USER->getActiveGroup();
-    if ($group == 'faculty' || $group == 'staff'  || $group == 'medtech') {
+    if ($group == "faculty" || $group == "staff"  || $group == "medtech") {
         $hidden = false;
     } else {
         $hidden = true;
@@ -831,11 +829,11 @@ div.content {
 	if ($shares_index) {
 		?>
         <ul id="sharetop" class="shares">
-            <li class='folder_container' id='share_id_0' data-parent='0'>
+            <li class="folder_container" id="share_id_0" data-parent="0">
                 <span class="iconPlaceholder"></span>
                 <div class="folder_sub_loop">
                     <span id="folder_id_0" class="folderIcon folder-1"></span>
-                    <ul class='folderUL'>
+                    <ul class="folderUL">
                         <li class="folderShare">
                             <div>Root Level</div>
                         </li>

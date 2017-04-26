@@ -67,6 +67,19 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
     switch ($request) {
         case "POST" :
+            switch ($method) {
+                 case "delete_grader" :
+                    if (isset(${$request_var}["grader_id"]) && $tmp_input = clean_input(${$request_var}["grader_id"], "int")) {
+                        $grader_id = $tmp_input;
+                    }
+
+                    if (Models_Gradebook_Assessment_Graders::deleteGraderForAssessment($grader_id, $assessment_id)) {
+                        echo json_encode(array("status" => "success", "data" => ""));
+                    } else {
+                        echo json_encode(array("status" => "error", "data" => "There was an error while removing the specified grader from the assessment."));
+                    }
+                    break;
+            }
             break;
         case "GET" :
             switch ($method) {
@@ -91,7 +104,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                     $learners_ids = Models_Gradebook_Assessment_Graders::fetchLearnersByAssessmentGrader($assessment_id, $grader_id);
                     $learners = array();
                     foreach ($learners_ids as $learner_id) {
-                        $learner = Models_User::fetchRowByNumber($learner_id);
+                        $learner = Models_User::fetchRowByID($learner_id);
                         $learners[] = $learner->getFullname();
                     }
                     echo json_encode(array("status" => "success", "data" => $learners));
@@ -109,18 +122,6 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
                     break;
 
-                case "delete_grader" :
-                    if (isset(${$request_var}["grader_id"]) && $tmp_input = clean_input(${$request_var}["grader_id"], "int")) {
-                        $grader_id = $tmp_input;
-                    }
-
-                    if (Models_Gradebook_Assessment_Graders::deleteGraderForAssessment($grader_id, $assessment_id)) {
-                        echo json_encode(array("status" => "success", "data" => ""));
-                    } else {
-                        echo json_encode(array("status" => "error", "data" => "There was an error while removing the specified grader from the assessment."));
-                    }
-                    break;
-
                 case "get_assigned_learners":
                     $student_ids = Models_Gradebook_Assessment_Graders::fetchLearnersProxyIdByAssessmentGrader($assessment_id);
 
@@ -133,5 +134,6 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                     break;
 
             }
+        break;
     }
 }

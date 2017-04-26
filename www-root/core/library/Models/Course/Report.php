@@ -27,6 +27,7 @@ class Models_Course_Report extends Models_Base {
 
     protected static $table_name = "course_reports";
     protected static $primary_key = "creport_id";
+    protected static $default_sort_column = "creport_id";
 
     public function __construct($arr = NULL) {
         parent::__construct($arr);

@@ -1354,7 +1354,7 @@ class User {
         return $output;
     }
 
-	public static function fetchUsersByGroups($search_term = null, $group = null, $organisation_id = null, $app_id = null, $excluded_ids = 0) {
+	public static function fetchUsersByGroups($search_term = null, $group = null, $organisation_id = null, $app_id = null, $excluded_ids = 0, $limit = null, $offset = null) {
 		global $db;
 
 		$groups_string = "";
@@ -1382,7 +1382,13 @@ class User {
 					(isset($app_id) && $app_id ? " AND b.`app_id` = " . $db->qstr($app_id) : "")."
                     GROUP BY a.`id`
                     ORDER BY a.`firstname` ASC, a.`lastname` ASC";
+        if (!empty($limit)) {
+            $query .= " LIMIT " . $limit;
+        }
 
+        if (!empty($offset)) {
+            $query .= " OFFSET " . $offset;
+        }
 		$results = $db->GetAll($query, ($groups_string ? array(time(), time()) : ($group ? array(time(), time(), $group) : array(time(), time()))));
 		return $results;
 	}

@@ -39,6 +39,8 @@ if ($RECORD_ID) {
 	if ($html_record) {
 		if ((int) $html_record["html_active"]) {
 			if (shares_html_module_access($RECORD_ID, "edit-html")) {
+
+                Models_Community_Share::getParentsBreadCrumbs($RECORD_ID);
 				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$html_record["cshare_id"], "title" => limit_chars($html_record["folder_title"], 32));
 				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-html&amp;id=".$RECORD_ID, "title" => "Edit Link");
 
@@ -256,13 +258,16 @@ if ($RECORD_ID) {
                                         }
                                     }
                                 }
-                                $url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&id=".$html_record["cshare_id"];
-                                $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-                                $SUCCESS++;
-                                $SUCCESSSTR[]	= "You have successfully updated this HTML document.<br /><br />You will now be redirected to the folder; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-                                add_statistic("community:".$COMMUNITY_ID.":shares", "html_edit", "cshtml_id", $RECORD_ID);
-                                communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_html", 1, $html_record["cshare_id"]);
+                                if (!$ERROR) {
+                                    Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["html_title"]), "success", $MODULE);
+                                    add_statistic("community:" . $COMMUNITY_ID . ":shares", "html_edit", "cshtml_id", $RECORD_ID);
+                                    communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_html", 1, $html_record["cshare_id"]);
+
+                                    $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-folder&id=" . $html_record["cshare_id"];
+                                    header("Location: " . $url);
+                                    exit;
+                                }
                             }
                         }
 
@@ -278,14 +283,6 @@ if ($RECORD_ID) {
 
 				// Page Display
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-                            echo display_success();
-						}
-					break;
 					case 1 :
 					default :
 						if ($ERROR) {
@@ -641,4 +638,3 @@ if ($RECORD_ID) {
 
 	application_log("error", "No HTML documemnt id was provided to edit. (Edit HTML)");
 }
-?>

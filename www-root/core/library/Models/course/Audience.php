@@ -125,7 +125,7 @@ class Models_Course_Audience extends Models_Base {
 	}
     
     public function getCurriculumPeriod($cperiod_id = null) {
-        return Models_CurriculumPeriod::fetchRowByID($cperiod_id);
+        return Models_Curriculum_Period::fetchRowByID($cperiod_id);
     }
 
     public function fetchCoursesByCurriculumPeriod($cperiod_ids = array()) {

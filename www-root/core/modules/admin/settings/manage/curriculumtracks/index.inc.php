@@ -33,32 +33,55 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TRACKS"))) {
 
     application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
+    $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min-1.10.1.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+    $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/dataTables.rowReorder.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
-    $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
-    $HEAD[] = "<script type=\"text/javascript\">
-
+    if ((isset($_POST["curriculumtrack_order"])) && ($curriculumtrack_order = clean_input($_POST["curriculumtrack_order"], array("notags", "trim")))) {
+        if (isset($_POST["pagenumber"])) {
+            $page = clean_input($_POST["pagenumber"], array("trim", "int"));
+            if ((isset($_POST["pagelength"])) && ($pagelength = clean_input($_POST["pagelength"], array("trim", "int")))) {
+                Models_Curriculum_Track::setCurriculumTrackerOrderByIDArray(explode(',', $curriculumtrack_order), $page, $pagelength);
+            }
+        }
+    }
+    ?>
+    <script>
         jQuery(function($) {
-            jQuery('#curriculumtracks').dataTable(
+            var table = $("#curriculumtracks").DataTable(
                 {
-                    'sPaginationType': 'full_numbers',
-                    'bInfo': false,
-                    'bAutoWidth': false,
-                    'sAjaxSource': '?org=".$ORGANISATION_ID."&section=api-list',
-                    'bServerSide': true,
-                    'bProcessing': true,
-                    'aoColumns': [
-                        { 'mDataProp': 'checkbox', 'bSortable': false },
-                        { 'mDataProp': 'curriculum_track_name' }
+                    "sPaginationType": "full_numbers",
+                    "bInfo": false,
+                    "bAutoWidth": false,
+                    "sAjaxSource": "?org=<?php echo $ORGANISATION_ID;?>&section=api-list",
+                    "bServerSide": true,
+                    "bProcessing": true,
+                    "aoColumns": [
+                        { "mDataProp": "checkbox", "bSortable": false },
+                        { "mDataProp": "curriculum_track_name" }
                     ],
-                    'oLanguage': {
-                        'sEmptyTable': 'There are currently no currculum tracks in the system.',
-                        'sZeroRecords': 'No curriculum track found to display.'
+                    "fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+                        $(nRow).attr("id", aData["id"]);
+                        return nRow;
+                    },
+                    "oLanguage": {
+                        "sEmptyTable": "There are currently no currculum tracks in the system.",
+                        "sZeroRecords": "No curriculum track found to display."
                     }
                 }
             );
+            $("#curriculumtracks").sortable({
+                cursor: "move",
+                items: "tbody tr",
+                stop: function (event, ui) {
+                    var info = table.page.info();
+                    $('#curriculumtrack_order').attr("value", $(this).sortable('toArray'));
+                    $('#pagenumber').attr("value", info.page);
+                    $('#pagelength').attr("value", info.length);
+                }
+            });
         });
-    </script>";
-    ?>
+    </script>
+
     <h1>Curriculum Tracks</h1>
 
     <div class="row-fluid">
@@ -81,6 +104,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TRACKS"))) {
         </table>
         <br />
         <input type="submit" value="Delete Selected" class="btn btn-danger" />
+        <input type="button" id="save_curriculum_order_button" class="btn btn-primary" onclick="$('curriculumtrack_order_form').submit()" value="Save Ordering" />
+    </form>
+
+    <form id="curriculumtrack_order_form" action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/curriculumtracks?org=<?php echo $ORGANISATION_ID;?>" method="post">
+        <div id="reorder-info">
+            <input id="curriculumtrack_order" name="curriculumtrack_order" style="display: none;" />
+            <input id="pagenumber" name="pagenumber" style="display: none;" />
+            <input id="pagelength" name="pagelength" style="display: none;" />
+            <p class="content-small">Rearrange the curriculum tracks in the table above by dragging them, and then press the <strong>Save Ordering</strong> button.</p>
+        </div>
     </form>
 <?php
 

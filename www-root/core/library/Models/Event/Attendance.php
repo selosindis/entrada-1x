@@ -118,13 +118,13 @@ class Models_Event_Attendance extends Models_Base {
         return $audience;
     }
 
-    public static function fetchAllByEventID($event_id, $event_start = 0) {
+    public static function fetchAllByEventID($event_id, $event_start = 0, $search_value = "") {
         global $db;
 
         $event_audience = Models_Event_Audience::fetchAllByEventID($event_id);
         if ($event_audience) {
             foreach ($event_audience as $event) {
-                if ($a = $event->getAudience($event_start)) {
+                if ($a = $event->getAudience($event_start, $search_value)) {
                     $members = $a->getAudienceMembers();
                     if ($members) {
                         foreach ($members as $member) {

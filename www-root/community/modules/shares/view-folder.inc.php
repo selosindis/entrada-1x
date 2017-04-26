@@ -29,7 +29,7 @@ if ($RECORD_ID) {
         $hidden = false;
     } else {
         $hidden = true;
-    }    
+    }
     $query            = "   SELECT * 
                             FROM `community_shares` 
                             WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." 
@@ -407,6 +407,9 @@ if ($RECORD_ID) {
                     overflow: visible;
                 }
             </style>
+            <?php
+                Entrada_Utilities_Flashmessenger::displayMessages($MODULE);
+            ?>
             <h1><?php echo html_encode($folder_record["folder_title"]); ?></h1>
             <div class="module-subTitle">
 				<?php echo nl2br(html_encode($folder_record["folder_description"])); ?>
@@ -559,22 +562,21 @@ if ($RECORD_ID) {
                 $results	= $db->GetAll($query);
                 //Filter out the files and links the user does not have access to
 
-                if (isset($results)) {
-                    if (is_array($results)) {
-                        $document_results_all = array_filter($results, function($item) {
-                            if ($item['type'] === 'file') {
-                                return shares_file_module_access($item['ID'], "view-file");
-                            } else if ($item['type'] === 'link') {
-                                return shares_link_module_access($item['ID'], "view-link");
-                            } else if ($item['type'] === 'html') {
-                                return shares_html_module_access($item['ID'], "view-html");
-                            }
-                            return false;
-                        });
-                        $document_results = array_slice($document_results_all, $limit_parameter, (int)$_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]);
-                    }
+                if ($results && is_array($results)) {
+                    $document_results_all = array_filter($results, function($item) {
+                        if ($item['type'] === 'file') {
+                            return shares_file_module_access($item['ID'], "view-file");
+                        } else if ($item['type'] === 'link') {
+                            return shares_link_module_access($item['ID'], "view-link");
+                        } else if ($item['type'] === 'html') {
+                            return shares_html_module_access($item['ID'], "view-html");
+                        }
+                        return false;
+                    });
+
+                    $document_results = array_slice($document_results_all, $limit_parameter, (int)$_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]);
                 }
-                
+
                 if ($document_results || $folder_record_sub) {
                     ?>
                     <table class="table table-striped table-bordered">
@@ -619,38 +621,43 @@ if ($RECORD_ID) {
                         //if there are subfolders then echos out the subfolders
                         if ($folder_record_sub) {
                             foreach ($folder_record_sub as $folder_sub) {
-                                $cumulative_count = Models_Community_Share::getFilesLinksCumulativeCount($folder_sub["cshare_id"]);
-                                $accessible	= true;
-                                $student_hidden_folder   = $folder_sub["student_hidden"];
-                                if ((($folder_sub["release_date"]) && ($folder_sub["release_date"] > time())) || (($folder_sub["release_until"]) && ($folder_sub["release_until"] < time()))) {
-                                    $accessible = false;
-                                    $student_hidden_folder = true;
-                                }
-
-                                /*
-                                 * Models_Community_Share::getEditMenu expects the $resource to have
-                                 * an 'id' and a 'type', so we must set these first.
-                                 */
-                                $folder_sub["id"] = $folder_sub["cshare_id"];
-                                $folder_sub["type"] = "folder";
-                                $menu = Models_Community_Share::getEditMenu($COMMUNITY_ID, $folder_sub);
-                                echo "<tr>\n";
-                                    echo "<td style=\"vertical-align: top\">\n";
-                                        echo "<img src=\"".ENTRADA_URL."/community/templates/course/images/list-folder-".$folder_sub["folder_icon"].($student_hidden_folder ? "-hidden" : "").".gif\" width=\"16\" height=\"16\" style=\"vertical-align: middle; margin-right: 4px\" />";
-                                        echo "<a " . ($student_hidden_folder ? "class='hidden_shares'" : "") ."id=\"folder-".(int) $folder_sub["cshare_id"]."-title\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&amp;id=".$folder_sub["cshare_id"]."\" style=\"font-weight: bold; vertical-align: middle\">".limit_chars(html_encode($folder_sub["folder_title"]), 50, true)."</a>\n";
-                                        echo (!$accessible) ? "<span><i class='icon-time'></i> </span>" : "";
-                                        echo $menu;
-                                        echo "<div>";
-                                        echo "<span class='content-small'>(" . $cumulative_count['total_docs'] . " documents)</span>";
-                                        echo "<div class='content-small'>".(($folder_sub["folder_description"] != "") ? html_encode(limit_chars($folder_sub["folder_description"], 125)) : "")."</div>";
-                                    echo "</td>\n";
-                                    echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($folder_sub["username"])."\" style=\"font-size: 10px\">".html_encode($folder_sub["owner"])."</a></td>\n";
-                                    echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $folder_sub["updated_date"])."</td>\n";
-                                    if ($COMMUNITY_ADMIN) {
-                                        echo "<td class=\"accesses\" style=\"text-align: center\"><strong>-</strong></td>";
+                            // if (static::isAllowed($community_id, $folder, "read", $is_community_course))
+                                $is_allowed = Models_Community_Share::isAllowed($COMMUNITY_ID, $folder_sub, "read");
+    
+                                if ($is_allowed == true) {
+                                    // $folder_sub
+                                    $cumulative_count = Models_Community_Share::getFilesLinksCumulativeCount($folder_sub["cshare_id"]);
+                                    $accessible	= true;
+                                    $student_hidden_folder   = $folder_sub["student_hidden"];
+                                    if ((($folder_sub["release_date"]) && ($folder_sub["release_date"] > time())) || (($folder_sub["release_until"]) && ($folder_sub["release_until"] < time()))) {
+                                        $accessible = false;
+                                        $student_hidden_folder = true;
                                     }
-                                echo "</tr>\n";
-
+    
+                                    /*
+                                     * Models_Community_Share::getEditMenu expects the $resource to have
+                                     * an 'id' and a 'type', so we must set these first.
+                                     */
+                                    $folder_sub["id"] = $folder_sub["cshare_id"];
+                                    $folder_sub["type"] = "folder";
+                                    $menu = Models_Community_Share::getEditMenu($COMMUNITY_ID, $folder_sub);
+                                    echo "<tr>\n";
+                                        echo "<td style=\"vertical-align: top\">\n";
+                                            echo "<img src=\"".ENTRADA_URL."/community/templates/course/images/list-folder-".$folder_sub["folder_icon"].($student_hidden_folder ? "-hidden" : "").".gif\" width=\"16\" height=\"16\" style=\"vertical-align: middle; margin-right: 4px\" />";
+                                            echo "<a " . ($student_hidden_folder ? "class='hidden_shares'" : "") ."id=\"folder-".(int) $folder_sub["cshare_id"]."-title\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&amp;id=".$folder_sub["cshare_id"]."\" style=\"font-weight: bold; vertical-align: middle\">".limit_chars(html_encode($folder_sub["folder_title"]), 50, true)."</a>\n";
+                                            echo (!$accessible) ? "<span><i class='icon-time'></i> </span>" : "";
+                                            echo $menu;
+                                            echo "<div>";
+                                            echo "<span class='content-small'>(" . $cumulative_count['total_docs'] . " documents)</span>";
+                                            echo "<div class='content-small'>".(($folder_sub["folder_description"] != "") ? html_encode(limit_chars($folder_sub["folder_description"], 125)) : "")."</div>";
+                                        echo "</td>\n";
+                                        echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($folder_sub["username"])."\" style=\"font-size: 10px\">".html_encode($folder_sub["owner"])."</a></td>\n";
+                                        echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $folder_sub["updated_date"])."</td>\n";
+                                        if ($COMMUNITY_ADMIN) {
+                                            echo "<td class=\"accesses\" style=\"text-align: center\"><strong>-</strong></td>";
+                                        }
+                                    echo "</tr>\n";
+                                }
                             }
                         }
 
@@ -693,13 +700,12 @@ if ($RECORD_ID) {
                                     $download_button = Models_Community_Share_File::getDownloadButton($document_result["ID"]);
                                     echo "<tr>\n";
                                         echo "<td style=\"vertical-align: top\">\n";
-                                            echo "<img src=\"".ENTRADA_URL."/serve-icon.php?ext=" . $ext['ext'] . "&hidden=" . $student_hidden . "\" width=\"16\" height=\"16\" alt=\"" . $ext['english'] . " \" title=\"" . $ext['english'] . " \" style=\"vertical-align: middle; margin-right: 4px\" />";
+                                            //echo "<img src=\"".ENTRADA_URL."/serve-icon.php?ext=" . $ext['ext'] . "&hidden=" . $student_hidden . "\" width=\"16\" height=\"16\" alt=\"" . $ext['english'] . " \" title=\"" . $ext['english'] . " \" style=\"vertical-align: middle; margin-right: 4px\" />";
+                                            echo $document_menu;
                                             echo "<a " . ($student_hidden ? "class='hidden_shares'" : "") . "id=\"file-".(int) $document_result["ID"]."-title\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".$document_result["ID"]."\" style=\"font-weight: bold; vertical-align: middle\">".limit_chars(html_encode($document_result["title"]), 47, true)."</a>\n";
                                             echo $download_button;
                                             echo (!$accessible) ? "<span><i class='icon-time'></i> </span>" : "";
-                                                //edit/create pencil
-                                                echo $document_menu;
-                                                echo "<div  class=\"content-small\" style=\"padding-left: 23px\">".html_encode(limit_chars($document_result["description"], 125))."</div>";
+                                            echo "<div  class=\"content-small\" style=\"padding-left: 23px\">".html_encode(limit_chars($document_result["description"], 125))."</div>";
                                         echo "</td>\n";
                                             echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($document_result["owner_username"])."\" style=\"font-size: 10px\">".html_encode($document_result["owner"])."</a></td>\n";
                                         echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $last_updated)."</td>\n";
@@ -730,10 +736,10 @@ if ($RECORD_ID) {
 
                                     echo "<tr>\n";
                                     echo "<td style='vertical-align: top'>\n";
-                                        echo "<a " . ($student_hidden ? "class='hidden_shares'" : "") . $access . " id='link-".(int) $document_result["ID"]."-title' href='".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-link&amp;id=".$document_result["ID"]."&amp;access=".$access_location."' style='font-weight: bold; vertical-align: middle' >".limit_chars(html_encode($document_result["title"]), 50, true)."</a>\n";
-                                        echo (!$accessible) ? "<span><i class='icon-time'></i> </span>" : "";
-                                        echo $document_menu;
-                                        echo "<div  class=\"content-small\" style=\"padding-left: 23px\">".html_encode(limit_chars($document_result["description"], 125))."</div>";
+                                    echo $document_menu;
+                                    echo "<a " . ($student_hidden ? "class='hidden_shares'" : "") . $access . " id='link-".(int) $document_result["ID"]."-title' href='".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-link&amp;id=".$document_result["ID"]."&amp;access=".$access_location."' style='font-weight: bold; vertical-align: middle' >".limit_chars(html_encode($document_result["title"]), 50, true)."</a>\n";
+                                    echo (!$accessible) ? "<span><i class='icon-time'></i> </span>" : "";
+                                    echo "<div  class=\"content-small\" style=\"padding-left: 23px\">".html_encode(limit_chars($document_result["description"], 125))."</div>";
                                     echo "</td>\n";
                                     echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($document_result["owner_username"])."\" style=\"font-size: 10px\">".html_encode($document_result["owner"])."</a></td>\n";
                                     echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $document_result["updated_date"])."</td>\n";
@@ -764,22 +770,21 @@ if ($RECORD_ID) {
                                     }
 
                                     echo "<tr>\n";
-                                        echo "<td style='vertical-align: top'>\n";
-                                            echo "<img src='".ENTRADA_URL."/serve-icon.php?ext=" . $ext['ext'] . "&hidden=" . $student_hidden . "' width='16' height='16' alt='". $ext['english'] ."' title='". $ext['english'] ."' style='vertical-align: middle; margin-right: 4px' />\n";
-                                            echo "<a " . ($student_hidden ? "class='hidden_shares'" : "") . $access . " id='html-".(int) $document_result["ID"]."-title' href='".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-html&amp;id=".$document_result["ID"]."&amp;access=".$access_location."' style='font-weight: bold; vertical-align: middle' >".limit_chars(html_encode($document_result["title"]), 50, true)."</a>\n";
-                                            echo (!$accessible) ? "<span><i class='icon-time'></i> </span>" : "";
-                                            echo $document_menu;
-                                            echo "<div  class=\"content-small\" style=\"padding-left: 23px\">".html_encode(limit_chars($document_result["description"], 125))."</div>";
-                                        echo "</td>\n";
-                                        echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($document_result["owner_username"])."\" style=\"font-size: 10px\">".html_encode($document_result["owner"])."</a></td>\n";
-                                        echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $document_result["updated_date"])."</td>\n";
-                                        if ($COMMUNITY_ADMIN) {
-                                            if ($statistics['views'] && $statistics['views'] != '0') {
-                                                echo "<td class=\"accesses\" style=\"text-align: center\"><a class=\"views-dialog\" href=\"#file-views\" data-action='" . $params['action'] . "' data-action_field='" . $params['action_field'] . "' data-action_value='" . $params['action_value'] . "' title=\"Click to see access log ".html_encode($statistics['views'])."\" style=\"font-weight: bold\">".html_encode($statistics['views'])."</a></td>\n";
-                                            } else {
-                                                 echo "<td class=\"accesses\" style=\"text-align: center\"><strong>0</strong></td>";
-                                            }
+                                    echo "<td style='vertical-align: top'>\n";
+                                    echo $document_menu;
+                                    echo "<a " . ($student_hidden ? "class='hidden_shares'" : "") . $access . " id='html-".(int) $document_result["ID"]."-title' href='".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-html&amp;id=".$document_result["ID"]."&amp;access=".$access_location."' style='font-weight: bold; vertical-align: middle' >".limit_chars(html_encode($document_result["title"]), 50, true)."</a>\n";
+                                    echo (!$accessible) ? "<span><i class='icon-time'></i> </span>" : "";
+                                    echo "<div  class=\"content-small\" style=\"padding-left: 23px\">".html_encode(limit_chars($document_result["description"], 125))."</div>";
+                                    echo "</td>\n";
+                                    echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($document_result["owner_username"])."\" style=\"font-size: 10px\">".html_encode($document_result["owner"])."</a></td>\n";
+                                    echo "<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $document_result["updated_date"])."</td>\n";
+                                    if ($COMMUNITY_ADMIN) {
+                                        if ($statistics['views'] && $statistics['views'] != '0') {
+                                            echo "<td class=\"accesses\" style=\"text-align: center\"><a class=\"views-dialog\" href=\"#file-views\" data-action='" . $params['action'] . "' data-action_field='" . $params['action_field'] . "' data-action_value='" . $params['action_value'] . "' title=\"Click to see access log ".html_encode($statistics['views'])."\" style=\"font-weight: bold\">".html_encode($statistics['views'])."</a></td>\n";
+                                        } else {
+                                             echo "<td class=\"accesses\" style=\"text-align: center\"><strong>0</strong></td>";
                                         }
+                                    }
                                     echo "</tr>\n";
                                 }
                             }

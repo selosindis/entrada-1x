@@ -27,7 +27,7 @@ if ($RECORD_ID) {
 	$poll_record		= $db->GetRow($query);
 	if ($poll_record) {
 		$terminology = $poll_record["poll_terminology"];
-		$BREADCRUMB[] 	= array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=vote-poll&amp;id=".$RECORD_ID, "title" => limit_chars($poll_record["poll_title"], 25));
+		$BREADCRUMB[] 	= array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=vote-poll&id=".$RECORD_ID, "title" => limit_chars($poll_record["poll_title"], 25));
 		
 		echo "<h1>".html_encode($poll_record["poll_title"])."</h1>";
 		
@@ -116,19 +116,15 @@ if ($RECORD_ID) {
 									}
 									if (!$ERROR) {
 										if ((int)$poll_record["allow_member_results"] == 1 || (int)$poll_record["allow_member_results_after"] == 1) {
-											$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-poll&amp;id=".$RECORD_ID;
-											$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-						
-											$SUCCESS++;
-											$SUCCESSSTR[]	= "You have successfully voted.<br /><br />You will now be redirected to the results of this ".$terminology."; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+											$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-poll&id=" . $RECORD_ID;
 										} else {
-											$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-											$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-						
-											$SUCCESS++;
-											$SUCCESSSTR[]	= "You have successfully voted.<br /><br />You will now be redirected back to your community; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-											add_statistic("community_polling", "poll_vote", "cpolls_id", $RECORD_ID);
-										} 
+											$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+										}
+                                        Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully voted."), "success", $MODULE);
+                                        add_statistic("community_polling", "poll_vote", "cpolls_id", $RECORD_ID);
+
+                                        header("Location: " . $url);
+                                        exit;
 									}
 								} else {
 									$questions = $db->GetAll("SELECT * FROM `community_polls_questions` WHERE `cpolls_id` = ".$db->qstr($RECORD_ID)." AND `question_active` = '1' ORDER BY `question_order`");
@@ -156,14 +152,6 @@ if ($RECORD_ID) {
 		
 					// Page Display
 					switch($STEP) {
-						case 2 :
-							if ($NOTICE) {
-								echo display_notice();
-							}
-							if ($SUCCESS) {
-								echo display_success();
-							}
-						break;
 						case 1 :
 						default :
 							if ($ERROR) {
@@ -180,7 +168,7 @@ if ($RECORD_ID) {
 								echo "</div>\n";
 							}
 							
-							echo "	<form action=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=vote-poll&amp;id=".$RECORD_ID."&amp;step=2\" method=\"post\">\n";
+							echo "	<form action=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=vote-poll&id=".$RECORD_ID."&step=2\" method=\"post\">\n";
 							$query = "SELECT * FROM `community_polls_questions` WHERE `cpolls_id` = ".$db->qstr($RECORD_ID)." AND `question_active` = '1' ORDER BY `question_order` ASC";
 							if (($questions = $db->GetAll($query))) {
 								$count = 1;

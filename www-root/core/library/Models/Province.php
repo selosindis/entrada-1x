@@ -53,6 +53,7 @@ class Models_Province extends Models_Base {
         return $this->abbreviation;
     }
 
+    /* @return bool|Models_Province */
     public static function fetchRowByID($province_id) {
         $self = new self();
         return $self->fetchRow(array(
@@ -60,16 +61,27 @@ class Models_Province extends Models_Base {
         ));
     }
 
+    /* @return bool|Models_Province */
+    public static function fetchRowByProvinceName($province) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "province", "value" => $province, "method" => "=")
+        ));
+    }
+
+    /* @return ArrayObject|Models_Province[] */
     public static function fetchAllRecords() {
         $self = new self();
         return $self->fetchAll(array(array("key" => "province_id", "value" => 0, "method" => ">=")));
     }
 
+    /* @return ArrayObject|Models_Province[] */
     public static function fetchAllByCountryID($country_id) {
         $self = new self();
         return $self->fetchAll(array(array("key" => "country_id", "value" => $country_id, "method" => "=")));
     }
 
+    /* @return bool|Models_Province */
     public static function fetchRowByIDCountryID($id, $country_id) {
         $self = new self();
         return $self->fetchRow(array(

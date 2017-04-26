@@ -188,18 +188,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         }
 
                         /**
-                         * Non-required field "event_location" / Event Location
+                        * Non-required field "room_id" / Event Location
                          */
+
                         if ((isset($_POST["event_location"])) && ($event_location = clean_input($_POST["event_location"], array("notags", "trim")))) {
                             $PROCESSED["event_location"] = $event_location;
                         } else {
                             $PROCESSED["event_location"] = "";
                         }
 
-                        $changed = false;
-                        $changed = md5_change_value($EVENT_ID, "event_id", "event_location", $PROCESSED["location"], "events");
-                        if ($changed) {
-                            $stats[] = "Event Location";
+                        if ((isset($_POST["room_id"])) && ($room_id = clean_input($_POST["room_id"], array("notags", "trim"))) && $room_id != "-1") {
+                            $PROCESSED["room_id"] = $room_id;
+                            $PROCESSED["event_location"] = "";
+                        } else {
+                            $PROCESSED["room_id"] = null;
                         }
 
                         /**
@@ -2380,12 +2382,115 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                             <?php echo Entrada_Utilities::generate_calendars("event", $translate->_("Event Date & Time"), true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
 
+                            <?php
+                            $event_buildings = events_fetch_all_buildings();
+
+                            if ($event_buildings) {
+                                ?>
                             <div class="control-group">
-                                <label for="event_location" class="control-label form-nrequired"><?php echo $translate->_("Event Location"); ?>:</label>
+                                <label for="building_id" class="control-label form-nrequired"><? echo $translate->_("Event Location Building"); ?></label>
                                 <div class="controls">
-                                    <input type="text" id="event_location" name="event_location" value="<?php echo html_encode($PROCESSED["event_location"]); ?>" maxlength="255" />
+                                    <select onchange="loadRooms()" id="building_id" name="building_id">
+
+                                            <?php
+                                                foreach ($event_buildings as $building) {
+                                                    echo "<option value=\"" . $building['building_id'] . "\">(" . $building['building_code'] . ") " . $building['building_name'] . "</option>\n";
+                                                }
+                                            ?>
+
+                                        <option value=""><?php echo $translate->_("Other location"); ?></option>
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <div id="roomlocation" style="<?php echo (isset($PROCESSED["room_id"]) && $PROCESSED["room_id"] != "" ? "" : "display:none;") ?>" class="control-group">
+                                <?php
+
+                                    $event_rooms = events_fetch_all_locations();
+
+                                    if ($event_rooms) {
+                                ?>
+                                <label for="room_id" class="control-label form-nrequired"><?php echo $translate->_("Event Location Room"); ?>:</label>
+                                <div class="controls">
+                                    <select id="room_id" name="room_id">
+                                            <option value="-1"><?php echo $translate->_("Select room"); ?></option>
+                                    </select>
+                                </div>
+                                <?php
+                                    }
+                                ?>
+                            </div>
+                        <?php
+                        }
+                        ?>
+
+                            <div class="control-group" id="otherlocation">
+                                <label for="event_location" class="control-label form-nrequired"><?php echo $translate->_("Event Location"); ?>:</label>
+
+                                <div class="controls">
+                                    <input value="<?php echo (isset($PROCESSED["event_location"]) && $PROCESSED["event_location"] != "" ? $PROCESSED["event_location"] : "") ?>" type="text" id="event_location" name="event_location"/>
                                 </div>
                             </div>
+
+                            <script>
+                                jQuery(document).ready(function(){
+                                    <?php
+                                    if(isset($PROCESSED["room_id"])) {
+                                        echo "room_id = ".$PROCESSED["room_id"].";";
+                                    } else {
+                                        echo "room_id = 0;";
+                                    }
+                                    ?>
+                                    jQuery.post('<?php echo ENTRADA_URL."/api/api-location-management.inc.php"; ?>',
+                                        {
+                                            method: "get-room-building-id",
+                                            room_id: room_id
+                                        }, function(data) {
+                                            jsonResponse = jQuery.parseJSON(data);
+                                            if (jsonResponse.status == "success") {
+                                                jQuery("#building_id").find("option[value=\""+jsonResponse.data[0]+"\"]").attr("selected","selected");
+                                                loadRooms(room_id);
+                                            } else {
+                                                jQuery("#building_id").find("option[value=\"\"]").attr("selected","selected");
+                                            }
+                                        });
+                                });
+
+                                function loadRooms (room_id) {
+                                    var building = jQuery("#building_id").val();
+                                    switch (building) {
+                                        case "":
+                                            jQuery("#room_id").html('<option value="-1"><?php echo $translate->_("Select room"); ?></option>');
+                                            jQuery("#otherlocation").show();
+                                            jQuery("#roomlocation").hide();
+                                            break;
+                                        default:
+                                            jQuery.post('<?php echo ENTRADA_URL."/api/api-location-management.inc.php"; ?>',
+                                                {
+                                                    method: "get-rooms-by-building",
+                                                    building_id: building
+                                                }, function(data) {
+                                                    jsonResponse = jQuery.parseJSON(data);
+                                                    if (jsonResponse.status == "success") {
+                                                        jQuery("#otherlocation").hide();
+                                                        jQuery("#roomlocation").show();
+                                                        jQuery("#event_location").val("");
+                                                        jQuery("#room_id").html('<option value="-1"><?php echo $translate->_("Select room"); ?></option>');
+                                                        jQuery.each(jsonResponse.data, function(key, value) {
+                                                            jQuery("#room_id").append("<option value=\""+value.room_id+"\">"+value.room_name+"</option>");
+                                                        });
+                                                        jQuery("#room_id").find("option[value=\""+room_id+"\"]").attr("selected","selected");
+                                                    } else {
+                                                        jQuery("#room_id").html('<option value="-1"><?php echo $translate->_("Select room"); ?></option>');
+                                                        jQuery("#otherlocation").show();
+                                                        jQuery("#roomlocation").hide();
+                                                    }
+                                                });
+                                            break;
+                                    }
+                                }
+                            </script>
 
                             <div class="control-group">
                                 <label for="eventtype_ids" class="control-label form-required"><?php echo $translate->_("Event Types"); ?>:</label>
@@ -2824,7 +2929,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         <script type="text/javascript">
                             jQuery(document).ready(function ($) {
                                 $("#eventtype_ids").advancedSearch({
-                                    closeAfterSelect: true,
+                                    close_after_select: true,
                                     resource_url: ENTRADA_URL,
                                     filters: {
                                         event_types: {
@@ -3233,8 +3338,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                             var events_updater = null;
                             function generateEventAutocomplete() {
-                                events_updater = new Ajax.Autocompleter("related_event_id", "events_autocomplete",
-                                    "<?php echo ENTRADA_URL; ?>/api/events-by-id.api.php?parent_id=" + $("parent_id").value + "&course_id=" + $("course_id").options[$("course_id").selectedIndex].value,
+                                events_updater = new Ajax.Autocompleter("related_event_title", "events_autocomplete",
+                                    "<?php echo ENTRADA_URL; ?>/admin/events?section=api-events-by-title&parent_id=" + $("parent_id").value + "&course_id=" + $("course_id").options[$("course_id").selectedIndex].value,
                                     {
                                         frequency: 0.2,
                                         minChars: 1,

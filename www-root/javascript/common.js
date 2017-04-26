@@ -5,6 +5,7 @@
  * @param default_message string
  * @returns {Array}
  */
+
 function safeParseJson(data, default_message) {
 	try {
 		var jsonResponse = JSON.parse(data);
@@ -990,5 +991,9 @@ jQuery(document).ready(function($) {
         if (!$(this).hasClass('last')) {
             $(this).addClass('last');
         }
+    });
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
     });
 });

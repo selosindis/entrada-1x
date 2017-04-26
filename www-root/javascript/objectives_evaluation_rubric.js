@@ -3,7 +3,11 @@
 	jQuery(document).ready(function($){
 		jQuery('.objectives').hide();
 
-		jQuery('.objective-remove').live('click',function(){
+        if(jQuery('#mapped_flat_objectives').children('li').length == 0){
+            jQuery('#toggle_sets').trigger('click');
+        }
+        
+        jQuery('.objective-remove').live('click',function(){
 			var id = jQuery(this).attr('data-id');
 			var qrow = jQuery("#qrow").val();
 			var list = jQuery('#mapped_objective_'+id).parent().attr('data-importance');
@@ -94,10 +98,6 @@
 		*/
 
 		jQuery('#evaluation-question-topics-toggle').trigger('click');
-
-		if(jQuery('#mapped_flat_objectives').children('li').length == 0){
-			jQuery('#toggle_sets').trigger('click');
-		}			
 
 		//load mapped array on page load
 		jQuery('#checked_objectives_select').children('option').each(function(){

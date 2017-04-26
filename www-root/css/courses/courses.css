@@ -40,8 +40,13 @@ img.list-cancel-image {
     width: 340px;
 }
 
+.track-options label{
+    font-size: 15px;
+    margin-left: 10px;
+}
+
 .track-options input {
-    margin-top:0px;
+    margin-top: 0px;
     margin-right: 3px;
 }
 .course-sort, .group-sort, .member-sort {

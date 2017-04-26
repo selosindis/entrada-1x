@@ -44,72 +44,89 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
     switch ($request_method) {
         case "GET" :
             switch ($request["method"]) {
-                case "get-roles" :
-
-                    if (isset($request["group"]) && $tmp_input = clean_input(strtolower($request["group"]), array("trim", "striptags"))) {
-                        $PROCESSED["group"] = $tmp_input;
-                    } else {
-                        $PROCESSED["group"] = "";
-                    }
-
-                    $group = Models_System_Group::fetchRowByName("student", $ENTRADA_USER->getActiveOrganisation(), 1);
-                    $roles = Models_System_Role::fetchAllByGroupID((int) $group["id"], $ENTRADA_USER->getActiveOrganisation(), 1, false);
-
+                case "get-groups" :
                     $data = array();
 
-                    if ($roles) {
-                        foreach ($roles as $role) {
-                            $data[] = array("target_id" => $role["id"], "target_label" => $translate->_(ucfirst($role["role_name"])), "target_children" => 1);
+                    $groups = Models_System_Group::fetchAllByOrganisationID($ENTRADA_USER->getActiveOrganisation());
+                    if ($groups) {
+                        foreach ($groups as $group) {
+                            $data[] = array("target_id" => $group["id"], "target_label" => $translate->_(ucfirst($group["group_name"])), "target_children" => 1);
                         }
                     }
 
                     if ($data) {
                         echo json_encode(array("status" => "success", "data" => $data));
+                    } else {
+                        echo json_encode(array("status" => "error", "data" => $translate->_("No System Groups were found.")));
+                    }
+                    break;
+                case "get-roles" :
+                    $data = array();
+
+                    if (isset($request["group_id"]) && $tmp_input = clean_input($request["group_id"], "int")) {
+                        $PROCESSED["group_id"] = $tmp_input;
+                    } else {
+                        $PROCESSED["group_id"] = 0;
+                    }
+
+                    $roles = Models_System_Role::fetchAllByGroupID($PROCESSED["group_id"], $ENTRADA_USER->getActiveOrganisation(), 1, false);
+                    if ($roles) {
+                        foreach ($roles as $role) {
+                            $data[] = array("target_id" => $role["id"], "target_label" => $translate->_(ucfirst($role["role_name"])), "target_children" => 1, "level_selectable" => false);
+                        }
+                    }
+
+                    if ($data) {
+                        echo json_encode(array("status" => "success", "data" => $data, "parent_id" => $PROCESSED["group_id"], "parent_name" => "Groups", "level_selectable" => false, "no_back_btn" => true));
                     } else {
                         echo json_encode(array("status" => "error", "data" => $translate->_("No Users found")));
                     }
                     break;
 
                 case "get-role-members" :
+                    $data = array();
 
                     if (isset($request["parent_id"]) && $tmp_input = clean_input(strtolower($request["parent_id"]), array("trim", "int"))) {
                         $PROCESSED["parent_id"] = $tmp_input;
-                    }
-                    $data = array();
-
-                    if (isset($PROCESSED["parent_id"])) {
-
-                        $role = Models_System_Role::fetchRowByID($PROCESSED["parent_id"]);
-
-                        $users = Models_User_Access::getGroupRoleMembers($ENTRADA_USER->getActiveOrganisation(), "student", $role->getRoleName());
-
-                        if ($users) {
-
-                            foreach ($users as $user) {
-                                $data[] = array("target_id" => $user["id"], "target_label" => $user["firstname"] . " " . $user["lastname"], "role" => $translate->_(ucfirst($user["role"])), "email" => $user["email"], "parent_id" => 0);
-                            }
-
-                        }
-
                     } else {
+                        $PROCESSED["parent_id"] = 0;
+                    }
 
-                        $group = Models_System_Group::fetchRowByName("student", $ENTRADA_USER->getActiveOrganisation(), 1);
-                        $roles = Models_System_Role::fetchAllByGroupID((int) $group["id"], $ENTRADA_USER->getActiveOrganisation(), 1, false);
-
+                    if (isset($PROCESSED["parent_id"]) && $PROCESSED["parent_id"] != 0) {
+                        $role = Models_System_Role::fetchRowByID($PROCESSED["parent_id"]);
+                        if ($role) {
+                            $group = Models_System_Group::fetchRowByID($role->getGroupsID());
+                            if ($group) {
+                                $users = Models_User_Access::getGroupRoleMembers($ENTRADA_USER->getActiveOrganisation(),
+                                    $group->getGroupName(), $role->getRoleName());
+                                if ($users) {
+                                    foreach ($users as $user) {
+                                        $data[] = array(
+                                            "target_id" => $user["id"],
+                                            "target_label" => $user["firstname"] . " " . $user["lastname"],
+                                            "role" => $translate->_(ucfirst($user["role"])),
+                                            "email" => $user["email"],
+                                            "parent_id" => 0
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        $roles = Models_System_Role::fetchAllByOrganisationID($ENTRADA_USER->getActiveOrganisation(), 1);
                         if ($roles) {
                             foreach ($roles as $role) {
-                                $data[] = array("target_id" => $role["id"], "target_label" => $translate->_(ucfirst($role["role_name"])), "target_children" => 1);
+                                $data[] = array("target_id" => $role["id"], "target_label" => $translate->_(ucfirst($role["role_name"])), "target_children" => 1, "level_selectable" => false, "no_back_btn" => true);
                             }
                         }
                     }
 
                     if ($data) {
-                        echo json_encode(array("status" => "success", "data" => $data));
+                        echo json_encode(array("status" => "success", "data" => $data, "parent_id" => 0, "parent_name" => "0", "no_back_btn" => true));
                     } else {
                         echo json_encode(array("status" => "error", "data" => $translate->_("No Users found")));
                     }
                     break;
-
             }
         break;
     }

@@ -23,6 +23,7 @@
  * @copyright Copyright 2013 Regents of The University of California. All Rights Reserved.
  *
 */
+
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
@@ -36,26 +37,40 @@
  */
 require_once("init.inc.php");
 
-if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
-    
-    $PROXY_ID = $ENTRADA_USER->getActiveId();
-    $query        = "    SELECT *
-                    FROM `community_shares_open`
-                    WHERE `community_id` = ".$_POST['community_id']."
-                    AND `page_id` = ".$_POST['page_id']."
-                    AND `proxy_id` = ".$PROXY_ID;
+$js_array = false;
 
-    $results    = $db->GetAll($query);
-    if ($results) {
-        if (is_null($results[0]["shares_open"])) {
-            $js_array = json_encode(array( 0 => 0));
-        } else {
-            $opened_folders = explode(",", $results[0]["shares_open"]);
-            $js_array = json_encode($opened_folders);
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
+    $community_id = 0;
+    $page_id = 0;
+
+    if (isset($_POST["community_id"]) && ($tmp_input = clean_input($_POST["community_id"], "int"))) {
+        $community_id = $tmp_input;
+    }        
+
+    if (isset($_POST["page_id"]) && ($tmp_input = clean_input($_POST["page_id"], "int"))) {
+        $page_id = $tmp_input;
+    }        
+
+    if ($community_id && $page_id) {
+        $query = "SELECT *
+                    FROM `community_shares_open`
+                    WHERE `community_id` = " . $db->qstr($community_id) . "
+                    AND `page_id` = " . $db->qstr($page_id) . "
+                    AND `proxy_id` = " . $db->qstr($ENTRADA_USER->getID());
+        $results = $db->GetAll($query);
+        if ($results) {
+            if (isset($results[0]["shares_open"]) && $results[0]["shares_open"]) {
+                $opened_folders = explode(",", $results[0]["shares_open"]);
+                if ($opened_folders) {
+                    $js_array = json_encode($opened_folders);
+                }
+            }
         }
-    } else {
-        $js_array = json_encode(array( 0 => 0));
     }
-    echo $js_array;
 }
-?>
+
+if (!$js_array) {
+    $js_array = json_encode([0 => 0]);
+}
+
+echo $js_array;

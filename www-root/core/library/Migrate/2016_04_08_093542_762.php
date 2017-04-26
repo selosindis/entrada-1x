@@ -15,6 +15,12 @@ class Migrate_2016_04_08_093542_762 extends Entrada_Cli_Migrate {
         PRIMARY KEY (`block_type_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+        INSERT INTO `cbl_schedule_lu_block_types` (`block_type_id`, `name`, `number_of_blocks`, `deleted_date`)
+        VALUES
+        (1, 'One Week', 52, NULL),
+        (2, 'Two Week', 26, NULL),
+        (3, 'Four Week', 13, NULL);
+
         ALTER TABLE `cbl_schedule` DROP COLUMN `stream_block_length`;
         ALTER TABLE `cbl_schedule` ADD COLUMN `block_type_id` INT(11) DEFAULT NULL AFTER `end_date`;
         <?php

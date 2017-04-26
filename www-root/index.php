@@ -66,7 +66,7 @@ if (!$sso_bypass && defined("AUTH_SSO_ENABLED") && (bool) AUTH_SSO_ENABLED && de
                     $SSO_AUTHENTICATED = true;
                     $username = $result["username"];
                     $password = $result["password"];
-                    $USER_ACCESS_ID = $result["id"];
+                    $USER_ACCESS_ID = $result["access_id"];
                 } else {
                     add_error("Your login credentials are not recognized.<br /><br />Please contact a system administrator for further information.");
                     $SSO_ERROR = true;

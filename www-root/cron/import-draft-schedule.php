@@ -89,11 +89,15 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
                                 }
 
 								if ($event["event_id"]) {
+                                    $has_event_id = true;
 									$old_event_id = $event["event_id"];
 									$old_events[$old_event_id] = $event;
 									unset($event["event_id"]);
 								} else {
-									$old_event_id = false;
+                                    $has_event_id = false;
+									$old_event_id = $event["devent_id"];
+                                    $old_events[$event["devent_id"]] = $event;
+                                    unset($event["devent_id"]);
 								}
 
 								$event["updated_date"]	= time();
@@ -234,7 +238,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									}
 								}
 
-								if ($old_event_id) {
+								if ($has_event_id) {
 									if ($draft_options["files"]) {
 										/*
 										*  add the event files associated with the event

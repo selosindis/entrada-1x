@@ -50,6 +50,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
         "event_title"               => array("title" => "Event Title",           "required" => true),
         "event_description"         => array("title" => "Event Description"),
         "location"                  => array("title" => "Location"),
+        "location_room"                  => array("title" => "Location Room"),
         "audience_groups"           => array("title" => "Audience (Groups)"),
         "audience_cohorts"           => array("title" => "Audience (Cohorts)"),
         "audience_students"         => array("title" => "Audience (Students)"),

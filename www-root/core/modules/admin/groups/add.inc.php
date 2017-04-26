@@ -328,38 +328,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						}
 					});
 
-					jQuery("#choose-members-btn").advancedSearch({
-						api_url: "<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-members"; ?>",
-						build_selected_filters: false,
-						reset_api_params: true,
-						resource_url: ENTRADA_URL,
-						filter_component_label: "Users",
-						select_all_enabled: true,
-						filters: {
 
-						},
-						no_results_text: "<?php echo $translate->_("No Users found matching the search criteria"); ?>",
-						list_data: {
-							selector: "#group_members_list",
-							background_value: "url(../images/list-community.gif) no-repeat scroll 0 4px transparent"
-						},
-						parent_form: jQuery("#frmSubmit"),
-						width: 300,
-						async: false,
-						target_name: "students"
-					});
+                    jQuery("#choose-members-btn").advancedSearch({
+                        api_url: "<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-members"; ?>",
+                        build_selected_filters: false,
+                        reset_api_params: true,
+                        resource_url: ENTRADA_URL,
+                        filter_component_label: "Users",
+                        select_all_enabled: true,
+                        filters: {},
+                        no_results_text: "<?php echo $translate->_("No users found matching the search criteria"); ?>",
+                        list_data: {
+                            selector: "#group_members_list",
+                            background_value: "url(../images/list-community.gif) no-repeat scroll 0 4px transparent"
+                        },
+                        parent_form: jQuery("#frmSubmit"),
+                        width: 300,
+                        async: false,
+                        target_name: "students"
+                    });
 
-					jQuery.getJSON("<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-members"; ?>", {method: "get-roles"} , function (json) {
-						jQuery.each(json.data, function (key, value) {
-							jQuery("#choose-members-btn").data("settings").filters[value.target_label] = {
-								label: value.target_label,
-								api_params: {
-									parent_id: value.target_id
-								},
-								data_source: "get-role-members"
-							}
-						});
-					});
+                    jQuery.getJSON("<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api-members"; ?>", {method: "get-groups"} , function (json) {
+                        jQuery.each(json.data, function (key, value) {
+                            jQuery("#choose-members-btn").data("settings").filters[value.target_label] = {
+                                label: value.target_label,
+                                api_params: {
+                                    group_id: value.target_id,
+                                    parent_name: value.parent_name
+                                },
+                                data_source: "get-roles",
+                                secondary_data_source: "get-role-members"
+                            }
+                        });
+                    });
 				});
 			</script>
 			<?php

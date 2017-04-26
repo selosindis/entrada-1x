@@ -87,14 +87,16 @@ if ($RECORD_ID) {
 
 							if ($db->AutoExecute("community_share_comments", $PROCESSED, "INSERT")) {
 								if ($COMMENT_ID = $db->Insert_Id()) {
-									$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID."#comment-".$COMMENT_ID;
-									$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-									$SUCCESS++;
-									$SUCCESSSTR[]	= "You have successfully added a new file comment.<br /><br />You will now be redirected back to this file; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
+                                    Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully added a new file comment."), "success", $MODULE);
 									add_statistic("community:".$COMMUNITY_ID.":shares", "comment_add", "cscomment_id", $COMMENT_ID);
 									communities_log_history($COMMUNITY_ID, $PAGE_ID, $COMMENT_ID, "community_history_add_file_comment", 1, $RECORD_ID);
+                                    if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
+                                        community_notify($COMMUNITY_ID, $RECORD_ID, "file-comment", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID, $RECORD_ID);
+                                    }
+
+                                    $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-file&id=".$RECORD_ID;
+                                    header("Location: " . $url);
+                                    exit;
 								}
 							}
 
@@ -118,17 +120,6 @@ if ($RECORD_ID) {
 
 				// Page Display
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-							echo display_success();
-							if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-								community_notify($COMMUNITY_ID, $RECORD_ID, "file-comment", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID, $RECORD_ID);
-							}
-						}
-					break;
 					case 1 :
 					default :
 					if ($ERROR) {

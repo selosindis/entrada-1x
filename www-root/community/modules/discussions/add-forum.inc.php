@@ -247,21 +247,19 @@ switch($STEP) {
                         $ERRORSTR[] = "Error updating the community ACL.";
                     }
 					
-					$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-					$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
 					if (!$ERROR) {
-						add_success("You have successfully added a new discussion forum to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+                        Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully added <strong>%s</strong> to the community."), $PROCESSED["forum_title"]), "success", $MODULE);
 
-						add_statistic("community:".$COMMUNITY_ID.":discussions", "forum_add", "cdiscussion_id", $FORUM_ID);
+                        add_statistic("community:".$COMMUNITY_ID.":discussions", "forum_add", "cdiscussion_id", $FORUM_ID);
 						communities_log_history($COMMUNITY_ID, $PAGE_ID, $FORUM_ID, "community_history_add_forum", 1);
+
+                        $url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL;
+                        header("Location: " . $url);
+                        exit;
 				    }
 				}
-			}
-
-			if (!$SUCCESS) {
-				add_error("There was a problem inserting this forum into the system.");
-
+			} else {
+                add_error($translate->_("There was a problem inserting this forum into the system. The MEdTech Unit was informed of this error; please try again later."));
 				application_log("error", "There was an error inserting a discussion forum. Database said: ".$db->ErrorMsg());
 			}
 		}
@@ -278,14 +276,6 @@ switch($STEP) {
 
 // Page Display
 switch($STEP) {
-	case 2 :
-		if ($NOTICE) {
-			echo display_notice();
-		}
-		if ($SUCCESS) {
-			echo display_success();
-		}
-	break;
 	case 1 :
 	default :
 		if ($ERROR) {

@@ -267,21 +267,19 @@ if ($RECORD_ID) {
                             if ($results === false) {
                                 add_error("Error updating the ACL permissions database.");
                             }
-							
-							$url = COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL;
-							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
                             if (!$ERROR) {
-                                add_success("You have successfully updated the <strong>".html_encode($PROCESSED["forum_title"])."</strong> discussion forum.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
+                                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated <strong>%s</strong>."), $PROCESSED["forum_title"]), "success", $MODULE);
 
                                 add_statistic("community:".$COMMUNITY_ID.":discussions", "forum_edit", "cdiscussion_id", $RECORD_ID);
                                 communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_forum", 1);
+
+                                $url = COMMUNITY_URL . $COMMUNITY_URL .":" . $PAGE_URL . "?title=" . $PROCESSED["forum_title"];
+                                header("Location: " . $url);
+                                exit;
                             }
-						}
-
-						if (!$SUCCESS) {
-							add_error("There was a problem inserting this forum into the system.");
-
+						} else {
+						    add_error("There was a problem inserting this forum into the system.");
 							application_log("error", "There was an error inserting a discussion forum. Database said: ".$db->ErrorMsg());
 						}
 					}
@@ -298,14 +296,6 @@ if ($RECORD_ID) {
 
 			// Page Display
 			switch($STEP) {
-				case 2 :
-					if ($NOTICE) {
-						echo display_notice();
-					}
-					if ($SUCCESS) {
-						echo display_success();
-					}
-				break;
 				case 1 :
 				default :
 					if ($ERROR) {

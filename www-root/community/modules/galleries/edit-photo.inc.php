@@ -191,8 +191,8 @@ if ($RECORD_ID) {
 								 */	
 								if ($update_photo_file) {
 									if (!communities_galleries_process_photo($_FILES["photo_file"]["tmp_name"], $RECORD_ID)) {
-										$NOTICE++;
-										$NOTICESTR[] = "Unable to store the new photo file on the server or generate a valid thumbnail; the MEdTech Unit has been informed of this error, please try again later.";
+										$ERROR++;
+										$ERRORSTR[] = "Unable to store the new photo file on the server or generate a valid thumbnail; the MEdTech Unit has been informed of this error, please try again later.";
 
 										application_log("error", "Failed to replace edited photo image. communities_galleries_process_photo failed.");
 									}
@@ -205,29 +205,30 @@ if ($RECORD_ID) {
 								if ((bool) $COMMUNITY_ADMIN) {
 									if ((isset($_POST["gallery_cgphoto_id"])) && ((int) trim($_POST["gallery_cgphoto_id"]) === 1) && ((int) $photo_record["gallery_cgphoto_id"] != (int) $RECORD_ID)) {
 										if (!$db->AutoExecute("community_galleries", array("gallery_cgphoto_id" => $RECORD_ID), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `cgallery_id` = ".$db->qstr($photo_record["cgallery_id"]))) {
-											$NOTICE++;
-											$NOTICESTR[] = "Unable to set this photo as the gallery thumbnail; the MEdTech Unit has been informed of this error, please try again later.";
+											$ERROR++;
+											$ERRORSTR[] = "Unable to set this photo as the gallery thumbnail; the MEdTech Unit has been informed of this error, please try again later.";
 
 											application_log("error", "Failed to set this photo as the gallery thumbnail. Database said: ".$db->ErrorMsg());
 										}
 									} elseif (((int) $photo_record["gallery_cgphoto_id"] == (int) $RECORD_ID) && ((!isset($_POST["gallery_cgphoto_id"])) || ((int) trim($_POST["gallery_cgphoto_id"]) != 1))) {
 										if (!$db->AutoExecute("community_galleries", array("gallery_cgphoto_id" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `cgallery_id` = ".$db->qstr($photo_record["cgallery_id"]))) {
-											$NOTICE++;
-											$NOTICESTR[] = "Unable to unset this photo as the gallery thumbnail; the MEdTech Unit has been informed of this error, please try again later.";
+											$ERROR++;
+											$ERRORSTR[] = "Unable to unset this photo as the gallery thumbnail; the MEdTech Unit has been informed of this error, please try again later.";
 
 											application_log("error", "Failed to unset this photo as the gallery thumbnail. Database said: ".$db->ErrorMsg());
 										}
 									}
 								}
+								if (!$ERROR) {
+									Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully updated the <strong>%s</strong> photo."), $PROCESSED["photo_title"]), "success", $MODULE);
 
-								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&id=".$RECORD_ID;
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+									add_statistic("community:" . $COMMUNITY_ID . ":galleries", "photo_edit", "cgphoto_id", $RECORD_ID);
+									communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_photo", 1, $photo_record["cgallery_id"]);
 
-								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully updated this photo.<br /><br />You will now be redirected to this image; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-								add_statistic("community:".$COMMUNITY_ID.":galleries", "photo_edit", "cgphoto_id", $RECORD_ID);
-								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_photo", 1, $photo_record["cgallery_id"]);
+									$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-photo&id=" . $RECORD_ID;
+									header("Location: " . $url);
+									exit;
+								}
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "Unable to update this photo at this time; the MEdTech Unit has been informed of this error, please try again later.";
@@ -248,14 +249,6 @@ if ($RECORD_ID) {
 
 				// Page Display
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-							echo display_success();
-						}
-					break;
 					case 1 :
 					default :
 						if ($ERROR) {

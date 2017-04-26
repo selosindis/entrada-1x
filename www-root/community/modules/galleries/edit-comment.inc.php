@@ -85,13 +85,15 @@ if ($RECORD_ID) {
 							$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
 
 							if ($db->AutoExecute("community_gallery_comments", $PROCESSED, "UPDATE", "`cgcomment_id` = ".$db->qstr($RECORD_ID)." AND `cgphoto_id` = ".$db->qstr($comment_record["cgphoto_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID))) {
-								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&id=".$comment_record["cgphoto_id"]."#comment-".$RECORD_ID;
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
 								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully edited your photo comment.<br /><br />You will now be redirected back to this photo; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+								Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully edited the <strong>%s</strong> photo comment."), $PROCESSED["comment_title"]), "success", $MODULE);
+
 								add_statistic("community:".$COMMUNITY_ID.":galleries", "comment_edit", "cgcomment_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_photo_comment", 0, $comment_record["cgphoto_id"]);
+
+								$url = COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=view-photo&id=" . $comment_record["cgphoto_id"];//"#comment-".$RECORD_ID;
+								header("Location: " . $url);
+								exit;
 							}
 
 							if (!$SUCCESS) {
@@ -114,14 +116,6 @@ if ($RECORD_ID) {
 
 				// Page Display
 				switch($STEP) {
-					case 2 :
-						if ($NOTICE) {
-							echo display_notice();
-						}
-						if ($SUCCESS) {
-							echo display_success();
-						}
-					break;
 					case 1 :
 					default :
 					if ($ERROR) {

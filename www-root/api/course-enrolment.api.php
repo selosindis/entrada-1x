@@ -105,7 +105,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                             $audience = new Models_Course_Audience();
                             $a = $audience->fetchRowByCourseIDCperiodID($course_id, $cperiod_id);
                             $ldap_sync_date = false;
-                            $period = Models_CurriculumPeriod::fetchRowByID($cperiod_id);
+                            $period = Models_Curriculum_Period::fetchRowByID($cperiod_id);
                             if ($a) {
                                 $ldap_sync_date = $a->getLdapSyncDate();
                                 if ($ldap_sync_date) {

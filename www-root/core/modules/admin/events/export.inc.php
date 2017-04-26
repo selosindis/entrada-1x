@@ -299,7 +299,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									FROM `event_objectives` eo
 									WHERE eo.`event_id` = " . $db->qstr($event["event_id"]) . "
 									AND eo.`objective_details` is NOT NULL
-									AND eo.`objective_details != ''";
+									AND eo.`objective_details` != ''";
 						$objs = $db->GetAll($query);
 						if ($objs) {
 							foreach ($objs as $o) {
@@ -426,6 +426,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$row[$key] = 0;
 						}
 						break;
+                    case "event_children":
+                        $event_children = array();
+                        $query = "  SELECT `event_id` 
+                                    FROM `events` 
+                                    WHERE `parent_id` = ".$db->qstr($event["event_id"]);
+                        $results = $db->GetAll($query);
+                        if ($results) {
+                            foreach($results as $result) {
+                                $event_children[] = $result["event_id"];
+                            }
+                        }
+                        $row[$key] = implode("; ", $event_children);
+                        break;
 					case "objectives_release_date":
 						if ($event["objectives_release_date"] != 0) {
 							$row[$key] = date("Y-m-d H:i", $event["objectives_release_date"]);

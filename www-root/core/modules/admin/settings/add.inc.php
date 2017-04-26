@@ -51,10 +51,10 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				if ($result) {
 					$PROCESSED["countries_id"] = $tmp_input;
 					$PROCESSED["organisation_country"] = $result["country"];
+                    $PROCESSED["province_id"] = 0;
+                    $PROCESSED["organisation_province"] = "";
 
 					if ((isset($_POST["prov_state"])) && ($tmp_input = clean_input($_POST["prov_state"], array("trim", "notags")))) {
-						$PROCESSED["province_id"] = 0;
-						$PROCESSED["organisation_province"] = "";
 						if (ctype_digit($tmp_input) && ($tmp_input = (int) $tmp_input)) {
 							$query = "SELECT * FROM `global_lu_provinces` WHERE `province_id` = " . $db->qstr($tmp_input) . " AND `country_id` = " . $db->qstr($PROCESSED["countries_id"]);
 							$result = $db->GetRow($query);
@@ -67,8 +67,6 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 						} else {
 							$PROCESSED["organisation_province"] = $tmp_input;
 						}
-					} else {
-						add_error("The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.");
 					}
 				} else {
 					add_error("The selected country does not exist in our countries database. Please select a valid country.");
@@ -412,7 +410,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_CONFIGURATION")) {
 				</div>
 			</div>
 			<div class="control-group">
-				<label for="province_id" class="control-label form-required"><?php echo $translate->_("Province / State"); ?>:</label>
+				<label for="province_id" class="control-label form-nrequired"><?php echo $translate->_("Province / State"); ?>:</label>
 				<div class="controls">
 					<div id="prov_state_div"><?php echo $translate->_("Please select a <b>Country</b> from above first."); ?></div>
 				</div>

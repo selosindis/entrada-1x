@@ -134,14 +134,11 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 	}
 
 	if (!$ERROR) {
-		$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-
-		$SUCCESS++;
-		$SUCCESSSTR[]	= "You have successfully updated the page ordering for the community.<br /><br />The changes will show after you are redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-		$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
-
+		Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have successfully updated the page ordering for the community"), "success", $MODULE);
 		application_log("success", "Page ordering for  [".$COMMUNITY_ID."] updated in the system.");
-		echo display_success();
+
+        $url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages";
+        header("Location: " . $url);
+        exit;
 	}
 }

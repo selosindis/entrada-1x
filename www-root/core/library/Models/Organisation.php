@@ -182,7 +182,7 @@ class Models_Organisation extends Models_Base {
         return $results ? $results : false;
     }
 
-    public static function fetchOrganisationUsers($search_term = null, $organisation_id = null, $group = null) {
+    public static function fetchOrganisationUsers($search_term = null, $organisation_id = null, $group = null, $limit = null, $offset = null) {
         global $db;
 
         $groups_string = "";
@@ -209,6 +209,16 @@ class Models_Organisation extends Models_Base {
                     ".(isset($groups_string) && $groups_string ? "AND b.`group` IN (".$groups_string.")" : (isset($group) && $group ? "AND b.`group` = ?" : ""))."
                     GROUP BY a.`id`
                     ORDER BY a.`firstname` ASC, a.`lastname` ASC";
+
+
+        if (!empty($limit)) {
+            $query .= " LIMIT " . $limit;
+        }
+
+        if (!empty($offset)) {
+            $query .= " OFFSET " . $offset;
+        }
+
 
         $results = $db->GetAll($query, ($groups_string ? array(time(), time(), $organisation_id) : ($group ? array(time(), time(), $organisation_id, $group) : array(time(), time(), $organisation_id))));
         return $results;

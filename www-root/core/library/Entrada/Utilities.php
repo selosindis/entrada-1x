@@ -324,7 +324,7 @@ class Entrada_Utilities {
          * If the uploaded file is active in the user_photos table, and
          * If the proxy_id has their privacy set to "Basic Information" or higher.
          */
-        $query			= "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($proxy_id);
+        $query = "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($proxy_id);
         $photo_active	= $db->GetOne($query);
         if ((@file_exists(STORAGE_USER_PHOTOS."/".$proxy_id."-upload")) && ($photo_active) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($proxy_id, (int) $privacy_level, "upload"), "read"))) {
             $photo_details["uploaded_active"] = true;
@@ -334,8 +334,193 @@ class Entrada_Utilities {
             }
         }
 
-
         return $photo_details;
+    }
+    
+     public static function myEntradaSidebar($returnHtml = NULL) {
+        global $translate, $ENTRADA_USER, $ENTRADA_CACHE;
+
+        $my_entrada = $translate->_("My_Entrada");
+
+        $exam_badge = "";
+        $grade_badge = "";
+        $assignment_badge = "";
+        $exam_count = 0;
+
+        /**
+         * Gets Exams
+         */
+        if (!isset($ENTRADA_CACHE) || !$ENTRADA_CACHE->test("exams_outstanding_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID())) {
+            if (!$ENTRADA_CACHE->test("exam_posts_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID())) {
+                $posts = Models_Exam_Post::fetchAllEventExamsByProxyID($ENTRADA_USER->getID(), true, true);
+
+                if (isset($ENTRADA_CACHE)) {
+                    $ENTRADA_CACHE->save($posts, "exam_posts_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID(), array(), 300);
+                }
+            } else {
+                $posts = $ENTRADA_CACHE->load("exam_posts_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+            }
+
+            $un_submitted_exams = array();
+            if (isset($posts) && is_array($posts) && !empty($posts)) {
+                foreach ($posts as $post) {
+                    if (isset($post) && is_object($post)) {
+                        $start_valid        = $post->isAfterUserStartTime($ENTRADA_USER);
+                        $end_valid          = $post->isBeforeUserEndTime($ENTRADA_USER);
+                        $submission_valid   = $post->isSubmitAttemptAllowedByUser($ENTRADA_USER);
+                        $post_id            = (int)$post->getID();
+                        $proxy_id           = (int)$ENTRADA_USER->getID();
+
+                        $progress           = Models_Exam_Progress::fetchAllByPostIDProxyIDProgressValue($post_id, $proxy_id, "submitted");
+                        if ($progress && is_array($progress) && !empty($progress)) {
+
+                        } else {
+                            $progress       = Models_Exam_Progress::fetchAllByPostIDProxyIDProgressValue($post_id, $proxy_id, "inprogress");
+                            if ($progress && is_array($progress) && !empty($progress)) {
+                                if ($submission_valid) {
+                                    $exam_exception = Models_Exam_Post_Exception::fetchRowByPostIdProxyIdExcluded($post->getID(), $ENTRADA_USER->getID());
+                                    if (!$exam_exception) {
+                                        $un_submitted_exams[] = $post;
+                                    }
+                                }
+                            } else {
+                                if ($start_valid && $end_valid && $submission_valid) {
+                                    $exam_exception = Models_Exam_Post_Exception::fetchRowByPostIdProxyIdExcluded($post->getID(), $ENTRADA_USER->getID());
+                                    if (!$exam_exception) {
+                                        $un_submitted_exams[] = $post;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                $exam_count = count($un_submitted_exams);
+            }
+
+            if (isset($ENTRADA_CACHE)) {
+                $ENTRADA_CACHE->save($exam_count, "exams_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+            }
+        } else {
+            $exam_count = $ENTRADA_CACHE->load("exams_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+        }
+
+        if ($exam_count) {
+            $exam_badge = "<span class=\"badge badge-success\"><small>".$exam_count."</small></span>";
+        }
+
+        /**
+         * Gets Assignments
+         */
+
+        if (!isset($ENTRADA_CACHE) || !$ENTRADA_CACHE->test("assignment_outstanding_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID())) {
+
+            /**
+             * We want to cache this query to make the navigation work faster
+             */
+
+            if (!$ENTRADA_CACHE->test("course_ids_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID())) {
+                $courses = courses_fetch_courses(true, true);
+
+                if ($courses && is_array($courses)) {
+                    foreach ($courses as $course) {
+                        $course_ids[] = $course["course_id"];
+                    }
+                }
+
+                if (isset($ENTRADA_CACHE)) {
+                    $ENTRADA_CACHE->save($course_ids, "course_ids_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID(), array(), 600);
+                }
+            } else {
+                $course_ids = $ENTRADA_CACHE->load("course_ids_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+            }
+
+            if (!$ENTRADA_CACHE->test("assignment_ids_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID())) {
+                $assessment_ids_array = array();
+
+                // this array is used to hold information about assessments a student is
+                /*
+                 * This section disabled
+                 * until gradebook is updated
+
+                $assessment_audiences_array = Models_Gradebook_Assessment::buildAssessmentByCourseFromProxyId($course_ids, $ENTRADA_USER->getID());
+                if ($assessment_audiences_array && is_array($assessment_audiences_array)) {
+                    foreach ($assessment_audiences_array as $grade_book_audience) {
+                        if ($grade_book_audience && is_object($grade_book_audience)) {
+                            if (!array_key_exists($grade_book_audience->getAssessmentID(), $assessment_ids_array)) {
+                                $assessment_ids_array[$grade_book_audience->getAssessmentID()] = $grade_book_audience->getAssessmentID();
+                            }
+                        }
+                    }
+                }
+                */
+
+                if (isset($ENTRADA_CACHE)) {
+                    $ENTRADA_CACHE->save($assessment_ids_array, "assignment_ids_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID(), array(), 600);
+                }
+            } else {
+                $assessment_ids_array = $ENTRADA_CACHE->load("assignment_ids_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+            }
+                    /*
+                 * This section disabled
+                 * until gradebook is updated
+            $assignments = Models_Gradebook_Assessment::fetchAllAssignmentsByAssessmentIdsProxyIdCourseIdsNotSubmitted($assessment_ids_array, $ENTRADA_USER, $course_ids, "a.`assignment_title` DESC");
+            $assignment_count = ($assignments ? count($assignments) : 0);
+                    */
+
+            $assignment_count = 0;
+
+            if (isset($ENTRADA_CACHE)) {
+                $ENTRADA_CACHE->save($assignment_count, "assignment_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+            }
+        } else {
+            $assignment_count = $ENTRADA_CACHE->load("assignment_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+        }
+
+        if ($assignment_count) {
+            $assignment_badge = "<span class=\"badge badge-success\">";
+            $assignment_badge .= "<small>";
+            $assignment_badge .= $assignment_count;
+            $assignment_badge .= "</small>";
+            $assignment_badge .= "</span>";
+        }
+
+        $sidebar_html = "<ul class=\"nav nav-list\">\n";
+        $sidebar_html .= "<li><a href=\"" . ENTRADA_RELATIVE . "/exams" . "\">" . $my_entrada["links"]["exams"] . "</a>" . $exam_badge . "</li>\n";
+        $sidebar_html .= "<li><a href=\"" . ENTRADA_RELATIVE . "/profile/gradebook" . "\">" . $my_entrada["links"]["gradebook"] . "</a></li>\n";
+        $sidebar_html .= "<li><a href=\"" . ENTRADA_RELATIVE . "/profile/gradebook/assignments" . "\">" . $my_entrada["links"]["assignments"] . "</a>" . $assignment_badge . "</li>\n";
+        $sidebar_html .= "</ul>\n";
+
+        if ($returnHtml === true) {
+            if ($ENTRADA_USER->getActiveGroup() === "student" || $ENTRADA_USER->getActiveGroup() === "resident") {
+                $export_html = "<div summary=\"my_entrada\" id=\"my_entrada\" class=\"panel\">";
+                $export_html .= "<div class=\"panel-head\">";
+                $export_html .= "<h3>" . $my_entrada["title"] . "</h3>";
+                $export_html .= "</div>";
+                $export_html .= "<div class=\"clearfix panel-body\">";
+                $export_html .= $sidebar_html;
+                $export_html .= "</div>";
+                $export_html .= "</div>";
+                return $export_html;
+            }
+        }
+
+        if ($ENTRADA_USER->getActiveGroup() === "student" || $ENTRADA_USER->getActiveGroup() === "resident") {
+            new_sidebar_item($my_entrada["title"], $sidebar_html, "my_entrada", "open", 1);
+        }
+    }
+    
+
+
+    /*
+    * Return the URL of the current page
+    */
+
+    public static function getCurrentUrl() {
+        $url  = isset( $_SERVER["HTTPS"] ) && "on" === $_SERVER["HTTPS"] ? "https" : "http";
+        $url .= "://" . $_SERVER["SERVER_NAME"];
+        $url .= in_array( $_SERVER["SERVER_PORT"], array("80", "443") ) ? "" : ":" . $_SERVER["SERVER_PORT"];
+        $url .= $_SERVER["REQUEST_URI"];
+        return $url;
     }
 
     /**

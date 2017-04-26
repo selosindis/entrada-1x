@@ -83,6 +83,15 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	} elseif (isset($_GET["out"]) && ($tmp_input = clean_input($_GET["out"], array("trim", "notags")))) {
 		$out = $tmp_input;
 	}
+
+	$course_id = "";
+
+	if (isset($_POST["course_id"]) && ($tmp_input = (int)$_POST["course_id"])) {
+		$course_id = $tmp_input;
+	} elseif (isset($_GET["course_id"]) && ($tmp_input = (int)$_GET["course_id"])) {
+		$course_id = $tmp_input;
+	}
+
 	if ($fullname) {
 		$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`, c.`organisation_title`, b.`group`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -145,6 +154,18 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					}
 				}
 				$query .= " AND a.`id` IN (".$evaluator_ids_string.")";
+			break;
+			case "course_contacts" :
+				$grader_ids = array();
+				$course_contacts = Models_Course_Contact::fetchAllByCourseIDContactType($course_id);
+
+				foreach ($course_contacts as $contact) {
+					$grader_ids[$contact->getProxyID()] = 1;
+				}
+				$query .= " AND a.`id` IN (" . implode(",", array_keys($grader_ids)) . ")";
+			break;
+			case "people" : // include every active user in the organisation
+				continue;
 			break;
 		}
 		$query .= "	AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."

@@ -86,55 +86,50 @@ jQuery(document).ready(function ($) {
      * This event listener just needs to be uncommented to re-enable that functionality, also removed was the cursor style on the "views" badge
      * so it doesn't appear clickable (removed from line 2018 & 2036 .css("cursor", pointer)
      *
-     *
+     */
     $("#event-resources-container").on("click", ".resource-view-toggle", function (event) {
         var resource_type = $(this).attr("data-type");
         var resource_id = $(this).attr("data-value");
         var resource_title = $(this).attr("data-title");
-        
-        $("#resource-views-table").dataTable().fnDestroy();
-        
+
         $("#event-resource-view-modal-heading").html(resource_title + " views");
         event.preventDefault();
-        
         $.ajax({
             url: SITE_URL + "/admin/events?section=api-resource-wizard",
             data: "method=resource-views&resource_type=" + resource_type + "&resource_id=" + resource_id,
             type: 'GET',
             success: function (data) {
+                $("#resource-views-table tbody").empty();
                 var jsonResponse = JSON.parse(data);
                 if (jsonResponse.status === "success") {
-                    $("#resource-views-table tbody").empty();
                     $.each(jsonResponse.data, function (key, view) {
                         var view_table_row  = document.createElement("tr");
                         var view_name_td = document.createElement("td");
                         var view_views_td = document.createElement("td");
                         var view_date_td = document.createElement("td");
-                        
+
                         $(view_name_td).append(view.name);
                         $(view_views_td).append(view.views);
                         $(view_date_td).append(view.last_viewed);
                         $(view_table_row).append(view_name_td).append(view_views_td).append(view_date_td);
                         $("#resource-views-table tbody").append(view_table_row);
                     });
-                } else {
-                    $("#resource-views-table tbody").empty();
+                } if (jsonResponse.status === "error") {
+                    $("#resource-views-table tbody").html("<tr class=\"muted text-center\"><td colspan=\"3\">" + jsonResponse.data + "</td></tr>");
                 }
-                
-                $("#resource-views-table").DataTable({
-                    "bPaginate": false,
-                    "bInfo": false,
-                    "bFilter": false,
-                    "oLanguage": {
-                        "sEmptyTable":     "This resource has not been viewed by any learners."
-                    }
-                });
+            },
+            beforeSend: function () {
+                $("#event-resources-views-loading").removeClass("hide");
+                $("#resource-views-table tbody").empty();
+            },
+            complete: function () {
+                $("#event-resources-views-loading").addClass("hide");
             }
         });
-        
+        $("#resource-views-table").width("100%");
         $("#event-resource-view-modal").modal("show");
     });
-    */
+
     
     $("#event-resource-step").on("change", "#event_resource_upload", function (event) {
         if (dragdrop) {
@@ -479,6 +474,15 @@ jQuery(document).ready(function ($) {
                             $("#event-resource-previous").removeAttr("disabled");
                         }
                         
+                        if (jsonResponse.data.next_step == "2") {
+                            if (selected_resource_type == "12") {
+                                var event_id = $("#event_id").val();
+                                var url = ENTRADA_URL + "/admin/exams/exams?event_id=" + event_id;
+
+                                window.location = url;
+                            }
+                        }
+                        
                         if (jsonResponse.data.next_step == "3") {
                             if (!edit_mode) {
                                 resource_release_start_control.val(jsonResponse.data.default_dates.release_start);
@@ -676,6 +680,20 @@ jQuery(document).ready(function ($) {
         $("#event_resource_quiz_results_value").val($(this).val());
     });
     
+    /**
+     *
+     * Event listener for exam stats
+     *
+     */
+
+    $("#event-resources-container").on("click", ".event-resource-access-label.exam-post-stats", function (e) {
+        e.preventDefault();
+        var post_id = $(this).attr("data-value");
+        var url     = SITE_URL + "/admin/exams/exams?section=activity&id=" + post_id;
+
+        window.location = url;
+    });
+
     /**
      *
      * Event listener for attach new file controls
@@ -2098,6 +2116,7 @@ jQuery(document).ready(function ($) {
                     var resource_delete_i = document.createElement("i");
                     var resource_description_p = document.createElement("p");
                     var resource_required_span = document.createElement("span");
+                    var resource_hidden_span    = document.createElement("span");
                     var resource_type_span = document.createElement("span");
                     var resource_time_p = document.createElement("p");
                     var resource_details_a = document.createElement("a");
@@ -2129,6 +2148,17 @@ jQuery(document).ready(function ($) {
 
                     $(resource_required_span).html(required).addClass(styles).addClass("event-resource-stat-label");
                     $(resource_type_span).html(resource.resource_type_title).addClass("label label-info event-resource-stat-label");
+                    $(resource_stats_div).append(resource_required_span);
+
+                    var required = "";
+                    var styles   = "";
+
+                    if (resource.hidden == "1") {
+                        required = "Hidden";
+                        styles   = "label label-important";
+                        $(resource_hidden_span).html(required).addClass(styles).addClass("event-resource-stat-label label-hidden");
+                        $(resource_stats_div).append(resource_hidden_span);
+                    }
 
                     $(resource_details_div).append(resource_delete_span).append(resource_description_p).attr({"data-id": resource.entity_id});
                     $(resource_stats_div).append(resource_required_span).append(resource_type_span);
@@ -2155,7 +2185,7 @@ jQuery(document).ready(function ($) {
                                 "data-type": resource.resource_type,
                                 "data-value": resource.resource_id,
                                 "data-title": resource.title
-                            }).addClass("label label-info event-resource-access-label resource-view-toggle").html(" " + resource.accesses + " views").prepend(resource_accesses_i);
+                            }).addClass("label label-info event-resource-access-label resource-view-toggle").html(" " + " views").prepend(resource_accesses_i);
                             $(resource_details_a).html(resource.title);
                             $(resource_stats_div).append(resource_accesses_span).append(download_span);
                             break;
@@ -2177,7 +2207,7 @@ jQuery(document).ready(function ($) {
                                 "data-type": resource.resource_type,
                                 "data-value": resource.resource_id,
                                 "data-title": resource.title
-                            }).addClass("label label-info event-resource-access-label resource-view-toggle").html(" " + resource.accesses + " views").prepend(resource_accesses_i);
+                            }).addClass("label label-info event-resource-access-label resource-view-toggle").html(" " +  " views").prepend(resource_accesses_i);
                             $(resource_stats_div).append(resource_accesses_span).append(link_span);
                             break;
                         /*
@@ -2215,9 +2245,52 @@ jQuery(document).ready(function ($) {
 
                             $(resource_stats_div).append(quiz_results_link).append(quiz_link);
                             break;
+                        case 12 :
+                            var resource_accesses_span  = document.createElement("span");
+                            var resource_accesses_i     = document.createElement("i");
+                            var post_text               = resource.post_text;
+                            var available               = resource.available;
+                            var attempts_allowed        = resource.attempts_allowed;
+                            var time_limit              = resource.time_limit;
+                            var progress_count          = resource.progress_count;
+
+                            if (available) {
+                                $(resource_time_p).html(available).addClass("muted").addClass("event-resource-release-dates");
+                            }
+
+                            if (attempts_allowed) {
+                                var resource_attempts_allowed_span = document.createElement("span");
+                                var header = post_text.table_headers.attempts;
+
+                                $(resource_attempts_allowed_span).html(header + ": " + attempts_allowed).addClass("label label-default").addClass("event-resource-stat-label");
+                                $(resource_stats_div).append(resource_attempts_allowed_span);
+                            }
+
+                            if (time_limit) {
+                                var resource_time_limit_span = document.createElement("span");
+                                var header = post_text.table_headers.time_limit;
+
+                                $(resource_time_limit_span).html(header + ": " + time_limit).addClass("label label-default").addClass("event-resource-stat-label");
+                                $(resource_stats_div).append(resource_time_limit_span);
+                            }
+
+                            if (progress_count || progress_count == 0) {
+                                $(resource_accesses_i).addClass("fa fa-bar-chart");
+                                $(resource_accesses_span).attr({
+                                    "data-type": resource.resource_type,
+                                    "data-value": resource.resource_id,
+                                    "data-title": resource.title
+                                }).addClass("label label-info event-resource-access-label resource-view-toggle exam-post-stats").html(" " + progress_count + " started").prepend(resource_accesses_i);
+                                $(resource_stats_div).append(resource_accesses_span);
+                            }
+
+                            break;
                     }
 
-                    $(resource_details_a).attr({href: "#"}).addClass("resource-link");
+                    if (resource.resource_type != 12) {
+                        $(resource_details_a).attr({href: "#"}).addClass("resource-link");
+                    }
+
                     $(resource_details_div).prepend(resource_time_p).prepend(resource_details_a);
                     $(timeframe_ul).append(resource_li);
 

@@ -37,10 +37,13 @@ class Models_Event extends Models_Base {
               $include_parent_description,
               $event_goals,
               $event_objectives,
+              $keywords_hidden,
+              $keywords_release_date,
               $objectives_release_date,
               $event_message,
               $include_parent_message,
               $event_location,
+              $room_id,
               $event_start,
               $event_finish,
               $event_duration,
@@ -52,6 +55,8 @@ class Models_Event extends Models_Base {
               $draft_id,
               $updated_date,
               $updated_by;
+
+    protected  $room, $building, $course;
 
     protected static $table_name = "events";
     protected static $primary_key = "event_id";
@@ -117,6 +122,14 @@ class Models_Event extends Models_Base {
         return $this->event_objectives;
     }
     
+    public function getKeywordsHidden() {
+        return $this->keywords_hidden;
+    }
+    
+    public function getKeywordsReleaseDate() {
+        return $this->keywords_release_date;
+    }
+    
     public function getObjectivesReleaseDate () {
         return $this->objectives_release_date;
     }
@@ -131,6 +144,10 @@ class Models_Event extends Models_Base {
     
     public function getEventLocation () {
         return $this->event_location;
+    }
+
+    public function getRoomId() {
+        return $this->room_id;
     }
     
     public function getEventStart () {
@@ -189,6 +206,11 @@ class Models_Event extends Models_Base {
     public function setEventId($event_id) {
         $this->event_id = $event_id;
     }
+    
+    /* @return bool|Models_Exam_Post */
+    public function getAttachedExams(){
+        return Models_Exam_Post::fetchAllByEventID($this->event_id);
+    }
 
     /* @return bool|Models_Event */
     public static function get($event_id = null) {
@@ -196,9 +218,32 @@ class Models_Event extends Models_Base {
         return $self->fetchRow(array("event_id" => $event_id));
     }
 
+    /* @return bool|Models_Event */
+    public static function fetchRowByID($event_id = NULL) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "event_id", "value" => $event_id, "method" => "=")
+        ));
+    }
+
     /* @return ArrayObject|Models_Event[] */
-    public function fetchAllByCourseID($course_id = null) {
-        return $this->fetchAll(array("course_id" => $course_id));
+    public static function fetchAllByParentID($parent_id = null) {
+        $self = new self();
+        $constraints = array(
+            array(
+                "key"=> "parent_id",
+                "value" => $parent_id,
+                "method"=>"="
+                )
+            );
+        
+        return $self->fetchRow($constraints);
+    }
+    
+    /* @return ArrayObject|Models_Event[] */
+    public static function fetchAllByCourseID($course_id = null) {
+        $self = new self();
+        return $self->fetchAll(array("course_id" => $course_id));
     }
 
     public static function fetchAllByCourseIDEventtypeID($course_id, $eventtype_id) {
@@ -242,31 +287,42 @@ class Models_Event extends Models_Base {
         return $events;
     }
 
-    /* @return ArrayObject|Models_Event[] */
-    public function fetchAllByCourseIdTitle($course_id = null, $title = null) {
+    /**
+     * Search the specified course_id for requested event_title.
+     *
+     * @param int $course_id
+     * @param string $title
+     * @return array
+     */
+    public function fetchAllByCourseIdTitle($course_id = 0, $title = "") {
         global $db;
-        $events = false;
-        
-        $query = "  SELECT * FROM `events` 
-                    WHERE  `course_id` = ?
-                    AND `event_title` LIKE ?
-                    AND (`parent_id` = ? OR `parent_id` IS NULL)
-                    ORDER BY `event_start` ASC";
-        
-        $results = $db->GetAll($query, array($course_id, "%".$title."%", "0"));
-        
-        if ($results) {
-            foreach ($results as $result) {
-                $event = new self($result);
-                $events[] = $event;
+
+        $course_id = (int) $course_id;
+        $title = clean_input($title, ["striptags", "trim"]);
+
+        $events = [];
+
+        if ($course_id) {
+            $query = "SELECT *
+                        FROM `events` 
+                        WHERE `course_id` = ?
+                        AND (`event_id` = ? OR `event_title` LIKE ?)
+                        AND (`parent_id` = 0 OR `parent_id` IS NULL)
+                        ORDER BY `event_start` ASC";
+            $results = $db->GetAll($query, [$course_id, (int) $title, ("%" . $title . "%")]);
+            if ($results) {
+                foreach ($results as $result) {
+                    $event = new self($result);
+                    $events[] = $event;
+                }
             }
         }
-        
+
         return $events;
     }
 
     /* @return ArrayObject|Models_Event[] */
-    public function fetchAllByCourseIdTitleDates($course_id = null, $title = null, $cperiod_start_date = null, $cperiod_finish_date = null) {
+    public static function fetchAllByCourseIdTitleDates($course_id = null, $title = null, $cperiod_start_date = null, $cperiod_finish_date = null) {
         global $db;
         $events = false;
         
@@ -290,11 +346,59 @@ class Models_Event extends Models_Base {
         return $events;
     }
 
+     /* @return bool|Models_Curriculum_Period */
+    public function getCurriculumPeriod() {
+        global $db;
+
+        $period = false;
+
+        $query = "SELECT a.`cperiod_id`
+                    FROM `course_audience` AS a
+                    JOIN `curriculum_periods` AS b
+                    ON a.`cperiod_id` = b.`cperiod_id`
+                    WHERE a.`course_id` = " . $db->qstr($this->course_id) . "
+                    AND b.`start_date` <= " . $db->qstr($this->event_start) . "
+                    AND b.`finish_date` >= " . $db->qstr($this->event_start);
+        $result = $db->GetRow($query);
+        if ($result) {
+            $period = Models_Curriculum_Period::fetchRowByID($result["cperiod_id"]);
+        }
+
+        return $period;
+    }
+
     /* @return ArrayObject|Models_Event_Audience[] */
     public function getEventAudience() {
         return Models_Event_Audience::fetchAllByEventID($this->event_id);
     }
+    
+    /* @return bool|Models_Course */
+    public function getCourse() {
+        if ($this->course === null) {
+            return $this->course = Models_Course::fetchRowByID($this->course_id);
+        } else {
+            return $this->course;
+        }
+    }
 
+    public static function fetchEventById($event_id) {
+        global $db;
+
+        $query		= "	SELECT a.*, b.`organisation_id`, IF(a.`room_id` IS NULL, a.`event_location`, CONCAT(d.`building_code`, '-', c.`room_number`)) AS `event_location`
+						FROM `events` AS a
+						LEFT JOIN `courses` AS b
+						ON b.`course_id` = a.`course_id`
+                        LEFT JOIN `global_lu_rooms` AS c
+                        ON c.`room_id` = a.`room_id`
+                        LEFT JOIN `global_lu_buildings` AS d
+                        ON d.`building_id` = c.`building_id`
+						WHERE a.`event_id` = ".$db->qstr($event_id);
+        $event_info	= $db->GetRow($query);
+
+        return $event_info;
+    }
+    
+    
     public function getEventType () {
         return Models_EventType::get($this->eventtype_id);
     }
@@ -343,4 +447,40 @@ class Models_Event extends Models_Base {
             return $data;
         }
     }
+
+    public static function migrateEventLocations($organisation_id, $room_id, $location) {
+        global $db;
+
+        $query = "UPDATE `events`
+                  JOIN `courses`
+                  ON `courses`.`course_id` = `events`.`course_id`
+                  AND `courses`.`organisation_id` = " . $db->qstr($organisation_id) . "
+                  SET `room_id` = " . $db->qstr($room_id) . "
+                  WHERE `event_location` = " . $db->qstr($location) . " AND (`room_id` IS NULL OR `room_id` <= 0)";
+
+        if ($db->Execute($query)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function selectEventLocationsWithOutRoomID($organisation_id) {
+        global $db;
+
+        $query = "  SELECT DISTINCT `event_location`
+                    FROM `events`
+                    JOIN `courses`
+                    ON `courses`.`course_id` = `events`.`course_id`
+                    AND `courses`.`organisation_id` = " . $db->qstr($organisation_id) . "
+                    WHERE (`room_id` IS NULL OR `room_id` <= 0) AND LENGTH(`event_location`) > 0
+                    ORDER BY `event_location` ASC";
+        if ($locations = $db->GetAll($query)) {
+            if ($locations) {
+                return $locations;
+            }
+        }
+        return false;
+    }
+
+
 }

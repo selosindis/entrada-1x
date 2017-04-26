@@ -40,7 +40,6 @@ $BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities?".replace_query(array(
 $COMMUNITY_ID		= 0;
 
 $url				= ENTRADA_URL."/communities";
-$ONLOAD[]			= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 /**
  * Check for a community category to proceed (via POST) to help prevent against CSRF attacks.
@@ -58,45 +57,33 @@ if($COMMUNITY_ID) {
 	if($community_details) {
 		if($ENTRADA_ACL->amIAllowed(new CommunityResource($COMMUNITY_ID), 'delete')) {
 			if(@$db->AutoExecute("communities", array("community_active" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID))) {
-
 				if ($MAILING_LISTS["active"]) {
 					$list = new MailingList($COMMUNITY_ID);
 					$list->mode_change("inactive");
 				}
-				communities_log_history($COMMUNITY_ID,  0, $COMMUNITY_ID, "community_history_deactivate_page", 1);
-				$SUCCESS++;
-				$SUCCESSSTR[] = "<strong>You have just deactiviated ".html_encode($community_details["community_title"]).".</strong><br /><br />If there has been a mistake please contact the MEdTech unit directly for assistance.<br /><br />You will now be redirected back to the communities section; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("You have successfully deactiviated <strong>%s</strong>.<br /><br />If there has been a mistake please contact the MEdTech unit directly for assistance."), $community_details["community_title"]), "success", $MODULE);
+                communities_log_history($COMMUNITY_ID,  0, $COMMUNITY_ID, "community_history_deactivate_page", 1);
+                application_log("success", "Community ID [".$COMMUNITY_ID."] has been deactivated.");
 
-				application_log("success", "Community ID [".$COMMUNITY_ID."] has been deactivated.");
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "<strong>Unable to deactive ".html_encode($community_details["community_title"]).".</strong><br /><br />The MEdTech unit has been informed of this error, please try again later. You will now be redirected back to the communities section; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
+                Entrada_Utilities_Flashmessenger::addMessage(sprintf($translate->_("Unable to deactive <strong>%s</strong><br /><br />The MEdTech unit has been informed of this error, please try again later."), $community_details["community_title"]), "error", $MODULE);
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "You are not listed as an active administrator of this community, or the community has already been deactivated. If you are having trouble, please contact a community administrator or the MEdTech Unit directly.";
+            Entrada_Utilities_Flashmessenger::addMessage($translate->_("You are not listed as an active administrator of this community, or the community has already been deactivated. If you are having trouble, please contact a community administrator or the MEdTech Unit directly."), "error", $MODULE);
 
 			application_log("error", "The proxy_id [".$ENTRADA_USER->getActiveId()." / ".$ENTRADA_USER->getID()."] is not an administrator of community_id [".$COMMUNITY_ID."] was not found or was already deactivated.");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "The community identifier that was provided does not exist in our database or has already been deactivated.";
+        Entrada_Utilities_Flashmessenger::addMessage($translate->_("The community identifier that was provided does not exist in our database or has already been deactivated."), "error", $MODULE);
 
 		application_log("error", "The provided community_id [".$COMMUNITY_ID."] was not found or was already deactivated.");
 	}
 } else {
-	$ERROR++;
-	$ERRORSTR[] = "You have not provided a valid community identifier to deactivate.";
+    Entrada_Utilities_Flashmessenger::addMessage($translate->_("You have not provided a valid community identifier to deactivate."), "error", $MODULE);
 
 	application_log("error", "There was no community_id provided to deactivate.");
 }
 
-if($SUCCESS) {
-	echo display_success();
-}
-
-if($ERROR) {
-	echo display_error();
-}
+header("Location: " . $url);
+exit;
 ?>

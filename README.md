@@ -13,3 +13,8 @@ For more information please visit our website: http://www.entrada-project.org
 
 For information on installing Entrada ME Open Edition please visit the wiki at:
 https://github.com/EntradaProject/entrada-1x/wiki/First-Time-Installation
+
+## Special Thanks
+!['logo'](https://i.imgur.com/8XLkPge.png?2)
+
+[BrowserStack.com](https://browserstack.com) automated testing across 1100+ web browsers.
